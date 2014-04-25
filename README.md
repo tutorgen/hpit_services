@@ -1,1 +1,1 @@
-# The HyperPersonalized Interactive Tutor
+# The HyperPersonalized Intelligent Tutor

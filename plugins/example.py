@@ -1,5 +1,6 @@
 from time import sleep
 from daemonize import Daemonize
+from lib.plugin import Plugins
 
 pid = "/tmp/test.pid"
 

@@ -4,6 +4,8 @@ import subprocess
 import os
 import signal
 
+from settings import *
+
 def read_configuration():
     try:
         with open('configuration.json', 'r') as f:
@@ -11,64 +13,176 @@ def read_configuration():
     except FileNotFoundError:
         return {}
 
+
 def write_configuration(configuration):
     with open('configuration.json', 'w') as f:
         f.write(json.dumps(configuration, indent=4))
 
-def create_entity(*args, **kwargs):
-    print("Create")
-    print(args, kwargs)
 
-def destroy_entity(*args, **kwargs):
-    print("Destory")
-    print(args, kwargs)
+def get_entity_collection(entity_type, configuration):
+    plural = entity_type + 's'
 
-def up_entity(*args, **kwargs):
-    print("Up")
-    print(args, kwargs)
+    things = []
+    if plural in configuration:
+        things = configuration[plural]
 
-def down_entity(*args, **kwargs):
-    print("Down")
-    print(args, kwargs)
+    return things
 
-def start(*args, **kwargs):
-    if os.path.isfile("hpit_pid"):
+
+def set_entity_collection(entity_type, configuration, collection):
+    plural = entity_type + 's'
+    configuration[plural] = collection
+
+
+def get_entity_py_file(entity_type, subtype):
+    plural = entity_type + 's'
+    return os.path.join(plural, subtype + '.py')
+
+
+def get_entity_pid_file(entity_name):
+    return os.path.join('tmp', entity_name + '.pid')
+
+
+def spin_up_all(entity_type, configuration):
+    entity_collection = get_entity_collection(entity_type, configuration)
+
+    for item in entity_collection:
+        if not item['active']:
+            item['active'] = True
+            name = item['name']
+            entity_subtype = item['type']
+            print("Starting entity: " + name)
+            filename = get_entity_py_file(entity_type, item['type'])
+            pidfile = get_entity_pid_file(name)
+            subprocess.call(["python3", "tutors.py", "--daemon", "--pid", pidfile, name, entity_subtype])
+
+
+def wind_down_all(entity_type, configuration):
+    entity_collection = get_entity_collection(entity_type, configuration)
+    wind_down_collection(entity_collection)
+
+
+def wind_down_collection(entity_collection):
+
+    for item in entity_collection:
+        if item['active']:
+            item['active'] = False
+            name = item['name']
+            print("Stopping entity: " + name)
+            pidfile = get_entity_pid_file(name)
+
+            try:
+                with open(pidfile) as f:
+                    pid = f.read()
+                    os.kill(int(pid), signal.SIGTERM)
+
+                os.remove(pidfile)
+            except FileNotFoundError:
+                print("Error: Could not find PIDfile for entity: " + name)
+
+
+def server_is_running():
+    return os.path.isfile(HPIT_PID_FILE)
+
+
+def add_entity(arguments, configuration):
+    things = get_entity_collection(arguments.entity, configuration)
+
+    count = arguments.count if arguments.count else 1
+    entity_type = arguments.type if arguments.type else 'example'
+
+    for thing in things:
+        names = thing['name'].split('.')
+
+        if arguments.name in names:
+            raise ValueError("Entity already exists in configuration.")
+
+    for i in range(0, count):
+        name = '.'.join([arguments.name, str(i)])
+
+        things.append({
+            'name': name,
+            'type': entity_type,
+            'active': False
+            })
+
+    set_entity_collection(arguments.entity, configuration, things)
+
+    if server_is_running():
+        spin_up_all(arguments.entity, configuration)
+
+
+def remove_entity(arguments, configuration):
+    things = get_entity_collection(arguments.entity, configuration)
+
+    things_to_remove = []
+    things_to_keep = []
+
+    for thing in things:
+        names = thing['name'].split('.')
+
+        if arguments.name in names:
+            things_to_remove.append(thing)
+        else:
+            things_to_keep.append(thing)
+
+    set_entity_collection(arguments.entity, configuration, things_to_keep)
+
+    if server_is_running():
+        wind_down_collection(things_to_remove)
+
+
+def start(arguments, configuration):
+    if not os.path.exists('tmp'):
+        os.makedirs('tmp')
+
+    if server_is_running():
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server...")
-        subprocess.call(["gunicorn", "hpit:app", "--daemon", "--pid", "hpit_pid"])
+        subprocess.call(["gunicorn", "hpit:app", "--daemon", "--pid", HPIT_PID_FILE])
+
+        print("Starting tutors...")
+        spin_up_all('tutor', configuration)
     print("DONE!")
 
-def stop(*args, **kwargs):
-    if os.path.isfile('hpit_pid'):
+
+def stop(arguments, configuration):
+    if server_is_running():
+        print("Stopping tutors...")
+        wind_down_all('tutor', configuration)
+
         print("Stopping the HPIT Hub Server...")
-        with open('hpit_pid') as f:
+        with open(HPIT_PID_FILE) as f:
             pid = f.read()
             os.kill(int(pid), signal.SIGTERM)
-            os.remove('hpit_pid')
+        os.remove(HPIT_PID_FILE)
     else:
         print("The HPIT Server is not running.")
     print("DONE!")
 
-def status(*args, **kwargs):
+
+def status(arguments, configuration):
     print("Status is...")
-    if os.path.isfile('hpit_pid'):
+    if server_is_running():
         print("The HPIT Server is running.")
     else:
         print("The HPIT Server it not running.")
 
+
 def create_command(sub, name, description, func):
     parser = sub.add_parser(name, description=description)
-    parser.add_argument('type', metavar='type', type=str, 
+    parser.add_argument('entity', metavar='entity', type=str, 
                         choices=['plugin', 'tutor', 'service'], 
                         help='A plugin, tutor or service entity.')
     parser.add_argument('name', metavar='name', type=str, 
                         help="Indentifying name for the entity.")
-    parser.add_argument('--class', type=str, 
-                        help="The class of the entity. (default=example)")
+    parser.add_argument('--type', type=str, 
+                        help="The subtype of the entity. (default=example)")
     parser.set_defaults(func=func)
 
     return parser
+
 
 def build_argument_parser():
     main_parser = argparse.ArgumentParser(
@@ -78,16 +192,12 @@ def build_argument_parser():
 
     subparsers = main_parser.add_subparsers(title='Sub-Commands')
 
-    create_parser = create_command(subparsers, 'create', 
-        "Create a new HPIT entity.", create_entity)
-    destroy_parser = create_command(subparsers, 'destroy', 
-        "Destroy an entity.", destroy_entity)
-    up_parser = create_command(subparsers, 'up', 
-        'Spin up an entity.', up_entity)
-    down_parser = create_command(subparsers, 'down', 
-        'Shutdown an entity.', down_entity)
+    add_parser = create_command(subparsers, 'add', 
+        "Add a new HPIT entity.", add_entity)
+    remove_parser = create_command(subparsers, 'remove', 
+        "Remove an entity by name.", remove_entity)
 
-    create_parser.add_argument('--count', type=int, 
+    add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")
 
     status_parser = subparsers.add_parser('status', description='Status of HPIT System')
@@ -108,8 +218,8 @@ if __name__ == '__main__':
     arguments = main_parser.parse_args()
 
     try:
-        arguments.func(arguments)
-    except:
+        arguments.func(arguments, configuration)
+    except AttributeError:
         main_parser.print_help()
 
     write_configuration(configuration)
