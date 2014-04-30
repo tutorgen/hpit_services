@@ -4,6 +4,7 @@
 #   payload: Object -- The message payload.
 # Specialized web APIs can be built on top of this architecture later on.
 import argparse
+import logging
 import os
 import random
 import uuid
@@ -27,21 +28,20 @@ main_parser.add_argument('type', type=str, help="The type of plugin.")
 main_parser.add_argument('--daemon', action='store_true', help="Daemonize the plugin.")
 main_parser.add_argument('--pid', type=str, help="The location of the pid file.")
 
-#def example_tutor_callback(tutor):
-#    event = random.choice(event_names)
-#
-#    print("Sending a random event: " + event)
-#    response = tutor.send(event, {'test': 1234})
-#    print("RECV: " + str(response.status_code) + " " + response.text)
+def test_plugin_callback(transaction):
+    logger = logging.getLogger(__name__)
+    logger.debug("TEST")
+    logger.debug(transaction)
 
-def test_plugin_callback(*args, **kwargs):
-    print("TEST")
-
-def example_plugin_callback(*args, **kwargs):
-    print("EXAMPLE")
+def example_plugin_callback(transaction):
+    logger = logging.getLogger(__name__)
+    logger.debug("EXAMPLE")
+    logger.debug(transaction)
 
 if __name__ == '__main__':
     arguments = main_parser.parse_args()
+
+    logger_path = os.path.join(os.getcwd(), 'log/plugin_' + arguments.name + '.log')
 
     if arguments.pid:
         pid = arguments.pid
@@ -55,6 +55,15 @@ if __name__ == '__main__':
         raise ValueError("Invalid Example Plugin Type. Choices are: " + repr(plugin_types))
 
     def main():
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        logger = logging.getLogger(__name__)
+
         plugin = Plugin(arguments.name)
         plugin.subscribe(
             test=test_plugin_callback, 

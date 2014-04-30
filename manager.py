@@ -143,6 +143,9 @@ def start(arguments, configuration):
     if not os.path.exists('tmp'):
         os.makedirs('tmp')
 
+    if not os.path.exists('log'):
+        os.makedirs('log')
+
     if server_is_running():
         print("The HPIT Server is already running.")
     else:

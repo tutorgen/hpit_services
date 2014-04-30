@@ -4,6 +4,7 @@
 #   payload: Object -- The message payload.
 # Specialized web APIs can be built on top of this architecture later on.
 import argparse
+import logging
 import os
 import random
 import uuid
@@ -32,9 +33,10 @@ main_parser.add_argument('--pid', type=str, help="The location of the pid file."
 def example_tutor_callback(tutor):
     event = random.choice(event_names)
 
-    print("Sending a random event: " + event)
+    logger = logging.getLogger(__name__)
+    logger.debug("Sending a random event: " + event)
     response = tutor.send(event, {'test': 1234})
-    print("RECV: " + str(response.status_code) + " " + response.text)
+    logger.debug("RECV: " + str(response.status_code) + " " + response.text)
 
     sleep(1)
 
@@ -45,6 +47,8 @@ def example_tutor_callback(tutor):
 
 if __name__ == '__main__':
     arguments = main_parser.parse_args()
+
+    logger_path = os.path.join(os.getcwd(), 'log/tutor_' + arguments.name + '.log')
 
     if arguments.pid:
         pid = arguments.pid
@@ -62,6 +66,15 @@ if __name__ == '__main__':
         raise ValueError("Invalid Example Tutor Type. Choices are: " + repr(tutor_types))
 
     def main():
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        logger = logging.getLogger(__name__)
+
         callback_name = ''.join([tutor_type, '_tutor_callback'])
         callback = globals()[callback_name]
 
