@@ -1,54 +1,106 @@
 {
+    "plugins": [
+        {
+            "name": "test.0",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.1",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.2",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.3",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.4",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.5",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.6",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.7",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.8",
+            "type": "example",
+            "active": false
+        },
+        {
+            "name": "test.9",
+            "type": "example",
+            "active": false
+        }
+    ],
     "tutors": [
         {
+            "name": "test.0",
             "type": "example",
-            "active": false,
-            "name": "test.0"
+            "active": false
         },
         {
+            "name": "test.1",
             "type": "example",
-            "active": false,
-            "name": "test.1"
+            "active": false
         },
         {
+            "name": "test.2",
             "type": "example",
-            "active": false,
-            "name": "test.2"
+            "active": false
         },
         {
+            "name": "test.3",
             "type": "example",
-            "active": false,
-            "name": "test.3"
+            "active": false
         },
         {
+            "name": "test.4",
             "type": "example",
-            "active": false,
-            "name": "test.4"
+            "active": false
         },
         {
+            "name": "test.5",
             "type": "example",
-            "active": false,
-            "name": "test.5"
+            "active": false
         },
         {
+            "name": "test.6",
             "type": "example",
-            "active": false,
-            "name": "test.6"
+            "active": false
         },
         {
+            "name": "test.7",
             "type": "example",
-            "active": false,
-            "name": "test.7"
+            "active": false
         },
         {
+            "name": "test.8",
             "type": "example",
-            "active": false,
-            "name": "test.8"
+            "active": false
         },
         {
+            "name": "test.9",
             "type": "example",
-            "active": false,
-            "name": "test.9"
+            "active": false
         }
     ]
 }

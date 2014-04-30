@@ -39,8 +39,8 @@ def get_entity_py_file(entity_type, subtype):
     return os.path.join(plural, subtype + '.py')
 
 
-def get_entity_pid_file(entity_name):
-    return os.path.join('tmp', entity_name + '.pid')
+def get_entity_pid_file(entity_type, entity_name):
+    return os.path.join('tmp', entity_type + '_' + entity_name + '.pid')
 
 
 def spin_up_all(entity_type, configuration):
@@ -53,23 +53,30 @@ def spin_up_all(entity_type, configuration):
             entity_subtype = item['type']
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
-            pidfile = get_entity_pid_file(name)
-            subprocess.call(["python3", "tutors.py", "--daemon", "--pid", pidfile, name, entity_subtype])
+            pidfile = get_entity_pid_file(entity_type, name)
+
+            if entity_type == 'tutor':
+                subprocess.call(["python3", "tutors.py", "--daemon", "--pid", pidfile, name, entity_subtype])
+            elif entity_type == 'plugin':
+                subprocess.call(["python3", "plugins.py", "--daemon", "--pid", pidfile, name, entity_subtype])
+            else:
+                print("ERROR: UNKNOWN ENTITY TYPE")
+
 
 
 def wind_down_all(entity_type, configuration):
     entity_collection = get_entity_collection(entity_type, configuration)
-    wind_down_collection(entity_collection)
+    wind_down_collection(entity_type, entity_collection)
 
 
-def wind_down_collection(entity_collection):
+def wind_down_collection(entity_type, entity_collection):
 
     for item in entity_collection:
         if item['active']:
             item['active'] = False
             name = item['name']
             print("Stopping entity: " + name)
-            pidfile = get_entity_pid_file(name)
+            pidfile = get_entity_pid_file(entity_type, name)
 
             try:
                 with open(pidfile) as f:
@@ -144,11 +151,15 @@ def start(arguments, configuration):
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
+        print("Starting plugins...")
+        spin_up_all('plugin', configuration)
     print("DONE!")
 
 
 def stop(arguments, configuration):
     if server_is_running():
+        print("Stopping plugins...")
+        wind_down_all('plugin', configuration)
         print("Stopping tutors...")
         wind_down_all('tutor', configuration)
 

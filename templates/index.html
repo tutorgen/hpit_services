@@ -1,0 +1,18 @@
+<h1>Welcome to HPIT Hub!</h1>
+
+<h3>API Status Dashboard</h3>
+
+<p><b>Not yet implemented.</b></p>
+
+Number of Tutors Connected: {{tutor_count}}<br/>
+Number of Plugins Connected: {{plugin_count}}<br/>
+Number of Events Published Every Second: Unknown<br/>
+
+<h3>Links for API</h3>
+{% for link in links %}
+    <p>
+        <b>{{link.0}}</b><br/>
+        Documentation: {{link.1|safe}}
+        <hr/>
+    </p>
+{% endfor %}
