@@ -25,9 +25,9 @@ class RequestsMixin:
 
     def _post_data(self, url, data=None):
         if data:
-            response = requests.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
+            response = self.session.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
         else:
-            response = requests.post(url)
+            response = self.session.post(url)
 
         if response.status_code != 200:
             raise ConnectionError("Could not POST Data to HPIT Server.")
@@ -35,7 +35,7 @@ class RequestsMixin:
         return response
 
     def _get_data(self, url):
-        response = requests.get(url)
+        response = self.session.get(url)
 
         if response.status_code != 200:
             raise ConnectionError("Could not GET Data from HPIT Server.")
@@ -85,7 +85,7 @@ class TransactionSenderMixin(RequestsMixin):
         if not self._try_hook('pre_poll_responses'):
             return False
 
-        responses = self._get_data(response_list_url).json()['responses']
+        responses = self._get_data(response_list_url)['responses']
 
         if not self._try_hook('post_poll_responses'):
             return False
@@ -200,7 +200,7 @@ class Plugin(TransactionSenderMixin):
         list_transactions_url = urljoin(HPIT_URL_ROOT, 
             '/plugin/' + self.name + '/transactions')
 
-        return self._get_data(list_transactions_url).json()['transactions']
+        return self._get_data(list_transactions_url)['transactions']
 
 
     def _dispatch(self, event_data):
@@ -304,7 +304,7 @@ class Tutor(TransactionSenderMixin):
         """
         try:
             while True:
-                if not self.callback(self):
+                if not self.callback():
                     break;
 
                 if not self._try_hook('pre_poll_responses'):

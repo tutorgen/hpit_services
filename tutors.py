@@ -50,7 +50,7 @@ class ExampleTutor(Tutor):
         logger = logging.getLogger(__name__)
         logger.debug("Sending a random event: " + event)
         response = self.send(event, {'test': 1234})
-        logger.debug("RECV: " + str(response.status_code) + " " + response.text)
+        logger.debug("RECV: " + str(response))
 
         sleep(1)
 

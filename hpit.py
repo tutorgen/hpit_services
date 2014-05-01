@@ -1,16 +1,19 @@
 import json
 from itertools import groupby
-from bson.objectid import ObjectId
-from flask import Flask, request, session, abort
-from flask import render_template, url_for, jsonify
 from uuid import uuid4
+from bson.objectid import ObjectId
+from flask import Flask, request, session, abort, Response
+from flask import render_template, url_for, jsonify
 from flask.ext.pymongo import PyMongo
+from sessions import MongoSessionInterface
+
 app = Flask(__name__)
 
 app.config['MONGO_DBNAME'] = 'hpit_development'
 app.secret_key = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
 
 mongo = PyMongo(app)
+app.session_interface = MongoSessionInterface(app, mongo)
 
 HPIT_STATUS = {
     'tutors': [],
@@ -41,7 +44,7 @@ def connect_tutor(name):
         Both assignments expire when you disconnect from HPIT.
     """
     entity_identifier = dict(
-        entity_name='tutor_' + name
+        entity_name='tutor_' + name,
         entity_id=uuid4()
     )
 
@@ -67,7 +70,7 @@ def connect_plugin(name):
         Both assignments expire when you disconnect from HPIT.
     """
     entity_identifier = dict(
-        entity_name='plugin_' + name
+        entity_name='plugin_' + name,
         entity_id=uuid4()
     )
 
@@ -81,7 +84,7 @@ def connect_plugin(name):
 
 
 @app.route("/tutor/disconnect", methods=["POST"])
-def disconnect_tutor(name):
+def disconnect_tutor():
     """
     SUPPORTS: POST
 
@@ -91,7 +94,7 @@ def disconnect_tutor(name):
     """
 
     entity_identifier = dict(
-        entity_name=session['entity_name']
+        entity_name=session['entity_name'],
         entity_id=session['entity_id']
     )
 
@@ -106,7 +109,7 @@ def disconnect_tutor(name):
     return "OK"
 
 @app.route("/plugin/disconnect", methods=["POST"])
-def disconnect_plugin(name):
+def disconnect_plugin():
     """
     SUPPORTS: POST
 
@@ -115,7 +118,7 @@ def disconnect_plugin(name):
     Returns: 200:OK
     """
     entity_identifier = dict(
-        entity_name=session['entity_name']
+        entity_name=session['entity_name'],
         entity_id=session['entity_id']
     )
 
@@ -358,7 +361,7 @@ def responses():
 
     entity_id = session['entity_id']
     my_responses = mongo.db.responses.find({
-        'transaction.entity_id': entity_id
+        'transaction.entity_id': entity_id,
         'response_recieved': False
     })
 
