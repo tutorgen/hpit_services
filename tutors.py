@@ -17,11 +17,10 @@ pid = ''.join(["tmp/tutor_", str(uuid.uuid4()), ".pid"])
 
 random.seed(datetime.now())
 
-tutor_types = ['example']
-event_names = ['test', 'example', 'add_student', 'remove_student', 'trace']
+tutor_types = ['example', 'knowledge_tracing']
 
 main_parser = argparse.ArgumentParser(
-    description='Example HPIT Tutor.')
+    description='ExampleTutor/KnowledgeTracingTutor for HPIT.')
 main_parser.add_argument('--version', action='version', 
     version='(HPIT) Example Tutor(version 0.0.1) - Codename Alphalpha')
 main_parser.add_argument('name', type=str, help="Name of the tutor.")
@@ -31,25 +30,65 @@ main_parser.add_argument('--daemon', action='store_true', help="Daemonize the tu
 main_parser.add_argument('--pid', type=str, help="The location of the pid file.")
 
 
-def example_tutor_callback(tutor):
-    event = random.choice(event_names)
+class ExampleTutor(Tutor):
+    def __init__(self, name, run_once=None):
+        super().__init__(name, self.main_callback)
+        self.run_once = run_once
+        self.event_names = [
+            'test', 'example', 'add_student', 
+            'remove_student', 'trace']
 
-    logger = logging.getLogger(__name__)
-    logger.debug("Sending a random event: " + event)
-    response = tutor.send(event, {'test': 1234})
-    logger.debug("RECV: " + str(response.status_code) + " " + response.text)
+    def setup(self):
+        pass
 
-    sleep(1)
+    def shutdown(self):
+        pass
 
-    if tutor.run_once:
-        return False
-    else:
+    def main_callback(self):
+        event = random.choice(self.event_names)
+
+        logger = logging.getLogger(__name__)
+        logger.debug("Sending a random event: " + event)
+        response = self.send(event, {'test': 1234})
+        logger.debug("RECV: " + str(response.status_code) + " " + response.text)
+
+        sleep(1)
+
+        if self.run_once:
+            return False
+        else:
+            return True
+
+    def run(self):
+        self.connect()
+        self.setup()
+        self.start()
+        self.shutdown()
+        self.disconnnect()
+
+
+
+class KnowledgeTracingTutor(Tutor):
+    def __init__(self, name, run_once=None):
+        super().__init__(name, self.main_callback, run_once=run_once)
+        self.run_once = run_once
+
+    def setup(self):
+        pass
+
+    def shutdown(self):
+        pass
+
+    def main_callback(self):
         return True
 
+    def run(self):
+        self.connect()
+        self.setup()
+        self.start()
+        self.shutdown()
+        self.disconnnect()
 
-def knowledge_tracing_tutor_callback(tutor):
-    #Randomly Generate Data and Send to Plugin
-    pass
 
 
 if __name__ == '__main__':
@@ -82,11 +121,12 @@ if __name__ == '__main__':
 
         logger = logging.getLogger(__name__)
 
-        callback_name = ''.join([tutor_type, '_tutor_callback'])
-        callback = globals()[callback_name]
-
-        tutor = Tutor(arguments.name, callback, run_once=run_once)
-        tutor.start()
+        if tutor_type == "example":
+            ExampleTutor(arguments.name, run_once=run_once).run()
+        elif tutor_type == "knowledge_tracing":
+            KnowledgeTracingTutor(arguments.name, run_once=run_once).run()
+        else:
+            raise Exception("Internal Error: Tutor type not supported.")
 
     if arguments.daemon:
         daemon = Daemonize(app=arguments.name, pid=pid, action=main)

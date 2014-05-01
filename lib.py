@@ -302,8 +302,6 @@ class Tutor(TransactionSenderMixin):
         """
         Starts the tutor in event-driven mode.
         """
-        self.connect()
-
         try:
             while True:
                 if not self.callback(self):
@@ -319,11 +317,8 @@ class Tutor(TransactionSenderMixin):
 
                 if not self._dispatch_responses(responses):
                     break;
-
         except KeyboardInterrupt:
             self.disconnect()
-
-        self.disconnect()
 
     def connect(self):
         connection = self._post_data(urljoin(HPIT_URL_ROOT, '/tutor/connect/' + self.name))
