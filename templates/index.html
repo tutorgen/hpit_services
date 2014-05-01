@@ -2,11 +2,39 @@
 
 <h3>API Status Dashboard</h3>
 
-<p><b>Not yet implemented.</b></p>
+<p><b>Only partially implemented.</b></p>
 
 Number of Tutors Connected: {{tutor_count}}<br/>
 Number of Plugins Connected: {{plugin_count}}<br/>
 Number of Events Published Every Second: Unknown<br/>
+
+<h4>Connected Tutors</h4>
+<table>
+    <tr>
+        <td><b>Tutor Name</b></td>
+        <td><b>Tutor ID</b></td>
+    </tr>
+    {% for tutor in tutors %}
+        <tr>
+            <td>{{tutor.entity_name}}</td>
+            <td>{{tutor.entity_id}}</td>
+        </tr> 
+    {% endfor %}
+</table>
+
+<h4>Connected Plugins</h4>
+<table>
+    <tr>
+        <td><b>Plugin Name</b></td>
+        <td><b>Plugin ID</b></td>
+    </tr>
+    {% for plugin in plugins %}
+        <tr>
+            <td>{{plugin.entity_name}}</td>
+            <td>{{plugin.entity_id}}</td>
+        </tr> 
+    {% endfor %}
+</table>
 
 <h3>Links for API</h3>
 {% for link in links %}

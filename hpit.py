@@ -1,11 +1,14 @@
 import json
 from itertools import groupby
 from bson.objectid import ObjectId
-from flask import Flask, request, render_template, url_for, jsonify
+from flask import Flask, request, session, abort
+from flask import render_template, url_for, jsonify
+from uuid import uuid4
 from flask.ext.pymongo import PyMongo
 app = Flask(__name__)
 
 app.config['MONGO_DBNAME'] = 'hpit_development'
+app.secret_key = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
 
 mongo = PyMongo(app)
 
@@ -20,66 +23,111 @@ def _map_mongo_document(document):
     del mapped_doc['_id']
     return mapped_doc
 
+@app.errorhandler(401)
+def custom_401(error):
+    return Response('You must establish a connection with HPIT first.', 
+        401, {'WWWAuthenticate':'Basic realm="Login Required"'})
 
 @app.route("/tutor/connect/<name>", methods=["POST"])
 def connect_tutor(name):
     """
     SUPPORTS: POST
 
-    Stub for handling connection to HPIT.
-    Currently not yet implemented.
+    Establishes a tutor session with HPIT.
 
-    Returns: 200:STUB
+    Returns: 200:JSON with the following fields:
+        - entity_name : string -> Assigned entity name (not unique)
+        - entity_id : string -> Assigned entity id (unique)
+        Both assignments expire when you disconnect from HPIT.
     """
-    if name not in HPIT_STATUS['tutors']:
-        HPIT_STATUS['tutors'].append(name)
+    entity_identifier = dict(
+        entity_name='tutor_' + name
+        entity_id=uuid4()
+    )
 
-    return "STUB"
+    if entity_identifier not in HPIT_STATUS['tutors']:
+        HPIT_STATUS['tutors'].append(entity_identifier)
+
+    session['entity_name'] = entity_identifier['entity_name']
+    session['entity_id'] = entity_identifier['entity_id']
+
+    return jsonify(entity_identifier)
+
 
 @app.route("/plugin/connect/<name>", methods=["POST"])
 def connect_plugin(name):
     """
     SUPPORTS: POST
 
-    Stub for handling connection to HPIT.
-    Currently not yet implemented.
+    Establishes a plugin session with HPIT.
 
-    Returns: 200:STUB
+    Returns: 200:JSON with the following fields:
+        - entity_name : string -> Assigned entity name (not unique)
+        - entity_id : string -> Assigned entity id (unique)
+        Both assignments expire when you disconnect from HPIT.
     """
-    if name not in HPIT_STATUS['plugins']:
-        HPIT_STATUS['plugins'].append(name)
+    entity_identifier = dict(
+        entity_name='plugin_' + name
+        entity_id=uuid4()
+    )
 
-    return "STUB"
+    if entity_identifier not in HPIT_STATUS['plugins']:
+        HPIT_STATUS['plugins'].append(entity_identifier)
 
-@app.route("/tutor/disconnect/<name>", methods=["POST"])
+    session['entity_name'] = entity_identifier['entity_name']
+    session['entity_id'] = entity_identifier['entity_id']
+
+    return jsonify(entity_identifier)
+
+
+@app.route("/tutor/disconnect", methods=["POST"])
 def disconnect_tutor(name):
     """
     SUPPORTS: POST
 
-    Stub for handling connection to HPIT.
-    Currently not yet implemented.
+    Destroys the session for the tutor calling this route.
 
-    Returns: 200:STUB
+    Returns: 200:OK
     """
-    if name not in HPIT_STATUS['tutors']:
-        HPIT_STATUS['tutors'] = [tutor for tutor in HPIT_STATUS['tutors'] if tutor != name]
 
-    return "STUB"
+    entity_identifier = dict(
+        entity_name=session['entity_name']
+        entity_id=session['entity_id']
+    )
 
-@app.route("/plugin/disconnect/<name>", methods=["POST"])
+    try:
+        HPIT_STATUS['tutors'].remove(entity_identifier)
+    except ValueError:
+        pass
+
+    session.pop('entity_name', None)
+    session.pop('entity_id', None)
+
+    return "OK"
+
+@app.route("/plugin/disconnect", methods=["POST"])
 def disconnect_plugin(name):
     """
     SUPPORTS: POST
 
-    Stub for handling connection to HPIT.
-    Currently not yet implemented.
+    Destroys the session for the plugin calling this route.
 
-    Returns: 200:STUB
+    Returns: 200:OK
     """
-    if name not in HPIT_STATUS['plugins']:
-        HPIT_STATUS['plugins'] = [plugin for plugin in HPIT_STATUS['plugins'] if plugin != name]
+    entity_identifier = dict(
+        entity_name=session['entity_name']
+        entity_id=session['entity_id']
+    )
 
-    return "STUB"
+    try:
+        HPIT_STATUS['plugins'].remove(entity_identifier)
+    except ValueError:
+        pass
+
+    session.pop('entity_name', None)
+    session.pop('entity_id', None)
+
+    return "OK"
 
 @app.route("/plugin/<name>/subscribe/<event>", methods=["POST"])
 def subscribe(name, event):
@@ -245,10 +293,15 @@ def transaction():
         - name : string => The name of the event transaction to submit to the server
         - payload : Object => A JSON Object of the DATA to store in the database
 
-    If successful the server will respond 200:OK
+    Returns 200:JSON -> 
+        - transaction_id - The ID of the transaction submitted to the database
     """
+    if 'entity_id' not in session:
+        return abort(401)
+
     name = request.json['name']
     payload = request.json['payload']
+    payload['entity_id'] = session['entity_id']
     transaction_id = mongo.db.transactions.insert(payload)
 
     plugins = mongo.db.plugin_subscriptions.find({'event': name})
@@ -258,11 +311,74 @@ def transaction():
             'plugin_name': plugin['name'],
             'event_name': name,
             'transaction_id': transaction_id,
+            'entity_id': session['entity_id'],
             'transaction_payload': payload,
             'sent_to_plugin': False
         })
 
-    return "OK"
+    return jsonify(transaction_id=str(transaction_id))
+
+@app.route("/response", methods=["POST"])
+def response():
+    """
+    SUPPORTS: POST
+    Submits a response to an earlier transaction to the HPIT server. 
+    Expects the data formatted as JSON with the application/json mimetype 
+    given in the headers. Expects two fields in the JSON data.
+        - transaction_id : string => The transaction id to the transaction you're responding to.
+        - payload : Object => A JSON Object of the DATA to respond with
+
+    Returns: 200:JSON ->
+        - response_id - The ID of the response submitted to the database
+    """
+    transaction_id = request.json['transaction_id']
+    payload = request.json['payload']
+
+    transaction = mongo.db.transactions.find_one({'_id': ObjectId(transaction_id)})
+
+    response_id = mongo.db.responses.insert({
+        'transaction_id': transaction_id,
+        'transaction': transaction,
+        'response': payload,
+        'response_recieved': False
+    })
+
+    return jsonify(response_id=str(response_id))
+
+@app.route("/responses", methods=["GET"])
+def responses():
+    """
+    SUPPORTS: GET
+    Poll for responses queued to original sender of a transaction.
+
+    Returns: JSON encoded list of responses.
+    """
+    if 'entity_id' not in session:
+        return abort(401)
+
+    entity_id = session['entity_id']
+    my_responses = mongo.db.responses.find({
+        'transaction.entity_id': entity_id
+        'response_recieved': False
+    })
+
+    result = [
+        (t['_id'], _map_mongo_document(t['transaction']), _map_mongo_document(t['response']))
+        for t in my_responses
+    ]
+
+    update_ids = [t[0] for t in result]
+    result = [{
+        'transaction': t[1],
+        'response': t[2]} for t in result]
+
+    mongo.db.responses.update(
+        {'_id':{'$in': update_ids}},
+        {"$set": {'response_recieved':True}}, 
+        multi=True
+    )
+
+    return jsonify({'responses': result})
 
 
 @app.route("/")
@@ -284,7 +400,9 @@ def index():
     return render_template('index.html', 
         links=links, 
         tutor_count=len(HPIT_STATUS['tutors']),
-        plugin_count=len(HPIT_STATUS['plugins'])
+        plugin_count=len(HPIT_STATUS['plugins']),
+        tutors=HPIT_STATUS['tutors'],
+        plugins=HPIT_STATUS['plugins']
     )
 
 if __name__ == "__main__":

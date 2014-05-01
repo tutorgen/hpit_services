@@ -30,6 +30,7 @@ main_parser.add_argument('--once', action='store_true', help="Only run one loop 
 main_parser.add_argument('--daemon', action='store_true', help="Daemonize the tutor.")
 main_parser.add_argument('--pid', type=str, help="The location of the pid file.")
 
+
 def example_tutor_callback(tutor):
     event = random.choice(event_names)
 
@@ -44,6 +45,12 @@ def example_tutor_callback(tutor):
         return False
     else:
         return True
+
+
+def knowledge_tracing_tutor_callback(tutor):
+    #Randomly Generate Data and Send to Plugin
+    pass
+
 
 if __name__ == '__main__':
     arguments = main_parser.parse_args()
