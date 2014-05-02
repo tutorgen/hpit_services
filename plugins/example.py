@@ -1,4 +1,4 @@
-from lib import Plugin
+from client import Plugin
 
 class ExamplePlugin(Plugin):
 

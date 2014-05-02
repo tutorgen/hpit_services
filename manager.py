@@ -150,7 +150,7 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server...")
-        subprocess.call(["gunicorn", "hpit:app", "--daemon", "--pid", HPIT_PID_FILE])
+        subprocess.call(["gunicorn", "server:app", "--daemon", "--pid", HPIT_PID_FILE])
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)

@@ -1,10 +1,14 @@
-from lib import Plugin
+from client import Plugin
+
+from pymongo import MongoClient
 
 class ProblemManagementPlugin(Plugin):
 
     def __init__(self, name, logger):
         super().__init__(name)
         self.logger = logger
+        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.db = self.mongo.hpit_problems
 
         self.subscribe(
             add_problem=self.add_problem_callback,

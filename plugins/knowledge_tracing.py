@@ -1,14 +1,18 @@
-from lib import Plugin
+from client import Plugin
+
+from pymongo import MongoClient
 
 class KnowledgeTracingPlugin(Plugin):
 
     def __init__(self, name, logger):
         super().__init__(name)
         self.logger = logger
+        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.db = self.mongo.hpit_knowledge_tracing
 
         self.subscribe(
             kt_set_initial=self.kt_set_initial_callback,
-            knowledge_tracing=self.knowledge_tracing_callback)
+            kt_trace=self.knowledge_tracing_callback)
 
     #Knowledge Tracing Plugin
     def knowledge_tracing_callback(self, transaction):

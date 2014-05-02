@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from time import sleep
 from daemonize import Daemonize
-from lib import Tutor
+from client import Tutor
 
 pid = ''.join(["tmp/tutor_", str(uuid.uuid4()), ".pid"])
 

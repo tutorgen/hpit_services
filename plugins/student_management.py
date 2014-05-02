@@ -1,10 +1,14 @@
-from lib import Plugin
+from client import Plugin
+
+from pymongo import MongoClient
 
 class StudentManagementPlugin(Plugin):
 
     def __init__(self, name, logger):
         super().__init__(name)
         self.logger = logger
+        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.db = self.mongo.hpit_students
 
         self.subscribe(
             add_student=self.add_student_callback,

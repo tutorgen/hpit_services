@@ -11,7 +11,6 @@ import uuid
 from datetime import datetime
 from time import sleep
 from daemonize import Daemonize
-from lib import Plugin
 
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, SkillManagementPlugin, StudentManagementPlugin
