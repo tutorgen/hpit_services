@@ -1,0 +1,10 @@
+Flask==0.10.1
+Flask-PyMongo==0.3.0
+Jinja2==2.7.2
+MarkupSafe==0.21
+Werkzeug==0.9.4
+daemonize==2.2.3
+gunicorn==18.0
+itsdangerous==0.24
+pymongo==2.7
+requests==2.2.1
