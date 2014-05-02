@@ -1,5 +1,3 @@
-# The HyperPersonalized Intelligent Tutor (HPIT)
-
 ## Overview
 
 The HyperPersonalize Intelligent Tutor (HPIT) is an schemaless, event driven system
