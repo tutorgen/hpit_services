@@ -1,7 +1,7 @@
 from urllib.parse import urljoin
 
 from .mixins import TransactionSenderMixin
-from settings import HPIT_URL_ROOT
+from .settings import HPIT_URL_ROOT
 
 class Tutor(TransactionSenderMixin):
     def __init__(self, name, callback, **kwargs):

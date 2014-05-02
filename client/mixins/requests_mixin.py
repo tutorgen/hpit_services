@@ -1,7 +1,7 @@
 import json
 import requests
 
-from exceptions import ConnectionError
+from ..exceptions import ConnectionError
 
 JSON_HTTP_HEADERS = {'content-type': 'application/json'}
 
@@ -10,6 +10,13 @@ class RequestsMixin:
         self.session = requests.Session()
 
     def _post_data(self, url, data=None):
+        """
+        Sends arbitrary data to the HPIT server. This is mainly a thin
+        wrapper ontop of requests that ensures we are using sessions properly.
+
+        Returns: requests.Response : class - The response from HPIT. Normally a 200:OK.
+        """
+
         if data:
             response = self.session.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
         else:
@@ -21,6 +28,12 @@ class RequestsMixin:
         return response
 
     def _get_data(self, url):
+        """
+        Gets arbitrary data from the HPIT server. This is mainly a thin
+        wrapper on top of requests that ensures we are using session properly.
+
+        Returns: dict() - A Python dictionary representing the JSON recieved in the request.
+        """
         response = self.session.get(url)
 
         if response.status_code != 200:

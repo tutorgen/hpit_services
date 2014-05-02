@@ -2,105 +2,105 @@
     "tutors": [
         {
             "active": false,
-            "type": "example",
-            "name": "test.0"
+            "name": "test.0",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.1"
+            "name": "test.1",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.2"
+            "name": "test.2",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.3"
+            "name": "test.3",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.4"
+            "name": "test.4",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.5"
+            "name": "test.5",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.6"
+            "name": "test.6",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.7"
+            "name": "test.7",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.8"
+            "name": "test.8",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.9"
+            "name": "test.9",
+            "type": "example"
         }
     ],
     "plugins": [
         {
             "active": false,
-            "type": "example",
-            "name": "test.0"
+            "name": "test.0",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.1"
+            "name": "test.1",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.2"
+            "name": "test.2",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.3"
+            "name": "test.3",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.4"
+            "name": "test.4",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.5"
+            "name": "test.5",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.6"
+            "name": "test.6",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.7"
+            "name": "test.7",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.8"
+            "name": "test.8",
+            "type": "example"
         },
         {
             "active": false,
-            "type": "example",
-            "name": "test.9"
+            "name": "test.9",
+            "type": "example"
         }
     ]
 }

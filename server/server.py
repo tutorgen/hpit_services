@@ -5,7 +5,8 @@ from bson.objectid import ObjectId
 from flask import Flask, request, session, abort, Response
 from flask import render_template, url_for, jsonify
 from flask.ext.pymongo import PyMongo
-from sessions import MongoSessionInterface
+
+from .sessions import MongoSessionInterface
 
 app = Flask(__name__)
 

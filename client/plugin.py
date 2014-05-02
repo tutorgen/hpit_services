@@ -1,9 +1,9 @@
 import time
 from urllib.parse import urljoin
 
-from mixins import TransactionSenderMixin
-from settings import HPIT_URL_ROOT
-from exceptions import PluginPollError
+from .mixins import TransactionSenderMixin
+from .settings import HPIT_URL_ROOT
+from .exceptions import PluginPollError
 
 class Plugin(TransactionSenderMixin):
     def __init__(self, name, wildcard_callback=None):
@@ -21,6 +21,12 @@ class Plugin(TransactionSenderMixin):
 
 
     def connect(self):
+        """
+        Register a connection with the HPIT Server.
+
+        This essentially sets up a session and logs that you are actively using
+        the system. This is mostly used to track plugin use with the site.
+        """
         connection = self._post_data(urljoin(HPIT_URL_ROOT, '/plugin/connect/' + self.name))
 
         if connection:
@@ -32,6 +38,11 @@ class Plugin(TransactionSenderMixin):
 
 
     def disconnect(self):
+        """
+        Tells the HPIT Server that you are not currently going to poll
+        the server for transactions or responses. This also destroys the current session
+        with the HPIT server.
+        """
         self._post_data(urljoin(HPIT_URL_ROOT, '/plugin/disconnect'))
         self.connected = False
 
@@ -39,6 +50,9 @@ class Plugin(TransactionSenderMixin):
 
 
     def list_subscriptions(self):
+        """
+        Polls the HPIT server for a list of event names we currently subscribing to.
+        """
         list_url = urljoin(HPIT_URL_ROOT, '/plugin/' + self.name + '/subscriptions')
         subscriptions = self._get_data(list_url)['subscriptions']
 
@@ -162,6 +176,12 @@ class Plugin(TransactionSenderMixin):
 
 
     def send_response(self, transaction_id, payload):
+        """
+        Sends a response to HPIT upon handling a specific event.
+
+        Responses are handled differently than normal transactions as they are destined
+        for a only the original sender of the transaction_id to recieve the response.
+        """
         response_url = urljoin(HPIT_URL_ROOT, 'response')
 
         self._post_data(response_url, {
