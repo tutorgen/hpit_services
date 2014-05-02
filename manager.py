@@ -56,9 +56,9 @@ def spin_up_all(entity_type, configuration):
             pidfile = get_entity_pid_file(entity_type, name)
 
             if entity_type == 'tutor':
-                subprocess.call(["python3", "tutors.py", "--daemon", "--pid", pidfile, name, entity_subtype])
+                subprocess.call(["python3", "tutors_daemon.py", "--daemon", "--pid", pidfile, name, entity_subtype])
             elif entity_type == 'plugin':
-                subprocess.call(["python3", "plugins.py", "--daemon", "--pid", pidfile, name, entity_subtype])
+                subprocess.call(["python3", "plugin_daemon.py", "--daemon", "--pid", pidfile, name, entity_subtype])
             else:
                 print("ERROR: UNKNOWN ENTITY TYPE")
 
