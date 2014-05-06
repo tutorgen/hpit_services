@@ -25,6 +25,7 @@ plugin_types = [
     'skill', 
     'student', 
     'problem',
+    'problem_step',
     'data']
 
 main_parser = argparse.ArgumentParser(
@@ -68,6 +69,7 @@ if __name__ == '__main__':
             'student': StudentManagementPlugin,
             'skill': SkillManagementPlugin,
             'problem': ProblemManagementPlugin,
+            'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
         }
 

@@ -326,6 +326,64 @@ Returns:
 
 ### Problem Management Plugin
 
+#### add_problem
+Adds a problem to the problem manager.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_name : string - The name of the problem.
+* problem_text : string - Text for the problem.
+
+Returns:
+* problem_name : string - The problem name.
+* problem_text : string - The problem's text.
+* success : boolean - True if the data was saved to the database.
+* updated : boolean - True if the data was updated (the record already existed)
+
+#### remove_problem
+Remove a problem from the problem manager.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_name : string - The name of the problem.
+
+Returns:
+* problem_name : string - The name of the problem that was removed.
+* exists : boolean - True if the problem existed.
+* success : boolean - True if the problem existed and was deleted.
+
+#### get_problem
+Gets a previously stored problem from the problem manager.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_name : string - The name of the problem to retrieve.
+
+Returns:
+* problem_name : string - The name of the problem.
+* problem_text : string - The text of the problem.
+* exists : boolean - True if the problem existed.
+* success : boolean - True if the problem existed.
+
+#### list_problems
+Get all the problems for a given entity.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+
+Returns:
+problems : list - A list of problems with
+    * problem_name : string - The name of the problem.
+    * problem_text : string - The text of the problem.
+success : True - Always returns True
+
+### Problem Step Management Plugin
+
+#### add_problem_step
+#### remove_problem_step
+#### get_problem_step
+#### list_problem_steps
+
 ### Data Storage Plugin
 
 ## Tech Stack
