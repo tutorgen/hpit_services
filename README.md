@@ -380,9 +380,65 @@ success : True - Always returns True
 ### Problem Step Management Plugin
 
 #### add_problem_step
+Adds a problem step to the problem step manager.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_name : string - The name of the problem.
+* problem_step_name : string - The name of the problem step.
+* problem_step_text : string - The text of the problem step.
+
+Returns:
+* problem_name : string - The problem name.
+* problem_step_name : string - The name of the problem step.
+* problem_step_text : string - The text of the problem step.
+* success : boolean - True if the data was saved to the database.
+* updated : boolean - True if the data was updated (the record already existed)
+
 #### remove_problem_step
+Remove a problem step from the problem step manager.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_name : string - The name of the problem.
+* problem_step_name : string - The name of the problem step.
+
+Returns:
+* problem_name : string - The name of the problem.
+* problem_step_name : string - The name of the problem that was removed.
+* exists : boolean - True if the problem existed.
+* success : boolean - True if the problem existed and was deleted.
+
 #### get_problem_step
+Gets a previously stored problem step from the problem step manager.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_step_name : string - The name of the problem step.
+* problem_name : string - The name of the problem to retrieve.
+
+Returns:
+* problem_name : string - The name of the problem.
+* problem_step_name : string - The name of the problem step.
+* problem_step_text : string - The text of the problem step.
+* exists : boolean - True if the problem existed.
+* success : boolean - True if the problem existed.
+
 #### list_problem_steps
+Get all the problems for a given problem and entity. If the problem name is specified
+returns all problem steps for the given problem_name. If the problem_name is NOT 
+specified, returns all the problem steps for the given entity.
+
+Recieves:
+* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* (optional) problem_name : string - The name of the problem.
+
+Returns:
+problem_steps : list - A list of problems with
+    * problem_step : string - The name of the problem.
+    * problem_step_name : string - The name of the problem step.
+    * problem_step_text : string - The text of the problem step.
+success : True - Always returns True
 
 ### Data Storage Plugin
 
