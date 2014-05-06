@@ -232,9 +232,9 @@ currently registered with HPIT. The HPIT server itself does not define what thes
 transactions look like, however HPIT does package some plugins as part of it's architecture.
 
 For example the HPIT basic knowledge tracing plugin supports the following three events:
-    * kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.
-    * kt_trace - Performs a knowledge tracing operation on the KT Skill.
-    * kt_reset - Resets the inital values for the knowledge tracer on the KT Skill.
+* kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.
+* kt_trace - Performs a knowledge tracing operation on the KT Skill.
+* kt_reset - Resets the inital values for the knowledge tracer on the KT Skill.
 
 Depending on the event name(eg kt_set_initial, or kt_trace) the payload the plugin expects will be different.
 
