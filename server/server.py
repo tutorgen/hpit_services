@@ -6,7 +6,7 @@ from flask import Flask, request, session, abort, Response
 from flask import render_template, url_for, jsonify
 from flask.ext.pymongo import PyMongo
 
-from sessions import MongoSessionInterface
+from .sessions import MongoSessionInterface
 
 app = Flask(__name__)
 
@@ -27,7 +27,7 @@ def _map_mongo_document(document):
     if '_id' in mapped_doc:
         mapped_doc['id'] = str(mapped_doc['_id'])
         del mapped_doc['_id']
-        
+
     return mapped_doc
 
 @app.errorhandler(401)
