@@ -272,6 +272,53 @@ effect where plugins fire in series to process a complex series of messages.
 ### Example Plugin
 
 ### Knowledge Tracing Plugin
+#### kt_set_initial
+Sets the initial probabilistic values for the knowledge tracer.
+
+Recieves:
+
+* entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
+* skill : string - String identifier for the skill.
+* probability_known : float (0.0-1.0) - Probability the skill is already known
+* probability_learned : float (0.0-1.0) - Probability the skill will be learned
+* probability_guess : float (0.0-1.0) - Probability the answer is a guess
+* probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
+
+Returns:
+* skill : string - String identifier for the skill.
+* probability_known : float (0.0-1.0) - Probability the skill is already known
+* probability_learned : float (0.0-1.0) - Probability the skill will be learned
+* probability_guess : float (0.0-1.0) - Probability the answer is a guess
+* probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
+
+#### kt_reset
+Resets the probabilistic values for the knowledge tracer.
+
+Recieves:
+* entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
+* skill : string - String identifier for the skill.
+
+Returns:
+* skill : string - String identifier for the skill.
+* probability_known : 0.0 - Probability the skill is already known
+* probability_learned : 0.0 - Probability the skill will be learned
+* probability_guess : 0.0 - Probability the answer is a guess
+* probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)
+
+#### kt_trace
+Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result.
+
+Recieves:
+* entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
+* skill : string - String identifier for the skill.
+* correct: boolean - True if correct. False if not.
+
+Returns:
+* skill : string - String identifier for the skill.
+* probability_known : float (0.0-1.0) - Probability the skill is already known
+* probability_learned : float (0.0-1.0) - Probability the skill will be learned
+* probability_guess : float (0.0-1.0) - Probability the answer is a guess
+* probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
 ### Student Management Plugin
 
