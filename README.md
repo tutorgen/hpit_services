@@ -267,6 +267,20 @@ transactions while altering the event name of the transaction so that other depe
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.
 
+## Packaged Plugins
+
+### Example Plugin
+
+### Knowledge Tracing Plugin
+
+### Student Management Plugin
+
+### Skill Management Plugin
+
+### Problem Management Plugin
+
+### Data Storage Plugin
+
 ## Tech Stack
 
 HPIT exclusively uses Open Source Technologies. Currently our tech stack consists 
