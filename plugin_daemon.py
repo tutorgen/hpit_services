@@ -13,7 +13,8 @@ from time import sleep
 from daemonize import Daemonize
 
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
-from plugins import ProblemManagementPlugin, SkillManagementPlugin, StudentManagementPlugin
+from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
+from plugins import SkillManagementPlugin, StudentManagementPlugin
 
 pid = ''.join(["tmp/plugin_", str(uuid.uuid4()), ".pid"])
 
