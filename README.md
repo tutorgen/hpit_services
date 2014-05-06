@@ -372,10 +372,10 @@ Recieves:
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 
 Returns:
-problems : list - A list of problems with
+* problems : list - A list of problems with
     * problem_name : string - The name of the problem.
     * problem_text : string - The text of the problem.
-success : True - Always returns True
+* success : True - Always returns True
 
 ### Problem Step Management Plugin
 
@@ -434,11 +434,11 @@ Recieves:
 * (optional) problem_name : string - The name of the problem.
 
 Returns:
-problem_steps : list - A list of problems with
+* problem_steps : list - A list of problems with
     * problem_step : string - The name of the problem.
     * problem_step_name : string - The name of the problem step.
     * problem_step_text : string - The text of the problem step.
-success : True - Always returns True
+* success : True - Always returns True
 
 ### Data Storage Plugin
 
