@@ -144,7 +144,7 @@ Returns: 200:JSON ->
 SUPPORTS: GET
 Shows the status dashboard and API route links for HPIT.
 
-### /plugin/<name>/unsubscribe/<event>
+### /plugin/\name\/unsubscribe/\event\
 SUPPORTS: POST
 
 Stop listening to an event type for a specific plugin with
@@ -152,7 +152,7 @@ the name .
 
 Returns: 200:OK or 200:DOES_NOT_EXIST
 
-### /plugin/<name>/subscribe/<event>
+### /plugin/\name\/subscribe/\event\
 SUPPORTS: POST
 
 Start listening to an event type for a specific plugin with
@@ -160,7 +160,7 @@ the name .
 
 Returns: 200:OK or 200:EXISTS
 
-### /plugin/connect/<name>
+### /plugin/connect/\name\
 SUPPORTS: POST
 
 Establishes a plugin session with HPIT.
@@ -170,7 +170,7 @@ Returns: 200:JSON with the following fields:
 - entity_id : string -> Assigned entity id (unique)
 Both assignments expire when you disconnect from HPIT.
 
-### /plugin/<name>/subscriptions
+### /plugin/\name\/subscriptions
 SUPPORTS: GET
 Lists the event names for transactions this plugin will listen to.
 If you are using the library then this is done under the hood to make sure
@@ -178,7 +178,7 @@ when you perform a poll you are recieving the right transactions.
 
 Returns the event_names as a JSON list.
 
-### /plugin/<name>/transactions
+### /plugin/\name\/transactions
 SUPPORTS: GET
 List the transactions queued for a specific plugin.
 
@@ -188,7 +188,7 @@ of the transactions queued for a plugin use the /preview route instead.
 
 Returns JSON for the transactions.
 
-### /plugin/<name>/history
+### /plugin/\name\/history
 SUPPORTS: GET
 Lists the transaction history for a specific plugin - including queued transactions.
 Does not mark them as recieved. 
@@ -200,7 +200,7 @@ DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
 
 Returns JSON for the transactions.
 
-### /plugin/<name>/preview
+### /plugin/\name\/preview
 SUPPORTS: GET
 Lists the transactions queued for a specific plugin. 
 Does not mark them as recieved. Only shows transactions not marked as received.
@@ -211,7 +211,7 @@ DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO PREVIEW THEM.
 
 Returns JSON for the transactions.
 
-### /tutor/connect/<name>
+### /tutor/connect/\name\
 SUPPORTS: POST
 
 Establishes a tutor session with HPIT.
