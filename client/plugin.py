@@ -120,12 +120,12 @@ class Plugin(TransactionSenderMixin):
                         self.wildcard_callback(payload)
                     except TypeError:
                         raise PluginPollError("Wildcard Callback is not a callable")
-            except TypeError:
+            except TypeError as e:
                 #Callback isn't a function
                 if self.callbacks[event] is None:
                     raise PluginPollError("No callback registered for event: <" + event + ">")
                 else:
-                    raise PluginPollError("Registered callback for event: <" + event + "> is not a callable")
+                    raise e
 
         if not self._try_hook('post_dispatch'):
             return False

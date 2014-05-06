@@ -7,7 +7,7 @@ from ..settings import HPIT_URL_ROOT
 class TransactionSenderMixin(RequestsMixin):
     def __init__(self):
         super().__init__()
-        self.response_callbacks = []
+        self.response_callbacks = {}
         self.pre_poll_responses = None
         self.post_poll_responses = None
         self.pre_dispatch_responses = None
@@ -90,7 +90,6 @@ class TransactionSenderMixin(RequestsMixin):
         Returns: boolean - True if event loop should continue. False if event loop should 
             abort.
         """
-
         if not self._try_hook('pre_dispatch_responses'):
             return False
 
