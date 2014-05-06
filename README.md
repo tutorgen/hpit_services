@@ -271,6 +271,9 @@ effect where plugins fire in series to process a complex series of messages.
 
 ### Example Plugin
 
+The example plugin listens to the `test` and `example` event names and logs
+whatever data it's sent in the payload to a file.
+
 ### Knowledge Tracing Plugin
 #### kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
