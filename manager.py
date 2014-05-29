@@ -4,7 +4,7 @@ import subprocess
 import os
 import signal
 
-from server.settings import HPIT_PID_FILE
+from server.settings import HPIT_PID_FILE, HPIT_BIND_ADDRESS
 
 def read_configuration():
     try:
@@ -150,7 +150,7 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server...")
-        subprocess.call(["gunicorn", "server:app", "--daemon", "--pid", HPIT_PID_FILE])
+        subprocess.call(["gunicorn", "server:app", "--bind", HPIT_BIND_ADDRESS, "--daemon", "--pid", HPIT_PID_FILE])
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
