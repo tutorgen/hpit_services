@@ -1,15 +1,15 @@
 {
     "tutors": [
         {
-            "name": "kt_test.0",
             "active": false,
+            "name": "test.0.0",
             "type": "knowledge_tracing"
         }
     ],
     "plugins": [
         {
-            "name": "kt_test.0",
             "active": false,
+            "name": "test.0.0",
             "type": "knowledge_tracing"
         }
     ]
