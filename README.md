@@ -19,6 +19,25 @@ which will ultimately be routed to the tutor that made the original request.
 In addition, HPIT packages several baseline plugins which peform basic functions related
 to intelligent tutoring systems.
 
+## Understanding Terminology
+
+HPIT - HPIT consists of several modules and is sort of an all encompassing term for the entire 
+system of modules.
+
+Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
+and analyze intelligent information about student perforamance. A tutor could be a game, or a web application,
+a Macromedia Flash game, or some other system that interacts with students in an effort to educate or train.
+
+HPIT Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
+A plugin may exist inside of HPIT itself(at TutorGen) or on a network or system outside of HPIT. Regardless of
+where the plugin sits it must communicate with the central HPIT router/server.
+
+HPIT Manager - The manager is used to load the HPIT router, and a set of plugins and tutors. It
+is used primarily for testing and development.
+
+HPIT Router/Server - This is the central server that routes messages and transactions between tutors
+and plugins.
+
 ## Getting started
 
 HPIT requires Python 3.4. Make sure that you have this version of Python installed and
