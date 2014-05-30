@@ -50,15 +50,18 @@ Once you have the right version of Python installed you should also have `virtua
 and `pip` installed as well. If you are unfamiliar with either of these libraries I highly 
 encourage you research them, as they will make working with HPIT much simpler.
 
-Once you have pip and virtualenv installed you can install HPIT by:
+Once you have pip and virtualenv installed you will need to install mongodb. On ubuntu type:
+`sudo apt-get install mongodb` On Mac with Brew install mongodb with: `brew install mongodb`
+
+Then you can begin installalling HPIT by:
 
 1. Changing to the directory where you have downloaded hpit with: `cd /path/to/project`
 2. Creating a new virtual environment with: `virtualenv my_environment`
 3. Activating that environment with: `source my_environment/bin/activate`
 4. Installing HPIT's dependencies with: `pip install -r requirements.txt`
 
-Once you have the project dependencies setup you can begin working with HPIT via 
-the HPIT manager. (See below)
+Once you have the project dependencies setup spin up a mongodb instance by typing `mongod` in the terminal.
+Then you can begin working with HPIT via the HPIT manager. (See below)
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000.
