@@ -5,6 +5,13 @@ MarkupSafe==0.21
 Werkzeug==0.9.4
 daemonize==2.2.3
 gunicorn==18.0
+httpretty==0.8.0
 itsdangerous==0.24
+mock==1.0.1
+py==1.4.20
 pymongo==2.7
+pytest==2.5.2
 requests==2.2.1
+six==1.6.1
+sure==1.2.7
+urllib3==1.8.2

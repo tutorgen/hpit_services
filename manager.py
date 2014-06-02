@@ -3,6 +3,7 @@ import json
 import subprocess
 import os
 import signal
+import pytest
 
 from server.settings import HPIT_PID_FILE
 
@@ -139,6 +140,10 @@ def remove_entity(arguments, configuration):
         wind_down_collection(things_to_remove)
 
 
+def run_unit_tests(arguments, configuration):
+    pytest.main(['-x', 'tests'])
+
+
 def start(arguments, configuration):
     if not os.path.exists('tmp'):
         os.makedirs('tmp')
@@ -210,6 +215,9 @@ def build_argument_parser():
         "Add a new HPIT entity.", add_entity)
     remove_parser = create_command(subparsers, 'remove', 
         "Remove an entity by name.", remove_entity)
+    
+    test_parser = subparsers.add_parser('test', description="Unit Test the code.")
+    test_parser.set_defaults(func=run_unit_tests)
 
     add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")
