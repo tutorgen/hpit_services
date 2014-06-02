@@ -1,20 +1,10 @@
 import sure
-from sure import expect
 import httpretty
 import json
 
 from client.mixins import RequestsMixin
 from client.exceptions import ConnectionError
 
-#@httpretty.activate
-#def test_yipit_api_returning_deals():
-#    httpretty.register_uri(httpretty.GET, "http://api.yipit.com/v1/deals/",
-#                           body='[{"title": "Test Deal"}]',
-#                           content_type="application/json")
-
-#    response = requests.get('http://api.yipit.com/v1/deals/')
-
-#    expect(response.json()).to.equal([{"title": "Test Deal"}])
 @httpretty.activate
 def test__post_data():
     httpretty.register_uri(httpretty.POST, "http://test__post_data/",
@@ -23,10 +13,10 @@ def test__post_data():
 
     subject = RequestsMixin()
     #it should return the username as jiansun when we post the username as jiansun
-    expect(subject._post_data('http://test__post_data/', data='{"username": "jiansun"}').text).to.equal('{"username": "jiansun"}')
+    subject._post_data('http://test__post_data/', data='{"username": "jiansun"}').text.should.equal('{"username": "jiansun"}')
 
     #it should return 200 when we post nothing
-    expect(subject._post_data('http://test__post_data/').status_code).to.equal(200)
+    subject._post_data('http://test__post_data/').status_code.should.equal(200)
     
     #it should throw an connection error when status code is 500
     httpretty.register_uri(httpretty.POST, "http://test__post_data_500/", status=500)
@@ -42,7 +32,7 @@ def test__get_data():
 
     subject = RequestsMixin()
     
-    expect(subject._get_data('http://test__get_data/')).to.equal([{"test": "true"}])
+    subject._get_data('http://test__get_data/').should.equal([{"test": "true"}])
 
     subject._get_data.when.called_with('http://test__get_data_500/').should.throw(ConnectionError)
 
