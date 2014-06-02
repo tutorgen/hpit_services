@@ -24,7 +24,6 @@ class RequestsMixin:
 
         if response.status_code != 200:
             raise ConnectionError("Could not POST Data to HPIT Server.")
-
         return response
 
     def _get_data(self, url):
@@ -38,7 +37,6 @@ class RequestsMixin:
 
         if response.status_code != 200:
             raise ConnectionError("Could not GET Data from HPIT Server.")
-
         return response.json()
 
     def _try_hook(self, hook_name):
