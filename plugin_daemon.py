@@ -10,7 +10,9 @@ import random
 import uuid
 from datetime import datetime
 from time import sleep
-from daemonize import Daemonize
+import platform
+if platform.system() != "Windows":
+    from daemonize import Daemonize
 
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin

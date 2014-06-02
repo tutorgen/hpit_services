@@ -413,4 +413,5 @@ def index():
     )
 
 if __name__ == "__main__":
+    print("Server running!")
     app.run(debug=True)
