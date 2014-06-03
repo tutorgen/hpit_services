@@ -4,7 +4,7 @@ import subprocess
 import os
 import signal
 
-from server.settings import HPIT_PID_FILE
+from server.settings import HPIT_PID_FILE,HPIT_VERSION
 
 import platform
 if platform.system() == "Windows":
@@ -174,7 +174,7 @@ def build_argument_parser():
     main_parser = argparse.ArgumentParser(
         description='Manager that spins up plugins, tutors, and web services.')
     main_parser.add_argument('--version', action='version', 
-        version='(HPIT) Hyper Personalized Intelligent Tutor(version 0.2) - Codename Asura')
+        version=HPIT_VERSION)
 
     subparsers = main_parser.add_subparsers(title='Sub-Commands')
 
