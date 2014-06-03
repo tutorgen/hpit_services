@@ -65,9 +65,8 @@ Then you can begin installalling HPIT by:
 2. Creating a new virtual environment with: `virtualenv my_environment`
 3. Activating that environment with: `source my_environment/bin/activate`
 4. Installing HPIT's dependencies with: `pip install -r requirements.txt`
-
-Once you have the project dependencies setup spin up a mongodb instance by typing `mongod` in the terminal.
-Then you can begin working with HPIT via the HPIT manager. (See below)
+5. Run the test suite by typing `python manager.py test`
+6. Start the MongoDB instance with `mongod`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000.

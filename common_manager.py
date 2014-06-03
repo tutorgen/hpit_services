@@ -3,8 +3,9 @@ import json
 import subprocess
 import os
 import signal
+import pytest
 
-from server.settings import HPIT_PID_FILE,HPIT_VERSION
+from server.settings import HPIT_PID_FILE, HPIT_VERSION
 
 import platform
 if platform.system() == "Windows":
@@ -166,6 +167,10 @@ def create_command(sub, name, description, func):
     return parser
 
 
+def run_unit_tests(arguments, configuration):
+    pytest.main(['-x', 'tests'])
+
+    
 def build_argument_parser():
     """
     Generate the argument parser for the manager using Python ArgumentParser
@@ -182,6 +187,9 @@ def build_argument_parser():
         "Add a new HPIT entity.", add_entity)
     remove_parser = create_command(subparsers, 'remove', 
         "Remove an entity by name.", remove_entity)
+
+    test_parser = subparsers.add_parser('test', description="Unit Test the code.")
+    test_parser.set_defaults(func=run_unit_tests)
 
     add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")

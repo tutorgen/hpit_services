@@ -5,4 +5,3 @@ else:
     from unix_manager import *
     
 run_manager()
-
