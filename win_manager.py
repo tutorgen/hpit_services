@@ -14,7 +14,7 @@ def spin_up_all(entity_type, configuration):
     """
     
     entity_collection = get_entity_collection(entity_type, configuration)
-
+    
     for item in entity_collection:
         if not item['active']:
             item['active'] = True
@@ -23,18 +23,16 @@ def spin_up_all(entity_type, configuration):
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
+           
+            if entity_type != 'tutor' and entity_type !='plugin':
+                raise Exception("Error: unknown entity type in spin_up_all")
             
-            if entity_type == 'tutor':
-                subp = subprocess.Popen(["python", "tutor_daemon.py", "--pid", pidfile, name, entity_subtype], creationflags=DETACHED_PROCESS, stderr = subprocess.STDOUT)
-                with open(pidfile,"w") as pfile:
-                    pfile.write(str(subp.pid))
-            elif entity_type == 'plugin':
-                subp = subprocess.Popen(["python", "plugin_daemon.py", "--pid", pidfile, name, entity_subtype], creationflags=DETACHED_PROCESS, stderr = subprocess.STDOUT)
-                with open(pidfile,"w") as pfile:
-                    pfile.write(str(subp.pid))
-            else:
-                print("ERROR: UNKNOWN ENTITY TYPE")
-
+            with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
+                subp = subprocess.Popen(["python", "entity_daemon.py","--entity",entity_type, "--pid", pidfile, name, entity_subtype], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+            with open(pidfile,"w") as pfile:
+                pfile.write(str(subp.pid))
+                
+                    
 
 def wind_down_collection(entity_type, entity_collection):
     """
