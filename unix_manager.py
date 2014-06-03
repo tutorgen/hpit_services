@@ -23,14 +23,13 @@ def spin_up_all(entity_type, configuration):
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
-
-            if entity_type == 'tutor':
-                subprocess.call(["python3", "tutor_daemon.py", "--daemon", "--pid", pidfile, name, entity_subtype])
-            elif entity_type == 'plugin':
-                subprocess.call(["python3", "plugin_daemon.py", "--daemon", "--pid", pidfile, name, entity_subtype])
-            else:
-                print("ERROR: UNKNOWN ENTITY TYPE")
-
+            
+            
+            if entity_type != 'tutor' and entity_type !='plugin':
+                raise Exception("Error: unknown entity type in spin_up_all")
+            
+            with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
+                subprocess.call(["python3", "entity_daemon.py", "--daemon","--entity",entity_type, "--pid", pidfile, name, entity_subtype], stdout = f, stderr = f)
 
 def wind_down_collection(entity_type, entity_collection):
     """
