@@ -5,5 +5,6 @@ workaround so the relative imports are preserved in Windows.
 """
 
 import server
+from server.settings import HPIT_BIND_PORT
 
-server.app.run(port = 8000)
+server.app.run(port = int(HPIT_BIND_PORT))

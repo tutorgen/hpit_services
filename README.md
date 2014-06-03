@@ -1,3 +1,8 @@
+## Todo
+
+In the tutor loop, support not having a main callback.
+Add a throttle in the tutor main loop.
+
 ## Overview
 
 The HyperPersonalize Intelligent Tutor (HPIT) is an schemaless, event driven system
