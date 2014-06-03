@@ -45,8 +45,6 @@ and plugins.
 
 ## Getting started
 
-### HPIT is currently *NOT* compatible with windows. It can be run in a unix based environment. Mac or Linux only.
-
 HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
 You may need to install Python3.4 manually to get started depending on your operating system.
