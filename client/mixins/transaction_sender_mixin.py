@@ -48,7 +48,8 @@ class TransactionSenderMixin(RequestsMixin):
             self.response_callbacks[response['transaction_id']] = callback
 
         return response
-
+        
+    def send_transaction(self, transaction, payload, callback=None):
 
     def _poll_responses(self):
         """

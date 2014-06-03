@@ -41,6 +41,7 @@ main_parser.add_argument('--daemon', action='store_true', help="Daemonize the pl
 main_parser.add_argument('--pid', type=str, help="The location of the pid file.")
 
 if __name__ == '__main__':
+    print("plugin_daemon starts!")
     arguments = main_parser.parse_args()
 
     logger_path = os.path.join(os.getcwd(), 'log/plugin_' + arguments.name + '.log')

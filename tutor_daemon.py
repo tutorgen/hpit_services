@@ -16,6 +16,8 @@ if platform.system() != "Windows":
 
 from client import Tutor
 
+
+
 pid = ''.join(["tmp/tutor_", str(uuid.uuid4()), ".pid"])
 
 random.seed(datetime.now())
@@ -125,6 +127,7 @@ class KnowledgeTracingTutor(Tutor):
 
 
 if __name__ == '__main__':
+    print("tutor_daemon starts!")
     arguments = main_parser.parse_args()
 
     logger_path = os.path.join(os.getcwd(), 'log/tutor_' + arguments.name + '.log')

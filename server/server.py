@@ -413,4 +413,5 @@ def index():
     )
 
 if __name__ == "__main__":
+    print("Actually, i did get executed!")
     app.run(debug=True)
