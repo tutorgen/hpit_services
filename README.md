@@ -45,7 +45,6 @@ and plugins.
 
 ## Getting started
 
-### HPIT is currently *NOT* compatible with windows. It can be run in a unix based environment. Mac or Linux only.
 
 HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
@@ -57,8 +56,9 @@ Once you have the right version of Python installed you should also have `virtua
 and `pip` installed as well. If you are unfamiliar with either of these libraries I highly 
 encourage you research them, as they will make working with HPIT much simpler.
 
-Once you have pip and virtualenv installed you will need to install mongodb. On ubuntu type:
-`sudo apt-get install mongodb` On Mac with Brew install mongodb with: `brew install mongodb`
+Once you have pip and virtualenv installed you will need to install mongodb. 
+- On ubuntu type: `sudo apt-get install mongodb` On Mac with Brew install mongodb with: `brew install mongodb`
+- On Windows, installation binaries are available from mongodb.org
 
 Then you can begin installalling HPIT by:
 
@@ -94,6 +94,20 @@ Currently the HPIT Manager has the following commands:
 - `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
 - `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
 - `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
+
+## Settings for Clients and Servers
+
+Both clients (tutors and plugins) and the server may need configuration.  The settings files
+are clients/settings.py and server/settings.py, for clients and servers, respectively.  
+
+clients/settings.py currently contains the following options:
+- HPIT_URL_ROOT : the URL root where the HPIT server lives
+
+server/settings.py currently contains the following options:
+- HPIT_PID_FILE : the location where the PID file of the server is stored, for tracking the server process
+- HPIT_BIND_IP : the IP address the server is listening on
+- HPIT_BIND_PORT : the port that the HPIT server listens on
+- HPIT_VERSION : the version of this server
 
 ## The tutor and plugin configuration
 
