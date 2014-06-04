@@ -49,7 +49,11 @@ class TransactionSenderMixin(RequestsMixin):
 
         return response
         
-    def send_transaction(self, transaction, payload, callback=None):
+    def send_transaction(self, payload, callback=None):
+        """
+        """
+        return self.send("transaction", payload)
+
 
     def _poll_responses(self):
         """
