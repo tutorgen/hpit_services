@@ -92,7 +92,10 @@ def stop(arguments, configuration):
         with open(HPIT_PID_FILE) as f:
             pid = f.read()
             os.kill(int(pid), signal.SIGTERM)
-        os.remove(HPIT_PID_FILE)
+        try:
+            os.remove(HPIT_PID_FILE) #Force for Mac
+        except FileNotFoundError: #On Linux
+            pass #On linux file is removed when process dies, on mac it needs forced.
     else:
         print("The HPIT Server is not running.")
     print("DONE!")
