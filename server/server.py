@@ -7,6 +7,7 @@ from flask import render_template, url_for, jsonify
 from flask.ext.pymongo import PyMongo
 
 from .sessions import MongoSessionInterface
+from .settings import HPIT_VERSION
 
 app = Flask(__name__)
 
@@ -34,6 +35,19 @@ def _map_mongo_document(document):
 def custom_401(error):
     return Response('You must establish a connection with HPIT first.', 
         401, {'WWWAuthenticate':'Basic realm="Login Required"'})
+
+@app.route("/version", methods=["GET"])
+def version():
+    """
+    SUPPORTS: GET
+
+    Gets the version of the HPIT server.
+
+    Returns: 200:JSON with the following fields:
+        - version : string -> version of HPIT
+    """
+    version_returned = {"version": HPIT_VERSION}
+    return jsonify(version_returned)
 
 @app.route("/tutor/connect/<name>", methods=["POST"])
 def connect_tutor(name):
