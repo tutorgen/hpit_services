@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 class KnowledgeTracingPlugin(Plugin):
 
-    def __init__(self, name, logger):
+    def __init__(self, name, logger, args = None):
         super().__init__(name)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
