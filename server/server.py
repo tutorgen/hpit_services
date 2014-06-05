@@ -6,12 +6,33 @@ from flask import Flask, request, session, abort, Response
 from flask import render_template, url_for, jsonify
 from flask.ext.pymongo import PyMongo
 
+from gears_less import LESSCompiler
+from gears_coffeescript import CoffeeScriptCompiler
+
+from flask_gears import Gears
+
+#Comment out this block if you run this file directly. (Strictly for development purposes only)
 from .sessions import MongoSessionInterface
+from .settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
+
+#For running this file directly uncomment this and comment the block above it.
+#from sessions import MongoSessionInterface
+#from settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
+
+gears = Gears(
+    compilers={
+    '.less': LESSCompiler.as_handler(),
+    '.coffee': CoffeeScriptCompiler.as_handler(),
+    #    '.hbs': 'gears_handlebars.HandlebarsCompiler'
+    }
+)
 
 app = Flask(__name__)
+gears.init_app(app)
 
-app.config['MONGO_DBNAME'] = 'hpit_development'
-app.secret_key = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
+app.config['MONGO_DBNAME'] = MONGO_DBNAME
+app.config['DEBUG'] = DEBUG_MODE
+app.secret_key = SECRET_KEY
 
 mongo = PyMongo(app)
 app.session_interface = MongoSessionInterface(app, mongo)
@@ -412,5 +433,5 @@ def index():
         plugins=HPIT_STATUS['plugins']
     )
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)

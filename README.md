@@ -59,13 +59,21 @@ Once you have pip and virtualenv installed you will need to install mongodb.
 - On ubuntu type: `sudo apt-get install mongodb` On Mac with Brew install mongodb with: `brew install mongodb`
 - On Windows, installation binaries are available from mongodb.org
 
+HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
+you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
+for downloading and installing node and npm to your system. IMPORTANT! If you are using an older version of ubuntu (13.10 or earlier)
+you MUST download node and recompile from scratch. The version of node packaged with older versions of ubuntu is far out of date
+and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
+the binaries to either /usr/bin or /usr/local/bin
+
 Then you can begin installalling HPIT by:
 
-1. Changing to the directory where you have downloaded hpit with: `cd /path/to/project`
-2. Creating a new virtual environment with: `virtualenv my_environment`
-3. Activating that environment with: `source my_environment/bin/activate`
-4. Installing HPIT's dependencies with: `pip install -r requirements.txt`
-5. Run the test suite by typing `python manager.py test`
+1. Change to the directory where you have downloaded hpit with: `cd /path/to/project`
+2. Create a reference to your python3 installation binary for virtualenv. ```export PY3_PATH=`which python3````
+3. Create a new virtual environment with: `virtualenv -p $PY3_PATH my_environment`
+3. Activate that environment with: `source my_environment/bin/activate`
+4. Install HPIT's dependencies with: `pip3 install -r requirements.txt`
+5. Run the test suite by typing `python3 manager.py test`
 6. Start the MongoDB instance with `mongod`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
