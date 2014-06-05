@@ -9,13 +9,14 @@ from flask.ext.pymongo import PyMongo
 from gears_less import LESSCompiler
 from gears_coffeescript import CoffeeScriptCompiler
 
-from flask_gears import Gears
 
 #Comment out this block if you run this file directly. (Strictly for development purposes only)
+from .flask_gears import Gears
 from .sessions import MongoSessionInterface
 from .settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
 
 #For running this file directly uncomment this and comment the block above it.
+#from flask_gears import Gears
 #from sessions import MongoSessionInterface
 #from settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
 

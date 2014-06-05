@@ -1,57 +1,114 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset='utf-8' />
-        <title>HPIT Server</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-    </head>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="TutorGen, Inc. team: Raymond Chandler III, Brian Sauer">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.ico">
 
-    <body>
-        <h1>Welcome to HPIT Hub!</h1>
+    <title>HPIT - The Hyper Personlized Intelligent Tutor</title>
 
-        <h3>API Status Dashboard</h3>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 
-        <p><b>Only partially implemented.</b></p>
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
 
-        Number of Tutors Connected: {{tutor_count}}<br/>
-        Number of Plugins Connected: {{plugin_count}}<br/>
-        Number of Events Published Every Second: Unknown<br/>
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
 
-        <h4>Connected Tutors</h4>
-        <table>
-            <tr>
-                <td><b>Tutor Name</b></td>
-                <td><b>Tutor ID</b></td>
-            </tr>
-            {% for tutor in tutors %}
+  <body>
+
+    <div class="site-wrapper">
+
+      <div class="site-wrapper-inner">
+
+        <div class="cover-container">
+
+          <div class="masthead clearfix">
+            <div class="inner">
+              <h3 class="masthead-brand">HPIT</h3>
+              <ul class="nav masthead-nav">
+                <li class="active"><a href="#">Docs</a></li>
+                <li><a href="#">Plugins</a></li>
+                <li><a href="#">Tutors</a></li>
+                <li><a href="#">Login</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="inner cover">
+            <h1>Welcome to HPIT Hub!</h1>
+
+            <h3>API Status Dashboard</h3>
+
+            <p><b>Only partially implemented.</b></p>
+
+            Number of Tutors Connected: {{tutor_count}}<br/>
+            Number of Plugins Connected: {{plugin_count}}<br/>
+            Number of Events Published Every Second: Unknown<br/>
+
+            <h4>Connected Tutors</h4>
+            <table>
                 <tr>
-                    <td>{{tutor.entity_name}}</td>
-                    <td>{{tutor.entity_id}}</td>
-                </tr> 
-            {% endfor %}
-        </table>
+                    <td><b>Tutor Name</b></td>
+                    <td><b>Tutor ID</b></td>
+                </tr>
+                {% for tutor in tutors %}
+                    <tr>
+                        <td>{{tutor.entity_name}}</td>
+                        <td>{{tutor.entity_id}}</td>
+                    </tr> 
+                {% endfor %}
+            </table>
 
-        <h4>Connected Plugins</h4>
-        <table>
-            <tr>
-                <td><b>Plugin Name</b></td>
-                <td><b>Plugin ID</b></td>
-            </tr>
-            {% for plugin in plugins %}
+            <h4>Connected Plugins</h4>
+            <table>
                 <tr>
-                    <td>{{plugin.entity_name}}</td>
-                    <td>{{plugin.entity_id}}</td>
-                </tr> 
-            {% endfor %}
-        </table>
+                    <td><b>Plugin Name</b></td>
+                    <td><b>Plugin ID</b></td>
+                </tr>
+                {% for plugin in plugins %}
+                    <tr>
+                        <td>{{plugin.entity_name}}</td>
+                        <td>{{plugin.entity_id}}</td>
+                    </tr> 
+                {% endfor %}
+            </table>
 
-        <h3>Links for API</h3>
-        {% for link in links %}
-            <p>
-                <b>{{link.0}}</b><br/>
-                Documentation: {{link.1|safe}}
-                <hr/>
-            </p>
-        {% endfor %}
-    </body>
+            <h3>Links for API</h3>
+            {% for link in links %}
+                <p>
+                    <b>{{link.0}}</b><br/>
+                    Documentation: {{link.1|safe}}
+                    <hr/>
+                </p>
+            {% endfor %}
+          </div>
+
+          <div class="mastfoot">
+            <div class="inner">
+              <p>Cover template for <a href="http://getbootstrap.com">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+    <script src="../../assets/js/docs.min.js"></script>
+  </body>
 </html>
