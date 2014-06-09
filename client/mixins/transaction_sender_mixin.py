@@ -37,6 +37,10 @@ class TransactionSenderMixin(RequestsMixin):
         of the transaction. This is not the eventual response from HPIT. It is simply an acknowledgement
         the data was recieved. You must send in a callback to handle the actual HPIT response.
         """
+        
+        if event_name == "transaction":
+            raise InvalidMessageNameException("Cannot use event_name 'transaction'.  Use send_transaction() method for datashop transactions.")
+            
         transaction_url = urljoin(HPIT_URL_ROOT, 'transaction')
 
         response = self._post_data(transaction_url, {
@@ -48,6 +52,14 @@ class TransactionSenderMixin(RequestsMixin):
             self.response_callbacks[response['transaction_id']] = callback
 
         return response
+        
+    def send_transaction(self, payload, callback= None):
+        """
+        This method acts as a wrapper for the send message, specifically for data shop transactions.  
+        See send() method for more details.
+        """
+        
+        self.send("transaction", payload, callback)
 
 
     def _poll_responses(self):
