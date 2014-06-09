@@ -15,14 +15,14 @@ class DataStoragePlugin(Plugin):
             retrieve_data=self.retrieve_data_callback,
             remove_data=self.remove_data_callback)
 
-    def store_data_callback(self, transaction):
+    def store_data_callback(self, message):
         self.logger.debug("STORE_DATA")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def retrieve_data_callback(self, transaction):
+    def retrieve_data_callback(self, message):
         self.logger.debug("RETRIEVE_DATA")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def remove_data_callback(self, transaction):
+    def remove_data_callback(self, message):
         self.logger.debug("REMOVE_DATA")
-        self.logger.debug(transaction)
+        self.logger.debug(message)

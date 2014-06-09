@@ -11,10 +11,10 @@ class ExamplePlugin(Plugin):
             example=self.example_plugin_callback)
 
     #Example Plugin
-    def test_plugin_callback(self, transaction):
+    def test_plugin_callback(self, message):
         self.logger.debug("TEST")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def example_plugin_callback(self, transaction):
+    def example_plugin_callback(self, message):
         self.logger.debug("EXAMPLE")
-        self.logger.debug(transaction)
+        self.logger.debug(message)

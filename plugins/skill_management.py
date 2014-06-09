@@ -15,14 +15,14 @@ class SkillManagementPlugin(Plugin):
             get_skill=self.get_skill_callback)
 
     #Skill Management Plugin
-    def add_skill_callback(self, transaction):
+    def add_skill_callback(self, message):
         self.logger.debug("ADD_SKILL")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def remove_skill_callback(self, transaction):
+    def remove_skill_callback(self, message):
         self.logger.debug("REMOVE_SKILL")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def get_skill_callback(self, transaction):
+    def get_skill_callback(self, message):
         self.logger.debug("GET_SKILL")
-        self.logger.debug(transaction)
+        self.logger.debug(message)

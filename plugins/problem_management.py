@@ -17,10 +17,10 @@ class ProblemManagementPlugin(Plugin):
             list_problems=self.list_problems_callback)
 
     #Problem Management Plugin
-    def add_problem_callback(self, transaction):
-        entity_id = transaction['entity_id']
-        problem_name = transaction['problem_name']
-        problem_text = transaction['problem_text']
+    def add_problem_callback(self, message):
+        entity_id = message['entity_id']
+        problem_name = message['problem_name']
+        problem_text = message['problem_text']
 
         problem = self.db.find_one({
             'entity_id': entity_id,
@@ -34,7 +34,7 @@ class ProblemManagementPlugin(Plugin):
                 'problem_text': problem_text,
             })
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_text': problem_text,
                 'success': True,
@@ -47,7 +47,7 @@ class ProblemManagementPlugin(Plugin):
                 'problem_text': problem_text,
             })
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_text': problem_text,
                 'success': True,
@@ -55,9 +55,9 @@ class ProblemManagementPlugin(Plugin):
             })
 
 
-    def remove_problem_callback(self, transaction):
-        entity_id = transaction['entity_id']
-        problem_name = transaction['problem_name']
+    def remove_problem_callback(self, message):
+        entity_id = message['entity_id']
+        problem_name = message['problem_name']
 
         problem = self.db.find_one({
             'entity_id': entity_id,
@@ -70,22 +70,22 @@ class ProblemManagementPlugin(Plugin):
                 'problem_name': problem_name,
             })
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'exists': True,
                 'success': True,
             })
         else:
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'exists': False,
                 'success': False
             })
 
 
-    def get_problem_callback(self, transaction):
-        entity_id = transaction['entity_id']
-        problem_name = transaction['problem_name']
+    def get_problem_callback(self, message):
+        entity_id = message['entity_id']
+        problem_name = message['problem_name']
 
         problem = self.db.find_one({
             'entity_id': entity_id,
@@ -93,21 +93,21 @@ class ProblemManagementPlugin(Plugin):
         })
 
         if not problem:
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'exists': False,
                 'success': False
             })
         else:
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_text': problem['problem_text'],
                 'exists': True,
                 'success': True
             })
 
-    def list_problems_callback(self, transaction):
-        entity_id = transaction['entity_id']
+    def list_problems_callback(self, message):
+        entity_id = message['entity_id']
 
         problems = self.db.find({
             'entity_id': entity_id
@@ -115,7 +115,7 @@ class ProblemManagementPlugin(Plugin):
 
         problems = [p for p in problems]
 
-        self.send_response(transaction['id'], {
+        self.send_response(message['id'], {
             'problems': problems,
             'success': True
         })
