@@ -17,7 +17,7 @@ we have built a client side library in the Python programming language to assist
 the creation of tutors and plugins and their communcation with HPIT.
 
 HPIT is a publish and subscribe framework using event-driven methodologies. Tutors interact 
-with the system by sending transactions which consist of a named event and a data payload. 
+with the system by sending messages which consist of a named event and a data payload. 
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.
 
@@ -42,6 +42,11 @@ is used primarily for testing and development.
 
 HPIT Router/Server - This is the central server that routes messages and transactions between tutors
 and plugins.
+
+HPIT Message - This is a event_name and payload pair, both of which are defined by the developer for
+their plugin.
+
+HPIT Transaction - A transaction is a message specifically for DataShop transactions.
 
 ## Getting started
 
@@ -123,6 +128,44 @@ server/settings.py currently contains the following options:
 - HPIT_BIND_PORT : the port that the HPIT server listens on
 - HPIT_VERSION : the version of this server
 
+## Database Structure
+
+The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions.  MongoDB uses a 
+lazy creation policy, so the database and its collections are created only after elements are inserted,
+and can be created with no prior configuration.  The database contains five core collections:
+
+### messages
+A list of messages sent to the system before being duplicated to plugin_messages
+It contains the following fields:
+entity_id: "The session ID of the sender"
+payload: "The data being sent."
+
+### plugin_subscriptions
+Maps the event names to the names of plugins that are actively listening for them.
+It contains the following fields:
+- name: "plugin name"
+- event: "event name"
+
+### plugin_messages
+Contains messages sent to plugins, as copied from the messages collection.
+It contains the following fields:
+- plugin_name: "name of destination plugin"
+- event_name: "name of event"
+- message_id: "the ID of this message"
+- message_payload: "The data contained in this message."
+- sent_to_plugin: "Boolean if it has been processed or not"
+
+### responses
+Stores responses for tutors or other plugins to poll.
+It contains the following fields:
+- response_received: "Boolean if it has been processed or not"
+- response: "data for this response"
+- message_id: "the id of the original sent message"
+- message: "the original message"
+
+### sessions
+Stores session data for plugins and tutors. 
+
 ## The HPIT Server in depth
 
 The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
@@ -153,29 +196,29 @@ Destroys the session for the tutor calling this route.
 
 Returns: 200:OK
 
-### /transaction
+### /message
 SUPPORTS: POST
-Submit a transaction to the HPIT server. Expect the data formatted as JSON
+Submit a message to the HPIT server. Expect the data formatted as JSON
 with the application/json mimetype given in the headers. Expects two fields in
 the JSON data.
-- name : string => The name of the event transaction to submit to the server
+- name : string => The name of the event message to submit to the server
 - payload : Object => A JSON Object of the DATA to store in the database
 
 Returns 200:JSON -> 
-- transaction_id - The ID of the transaction submitted to the database
+- message_id - The ID of the message submitted to the database
 
 ### /responses
 SUPPORTS: GET
-Poll for responses queued to original sender of a transaction.
+Poll for responses queued to original sender of a message.
 
 Returns: JSON encoded list of responses.
 
 ### /response
 SUPPORTS: POST
-Submits a response to an earlier transaction to the HPIT server. 
+Submits a response to an earlier message to the HPIT server. 
 Expects the data formatted as JSON with the application/json mimetype 
 given in the headers. Expects two fields in the JSON data.
-- transaction_id : string => The transaction id to the transaction you're responding to.
+- message_id : string => The message id to the message you're responding to.
 - payload : Object => A JSON Object of the DATA to respond with
 
 Returns: 200:JSON ->
@@ -213,44 +256,44 @@ Both assignments expire when you disconnect from HPIT.
 
 ### /plugin/\name\/subscriptions
 SUPPORTS: GET
-Lists the event names for transactions this plugin will listen to.
+Lists the event names for messages this plugin will listen to.
 If you are using the library then this is done under the hood to make sure
-when you perform a poll you are recieving the right transactions.
+when you perform a poll you are recieving the right messages.
 
 Returns the event_names as a JSON list.
 
-### /plugin/\name\/transactions
+### /plugin/\name\/messages
 SUPPORTS: GET
-List the transactions queued for a specific plugin.
+List the messages queued for a specific plugin.
 
-!!!DANGER!!!: Will mark the transactions as recieved by the plugin 
+!!!DANGER!!!: Will mark the messages as recieved by the plugin 
 and they will not show again. If you wish to see a preview
-of the transactions queued for a plugin use the /preview route instead.
+of the messages queued for a plugin use the /preview route instead.
 
-Returns JSON for the transactions.
+Returns JSON for the messages.
 
 ### /plugin/\name\/history
 SUPPORTS: GET
-Lists the transaction history for a specific plugin - including queued transactions.
+Lists the message history for a specific plugin - including queued messages.
 Does not mark them as recieved. 
 
-If you wish to preview queued transactions only use the '/preview' route instead.
-If you wish to actually CONSUME the queue (mark as recieved) use the '/transactions' route instead.
+If you wish to preview queued messages only use the '/preview' route instead.
+If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
 
-DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
+DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
 
-Returns JSON for the transactions.
+Returns JSON for the messages.
 
 ### /plugin/\name\/preview
 SUPPORTS: GET
-Lists the transactions queued for a specific plugin. 
-Does not mark them as recieved. Only shows transactions not marked as received.
-If you wish to see the entire transaction history for 
+Lists the messages queued for a specific plugin. 
+Does not mark them as recieved. Only shows messages not marked as received.
+If you wish to see the entire message history for 
 the plugin use the '/history' route instead.
 
-DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO PREVIEW THEM.
+DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
 
-Returns JSON for the transactions.
+Returns JSON for the messages.
 
 ### /tutor/connect/\name\
 SUPPORTS: POST
@@ -264,13 +307,13 @@ Both assignments expire when you disconnect from HPIT.
 
 ## Tutors in depth
 
-A Tutor is an HPIT entity that can send transactions to HPIT. A transaction consists of
+A Tutor is an HPIT entity that can send messages to HPIT. A message consists of
 an event name and a payload. The event name is an arbitrary string that defines what is in
-the payload. Plugins register to listen to transactions based on the event name. The 
-transaction payload is an arbitrary JSON like document with data formatted based on plugin
-requirements. The kinds of transactions a tutor can send is definied by the plugins 
+the payload. Plugins register to listen to messages based on the event name. The 
+message payload is an arbitrary JSON like document with data formatted based on plugin
+requirements. The kinds of messages a tutor can send is definied by the plugins 
 currently registered with HPIT. The HPIT server itself does not define what these 
-transactions look like, however HPIT does package some plugins as part of it's architecture.
+messages look like, however HPIT does package some plugins as part of it's architecture.
 
 For example the HPIT basic knowledge tracing plugin supports the following three events:
 * kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.
@@ -285,26 +328,26 @@ send a response depending on the plugin.
 ## Plugins in depth
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, recieves
-transcation payloads, perfoms some arbitrary function based on the event and transaction
-payload, and may or may not return a response to the original sender of the transaction.
+transcation payloads, perfoms some arbitrary function based on the event and message
+payload, and may or may not return a response to the original sender of the message.
 
 A plugin may listen to and define any events it wishes. When a tutor sends a transcation
 to HPIT, if a plugin has registered itself with HPIT, and if that plugin and subscribed
 to the event name submitted with the tutor's transcation it will recieve a queued list
-of transactions when it polls the HPIT server for data. It is expected that plugins will
-do this type of polling periodically to see if any transactions have been queued for 
+of messages when it polls the HPIT server for data. It is expected that plugins will
+do this type of polling periodically to see if any messages have been queued for 
 processing by HPIT.
 
 When a plugin processes an event from HPIT, it will recieve all the information in the 
-original transaction, including the information identifying the tutor that sent the
-transaction. This identifying information is called the entity_id of the tutor.
+original message, including the information identifying the tutor that sent the
+message. This identifying information is called the entity_id of the tutor.
 
-A plugin may send a response to HPIT by providing the original transaction id, along with 
-a response payload, which will be sent to the original sender of the transaction message.
+A plugin may send a response to HPIT by providing the original message id, along with 
+a response payload, which will be sent to the original sender of the message message.
 
-It is possible for plugins to send transactions like tutors and respond to transactions
+It is possible for plugins to send messages like tutors and respond to messages
 like tutors. In this way, it is possible for plugins to listen to, and refire event 
-transactions while altering the event name of the transaction so that other dependent 
+messages while altering the event name of the message so that other dependent 
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.
 
