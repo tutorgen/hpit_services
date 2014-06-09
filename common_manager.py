@@ -170,7 +170,10 @@ def create_command(sub, name, description, func):
 def run_unit_tests(arguments, configuration):
     pytest.main(['-x', 'tests'])
 
-    
+def run_debug(arguments, configuration):
+    from server import app
+    app.run(debug=True, port=8000)
+
 def build_argument_parser():
     """
     Generate the argument parser for the manager using Python ArgumentParser
@@ -190,6 +193,9 @@ def build_argument_parser():
 
     test_parser = subparsers.add_parser('test', description="Unit Test the code.")
     test_parser.set_defaults(func=run_unit_tests)
+
+    run_debug_parser = subparsers.add_parser('debug', description="Runs the server in debug mode.")
+    run_debug_parser.set_defaults(func=run_debug)
 
     add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")

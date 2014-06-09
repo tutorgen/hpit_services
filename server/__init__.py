@@ -60,3 +60,5 @@ def custom_401(error):
 
 from server.views.api import *
 from server.views.dashboard import *
+
+__all__ = ['app']
