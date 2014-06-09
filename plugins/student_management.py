@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 class StudentManagementPlugin(Plugin):
 
-    def __init__(self, name, logger):
+    def __init__(self, name, logger, args = None):
         super().__init__(name)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
@@ -16,14 +16,14 @@ class StudentManagementPlugin(Plugin):
             get_student=self.get_student_callback)
 
     #Student Management Plugin
-    def add_student_callback(self, transaction):
+    def add_student_callback(self, message):
         self.logger.debug("ADD_STUDENT")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def remove_student_callback(self, transaction):
+    def remove_student_callback(self, message):
         self.logger.debug("REMOVE_STUDENT")
-        self.logger.debug(transaction)
+        self.logger.debug(message)
 
-    def get_student_callback(self, transaction):
+    def get_student_callback(self, message):
         self.logger.debug("GET_STUDENT")
-        self.logger.debug(transaction)
+        self.logger.debug(message)

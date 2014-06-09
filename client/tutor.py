@@ -1,10 +1,10 @@
 from urllib.parse import urljoin
 
-from .mixins import TransactionSenderMixin
+from .mixins import MessageSenderMixin
 from .settings import HPIT_URL_ROOT
 from .exceptions import ResponseDispatchError
 
-class Tutor(TransactionSenderMixin):
+class Tutor(MessageSenderMixin):
     def __init__(self, name, callback, **kwargs):
         super().__init__()
 

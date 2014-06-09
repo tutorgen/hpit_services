@@ -30,6 +30,7 @@ main_parser.add_argument('--once', action='store_true', help="Only run one loop 
 main_parser.add_argument('--daemon', action='store_true', help="Daemonize the tutor.")
 main_parser.add_argument('--pid', type=str, help="The location of the pid file.")
 main_parser.add_argument('--entity', type=str, help="Either 'tutor' or 'plugin'.")
+main_parser.add_argument('--args', type=str, help = "JSON string of command line arguments.")
 
 
 random.seed(datetime.now())
@@ -109,10 +110,10 @@ if __name__ == '__main__':
         
         entity = None
         if arguments.entity == 'plugin':
-            entity = plugin_classes[entity_subtype](arguments.name, logger)
+            entity = plugin_classes[entity_subtype](arguments.name, logger, args = arguments.args)
             entity.start()
         elif arguments.entity == 'tutor':
-            entity = tutor_classes[entity_subtype](arguments.name,logger=logger,run_once=run_once)
+            entity = tutor_classes[entity_subtype](arguments.name,logger=logger,run_once=run_once, args = arguments.args)
             entity.run()
         
 

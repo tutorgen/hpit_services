@@ -20,6 +20,12 @@ def spin_up_all(entity_type, configuration):
             item['active'] = True
             name = item['name']
             entity_subtype = item['type']
+            
+            if 'args' in item:
+                entity_args = shlex.quote(json.dumps(item['args']))
+            else:
+                entity_args = "none"
+                
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)

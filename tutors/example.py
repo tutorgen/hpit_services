@@ -9,7 +9,7 @@ from time import sleep
 from client import Tutor
 
 class ExampleTutor(Tutor):
-    def __init__(self, name, logger=None, run_once=None):
+    def __init__(self, name, logger=None, run_once=None, args = None):
         super().__init__(name, self.main_callback)
         self.run_once = run_once
         self.logger = logger
