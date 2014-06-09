@@ -1,61 +1,8 @@
-import json
-from itertools import groupby
 from uuid import uuid4
 from bson.objectid import ObjectId
-from flask import Flask, request, session, abort, Response
-from flask import render_template, url_for, jsonify
-from flask.ext.pymongo import PyMongo
+from flask import session, jsonify, abort, request
 
-from gears_less import LESSCompiler
-from gears_coffeescript import CoffeeScriptCompiler
-
-
-#Comment out this block if you run this file directly. (Strictly for development purposes only)
-from .flask_gears import Gears
-from .sessions import MongoSessionInterface
-from .settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
-
-#For running this file directly uncomment this and comment the block above it.
-#from flask_gears import Gears
-#from sessions import MongoSessionInterface
-#from settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
-
-gears = Gears(
-    compilers={
-    '.less': LESSCompiler.as_handler(),
-    '.coffee': CoffeeScriptCompiler.as_handler(),
-    #    '.hbs': 'gears_handlebars.HandlebarsCompiler'
-    }
-)
-
-app = Flask(__name__)
-gears.init_app(app)
-
-app.config['MONGO_DBNAME'] = MONGO_DBNAME
-app.config['DEBUG'] = DEBUG_MODE
-app.secret_key = SECRET_KEY
-
-mongo = PyMongo(app)
-app.session_interface = MongoSessionInterface(app, mongo)
-
-HPIT_STATUS = {
-    'tutors': [],
-    'plugins': []
-}
-
-def _map_mongo_document(document):
-    mapped_doc = {k: v for k, v in document.items()}
-
-    if '_id' in mapped_doc:
-        mapped_doc['id'] = str(mapped_doc['_id'])
-        del mapped_doc['_id']
-
-    return mapped_doc
-
-@app.errorhandler(401)
-def custom_401(error):
-    return Response('You must establish a connection with HPIT first.', 
-        401, {'WWWAuthenticate':'Basic realm="Login Required"'})
+from server import app, mongo, _map_mongo_document, HPIT_STATUS
 
 @app.route("/tutor/connect/<name>", methods=["POST"])
 def connect_tutor(name):
@@ -408,31 +355,3 @@ def responses():
     )
 
     return jsonify({'responses': result})
-
-
-@app.route("/")
-def index():
-    """
-    SUPPORTS: GET
-    Shows the status dashboard and API route links for HPIT.
-    """
-    links = []
-    for rule in app.url_map.iter_rules():
-        if rule.endpoint != 'static':
-            docs = app.view_functions[rule.endpoint].__doc__
-
-            if docs:
-                docs = docs.replace('\n', '<br/>')
-
-            links.append((rule.rule, docs))
-
-    return render_template('index.html', 
-        links=links, 
-        tutor_count=len(HPIT_STATUS['tutors']),
-        plugin_count=len(HPIT_STATUS['plugins']),
-        tutors=HPIT_STATUS['tutors'],
-        plugins=HPIT_STATUS['plugins']
-    )
-
-if __name__ == '__main__':
-    app.run(debug=True)
