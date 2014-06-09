@@ -18,8 +18,7 @@ class KnowledgeTracingTutor(Tutor):
         self.skills = ['addition', 'subtraction', 'multiplication', 'division']
         
         self.args = json.loads(args[1:-1])
-        print(self.args["item"])
-        sys.stdout.flush()
+      
         
     def setup(self):
         for sk in self.skills:
