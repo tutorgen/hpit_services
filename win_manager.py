@@ -3,6 +3,7 @@ import json
 import subprocess
 import os
 import signal
+import shlex
 
 from server.settings import HPIT_PID_FILE
 
@@ -20,6 +21,12 @@ def spin_up_all(entity_type, configuration):
             item['active'] = True
             name = item['name']
             entity_subtype = item['type']
+            
+            if 'args' in item:
+                entity_args = shlex.quote(json.dumps(item['args']))
+            else:
+                entity_args = "none"
+            
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
@@ -28,7 +35,7 @@ def spin_up_all(entity_type, configuration):
                 raise Exception("Error: unknown entity type in spin_up_all")
             
             with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                subp = subprocess.Popen(["python", "entity_daemon.py","--entity",entity_type, "--pid", pidfile, name, entity_subtype], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+                subp = subprocess.Popen(["python", "entity_daemon.py","--entity",entity_type, "--pid", pidfile, "--args", entity_args, name, entity_subtype], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
             with open(pidfile,"w") as pfile:
                 pfile.write(str(subp.pid))
                 

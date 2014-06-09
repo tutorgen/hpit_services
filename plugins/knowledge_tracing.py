@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 class KnowledgeTracingPlugin(Plugin):
 
-    def __init__(self, name, logger):
+    def __init__(self, name, logger, args = None):
         super().__init__(name)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
@@ -16,17 +16,17 @@ class KnowledgeTracingPlugin(Plugin):
             kt_trace=self.kt_trace)
 
     #Knowledge Tracing Plugin
-    def kt_trace(self, transaction):
-        self.logger.debug("RECV: kt_trace with transaction: " + str(transaction))
+    def kt_trace(self, message):
+        self.logger.debug("RECV: kt_trace with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': transaction['entity_id'],
-            'skill': transaction['skill']
+            'entity_id': message['entity_id'],
+            'skill': message['skill']
         })
 
         if not kt_config:
             self.logger.debug("ERROR: Could not find inital setting for knowledge tracer.")
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
                 'send': {
                     'event_name': 'kt_set_initial',
@@ -44,7 +44,7 @@ class KnowledgeTracingPlugin(Plugin):
         p_guess = kt_config['probability_guess']
         p_mistake = kt_config['probability_mistake']
 
-        correct = transaction['correct']
+        correct = message['correct']
 
         numer = 0
         denom = 1
@@ -65,7 +65,7 @@ class KnowledgeTracingPlugin(Plugin):
 
         self.logger.debug("SUCCESS: kt_trace with new data: " + str(kt_config))
 
-        self.send_response(transaction['id'], {
+        self.send_response(message['id'], {
             'skill': kt_config['skill'],
             'probability_known': p_known,
             'probability_learned': p_learned,
@@ -73,46 +73,46 @@ class KnowledgeTracingPlugin(Plugin):
             'probability_mistake': p_mistake
             })
 
-    def kt_set_initial_callback(self, transaction):
-        self.logger.debug("RECV: kt_set_initial with transaction: " + str(transaction))
+    def kt_set_initial_callback(self, message):
+        self.logger.debug("RECV: kt_set_initial with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': transaction['entity_id'],
-            'skill': transaction['skill']
+            'entity_id': message['entity_id'],
+            'skill': message['skill']
         })
 
         if not kt_config:
             self.db.insert({
-                'entity_id': transaction['entity_id'],
-                'skill': transaction['skill'],
-                'probability_known': transaction['probability_known'],
-                'probability_learned': transaction['probability_learned'],
-                'probability_guess': transaction['probability_guess'],
-                'probability_mistake': transaction['probability_mistake']
+                'entity_id': message['entity_id'],
+                'skill': message['skill'],
+                'probability_known': message['probability_known'],
+                'probability_learned': message['probability_learned'],
+                'probability_guess': message['probability_guess'],
+                'probability_mistake': message['probability_mistake']
                 })
         else:
             self.db.update({'_id': kt_config['_id']},
                 {'$set': {
-                    'probability_known' : transaction['probability_known'],
-                    'probability_learned' : transaction['probability_learned'],
-                    'probability_guess' : transaction['probability_guess'],
-                    'probability_mistake' : transaction['probability_mistake']
+                    'probability_known' : message['probability_known'],
+                    'probability_learned' : message['probability_learned'],
+                    'probability_guess' : message['probability_guess'],
+                    'probability_mistake' : message['probability_mistake']
                 }})
 
-        self.send_response(transaction['id'], {
-            'skill': transaction['skill'],
-            'probability_known': transaction['probability_known'],
-            'probability_learned': transaction['probability_learned'],
-            'probability_guess': transaction['probability_guess'],
-            'probability_mistake': transaction['probability_mistake']
+        self.send_response(message['id'], {
+            'skill': message['skill'],
+            'probability_known': message['probability_known'],
+            'probability_learned': message['probability_learned'],
+            'probability_guess': message['probability_guess'],
+            'probability_mistake': message['probability_mistake']
             })
 
-    def kt_reset(self, transaction):
-        self.logger.debug("RECV: kt_reset with transaction: " + str(transaction))
+    def kt_reset(self, message):
+        self.logger.debug("RECV: kt_reset with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': transaction['entity_id'],
-            'skill': transaction['skill']
+            'entity_id': message['entity_id'],
+            'skill': message['skill']
         })
 
         if kt_config:
@@ -123,7 +123,7 @@ class KnowledgeTracingPlugin(Plugin):
                 'probability_mistake': 0.0
             }})
 
-        self.send_response(transaction['id'], {
+        self.send_response(message['id'], {
             'skill': kt_config['skill'],
             'probability_known': 0.0,
             'probability_learned': 0.0,

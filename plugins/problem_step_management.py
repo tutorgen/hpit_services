@@ -4,7 +4,7 @@ from pymongo import MongoClient
 
 class ProblemStepManagementPlugin(Plugin):
 
-    def __init__(self, name, logger):
+    def __init__(self, name, logger, args = None):
         super().__init__(name)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
@@ -16,11 +16,11 @@ class ProblemStepManagementPlugin(Plugin):
             get_problem_step=self.get_problem_step_callback,
             list_problem_steps=self.list_problem_steps_callback)
 
-    def add_problem_step_callback(self, transaction):
-        entity_id = transaction['entity_id']
-        problem_name = transaction['problem_name']
-        problem_step_name = transaction['problem_step_name']
-        problem_step_text = transaction['problem_step_text']
+    def add_problem_step_callback(self, message):
+        entity_id = message['entity_id']
+        problem_name = message['problem_name']
+        problem_step_name = message['problem_step_name']
+        problem_step_text = message['problem_step_text']
 
         problem_step = self.db.find_one({
             'entity_id': entity_id,
@@ -36,7 +36,7 @@ class ProblemStepManagementPlugin(Plugin):
                 'problem_step_text': problem_step_text,
             })
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'problem_step_text': problem_step_text,
@@ -51,7 +51,7 @@ class ProblemStepManagementPlugin(Plugin):
                 'problem_step_text': problem_step_text,
             })
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'problem_step_text': problem_step_text,
@@ -59,10 +59,10 @@ class ProblemStepManagementPlugin(Plugin):
                 'updated': True
             })
 
-    def remove_problem_step_callback(self, transaction):
-        entity_id = transaction['entity_id']
-        problem_name = transaction['problem_name']
-        problem_step_name = transaction['problem_step_name']
+    def remove_problem_step_callback(self, message):
+        entity_id = message['entity_id']
+        problem_name = message['problem_name']
+        problem_step_name = message['problem_step_name']
 
         problem_step = self.db.find_one({
             'entity_id': entity_id,
@@ -77,24 +77,24 @@ class ProblemStepManagementPlugin(Plugin):
                 'problem_step_name': problem_step_name
             })
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'exists': True,
                 'success': True,
             })
         else:
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'exists': False,
                 'success': False
             })
 
-    def get_problem_step_callback(self, transaction):
-        entity_id = transaction['entity_id']
-        problem_name = transaction['problem_name']
-        problem_step_name = transaction['problem_step_name']
+    def get_problem_step_callback(self, message):
+        entity_id = message['entity_id']
+        problem_name = message['problem_name']
+        problem_step_name = message['problem_step_name']
 
         problem_step = self.db.find_one({
             'entity_id': entity_id,
@@ -103,14 +103,14 @@ class ProblemStepManagementPlugin(Plugin):
         })
 
         if not problem_step:
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'exists': False,
                 'success': False
             })
         else:
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'problem_step_text': problem_step['problem_step_text'],
@@ -118,11 +118,11 @@ class ProblemStepManagementPlugin(Plugin):
                 'success': True
             })
 
-    def list_problem_steps_callback(self, transaction):
-        entity_id = transaction['entity_id']
+    def list_problem_steps_callback(self, message):
+        entity_id = message['entity_id']
 
-        if 'problem_name' in transaction:
-            problem_name = transaction['problem_name']
+        if 'problem_name' in message:
+            problem_name = message['problem_name']
             problem_steps = self.db.find({
                 'entity_id': entity_id,
                 'problem_name': problem_name
@@ -130,7 +130,7 @@ class ProblemStepManagementPlugin(Plugin):
 
             problem_steps = [p for p in problem_steps]
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_steps': problem_steps,
                 'success': True
             })
@@ -141,7 +141,7 @@ class ProblemStepManagementPlugin(Plugin):
 
             problem_steps = [p for p in problem_steps]
 
-            self.send_response(transaction['id'], {
+            self.send_response(message['id'], {
                 'problem_name': problem_name,
                 'problem_steps': problem_steps,
                 'success': True

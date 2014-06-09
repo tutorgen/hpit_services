@@ -22,3 +22,8 @@ class ResponseDispatchError(Exception):
     This exception indicates that a response from HPIT could not be dispatched to a callback.
     """
     pass
+
+class InvalidMessageNameException(Exception):
+    """
+    This exception is raised when a user attempts to use a system message name, like 'transaction'.
+    """
