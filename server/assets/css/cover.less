@@ -27,13 +27,12 @@ a:hover {
 html,
 body {
   height: 100%;
-  background-color: #333;
+  background-color: #4FA2D1;
 }
 body {
-  color: #fff;
+  color: #666;
   text-align: center;
   text-shadow: 0 1px 3px rgba(0,0,0,.5);
-  box-shadow: inset 0 0 100px rgba(0,0,0,.5);
 }
 
 /* Extra markup and styles for table-esque vertical and horizontal centering */
@@ -47,23 +46,31 @@ body {
   display: table-cell;
   vertical-align: top;
 }
+
 .cover-container {
   margin-right: auto;
   margin-left: auto;
-}
+  background-color: white;
 
-/* Padding for spacing */
-.inner {
-  padding: 30px;
-}
+  /* Padding for spacing */
+  .inner {
+    padding: 30px;
+  }
 
+}
 
 /*
  * Header
  */
+.masthead {
+  background-color: white;
+  border: 3px solid #333;
+  text-shadow: 0 1px 3px rgba(128,128,128,.5);
+}
 .masthead-brand {
   margin-top: 10px;
   margin-bottom: 10px;
+  color: #4FA2D1;
 }
 
 .masthead-nav > li {
@@ -77,9 +84,7 @@ body {
   padding-left: 0;
   font-size: 16px;
   font-weight: bold;
-  color: #fff; /* IE8 proofing */
-  color: rgba(255,255,255,.75);
-  border-bottom: 2px solid transparent;
+  color: #4FA2D1;
 }
 .masthead-nav > li > a:hover,
 .masthead-nav > li > a:focus {
@@ -89,8 +94,9 @@ body {
 .masthead-nav > .active > a,
 .masthead-nav > .active > a:hover,
 .masthead-nav > .active > a:focus {
-  color: #fff;
-  border-bottom-color: #fff;
+  color: #4FA2D1;
+  border-bottom: 3px solid #333;
+  line-height: 0px;
 }
 
 @media (min-width: 768px) {
@@ -108,7 +114,11 @@ body {
  */
 
 .cover {
+  margin-top: 60px;
+  margin-bottom: 60px;
   padding: 0 20px;
+  border: 3px solid #333;
+  text-align: left;
 }
 .cover .btn-lg {
   padding: 10px 20px;
@@ -121,8 +131,10 @@ body {
  */
 
 .mastfoot {
-  color: #999; /* IE8 proofing */
-  color: rgba(255,255,255,.5);
+  color: #4FA2D1;
+  background-color: white;
+  border: 3px solid #333;
+  text-align: left;
 }
 
 
@@ -157,5 +169,21 @@ body {
   .mastfoot,
   .cover-container {
     width: 700px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .masthead,
+  .mastfoot,
+  .cover-container {
+    width: 1100px;
+  }
+}
+
+@media (min-width: 1420px) {
+  .masthead,
+  .mastfoot,
+  .cover-container {
+    width: 1350px;
   }
 }
