@@ -322,8 +322,8 @@ def message():
 
     name = request.json['name']
     payload = request.json['payload']
-    payload['entity_id'] = session['entity_id']
-    message_id = mongo.db.messages.insert(payload)
+    entity_id = session['entity_id']
+    message_id = mongo.db.messages.insert({"event":name,"payload":payload,"entity_id":entity_id})
 
     plugins = mongo.db.plugin_subscriptions.find({'event': name})
 
