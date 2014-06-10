@@ -195,6 +195,12 @@ def run_listroutes(arguments, configuration):
     for line in sorted(output):
         print(line)
 
+
+def run_docs(arguments, configuration):
+    import shutil
+    shutil.copy('./README.md', './server/assets/docs.md')
+
+
 def build_argument_parser():
     """
     Generate the argument parser for the manager using Python ArgumentParser
@@ -223,6 +229,9 @@ def build_argument_parser():
 
     run_listroutes_parser = subparsers.add_parser('routes', description="Lists all the available routes.")
     run_listroutes_parser.set_defaults(func=run_listroutes)
+
+    run_docs_parser = subparsers.add_parser('docs', description="Copy's the root project README.md to the server assets folder.")
+    run_docs_parser.set_defaults(func=run_docs)
 
     add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")

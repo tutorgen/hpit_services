@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% for link in links %}
+        <p>
+            <b>{{link.0}}</b><br/>
+            Documentation: {{link.1|safe}}
+            <hr/>
+        </p>
+    {% endfor %}
+{% endblock %}

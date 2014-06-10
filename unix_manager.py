@@ -94,7 +94,7 @@ def stop(arguments, configuration):
         wind_down_all('tutor', configuration)
 
         print("Stopping the HPIT Hub Server...")
-        with open(setting.HPIT_PID_FILE) as f:
+        with open(settings.HPIT_PID_FILE) as f:
             pid = f.read()
         try:
             os.kill(int(pid), signal.SIGTERM)

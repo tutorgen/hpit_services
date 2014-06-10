@@ -8,6 +8,7 @@ from flask.ext.babel import Babel
 from flask.ext.mail import Mail
 from flask.ext.pymongo import PyMongo
 from flask.ext.sqlalchemy import SQLAlchemy
+from flaskext.markdown import Markdown
 from flask.ext.user import current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
 
 from gears_less import LESSCompiler
@@ -41,6 +42,7 @@ mongo = PyMongo(app)
 babel = Babel(app)
 db = SQLAlchemy(app)
 mail = Mail(app)
+md = Markdown(app)
 
 #Session Store
 app.session_interface = MongoSessionInterface(app, mongo)
