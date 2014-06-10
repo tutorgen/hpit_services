@@ -3,10 +3,9 @@ import json
 import subprocess
 import os
 import signal
+import shutil
 
-from server.settings import HPIT_PID_FILE, HPIT_BIND_ADDRESS
-
-
+from server.settings import settings
 
 def spin_up_all(entity_type, configuration):
     """
@@ -82,7 +81,7 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server for Unix...")
-        subprocess.call(["gunicorn", "server:app", "--bind", HPIT_BIND_ADDRESS, "--daemon", "--pid", HPIT_PID_FILE])
+        subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE])
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
@@ -103,13 +102,18 @@ def stop(arguments, configuration):
         wind_down_all('tutor', configuration)
 
         print("Stopping the HPIT Hub Server...")
-        with open(HPIT_PID_FILE) as f:
+        with open(setting.HPIT_PID_FILE) as f:
             pid = f.read()
-            os.kill(int(pid), signal.SIGTERM)
         try:
-            os.remove(HPIT_PID_FILE) #Force for Mac
+            os.kill(int(pid), signal.SIGTERM)
+            os.remove(settings.HPIT_PID_FILE) #Force for Mac
         except FileNotFoundError: #On Linux
             pass #On linux file is removed when process dies, on mac it needs forced.
+        except ProcessLookupError:
+            print("ERROR: The HPIT server could not be stopped because it shutdown unexpectedly!")
+
+        #Cleanup the tmp directory
+        shutil.rmtree('tmp')
     else:
         print("The HPIT Server is not running.")
     print("DONE!")
