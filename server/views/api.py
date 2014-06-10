@@ -1,40 +1,8 @@
-import json
-from itertools import groupby
 from uuid import uuid4
 from bson.objectid import ObjectId
-from flask import Flask, request, session, abort, Response
-from flask import render_template, url_for, jsonify
-from flask.ext.pymongo import PyMongo
+from flask import session, jsonify, abort, request
 
-from .sessions import MongoSessionInterface
-from .settings import HPIT_VERSION
-
-app = Flask(__name__)
-
-app.config['MONGO_DBNAME'] = 'hpit_development'
-app.secret_key = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
-
-mongo = PyMongo(app)
-app.session_interface = MongoSessionInterface(app, mongo)
-
-HPIT_STATUS = {
-    'tutors': [],
-    'plugins': []
-}
-
-def _map_mongo_document(document):
-    mapped_doc = {k: v for k, v in document.items()}
-
-    if '_id' in mapped_doc:
-        mapped_doc['id'] = str(mapped_doc['_id'])
-        del mapped_doc['_id']
-
-    return mapped_doc
-
-@app.errorhandler(401)
-def custom_401(error):
-    return Response('You must establish a connection with HPIT first.', 
-        401, {'WWWAuthenticate':'Basic realm="Login Required"'})
+from server import app, mongo, _map_mongo_document, HPIT_STATUS
 
 @app.route("/version", methods=["GET"])
 def version():
@@ -400,31 +368,3 @@ def responses():
     )
 
     return jsonify({'responses': result})
-
-
-@app.route("/")
-def index():
-    """
-    SUPPORTS: GET
-    Shows the status dashboard and API route links for HPIT.
-    """
-    links = []
-    for rule in app.url_map.iter_rules():
-        if rule.endpoint != 'static':
-            docs = app.view_functions[rule.endpoint].__doc__
-
-            if docs:
-                docs = docs.replace('\n', '<br/>')
-
-            links.append((rule.rule, docs))
-
-    return render_template('index.html', 
-        links=links, 
-        tutor_count=len(HPIT_STATUS['tutors']),
-        plugin_count=len(HPIT_STATUS['plugins']),
-        tutors=HPIT_STATUS['tutors'],
-        plugins=HPIT_STATUS['plugins']
-    )
-
-if __name__ == "__main__":
-    app.run(debug=True)

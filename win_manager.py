@@ -5,7 +5,7 @@ import os
 import signal
 import shlex
 
-from server.settings import HPIT_PID_FILE
+from server.settings import settings
 
 DETACHED_PROCESS = 8 #code for windows subprocess
 
@@ -78,8 +78,8 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server for Windows...")
-        subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", HPIT_PID_FILE], creationflags=DETACHED_PROCESS)
-        with open(HPIT_PID_FILE,"w") as pfile:
+        subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS)
+        with open(settings.HPIT_PID_FILE,"w") as pfile:
             pfile.write(str(subp.pid))
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
@@ -100,10 +100,10 @@ def stop(arguments, configuration):
         wind_down_all('tutor', configuration)
 
         print("Stopping the HPIT Hub Server...")
-        with open(HPIT_PID_FILE) as f:
+        with open(settings.HPIT_PID_FILE) as f:
             pid = f.read()
             os.kill(int(pid), signal.SIGTERM)
-        os.remove(HPIT_PID_FILE)
+        os.remove(settings.HPIT_PID_FILE)
     else:
         print("The HPIT Server is not running.")
     print("DONE!")
