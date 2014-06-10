@@ -1,5 +1,6 @@
 env
 *.pyc
 configuration.json
+server/db/hpit_development.sqlite
 tmp
 log

@@ -36,9 +36,14 @@
               <h3 class="masthead-brand">HPIT</h3>
               <ul class="nav masthead-nav">
                 <li class="active"><a href="#">Docs</a></li>
-                <li><a href="#">Plugins</a></li>
-                <li><a href="#">Tutors</a></li>
-                <li><a href="#">Login</a></li>
+                {% if current_user.is_authenticated() %}
+                  <li><a href="#">My Plugins</a></li>
+                  <li><a href="#">My Tutors</a></li>
+                  <li><a href="/user/sign-out">Signout</a></li>
+                {% else %}
+                  <li><a href="/user/sign-in">Sign in</a></li>
+                  <li><a href="/user/register">Register</a></li>
+                {% endif %}
               </ul>
             </div>
           </div>

@@ -5,7 +5,7 @@ import os
 import signal
 import pytest
 
-from server.settings import HPIT_PID_FILE, HPIT_VERSION
+from server.settings import settings
 
 import platform
 if platform.system() == "Windows":
@@ -80,7 +80,7 @@ def server_is_running():
     """
     If the PID is there, then it must be running
     """
-    return os.path.isfile(HPIT_PID_FILE)
+    return os.path.isfile(settings.HPIT_PID_FILE)
     
     
 def add_entity(arguments, configuration):
@@ -174,6 +174,27 @@ def run_debug(arguments, configuration):
     from server import app
     app.run(debug=True, port=8000)
 
+def run_syncdb(arguments, configuration):
+    from server import db
+    db.create_all()
+
+def run_listroutes(arguments, configuration):
+    from server import app
+    import urllib.parse
+
+    output = []
+    for rule in app.url_map.iter_rules():
+
+        options = {}
+        for arg in rule.arguments:
+            options[arg] = "[{0}]".format(arg)
+
+        methods = ','.join(rule.methods)
+        output.append(urllib.parse.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, str(rule))))
+
+    for line in sorted(output):
+        print(line)
+
 def build_argument_parser():
     """
     Generate the argument parser for the manager using Python ArgumentParser
@@ -182,7 +203,7 @@ def build_argument_parser():
     main_parser = argparse.ArgumentParser(
         description='Manager that spins up plugins, tutors, and web services.')
     main_parser.add_argument('--version', action='version', 
-        version=HPIT_VERSION)
+        version=settings.HPIT_VERSION)
 
     subparsers = main_parser.add_subparsers(title='Sub-Commands')
 
@@ -196,6 +217,12 @@ def build_argument_parser():
 
     run_debug_parser = subparsers.add_parser('debug', description="Runs the server in debug mode.")
     run_debug_parser.set_defaults(func=run_debug)
+
+    run_syncdb_parser = subparsers.add_parser('syncdb', description="Creates all the tables in the database.")
+    run_syncdb_parser.set_defaults(func=run_syncdb)
+
+    run_listroutes_parser = subparsers.add_parser('routes', description="Lists all the available routes.")
+    run_listroutes_parser.set_defaults(func=run_listroutes)
 
     add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")

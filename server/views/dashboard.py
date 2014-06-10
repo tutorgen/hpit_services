@@ -1,7 +1,9 @@
 from flask import render_template
+from flask.ext.user import login_required
 
 from server import app, HPIT_STATUS
 
+@login_required
 @app.route("/")
 def index():
     """
