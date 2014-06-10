@@ -207,6 +207,16 @@ the JSON data.
 Returns 200:JSON -> 
 - message_id - The ID of the message submitted to the database
 
+### /transaction
+SUPPORTS: POST
+Submit a transaction to the HPIT server. Expect the data formatted as JSON
+with the application/json mimetype given in the headers. Expects a single field in
+the JSON data.
+- payload : Object => A JSON Object of the DATA to store in the database
+
+Returns 200:JSON -> 
+- message_id - The ID of the transaction submitted to the database
+
 ### /responses
 SUPPORTS: GET
 Poll for responses queued to original sender of a message.
