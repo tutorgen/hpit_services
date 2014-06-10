@@ -23,7 +23,7 @@ class Plugin(MessageSenderMixin):
             transaction=self.transaction_callback
         )
     
-    def transaction_callback(self):
+    def transaction_callback(self,message):
         """
         This is the default callback to responding to transaction messages.  This
         can be overridden if a plugin is interested in transaction messages.

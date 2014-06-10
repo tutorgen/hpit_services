@@ -220,7 +220,7 @@ def plugin_list_subscriptions(name):
 def plugin_message_history(name):
     """
     SUPPORTS: GET
-    Lists the message history for a specific plugin - including queued messages.
+    Lists the message and transaction history for a specific plugin - including queued messages.
     Does not mark them as recieved. 
 
     If you wish to preview queued messages only use the '/preview' route instead.
@@ -246,7 +246,7 @@ def plugin_message_history(name):
 def plugin_message_preview(name):
     """
     SUPPORTS: GET
-    Lists the messages queued for a specific plugin. 
+    Lists the messages and transactions queued for a specific plugin. 
     Does not mark them as recieved. Only shows messagess not marked as received.
     If you wish to see the entire message history for 
     the plugin use the '/history' route instead.
@@ -272,7 +272,7 @@ def plugin_message_preview(name):
 def plugin_messages(name):
     """
     SUPPORTS: GET
-    List the messages queued for a specific plugin.
+    List the messages and transactions queued for a specific plugin.
 
     !!!DANGER!!!: Will mark the messages as recieved by the plugin 
     and they will not show again. If you wish to see a preview
@@ -338,6 +338,41 @@ def message():
         })
 
     return jsonify(message_id=str(message_id))
+    
+@app.route("/transaction", methods=["POST"])
+def transaction():
+    """
+    SUPPORTS: POST
+    Submit a transaction to the HPIT server. Expect the data formatted as JSON
+    with the application/json mimetype given in the headers. Expects a single in
+    the JSON data.
+        - payload : Object => A JSON Object of the DATA to store in the database
+
+    Returns 200:JSON -> 
+        - message_id - The ID of the message submitted to the database
+    """
+    if 'entity_id' not in session:
+        return abort(401)
+
+    name = "transaction"
+    payload = request.json['payload']
+    payload['entity_id'] = session['entity_id']
+    message_id = mongo.db.messages.insert(payload)
+
+    plugins = mongo.db.plugin_subscriptions.find({'event': name})
+
+    for plugin in plugins:
+        mongo.db.plugin_messages.insert({
+            'plugin_name': plugin['name'],
+            'event_name': name,
+            'message_id': message_id,
+            'entity_id': session['entity_id'],
+            'message_payload': payload,
+            'sent_to_plugin': False
+        })
+
+    return jsonify(message_id=str(message_id))
+
 
 @app.route("/response", methods=["POST"])
 def response():
