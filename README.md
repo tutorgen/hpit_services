@@ -77,9 +77,10 @@ Then you can begin installalling HPIT by:
 2. Create a reference to your python3 installation binary for virtualenv. ```export PY3_PATH=`which python3````
 3. Create a new virtual environment with: `virtualenv -p $PY3_PATH my_environment`
 3. Activate that environment with: `source my_environment/bin/activate`
-4. Install HPIT's dependencies with: `pip3 install -r requirements.txt`
-5. Run the test suite by typing `python3 manager.py test`
-6. Start the MongoDB instance with `mongod`
+4. Install HPIT's dependencies with: `pip3 install -r requirements.txt` if on Unix, if on Windows, run: 'pip install -r requirements-win.txt'
+5. If on Windows, install PyCrypto via a binary. 
+6. Run the test suite by typing `python3 manager.py test`
+7. Start the MongoDB instance with `mongod`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000.

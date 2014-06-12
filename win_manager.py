@@ -86,7 +86,8 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server for Windows...")
-        subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS)
+        with open("tmp/output_server.txt","w") as f:
+            subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
         with open(settings.HPIT_PID_FILE,"w") as pfile:
             pfile.write(str(subp.pid))
         print("Starting tutors...")
