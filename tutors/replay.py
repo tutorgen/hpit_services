@@ -45,7 +45,7 @@ class ReplayTutor(Tutor):
                     successFlag = criteriaFlag | 2
                     
             if criteriaFlag == successFlag:
-                #self.send(message["event"],message["payload"])
+                self.send(message["event"],message["payload"])
                 self.logger.debug("REPLAYED: "+str(message))
             
         
