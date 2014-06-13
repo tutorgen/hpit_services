@@ -93,7 +93,7 @@ class Plugin(MessageSenderMixin):
         for event_name in event_names:
             if event_name in self.callbacks:
                 unsubscribe_url = urljoin(HPIT_URL_ROOT, 
-                    'plugin', self.name, 'unsubscribe', event_name)
+                    '/plugin/'+ self.name+ '/unsubscribe/'+ event_name)
 
                 self._post_data(unsubscribe_url)
                 del self.callbacks[event_name]

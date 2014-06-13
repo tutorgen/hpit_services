@@ -7,6 +7,16 @@ from client import Tutor
 from client.settings import HPIT_URL_ROOT
 from client.exceptions import ConnectionError
 
+def test_constructor():
+    """
+    Tutor.__init__() Test plan:
+        -ensure name is set
+        -ensure connected is false
+    """
+    test_tutor = Tutor("test_name",None)
+    test_tutor.name.should.equal("test_name")
+    test_tutor.connected.should.equal(False)
+
 @httpretty.activate
 def test_connect():
     """
@@ -17,9 +27,7 @@ def test_connect():
 
     test_tutor = Tutor("test_name",None)
     
-    test_tutor.connect().should.throw.(ConnectionError)
-    
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/connect/",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/connect/test_name",
                             body='{"entity_name":"tutor_name","entity_id":"4"}',
                             )
     
