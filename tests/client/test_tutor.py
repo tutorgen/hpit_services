@@ -29,6 +29,11 @@ def test_connect():
     
 @httpretty.activate
 def test_disconnect():
+    """
+    Tutor.test_disconnect() Test plan:
+        -ensure that connected is false after calling.
+    """
+    
     httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/disconnect",
                             body='OK',
                             )
