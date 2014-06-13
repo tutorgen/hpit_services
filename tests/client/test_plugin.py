@@ -6,6 +6,7 @@ import requests
 from client import Plugin
 from client.settings import HPIT_URL_ROOT
 from client.exceptions import ConnectionError
+from client.exceptions import PluginPollError
 
 @httpretty.activate
 def test_constructor():
@@ -159,22 +160,106 @@ def test_unsubscribe():
 def test_poll():
     """
     Plugin._poll() Test plan:
+        -ensure we get something from server
     """
-    pass
     
+    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/test_name/messages",
+                            body='{"messages":"4"}',
+                            )
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+                            body='',
+                            )
+    
+    test_plugin = Plugin("test_name",None)
+    test_plugin._poll().should_not.equal(None)
+    
+
+wildCardCalled = False
+
 @httpretty.activate
 def test_dispatch():
     """
     Plugin._dispatch() Test plan:
+        -if pre_dispatch hook not defined or false, return false
+        -if post_dispatch hook not defined or false, return false
+        -ensure pluginpollerror raised if wildcard callback not set on key error
+        -ensure wildcard callback is called if callback not set on key error if exists
+        -ensure pluginpollerror raised if no callback set
+        -ensure typerror raised if its not a function
+        -true on success
+        
+        Table:
+        pre_dispatch   post dispatch    callback[event]=    wildcard set  callback callable     result            
+        
+        returnFalse    *                set                 *             *                     false
+        returnTrue     returnFalse      set                 *             Yes                   false
+        returnTrue     returnTrue       not set             Not callable  *                     PluginPollError
+        returnTrue     returntrue       not set             Yes           *                     callbackCalled = True, rv True
+        returnTrue     returnTrue       None                *             No (none)             PluginPollError
+        returnTrue     returnTrue       4                   *             No (4)                TypeError
+        returnTrue     returnTrue       set                 *             Yes                   true
     """
-    pass
+    
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+                            body='',
+                            )
+    
+    def returnTrue():
+        return True
+    def returnFalse():
+        return False
+    def testCallback(param):
+        pass
+    def wildCard(param):
+        global wildCardCalled
+        wildCardCalled = True      
+    event_param = [{"event_name":"test_event","message":"test message"}]
+    
+    
+    test_plugin = Plugin("test_name",None)
+    
+    setattr(test_plugin,"pre_dispatch",returnFalse)
+    test_plugin._dispatch(event_param).should.equal(False)
+    
+    setattr(test_plugin,"pre_dispatch",returnTrue)
+    setattr(test_plugin,"post_dispatch",returnFalse)
+    test_plugin.callbacks["test_event"] = testCallback
+    test_plugin._dispatch(event_param).should.equal(False)
+    
+    del test_plugin.callbacks["test_event"]
+    test_plugin.wildcard_callback = 4
+    test_plugin._dispatch.when.called_with(event_param).should.throw(PluginPollError)
+    
+    setattr(test_plugin,"post_dispatch",returnTrue)
+    test_plugin.wildcard_callback = wildCard
+    test_plugin._dispatch(event_param).should.equal(True)
+    wildCardCalled.should.equal(True)
+    
+    test_plugin.callbacks["test_event"] = None
+    test_plugin._dispatch.when.called_with(event_param).should.throw(PluginPollError)
+    
+    test_plugin.callbacks["test_event"] = 4
+    test_plugin._dispatch.when.called_with(event_param).should.throw(TypeError)
+    
+    test_plugin.callbacks["test_event"] = testCallback
+    test_plugin._dispatch(event_param).should.equal(True)
+    
 
 @httpretty.activate
 def test_send_reponse():
     """
     Plugin.send_response() Test plan:
+        -make sure no exception raised
     """
-    pass
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/response",
+                            body='OK',
+                            )
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+                            body='',
+                            )
+    
+    test_plugin = Plugin("test_name",None)
+    test_plugin.send_response(4,{"payload":"4"})
     
 
 
