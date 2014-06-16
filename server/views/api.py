@@ -184,14 +184,14 @@ def plugin_list_subscriptions(name):
     return jsonify({'subscriptions': subscriptions})
 
 
-@app.route("/plugin/<name>/history")
+@app.route("/plugin/<name>/messages/history")
 def plugin_message_history(name):
     """
     SUPPORTS: GET
     Lists the message history for a specific plugin - including queued messages.
     Does not mark them as recieved. 
 
-    If you wish to preview queued messages only use the '/preview' route instead.
+    If you wish to preview queued messages only use the '/message-preview' route instead.
     If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
@@ -200,6 +200,7 @@ def plugin_message_history(name):
     """
     my_messagess = mongo.db.plugin_messages.find({
         'plugin_name': name,
+        'event_name' : {"$ne" : "transaction"}, 
     })
 
     result = [{
@@ -207,17 +208,43 @@ def plugin_message_history(name):
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
-    return jsonify({'history': result})
+    return jsonify({'message-history': result})
+    
+app.route("/plugin/<name>/transactions/history")
+def plugin_transaction_history(name):
+    """
+    SUPPORTS: GET
+    Lists the transaction history for a specific plugin - including queued messages.
+    Does not mark them as recieved. 
+
+    If you wish to preview queued transactions only use the '/transaction-preview' route instead.
+    If you wish to actually CONSUME the queue (mark as recieved) use the '/transactions' route instead.
+
+    DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
+
+    Returns JSON for the transactions.
+    
+    """
+    my_messagess = mongo.db.plugin_messages.find({
+        'plugin_name': name,
+        'event_name' : "transaction", 
+    })
+    result = [{
+        'event_name': t['event_name'],
+        'message': _map_mongo_document(t['message_payload'])
+        } for t in my_messages]
+
+    return jsonify({'transaction-history': result})
 
 
-@app.route("/plugin/<name>/preview")
+@app.route("/plugin/<name>/messages/preview")
 def plugin_message_preview(name):
     """
     SUPPORTS: GET
-    Lists the messages queued for a specific plugin. 
+    Lists the messages and transactions queued for a specific plugin. 
     Does not mark them as recieved. Only shows messagess not marked as received.
     If you wish to see the entire message history for 
-    the plugin use the '/history' route instead.
+    the plugin use the '/message-history' route instead.
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
 
@@ -226,6 +253,7 @@ def plugin_message_preview(name):
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
         'plugin_name': name,
+        'event_name' : {"$ne" : "transaction"},
     })
 
     result = [{
@@ -233,24 +261,52 @@ def plugin_message_preview(name):
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
-    return jsonify({'preview': result})
-
-
-@app.route("/plugin/<name>/messages")
-def plugin_messages(name):
+    return jsonify({'message-preview': result})
+    
+    
+@app.route("/plugin/<name>/transactions/preview")
+def plugin_transaction_preview(name):
     """
     SUPPORTS: GET
-    List the messages queued for a specific plugin.
+    Lists the transactions queued for a specific plugin. 
+    Does not mark them as recieved. Only shows transactions not marked as received.
+    If you wish to see the entire transaction history for 
+    the plugin use the '/transaction-history' route instead.
 
-    !!!DANGER!!!: Will mark the messages as recieved by the plugin 
-    and they will not show again. If you wish to see a preview
-    of the messages queued for a plugin use the /preview route instead.
+    DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO PREVIEW THEM.
 
     Returns JSON for the messages.
     """
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
         'plugin_name': name,
+        'event_name' : "transaction",
+    })
+
+    result = [{
+        'event_name': t['event_name'],
+        'message': _map_mongo_document(t['message_payload'])
+        } for t in my_messages]
+
+    return jsonify({'transaction-preview': result})
+
+
+@app.route("/plugin/<name>/messages/list")
+def plugin_messages(name):
+    """
+    SUPPORTS: GET
+    List the messages and transactions queued for a specific plugin.
+
+    !!!DANGER!!!: Will mark the messages as recieved by the plugin 
+    and they will not show again. If you wish to see a preview
+    of the messages queued for a plugin use the /message-preview route instead.
+
+    Returns JSON for the messages.
+    """
+    my_messages = mongo.db.plugin_messages.find({
+        'sent_to_plugin': False,
+        'plugin_name': name,
+        'event_name' : {"$ne" : "transaction"},
     })
 
     result = [
@@ -271,6 +327,41 @@ def plugin_messages(name):
 
     return jsonify({'messages': result})
 
+@app.route("/plugin/<name>/transactions/list")
+def plugin_transactions(name):
+    """
+    SUPPORTS: GET
+    List the transactions queued for a specific plugin.
+
+    !!!DANGER!!!: Will mark the transactions as recieved by the plugin 
+    and they will not show again. If you wish to see a preview
+    of the transactions queued for a plugin use the /transaction-preview route instead.
+
+    Returns JSON for the messages.
+    """
+    my_messages = mongo.db.plugin_messages.find({
+        'sent_to_plugin': False,
+        'plugin_name': name,
+        'event_name' : "transaction",
+    })
+
+    result = [
+        (t['_id'], t['event_name'], _map_mongo_document(t['message_payload']))
+        for t in my_messages
+    ]
+
+    update_ids = [t[0] for t in result]
+    result = [{
+        'event_name': t[1],
+        'message': t[2]} for t in result]
+
+    mongo.db.plugin_messages.update(
+        {'_id':{'$in': update_ids}},
+        {"$set": {'sent_to_plugin':True}}, 
+        multi=True
+    )
+
+    return jsonify({'messages': result})
 
 @app.route("/message", methods=["POST"])
 def message():
@@ -290,6 +381,40 @@ def message():
 
     name = request.json['name']
     payload = request.json['payload']
+    entity_id = session['entity_id']
+    message_id = mongo.db.messages.insert({"event":name,"payload":payload,"entity_id":entity_id})
+
+    plugins = mongo.db.plugin_subscriptions.find({'event': name})
+
+    for plugin in plugins:
+        mongo.db.plugin_messages.insert({
+            'plugin_name': plugin['name'],
+            'event_name': name,
+            'message_id': message_id,
+            'entity_id': session['entity_id'],
+            'message_payload': payload,
+            'sent_to_plugin': False
+        })
+
+    return jsonify(message_id=str(message_id))
+    
+@app.route("/transaction", methods=["POST"])
+def transaction():
+    """
+    SUPPORTS: POST
+    Submit a transaction to the HPIT server. Expect the data formatted as JSON
+    with the application/json mimetype given in the headers. Expects a single in
+    the JSON data.
+        - payload : Object => A JSON Object of the DATA to store in the database
+
+    Returns 200:JSON -> 
+        - message_id - The ID of the message submitted to the database
+    """
+    if 'entity_id' not in session:
+        return abort(401)
+
+    name = "transaction"
+    payload = request.json['payload']
     payload['entity_id'] = session['entity_id']
     message_id = mongo.db.messages.insert(payload)
 
@@ -306,6 +431,7 @@ def message():
         })
 
     return jsonify(message_id=str(message_id))
+
 
 @app.route("/response", methods=["POST"])
 def response():

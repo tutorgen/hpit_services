@@ -61,10 +61,9 @@ class MessageSenderMixin(RequestsMixin):
         See send() method for more details.
         """
         
-        message_url = urljoin(HPIT_URL_ROOT, 'message') #TODO: change to transaction
+        message_url = urljoin(HPIT_URL_ROOT, 'transaction')
 
         response = self._post_data(message_url, {
-            'name': "transaction",
             'payload': payload
         }).json()
 

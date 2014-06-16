@@ -8,7 +8,6 @@ import shlex
 from server.settings import settings
 
 DETACHED_PROCESS = 8 #code for windows subprocess
-
 def spin_up_all(entity_type, configuration):
     """
     Start all entities of a given type, as specified in configuration
@@ -22,20 +21,29 @@ def spin_up_all(entity_type, configuration):
             name = item['name']
             entity_subtype = item['type']
             
-            if 'args' in item:
-                entity_args = shlex.quote(json.dumps(item['args']))
-            else:
-                entity_args = "none"
-            
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
-           
+            
+            subp_args = ["python", "entity_daemon.py", "--entity",entity_type, "--pid", pidfile]
+            
+            if 'args' in item:
+                entity_args = shlex.quote(json.dumps(item['args']))
+                subp_args.append("--args")
+                subp_args.append(entity_args)
+                
+            if 'once' in item:
+                subp_args.append("--once")
+                
+            subp_args.append(name)
+            subp_args.append(entity_subtype)
+                
+            
             if entity_type != 'tutor' and entity_type !='plugin':
                 raise Exception("Error: unknown entity type in spin_up_all")
             
             with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                subp = subprocess.Popen(["python", "entity_daemon.py","--entity",entity_type, "--pid", pidfile, "--args", entity_args, name, entity_subtype], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+                subp = subprocess.Popen(subp_args, creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
             with open(pidfile,"w") as pfile:
                 pfile.write(str(subp.pid))
                 
@@ -78,7 +86,8 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server for Windows...")
-        subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS)
+        with open("tmp/output_server.txt","w") as f:
+            subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
         with open(settings.HPIT_PID_FILE,"w") as pfile:
             pfile.write(str(subp.pid))
         print("Starting tutors...")

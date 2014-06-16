@@ -20,21 +20,29 @@ def spin_up_all(entity_type, configuration):
             name = item['name']
             entity_subtype = item['type']
             
-            if 'args' in item:
-                entity_args = shlex.quote(json.dumps(item['args']))
-            else:
-                entity_args = "none"
-                
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
+            
+            subp_args = ["python", "entity_daemon.py", "--entity",entity_type, "--pid", pidfile]
+            
+            if 'args' in item:
+                entity_args = shlex.quote(json.dumps(item['args']))
+                subp_args.append("--args")
+                subp_args.append(entity_args)
+                
+            if 'once' in item:
+                subp_args.append("--once")
+                
+            subp_args.append(name)
+            subp_args.append(entity_subtype)
             
             
             if entity_type != 'tutor' and entity_type !='plugin':
                 raise Exception("Error: unknown entity type in spin_up_all")
             
             with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                subprocess.call(["python3", "entity_daemon.py", "--daemon","--entity",entity_type, "--pid", pidfile, name, entity_subtype], stdout = f, stderr = f)
+                subprocess.call(subp_args, stdout = f, stderr = f)
 
 def wind_down_collection(entity_type, entity_collection):
     """
@@ -73,7 +81,8 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server for Unix...")
-        subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE])
+        with open("tmp/output_server.txt","w") as f:
+            subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE], stdout = f, stderr = f)
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
