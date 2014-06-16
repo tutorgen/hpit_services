@@ -77,10 +77,10 @@ Then you can begin installalling HPIT by:
 2. Create a reference to your python3 installation binary for virtualenv. ```export PY3_PATH=`which python3````
 3. Create a new virtual environment with: `virtualenv -p $PY3_PATH my_environment`
 3. Activate that environment with: `source my_environment/bin/activate`
-4. Install HPIT's dependencies with: `pip3 install -r requirements.txt` if on Unix, if on Windows, run: 'pip install -r requirements-win.txt'
+4. On Unix, install HPIT's dependencies with: `pip3 install -r requirements.txt`.  On Windows, run: 'pip install -r requirements-win.txt'.
 5. If on Windows, install PyCrypto via a binary. 
-6. Run the test suite by typing `python3 manager.py test`
-7. Start the MongoDB instance with `mongod`
+6. Start the MongoDB instance with `mongod`
+7. Run the test suite by typing `python3 manager.py test`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000.
@@ -281,6 +281,39 @@ when you perform a poll you are recieving the right messages.
 
 Returns the event_names as a JSON list.
 
+### /plugin/\name\/transactions
+SUPPORTS: GET
+List the transactions queued for a specific plugin.
+
+!!!DANGER!!!: Will mark the transactions as recieved by the plugin 
+and they will not show again. If you wish to see a preview
+of the transactions queued for a plugin use the /transaction-preview route instead.
+
+Returns JSON for the messages.
+
+### /plugin/\name\/transaction-history
+SUPPORTS: GET
+Lists the transaction history for a specific plugin - including queued messages.
+Does not mark them as recieved. 
+
+If you wish to preview queued transactions only use the '/transaction-preview' route instead.
+If you wish to actually CONSUME the queue (mark as recieved) use the '/transactions' route instead.
+
+DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
+
+Returns JSON for the transactions.
+
+### /plugin/\name\/transaction-preview
+SUPPORTS: GET
+Lists the transactions queued for a specific plugin. 
+Does not mark them as recieved. Only shows transactions not marked as received.
+If you wish to see the entire transaction history for 
+the plugin use the '/transaction-history' route instead.
+
+DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO PREVIEW THEM.
+
+Returns JSON for the messages.
+
 ### /plugin/\name\/messages
 SUPPORTS: GET
 List the messages queued for a specific plugin.
@@ -291,7 +324,7 @@ of the messages queued for a plugin use the /preview route instead.
 
 Returns JSON for the messages.
 
-### /plugin/\name\/history
+### /plugin/\name\/message-history
 SUPPORTS: GET
 Lists the message history for a specific plugin - including queued messages.
 Does not mark them as recieved. 
@@ -303,7 +336,7 @@ DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
 
 Returns JSON for the messages.
 
-### /plugin/\name\/preview
+### /plugin/\name\/message-preview
 SUPPORTS: GET
 Lists the messages queued for a specific plugin. 
 Does not mark them as recieved. Only shows messages not marked as received.
