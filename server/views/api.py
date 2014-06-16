@@ -184,7 +184,7 @@ def plugin_list_subscriptions(name):
     return jsonify({'subscriptions': subscriptions})
 
 
-@app.route("/plugin/<name>/message-history")
+@app.route("/plugin/<name>/messages/history")
 def plugin_message_history(name):
     """
     SUPPORTS: GET
@@ -210,7 +210,7 @@ def plugin_message_history(name):
 
     return jsonify({'message-history': result})
     
-app.route("/plugin/<name>/transaction-history")
+app.route("/plugin/<name>/transactions/history")
 def plugin_transaction_history(name):
     """
     SUPPORTS: GET
@@ -237,7 +237,7 @@ def plugin_transaction_history(name):
     return jsonify({'transaction-history': result})
 
 
-@app.route("/plugin/<name>/message-preview")
+@app.route("/plugin/<name>/messages/preview")
 def plugin_message_preview(name):
     """
     SUPPORTS: GET
@@ -264,7 +264,7 @@ def plugin_message_preview(name):
     return jsonify({'message-preview': result})
     
     
-@app.route("/plugin/<name>/transaction-preview")
+@app.route("/plugin/<name>/transactions/preview")
 def plugin_transaction_preview(name):
     """
     SUPPORTS: GET
@@ -291,7 +291,7 @@ def plugin_transaction_preview(name):
     return jsonify({'transaction-preview': result})
 
 
-@app.route("/plugin/<name>/messages")
+@app.route("/plugin/<name>/messages/list")
 def plugin_messages(name):
     """
     SUPPORTS: GET
@@ -327,7 +327,7 @@ def plugin_messages(name):
 
     return jsonify({'messages': result})
 
-@app.route("/plugin/<name>/transactions")
+@app.route("/plugin/<name>/transactions/list")
 def plugin_transactions(name):
     """
     SUPPORTS: GET

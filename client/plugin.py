@@ -108,7 +108,7 @@ class Plugin(MessageSenderMixin):
         to.
         """
         list_messages_url = urljoin(HPIT_URL_ROOT, 
-            '/plugin/' + self.name + '/messages')
+            '/plugin/' + self.name + '/messages/list')
 
         return self._get_data(list_messages_url)['messages']
 

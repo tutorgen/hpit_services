@@ -281,7 +281,7 @@ when you perform a poll you are recieving the right messages.
 
 Returns the event_names as a JSON list.
 
-### /plugin/\name\/transactions
+### /plugin/\name\/transactions/list
 SUPPORTS: GET
 List the transactions queued for a specific plugin.
 
@@ -291,7 +291,7 @@ of the transactions queued for a plugin use the /transaction-preview route inste
 
 Returns JSON for the messages.
 
-### /plugin/\name\/transaction-history
+### /plugin/\name\/transactions/history
 SUPPORTS: GET
 Lists the transaction history for a specific plugin - including queued messages.
 Does not mark them as recieved. 
@@ -303,7 +303,7 @@ DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
 
 Returns JSON for the transactions.
 
-### /plugin/\name\/transaction-preview
+### /plugin/\name\/transactions/preview
 SUPPORTS: GET
 Lists the transactions queued for a specific plugin. 
 Does not mark them as recieved. Only shows transactions not marked as received.
@@ -314,7 +314,7 @@ DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO PREVIEW THEM.
 
 Returns JSON for the messages.
 
-### /plugin/\name\/messages
+### /plugin/\name\/messages/list
 SUPPORTS: GET
 List the messages queued for a specific plugin.
 
@@ -324,7 +324,7 @@ of the messages queued for a plugin use the /preview route instead.
 
 Returns JSON for the messages.
 
-### /plugin/\name\/message-history
+### /plugin/\name\/messages/history
 SUPPORTS: GET
 Lists the message history for a specific plugin - including queued messages.
 Does not mark them as recieved. 
@@ -336,7 +336,7 @@ DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
 
 Returns JSON for the messages.
 
-### /plugin/\name\/message-preview
+### /plugin/\name\/messages/preview
 SUPPORTS: GET
 Lists the messages queued for a specific plugin. 
 Does not mark them as recieved. Only shows messages not marked as received.
