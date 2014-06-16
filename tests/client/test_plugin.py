@@ -163,7 +163,7 @@ def test_poll():
         -ensure we get something from server
     """
     
-    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/test_name/messages",
+    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/test_name/messages/list",
                             body='{"messages":"4"}',
                             )
     httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",

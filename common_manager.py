@@ -168,7 +168,7 @@ def create_command(sub, name, description, func):
 
 
 def run_unit_tests(arguments, configuration):
-    pytest.main(['-x', 'tests'])
+    pytest.main(['-x', 'tests','--tb=short'])
 
 def run_debug(arguments, configuration):
     from server import app
