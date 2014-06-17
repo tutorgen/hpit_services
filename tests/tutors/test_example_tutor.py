@@ -16,8 +16,19 @@ def setup_function(function):
     """ setup any state tied to the execution of the given method in a
     class.  setup_method is invoked for every test method of a class.
     """
+    global test_subject
     
     test_subject = ExampleTutor("test_name",None)
+    
+    httpretty.enable()
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/connect/test_name",
+                            body='{"entity_name":"example_tutor","entity_id":"4"}',
+                            )
+    
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/disconnect",
+                            body='OK',
+                            )
+
 
 def teardown_function(function):
     """ teardown any state that was previously setup with a setup_method
@@ -29,8 +40,16 @@ def teardown_function(function):
 def test_constructor():
     """
     ExampleTutor.__init__() Test plan:
+        -Ensure name, logger set correctly
+        -Ensure event_names set correctly
     """
-    pass
+    
+    test_subject.name.should.equal("test_name")
+    test_subject.logger.should.equal(None)
+    test_subject.event_names.should.equal([
+            'test', 'example', 'add_student', 
+            'remove_student', 'trace'])
+    test_subject.run_once.should.equal(None)
 
 def test_setup():
     """
@@ -63,4 +82,10 @@ def test_run():
         -mock start, ensured called
         -ensure starts disconnected, finishes connected
     """
-    pass
+    mock = MagicMock()
+    test_subject.start = mock
+    test_subject.run()
+    test_subject.start.assert_any_call()
+    
+    
+    
