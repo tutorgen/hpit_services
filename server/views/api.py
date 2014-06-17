@@ -2,7 +2,7 @@ from uuid import uuid4
 from bson.objectid import ObjectId
 from flask import session, jsonify, abort, request
 
-from server import app, mongo, _map_mongo_document, HPIT_STATUS
+from server import app, mongo, _map_mongo_document, HPIT_STATUS,settings
 
 @app.route("/version", methods=["GET"])
 def version():
@@ -14,7 +14,7 @@ def version():
     Returns: 200:JSON with the following fields:
         - version : string -> version of HPIT
     """
-    version_returned = {"version": HPIT_VERSION}
+    version_returned = {"version": settings.HPIT_VERSION}
     return jsonify(version_returned)
 
 @app.route("/tutor/connect/<name>", methods=["POST"])
