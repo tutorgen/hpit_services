@@ -1,0 +1,43 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Plugin Details</h3>
+    </div>
+    
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-4">
+                <b>Entity ID</b>
+            </div>
+            <div class="col-md-8">
+                {{ plugin.entity_id }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <b>Name</b>
+            </div>
+            <div class="col-md-8">
+                {{ plugin.name }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <b>Description</b>
+            </div>
+            <div class="col-md-8">
+                {{ plugin.description }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <b>Online?</b>
+            </div>
+            <div class="col-md-8">
+                {{ plugin.connected }}
+            </div>
+        </div>
+    </div>
+</div>

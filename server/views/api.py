@@ -3,7 +3,26 @@ from bson.objectid import ObjectId
 from flask import session, jsonify, abort, request
 
 from server import app, mongo, _map_mongo_document, HPIT_STATUS
+from server.models import Plugin, Tutor
 
+def bad_parameter_response(parameter):
+    return Response(
+        status="Missing parameter: " + parameter,
+        status_code=401,
+        mimetype="application/json")
+
+
+def invalid_key_response():
+    return Response(
+        status="Permission Denied: Invalid API Key",
+        status_code=403,
+        mimetype="application/json")
+
+
+def response_ok():
+    return Response(status="OK", status_code=200, mimetype="application/json")
+
+    
 @app.route("/version", methods=["GET"])
 def version():
     """
@@ -17,8 +36,9 @@ def version():
     version_returned = {"version": HPIT_VERSION}
     return jsonify(version_returned)
 
-@app.route("/tutor/connect/<name>", methods=["POST"])
-def connect_tutor(name):
+
+@app.route("/tutor/connect", methods=["POST"])
+def connect_tutor():
     """
     SUPPORTS: POST
 
@@ -27,23 +47,43 @@ def connect_tutor(name):
     Returns: 200:JSON with the following fields:
         - entity_name : string -> Assigned entity name (not unique)
         - entity_id : string -> Assigned entity id (unique)
+        - api_key : string -> Assigned api key for connection authentication
         Both assignments expire when you disconnect from HPIT.
     """
-    entity_identifier = dict(
-        entity_name='tutor_' + name,
-        entity_id=uuid4()
-    )
+    for x in ['entity_name', 'entity_id', 'api_key']:
+        if x not in request.json:
+            return bad_parameter_response(x)
 
-    if entity_identifier not in HPIT_STATUS['tutors']:
-        HPIT_STATUS['tutors'].append(entity_identifier)
+    entity_name = request.json['entity_name']
+    entity_id = request.json['entity_id']
+    api_key = request.json['api_key']
 
-    session['entity_name'] = entity_identifier['entity_name']
-    session['entity_id'] = entity_identifier['entity_id']
+    #If this 404s the Tutor isn't registered in our system.
+    tutor = Tutor.query.filter_by(object_id=entity_id).first_or_404()
 
-    return jsonify(entity_identifier)
+    if not tutor.connected:
+
+        #Clear the session
+        session.clear()
+
+        #Authenticate
+        if tutor.api_key != api_key:
+            return invalid_key_response()
+
+        tutor.connected = True
+
+        #Renew Session
+        session['entity_name'] = entity_name
+        session['entity_id'] = entity_id
+ 
+        db.session.add(tutor)
+        db.session.commit()
+
+    #All is well
+    return jsonify(dict(entity_name=entity_name, entity_id=entity_id))
 
 
-@app.route("/plugin/connect/<name>", methods=["POST"])
+@app.route("/plugin/connect", methods=["POST"])
 def connect_plugin(name):
     """
     SUPPORTS: POST
@@ -53,12 +93,16 @@ def connect_plugin(name):
     Returns: 200:JSON with the following fields:
         - entity_name : string -> Assigned entity name (not unique)
         - entity_id : string -> Assigned entity id (unique)
+        - api_key : string -> Assigned api key for connection authentication
         Both assignments expire when you disconnect from HPIT.
     """
-    entity_identifier = dict(
-        entity_name='plugin_' + name,
-        entity_id=uuid4()
-    )
+    for x in ['entity_name', 'entity_id', 'api_key']:
+        if x not in request.json:
+            return bad_parameter_response(x)
+
+    entity_name = request.json['entity_name']
+    entity_id = request.json['entity_id']
+    api_key = request.json['api_key']
 
     if entity_identifier not in HPIT_STATUS['plugins']:
         HPIT_STATUS['plugins'].append(entity_identifier)
@@ -67,6 +111,30 @@ def connect_plugin(name):
     session['entity_id'] = entity_identifier['entity_id']
 
     return jsonify(entity_identifier)
+
+    #If this 404s the Tutor isn't registered in our system.
+    plugin = Plugin.query.filter_by(object_id=entity_id).first_or_404()
+
+    if not plugin.connected:
+
+        #Clear the session
+        session.clear()
+
+        #Authenticate
+        if plugin.api_key != api_key:
+            return invalid_key_response()
+
+        plugin.connected = True
+
+        #Renew Session
+        session['entity_name'] = entity_name
+        session['entity_id'] = entity_id
+ 
+        db.session.add(plugin)
+        db.session.commit()
+
+    #All is well
+    return jsonify(dict(entity_name=entity_name, entity_id=entity_id))
 
 
 @app.route("/tutor/disconnect", methods=["POST"])
@@ -78,21 +146,20 @@ def disconnect_tutor():
 
     Returns: 200:OK
     """
+    entity_name = session['entity_name']
+    entity_id = session['entity_id']
 
-    entity_identifier = dict(
-        entity_name=session['entity_name'],
-        entity_id=session['entity_id']
-    )
+    tutor = Tutor.query.filter(entity_id=entity_id).first_or_404()
 
-    try:
-        HPIT_STATUS['tutors'].remove(entity_identifier)
-    except ValueError:
-        pass
+    if tutor.connected:
+        tutor.connected = False
+        db.session.add(tutor)
+        db.session.commit()
 
-    session.pop('entity_name', None)
-    session.pop('entity_id', None)
+        session.clear()
 
-    return "OK"
+    return response_ok()
+
 
 @app.route("/plugin/disconnect", methods=["POST"])
 def disconnect_plugin():
@@ -103,20 +170,21 @@ def disconnect_plugin():
 
     Returns: 200:OK
     """
-    entity_identifier = dict(
-        entity_name=session['entity_name'],
-        entity_id=session['entity_id']
-    )
 
-    try:
-        HPIT_STATUS['plugins'].remove(entity_identifier)
-    except ValueError:
-        pass
+    entity_name = session['entity_name']
+    entity_id = session['entity_id']
 
-    session.pop('entity_name', None)
-    session.pop('entity_id', None)
+    plugin = Plugin.query.filter(entity_id=entity_id).first_or_404()
 
-    return "OK"
+    if plugin.connected:
+        plugin.connected = False
+        db.session.add(plugin)
+        db.session.commit()
+
+        session.clear()
+
+    return response_ok()
+
 
 @app.route("/plugin/<name>/subscribe/<event>", methods=["POST"])
 def subscribe(name, event):
@@ -141,6 +209,7 @@ def subscribe(name, event):
     else:
         return "EXISTS"
 
+
 @app.route("/plugin/<name>/unsubscribe/<event>", methods=["POST"])
 def unsubscribe(name, event):
     """
@@ -164,6 +233,7 @@ def unsubscribe(name, event):
         return "OK"
     else:
         return "DOES_NOT_EXIST"
+
 
 @app.route('/plugin/<name>/subscriptions')
 def plugin_list_subscriptions(name):
@@ -333,6 +403,7 @@ def response():
     })
 
     return jsonify(response_id=str(response_id))
+
 
 @app.route("/responses", methods=["GET"])
 def responses():

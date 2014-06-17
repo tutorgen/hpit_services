@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Your Plugin</h1>
+
+<div class="panel panel-danger">
+    <div class="panel-heading">
+        <h3 class="panel-title">Plugin API Access Key</h3>
+    </div>
+
+    <div class="panel-body">
+        <b>IMPORTANT!</b>
+        This access key will only be shown once. Write it down or copy it to a text file and save it somewhere safe.
+
+        <p><b>KEEP THIS KEY SECRET!</b></p>
+
+        Once you leave this page, your key will be lost forever and we cannot recover it for you. If you lose this 
+        key, we can generate a new one for you but you'll have to update your plugin software to reflect this change.
+
+        <div class="form-group">
+            <label for="api_key">Your API Access Key:</label>
+            <input class="form-control" id="api_key" type="text" value="{{key}}">
+        </div>
+    </div>
+</div>
+
+{% include '_plugin_detail_partial.html' %}
+
+{% endblock %}

@@ -21,6 +21,9 @@ class ServerSettings:
     MAIL_PASSWORD = 'abcd1234'
     MAIL_DEFAULT_SENDER = '"HPIT Production" <hpit@tutorgen.com>'
 
+    #Security
+    USER_PASSWORD_HASH = 'bcrypt_sha256'
+
     # Configure Flask-User
     USER_ENABLE_EMAIL            = False
     USER_ENABLE_USERNAME         = True

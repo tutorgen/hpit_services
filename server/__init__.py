@@ -10,6 +10,7 @@ from flask.ext.pymongo import PyMongo
 from flask.ext.sqlalchemy import SQLAlchemy
 from flaskext.markdown import Markdown
 from flask.ext.user import current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
+from flask_wtf.csrf import CsrfProtect
 
 from gears_less import LESSCompiler
 from gears_coffeescript import CoffeeScriptCompiler
@@ -43,6 +44,7 @@ babel = Babel(app)
 db = SQLAlchemy(app)
 mail = Mail(app)
 md = Markdown(app)
+csrf = CsrfProtect(app)
 
 #Session Store
 app.session_interface = MongoSessionInterface(app, mongo)
@@ -74,4 +76,4 @@ from server.views.api import *
 from server.views.dashboard import *
 from server.models import *
 
-__all__ = ['app', 'mongo', 'db', 'babel', 'user_manager']
+__all__ = ['app', 'mongo', 'db', 'babel', 'csrf', 'user_manager']
