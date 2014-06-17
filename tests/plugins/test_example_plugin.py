@@ -38,9 +38,11 @@ def teardown_function(function):
     """ teardown any state that was previously setup with a setup_method
     call.
     """
+    global test_subject
+    
     httpretty.disable()
     httpretty.reset()
-
+    test_subject = None
 
 def test_constructor():
     """
