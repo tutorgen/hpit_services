@@ -1,10 +1,10 @@
 import os
 from uuid import uuid4
 
-from flask import request, render_template
+from flask import request, render_template, redirect, url_for
 from flask.ext.user import login_required, current_user
 
-from server import app, HPIT_STATUS
+from server import app, db, HPIT_STATUS
 from server.models import Plugin, Tutor
 from server.forms import PluginForm, TutorForm
 
@@ -74,17 +74,6 @@ def plugins():
     return render_template('plugins.html', plugins=plugins)
 
 
-@app.route('/plugin/<entity_id>')
-@login_required
-def plugin_detail(entity_id):
-    plugin = Plugin.query.filter(user_id=current_user.id, entity_id=entity_id).first_or_404()
-
-    if plugin.user_id != current_user.id:
-        return abort(403)
-
-    return render_template('plugin_detail.html', plugin=plugin)
-
-
 @app.route('/plugin/new', methods=["GET", "POST"])
 @login_required
 def plugin_new():
@@ -99,46 +88,82 @@ def plugin_new():
         if plugin_form.validate():
             new_plugin = Plugin()
             plugin_form.populate_obj(new_plugin)
+            new_plugin.user = current_user
 
-            new_plugin.entity_id = uuid4()
+            new_plugin.entity_id = str(uuid4())
             key = new_plugin.generate_key()
+
+            db.session.add(new_plugin)
+            db.session.commit()
 
             return render_template('plugin_key.html', plugin=new_plugin, key=key)
 
     return render_template('plugin_new.html', form=plugin_form)
 
 
-@app.route('/plugin/edit/<entity_id>', methods=["GET", "POST"])
+@app.route('/plugin/edit/<plugin_id>', methods=["GET", "POST"])
 @login_required
-def plugin_edit(entity_id):
+def plugin_edit(plugin_id):
     """
     SUPPORTS: GET, POST
     Allows the user to edit a plugin
     """
 
-    plugin = Plugin.query.filter(user_id=current_user.id, entity_id=entity_id).first_or_404()
+    plugin = Plugin.query.get(plugin_id)
 
-    plugin_form = PluginForm(request.POST, plugin)
+    if plugin.user != current_user:
+        abort(403)
+
+    plugin_form = PluginForm(request.form, plugin)
 
     if request.method == "POST":
-        if form.validate():
+        if plugin_form.validate():
             plugin_form.populate_obj(plugin)
 
-            return redirect(url_for('plugin_detail', entity_id))
+            db.session.add(plugin)
+            db.session.commit()
+
+            return redirect(url_for('plugins'))
 
     return render_template('plugin_edit.html', form=plugin_form, plugin=plugin)
 
 
-@app.route('/plugin/delete/<entity_id>', methods=["POST"])
+@app.route('/plugin/genkey/<plugin_id>', methods=["GET"])
 @login_required
-def plugin_delete():
+def plugin_genkey(plugin_id):
     """
-    SUPPORTS: POST
+    SUPPORTS: GET
+    Allows the user to generate a new API key for their plugin.
+    """
+
+    plugin = Plugin.query.get(plugin_id)
+
+    if plugin.user != current_user:
+        abort(403)
+
+    key = plugin.generate_key()
+
+    db.session.add(plugin)
+    db.session.commit()
+
+    return render_template('plugin_key.html', plugin=plugin, key=key)
+
+
+@app.route('/plugin/delete/<plugin_id>', methods=["GET"])
+@login_required
+def plugin_delete(plugin_id):
+    """
+    SUPPORTS: GET
     Allows the user to delete a plugin
     """
 
-    plugin = Plugin.query.filter(user_id=current_user.id, entity_id=entity_id).first_or_404()
-    plugin.delete()
+    plugin = Plugin.query.get(plugin_id)
+
+    if plugin.user != current_user:
+        abort(403)
+
+    db.session.delete(plugin)
+    db.session.commit()
 
     return redirect(url_for('plugins'))
 

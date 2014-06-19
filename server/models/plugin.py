@@ -19,15 +19,15 @@ class Plugin(db.Model):
         random.seed(now)
 
         #Generate a randomize salt and HMAC it for posterity
-        self.api_key_salt = random.randrange(16**30)
+        self.api_key_salt = str(random.randrange(16**30))
         hsh = HMAC.new(bytes(settings.SECRET_KEY.encode('utf-8')))
-        hsh.update(bytes(str(self.api_key_salt).encode('utf-8')))
+        hsh.update(bytes(self.api_key_salt.encode('utf-8')))
 
         key = hsh.hexdigest()
 
         #Generate the resulting hash of key + salt + our_secret
         hsh = SHA512.new(bytes(settings.SECRET_KEY.encode('utf-8')))
-        hsh.update(bytes(str(self.api_key_salt).encode('utf-8')))
+        hsh.update(bytes(self.api_key_salt.encode('utf-8')))
         hsh.update(bytes(key.encode('utf-8')))
 
         #Only the resulting hash is stored
