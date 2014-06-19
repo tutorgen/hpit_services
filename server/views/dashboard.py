@@ -125,7 +125,7 @@ def plugin_edit(plugin_id):
 
             return redirect(url_for('plugins'))
 
-    return render_template('plugin_edit.html', form=plugin_form, plugin=plugin)
+    return render_template('plugin_edit.html', form=plugin_form)
 
 
 @app.route('/plugin/genkey/<plugin_id>', methods=["GET"])
@@ -175,8 +175,9 @@ def tutors():
     SUPPORTS: GET
     Shows a user's tutors.
     """
+    tutors = current_user.tutors
 
-    return render_template('tutors.html')
+    return render_template('tutors.html', tutors=tutors)
 
 
 @app.route('/tutor/new', methods=["GET", "POST"])
@@ -187,27 +188,88 @@ def tutor_new():
     Allows the user to create a new plugin.
     """
 
-    return render_template('tutor_new.html')
+    tutor_form = TutorForm(request.form)
+
+    if request.method == "POST":
+        if tutor_form.validate():
+            new_tutor = Tutor()
+            tutor_form.populate_obj(new_tutor)
+            new_tutor.user = current_user
+
+            new_tutor.entity_id = str(uuid4())
+            key = new_tutor.generate_key()
+
+            db.session.add(new_tutor)
+            db.session.commit()
+
+            return render_template('tutor_key.html', tutor=new_tutor, key=key)
+
+    return render_template('tutor_new.html', form=tutor_form)
 
 
-@app.route('/tutor/edit', methods=["GET", "POST"])
+@app.route('/tutor/edit/<tutor_id>', methods=["GET", "POST"])
 @login_required
-def tutor_edit():
+def tutor_edit(tutor_id):
     """
     SUPPORTS: GET, POST
     Allows the user to edit a plugin
     """
 
-    return render_template('tutor_edit.html')
+    tutor = Tutor.query.get(tutor_id)
+
+    if tutor.user != current_user:
+        abort(403)
+
+    tutor_form = TutorForm(request.form, tutor)
+
+    if request.method == "POST":
+        if tutor_form.validate():
+            tutor_form.populate_obj(tutor)
+
+            db.session.add(tutor)
+            db.session.commit()
+
+            return redirect(url_for('tutors'))
+
+    return render_template('tutor_edit.html', form=tutor_form)
 
 
-@app.route('/tutor/delete', methods=["POST"])
+@app.route('/tutor/genkey/<tutor_id>', methods=["GET"])
 @login_required
-def tutor_delete():
+def tutor_genkey(tutor_id):
     """
-    SUPPORTS: POST
+    SUPPORTS: GET
+    Allows the user to generate a new API key for their plugin.
+    """
+
+    tutor = Tutor.query.get(tutor_id)
+
+    if tutor.user != current_user:
+        abort(403)
+
+    key = tutor.generate_key()
+
+    db.session.add(tutor)
+    db.session.commit()
+
+    return render_template('tutor_key.html', tutor=tutor, key=key)
+
+
+
+
+@app.route('/tutor/delete/<tutor_id>', methods=["GET"])
+@login_required
+def tutor_delete(tutor_id):
+    """
+    SUPPORTS: GET
     Allows the user to delete a plugin
     """
+    tutor = Tutor.query.get(tutor_id)
 
-    return render_template('tutor_edit.html')
+    if tutor.user != current_user:
+        abort(403)
 
+    db.session.delete(tutor)
+    db.session.commit()
+
+    return redirect(url_for('tutors'))

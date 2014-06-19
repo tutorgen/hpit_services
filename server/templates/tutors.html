@@ -3,6 +3,18 @@
 {% block content %}
 <h1>Tutors</h1>
 
-<a href="/tutor/new">Add a new tutor</a>
+<div class="row"><div class="spacer"></div></div>
+
+{% for tutor in tutors %}
+    {% include '_tutor_detail_partial.html' %}
+
+    <div class="row"><div class="spacer"></div></div>
+{% endfor %}
+
+<a href="/tutor/new">
+    <div class="btn btn-primary">
+        <span class="glyphicon glyphicon-plus"></span> Add a new tutor
+    </div>
+</a>
 
 {% endblock %}

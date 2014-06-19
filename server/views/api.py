@@ -12,15 +12,25 @@ def bad_parameter_response(parameter):
         mimetype="application/json")
 
 
-def invalid_key_response():
+def auth_failed_response():
     return Response(
-        status="Permission Denied: Invalid API Key",
+        status="Could not authenticate. Invalid entity_id/api_key combination.",
         status_code=403,
         mimetype="application/json")
 
 
-def response_ok():
-    return Response(status="OK", status_code=200, mimetype="application/json")
+def not_found_response():
+    return Response(
+        status="Could not find the requested resource.",
+        status_code=404,
+        mimetype="application/json")
+   
+
+def ok_response():
+    return Response(
+        status="OK", 
+        status_code=200, 
+        mimetype="application/json")
 
     
 @app.route("/version", methods=["GET"])
@@ -37,153 +47,96 @@ def version():
     return jsonify(version_returned)
 
 
-@app.route("/tutor/connect", methods=["POST"])
-def connect_tutor():
+@app.route("/connect", methods=["POST"])
+def connect():
     """
     SUPPORTS: POST
 
-    Establishes a tutor session with HPIT.
+    Establishes a RESTful session with HPIT.
 
-    Returns: 200:JSON with the following fields:
-        - entity_name : string -> Assigned entity name (not unique)
+    Accepts: JSON
         - entity_id : string -> Assigned entity id (unique)
         - api_key : string -> Assigned api key for connection authentication
-        Both assignments expire when you disconnect from HPIT.
+
+    Returns: 
+        200 on success
+        404 if no entity or tutor is registered with the supplied entity_id
+        403 if failed to authenticate (entity_id or api_key is invalid)
     """
-    for x in ['entity_name', 'entity_id', 'api_key']:
+    for x in ['entity_id', 'api_key']:
         if x not in request.json:
             return bad_parameter_response(x)
 
-    entity_name = request.json['entity_name']
     entity_id = request.json['entity_id']
     api_key = request.json['api_key']
 
-    #If this 404s the Tutor isn't registered in our system.
-    tutor = Tutor.query.filter_by(object_id=entity_id).first_or_404()
+    entity = Tutor.query.filter_by(entity_id=entity_id).first()
 
-    if not tutor.connected:
+    if not entity:
+        entity = Plugin.query.filter_by(entity_id=entity_id).first()
 
-        #Clear the session
-        session.clear()
+    if not entity:
+        return not_found_response()
 
-        #Authenticate
-        if tutor.api_key != api_key:
-            return invalid_key_response()
+    if not entity.authenticate(api_key):
+        return auth_failed_response()
 
-        tutor.connected = True
+    #Clear the session
+    session.clear()
 
-        #Renew Session
-        session['entity_name'] = entity_name
-        session['entity_id'] = entity_id
- 
-        db.session.add(tutor)
-        db.session.commit()
+    entity.connected = True
+
+    #Renew Session
+    session['entity_name'] = entity.name
+    session['entity_description'] = entity.description
+    session['entity_id'] = entity_id
+
+    db.session.add(entity)
+    db.session.commit()
 
     #All is well
-    return jsonify(dict(entity_name=entity_name, entity_id=entity_id))
+    return ok_response()
 
 
-@app.route("/plugin/connect", methods=["POST"])
-def connect_plugin(name):
+@app.route("/disconnect", methods=["POST"])
+def disconnect():
     """
     SUPPORTS: POST
 
-    Establishes a plugin session with HPIT.
+    Destroys the session for the entity calling this route.
 
-    Returns: 200:JSON with the following fields:
-        - entity_name : string -> Assigned entity name (not unique)
+    Accepts: JSON
         - entity_id : string -> Assigned entity id (unique)
         - api_key : string -> Assigned api key for connection authentication
-        Both assignments expire when you disconnect from HPIT.
-    """
-    for x in ['entity_name', 'entity_id', 'api_key']:
-        if x not in request.json:
-            return bad_parameter_response(x)
 
-    entity_name = request.json['entity_name']
-    entity_id = request.json['entity_id']
+    Returns: 
+        200 on success
+        404 if no entity or tutor is registered with the supplied entity_id
+        403 if failed to authenticate (entity_id or api_key is invalid)
+    """
+
+    entity_id = session['entity_id']
     api_key = request.json['api_key']
 
-    if entity_identifier not in HPIT_STATUS['plugins']:
-        HPIT_STATUS['plugins'].append(entity_identifier)
+    entity = Tutor.query.filter_by(entity_id=entity_id).first()
 
-    session['entity_name'] = entity_identifier['entity_name']
-    session['entity_id'] = entity_identifier['entity_id']
+    if not entity:
+        entity = Plugin.query.filter_by(entity_id=entity_id).first()
 
-    return jsonify(entity_identifier)
+    if not entity:
+        return not_found_response()
 
-    #If this 404s the Tutor isn't registered in our system.
-    plugin = Plugin.query.filter_by(object_id=entity_id).first_or_404()
+    #Authenticate
+    if not entity.authenticate(api_key):
+        return auth_failed_response()
 
-    if not plugin.connected:
+    entity.connected = False
+    db.session.add(entity)
+    db.session.commit()
 
-        #Clear the session
-        session.clear()
+    session.clear()
 
-        #Authenticate
-        if plugin.api_key != api_key:
-            return invalid_key_response()
-
-        plugin.connected = True
-
-        #Renew Session
-        session['entity_name'] = entity_name
-        session['entity_id'] = entity_id
- 
-        db.session.add(plugin)
-        db.session.commit()
-
-    #All is well
-    return jsonify(dict(entity_name=entity_name, entity_id=entity_id))
-
-
-@app.route("/tutor/disconnect", methods=["POST"])
-def disconnect_tutor():
-    """
-    SUPPORTS: POST
-
-    Destroys the session for the tutor calling this route.
-
-    Returns: 200:OK
-    """
-    entity_name = session['entity_name']
-    entity_id = session['entity_id']
-
-    tutor = Tutor.query.filter(entity_id=entity_id).first_or_404()
-
-    if tutor.connected:
-        tutor.connected = False
-        db.session.add(tutor)
-        db.session.commit()
-
-        session.clear()
-
-    return response_ok()
-
-
-@app.route("/plugin/disconnect", methods=["POST"])
-def disconnect_plugin():
-    """
-    SUPPORTS: POST
-
-    Destroys the session for the plugin calling this route.
-
-    Returns: 200:OK
-    """
-
-    entity_name = session['entity_name']
-    entity_id = session['entity_id']
-
-    plugin = Plugin.query.filter(entity_id=entity_id).first_or_404()
-
-    if plugin.connected:
-        plugin.connected = False
-        db.session.add(plugin)
-        db.session.commit()
-
-        session.clear()
-
-    return response_ok()
+    return ok_response()
 
 
 @app.route("/plugin/<name>/subscribe/<event>", methods=["POST"])
