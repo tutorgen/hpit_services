@@ -14,6 +14,9 @@ class Plugin(db.Model):
     description = db.Column(db.String(1400), nullable=False)
     connected = db.Column(db.Boolean, nullable=False, default=False)
 
+    #Relationships
+    subscriptions = db.relationship('Subscription', backref='plugin')
+
     def generate_key(self):
         now = datetime.now()
         random.seed(now)

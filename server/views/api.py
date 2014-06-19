@@ -26,6 +26,13 @@ def not_found_response():
         mimetype="application/json")
    
 
+def exists_response():
+    return Response(
+        status="EXISTS", 
+        status_code=200, 
+        mimetype="application/json")
+
+
 def ok_response():
     return Response(
         status="OK", 
@@ -139,87 +146,135 @@ def disconnect():
     return ok_response()
 
 
-@app.route("/plugin/<name>/subscribe/<event>", methods=["POST"])
-def subscribe(name, event):
+@app.route("/plugin/subscribe", methods=["POST"])
+def subscribe():
     """
     SUPPORTS: POST
 
-    Start listening to an event type <event> for a specific plugin with
-    the name <name>.
+    Start listening to a message for the plugin that sends this request.
 
-    Returns: 200:OK or 200:EXISTS
+    Accepts: JSON
+        - message_name - the name of the message to subscribe to
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session.
+        200:OK      - Mapped the event to the plugin
+        200:EXISTS  - The mapping already exists
     """
-    payload = {
-        'name': name,
-        'event': event
-    }
+    if 'message_name' not in request.json:
+        return bad_parameter_response()
 
-    found = mongo.db.plugin_subscriptions.find_one(payload)
+    message_name = request.json['message_name']
+    entity_id = session['entity_id']
 
-    if not found:
-        mongo.db.plugin_subscriptions.insert(payload)
-        return "OK"
-    else:
-        return "EXISTS"
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    subscription = plugin.subscriptions.filter_by(message_name=message_name).first()
+
+    if subscription:
+        return exists_response()
+
+    subscription = Subscription()
+    subscription.plugin = plugin
+    subscription.message_name = message_name
+
+    db.session.add(subscription)
+    db.session.commit()
+
+    return ok_response()
 
 
-@app.route("/plugin/<name>/unsubscribe/<event>", methods=["POST"])
-def unsubscribe(name, event):
+@app.route("/plugin/unsubscribe", methods=["POST"])
+def unsubscribe():
     """
     SUPPORTS: POST
 
-    Stop listening to an event type <event> for a specific plugin with
-    the name <name>.
+    Stop listening to a message for the plugin that sends this request.
 
-    Returns: 200:OK or 200:DOES_NOT_EXIST
+    Accepts: JSON
+        - message_name - the name of the message to unsubscribe from
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session or could not find the subscription.
+        200:OK      - Mapped the event to the plugin
+        200:EXISTS  - The mapping already exists
     """
 
-    payload = {
-        'name': name,
-        'event': event
-    }
+    if 'message_name' not in request.json:
+        return bad_parameter_response()
 
-    found = mongo.db.plugin_subscriptions.find_one(payload)
+    message_name = request.json['message_name']
+    entity_id = session['entity_id']
 
-    if found:
-        mongo.db.plugin_subscriptions.remove(payload)
-        return "OK"
-    else:
-        return "DOES_NOT_EXIST"
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    subscription = plugin.subscriptions.filter_by(message_name=message_name).first()
+
+    if not subscription:
+        return not_found_response()
+
+    db.session.delete(subscription)
+    db.session.commit()
+
+    return ok_response()
 
 
-@app.route('/plugin/<name>/subscriptions')
-def plugin_list_subscriptions(name):
+@app.route('/plugin/subscriptions')
+def plugin_list_subscriptions():
     """
     SUPPORTS: GET
-    Lists the event names for messages this plugin will listen to.
+
+    Lists the messages this plugin will listen to.
     If you are using the library then this is done under the hood to make sure
     when you perform a poll you are recieving the right messages.
 
-    Returns the event_names as a JSON list.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session.
+        200:OK      - A JSON list of the subscriptions for this plugin.
     """
 
     def _map_subscriptions(subscription):
-        return subscription['name']
+        return subscription['message_name']
 
-    subscriptions = list(mongo.db.plugin_subscriptions.find({'name': name}))
-    subscriptions = [_map_subscriptions(sub) for sub in subscriptions]
+    entity_id = session['entity_id']
+
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    subscriptions = [x.message_name for x in plugin.subscriptions.all()]
+
     return jsonify({'subscriptions': subscriptions})
 
 
-@app.route("/plugin/<name>/history")
+@app.route("/plugin/history")
 def plugin_message_history(name):
     """
     SUPPORTS: GET
-    Lists the message history for a specific plugin - including queued messages.
-    Does not mark them as recieved. 
+    Lists the message history for the plugin - including queued messages.
+
+    !!! IMPORTANT - Does not mark the messages as recieved. 
 
     If you wish to preview queued messages only use the '/preview' route instead.
     If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
+    HEREHERE
     """
     my_messagess = mongo.db.plugin_messages.find({
         'plugin_name': name,
