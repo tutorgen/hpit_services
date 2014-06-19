@@ -7,34 +7,26 @@ from unittest.mock import *
 from flask import jsonify
 from flask import request
 
-from server.views import api
-from server import settings
 from server import app
+from server import settings
+from flask.ext.pymongo import PyMongo
 
 test_client = None
-
-def setup_module(module):
-    pass
-    
-def teardown_module(module):
-    pass
 
 def setup_function(function):
     """ setup any state tied to the execution of the given method in a
     class.  setup_method is invoked for every test method of a class.
     """
     global test_client
-    
     test_client = app.test_client()
-
+    
 def teardown_function(function):
     """ teardown any state that was previously setup with a setup_method
     call.
     """
     global test_client
-    
     test_client = None
-
+ 
 
 def test_version():
     """
@@ -89,7 +81,8 @@ def test_subscribe():
         -return OK if new, EXISTS if not new.
         -ensure new record in DB on OK, and no additional records added on EXISTS
     """
-    pass
+    response = test_client.post("/plugin/test-plugin/subscribe/foo")
+    str(response.get_data()).should.contain("OK")
 
 def test_unsubscribe():
     """
@@ -117,14 +110,111 @@ def test_plugin_message_history():
         -ensure a list of names and payloads are returned matches those in DB
         -make sure that plugins that share names do not share histories
         -make sure none of the messages have "transaction" as a name
+        -make sure is in the format of event_name and message
     """
     pass
 
 def test_plugin_transaction_history():
     """
     api.plugin_transaction_history() Test plan:
-        - 
+        -mock a db with some events for a given plugin name (at least event need not "transaction" as name)
+        -ensure a list of names and payloads are returned matches those in DB
+        -make sure that plugins that share names do not share histories
+        -make sure all of the messages have "transaction" as a name
+        -make sure is in the format of event_name and message
     """
     pass
 
- 
+def test_plugin_message_preview():
+    """
+    api.plugin_message_preview() Test plan:
+        -mock database with transactions, messages, some processed, some not
+        -ensure list of names returned matches those in db
+        -ensure that none of the returned values have sent_to_plugin be true
+        -make sure that plugins that share names do not share previews
+        -make sure is in the format of event_name and message
+    """
+    pass
+
+def test_plugin_transaction_preview():
+    """
+    api.plugin_transaction_preview() Test plan:
+        -mock database with transactions, messages, some processed, some not
+        -ensure list of names returned matches those in db
+        -ensure that none of the returned values have sent_to_plugin be true
+        -make sure that plugins that share names do not share previews
+        -make sure is in the format of event_name and message
+    """
+    pass
+
+def test_plugin_messages():
+    """
+    api.plugin_messages() Test plan:
+        -mock db, add some messages; some sent, some not, some transactions, some not
+        -on get, ensure that only sent_to_plugin = false messages are received
+        -make sure none of them transactions
+        -make sure return value in the form of event,message dict
+        -ensure that after fetch, those returned sent_to_plugin is changed to true in the db
+        -make sure that two plugins cannot accidentally share messages
+        -make sure untouched messages remain unchanged in db
+    """
+    pass
+
+def test_plugin_transactions():
+    """
+    api.plugin_transactions() Test plan:
+        -mock db, add some messages; some sent, some not, some transactions, some not
+        -on get, ensure that only sent_to_plugin = false transactions are received
+        -make sure none of them normal messages
+        -make sure return value in the form of event,message dict
+        -ensure that after fetch, those returned sent_to_plugin is changed to true in the db
+        -make sure that two plugins cannot accidentally share transactions
+        -make sure untouched messages remain unchanged in db
+    """
+    pass
+
+def test_message():
+    """
+    api.message() Test plan:
+        -mock a database, empty
+        -send a fake request with some data
+        -make sure data is correctly propogated to plugin_messagse (fields match)
+        -make sure duplicate plugins get duplicate messages (name querying problem probably exists)
+        -make sure the returned id is in the plugin_message entries added by the system
+    """
+    pass
+
+def test_transaction():
+    """
+    api.transaction() Test plan:
+        -mock a database, empty
+        -send a fake request with some data
+        -make sure data is correctly propogated to plugin_messagse (fields match)
+        -transactions should be put in plugin_messages for every plugin that exists (all subscribe to transactions)
+        -make sure same named plugins get duplicate messages (name querying problem probably exists)
+        -make sure the returned id is in the plugin_message entries added by the system
+    """
+    pass
+
+def test_response():
+    """
+    api.response() Test plan:
+        -mock db with a message, and no responses
+        -Test for invalid message_id... what does it do
+        -On success, make sure response written to database
+        -reutrned ID should be listed in response database
+    """
+    pass
+
+def test_responses():
+    """
+    api.responses() Test plan:
+        -ensure 401 returned if session data not available
+        -ensure return value is proper format {response: {message: ,response: }}
+        -ensure that after response is polled, its received value is set to true
+        -ensure that other responses are not touched
+    """
+    pass
+
+
+      
