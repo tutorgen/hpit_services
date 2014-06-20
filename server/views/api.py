@@ -258,7 +258,7 @@ def plugin_list_subscriptions():
 
 
 @app.route("/plugin/history")
-def plugin_message_history(name):
+def plugin_message_history():
     """
     SUPPORTS: GET
     Lists the message history for the plugin - including queued messages.
@@ -272,12 +272,15 @@ def plugin_message_history(name):
 
     Returns: 
         403         - A connection with HPIT must be established first.
-        404         - Could not find the plugin stored in the session.
         200:OK      - A JSON list of dicts of the messages for this plugin.
-    HEREHERE
     """
-    my_messagess = mongo.db.plugin_messages.find({
-        'plugin_name': name,
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
+    my_messages = mongo.db.plugin_messages.find({
+        'plugin_entity_id': entity_id,
     })
 
     result = [{
@@ -288,8 +291,8 @@ def plugin_message_history(name):
     return jsonify({'history': result})
 
 
-@app.route("/plugin/<name>/preview")
-def plugin_message_preview(name):
+@app.route("/plugin/preview")
+def plugin_message_preview():
     """
     SUPPORTS: GET
     Lists the messages queued for a specific plugin. 
@@ -299,11 +302,18 @@ def plugin_message_preview(name):
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_name': name,
+        'plugin_entity_id': entity_id,
     })
 
     result = [{
@@ -314,8 +324,8 @@ def plugin_message_preview(name):
     return jsonify({'preview': result})
 
 
-@app.route("/plugin/<name>/messages")
-def plugin_messages(name):
+@app.route("/plugin/messages")
+def plugin_messages():
     """
     SUPPORTS: GET
     List the messages queued for a specific plugin.
@@ -324,15 +334,22 @@ def plugin_messages(name):
     and they will not show again. If you wish to see a preview
     of the messages queued for a plugin use the /preview route instead.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_name': name,
+        'receiver_entity_id': entity_id,
     })
 
     result = [
-        (t['_id'], t['event_name'], _map_mongo_document(t['message_payload']))
+        (t['_id'], t['event_name'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
@@ -343,7 +360,7 @@ def plugin_messages(name):
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
-        {"$set": {'sent_to_plugin':True}}, 
+        {"$set": {'sent_to_plugin':True, 'time_received': datetime.now()}}, 
         multi=True
     )
 
@@ -357,33 +374,56 @@ def message():
     Submit a message to the HPIT server. Expect the data formatted as JSON
     with the application/json mimetype given in the headers. Expects two fields in
     the JSON data.
+
+    Accepts: JSON
         - name : string => The name of the event message to submit to the server
         - payload : Object => A JSON Object of the DATA to store in the database
 
-    Returns 200:JSON -> 
-        - message_id - The ID of the message submitted to the database
+    Returns:
+        403         - A connection with HPIT must be established first.
+        200: JSON   
+            - message_id - The ID of the message submitted to the database
     """
     if 'entity_id' not in session:
-        return abort(401)
+        return auth_failed_response()
 
-    name = request.json['name']
+    sender_entity_id = session['entity_id']
+    event_name = request.json['name']
     payload = request.json['payload']
-    payload['entity_id'] = session['entity_id']
-    message_id = mongo.db.messages.insert(payload)
 
-    plugins = mongo.db.plugin_subscriptions.find({'event': name})
+    message = {
+        'sender_entity_id': sender_entity_id,
+        'time_created': datetime.now(),
+        'event_name': event_name,
+        'payload': payload,
+    }
 
-    for plugin in plugins:
+    message_id = mongo.db.messages.insert(message)
+
+    subscriptions = Subscription.query.filter_by(event_name=event_name)
+
+    for subscription in subscriptions:
+        plugin_entity_id = subscription.plugin.entity_id
+
         mongo.db.plugin_messages.insert({
-            'plugin_name': plugin['name'],
-            'event_name': name,
-            'message_id': message_id,
-            'entity_id': session['entity_id'],
-            'message_payload': payload,
-            'sent_to_plugin': False
+            '_message_id': message_id,
+
+            'sender_entity_id': sender_entity_id,
+            'receiver_entity_id': plugin_entity_id,
+
+            'time_created': datetime.now(),
+            'time_received': datetime.now(),
+            'time_responded': datetime.now(),
+            'time_response_received': datetime.now(),
+
+            'event_name': event_name,
+            'payload': payload,
+
+            'sent_to_plugin': False,
         })
 
     return jsonify(message_id=str(message_id))
+
 
 @app.route("/response", methods=["POST"])
 def response():
@@ -392,19 +432,35 @@ def response():
     Submits a response to an earlier message to the HPIT server. 
     Expects the data formatted as JSON with the application/json mimetype 
     given in the headers. Expects two fields in the JSON data.
+
+    Accepts: JSON
         - message_id : string => The message id to the message you're responding to.
         - payload : Object => A JSON Object of the DATA to respond with
 
-    Returns: 200:JSON ->
-        - response_id - The ID of the response submitted to the database
+    Returns:
+        403         - A connection with HPIT must be established first.
+        200: JSON   
+            - response_id - The ID of the response submitted to the database
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    responder_entity_id = session['entity_id']
     message_id = request.json['message_id']
     payload = request.json['payload']
 
-    message = mongo.db.messages.find_one({'_id': ObjectId(message_id)})
+    plugin_message = mongo.db.plugin_messages.find_one({
+        '_message_id': ObjectId(message_id),
+        'receiver_entity_id': responder_entity_id
+    })
+
+    plugin_message.time_responded = datetime.now()
+    plugin_message.save()
 
     response_id = mongo.db.responses.insert({
-        'message_id': message_id,
+        '_message_id': plugin_message._message_id,
+        'sender_entity_id': responder_entity_id,
+        'receiver_entity_id': plugin_message.sender_entity_id,
         'message': message,
         'response': payload,
         'response_recieved': False
@@ -419,14 +475,17 @@ def responses():
     SUPPORTS: GET
     Poll for responses queued to original sender of a message.
 
-    Returns: JSON encoded list of responses.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the responses for this plugin.
     """
     if 'entity_id' not in session:
-        return abort(401)
+        return auth_failed_response()
 
     entity_id = session['entity_id']
+
     my_responses = mongo.db.responses.find({
-        'message.entity_id': entity_id,
+        'receiver_entity_id': entity_id,
         'response_recieved': False
     })
 
@@ -442,7 +501,7 @@ def responses():
 
     mongo.db.responses.update(
         {'_id':{'$in': update_ids}},
-        {"$set": {'response_recieved':True}}, 
+        {"$set": {'response_recieved':True, 'time_response_received': datetime.now()}}, 
         multi=True
     )
 
