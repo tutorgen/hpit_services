@@ -5,10 +5,11 @@ from .settings import HPIT_URL_ROOT
 from .exceptions import ResponseDispatchError
 
 class Tutor(MessageSenderMixin):
-    def __init__(self, name, callback, **kwargs):
+    def __init__(self, entity_id, api_key, callback, **kwargs):
         super().__init__()
 
-        self.name = name
+        self.entity_id = entity_id
+        self.api_key = api_key
         self.callback = callback
         self.connected = False
 
@@ -19,6 +20,8 @@ class Tutor(MessageSenderMixin):
         """
         Starts the tutor in event-driven mode.
         """
+        self.connect()
+        
         try:
             while True:
                 if not self.callback():
@@ -40,18 +43,3 @@ class Tutor(MessageSenderMixin):
 
         except KeyboardInterrupt:
             self.disconnect()
-
-    def connect(self):
-        connection = self._post_data(urljoin(HPIT_URL_ROOT, '/tutor/connect/' + self.name))
-        if connection:
-            self.connected = True
-        else:
-            self.connected = False
-
-        return self.connected
-
-    def disconnect(self):
-        self._post_data(urljoin(HPIT_URL_ROOT, '/tutor/disconnect'))
-        self.connected = False
-
-        return self.connected

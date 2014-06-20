@@ -1,13 +1,58 @@
 import json
 import requests
+from urllib.parse import urljoin
 
 from ..exceptions import ConnectionError
+from ..settings import HPIT_URL_ROOT
 
 JSON_HTTP_HEADERS = {'content-type': 'application/json'}
 
 class RequestsMixin:
     def __init__(self):
+        self.entity_id = ""
+        self.api_key = ""
         self.session = requests.Session()
+
+
+    def connect(self):
+        """
+        Register a connection with the HPIT Server.
+
+        This essentially sets up a session and logs that you are actively using
+        the system. This is mostly used to track plugin use with the site.
+        """
+        connection = self._post_data(
+            urljoin(HPIT_URL_ROOT, '/connect'), {
+                'entity_id': self.entity_id, 
+                'api_key': self.api_key
+            }
+        )
+
+        if connection:
+            self.connected = True
+        else:
+            self.connected = False
+
+        return self.connected
+
+
+    def disconnect(self):
+        """
+        Tells the HPIT Server that you are not currently going to poll
+        the server for messages or responses. This also destroys the current session
+        with the HPIT server.
+        """
+        self._post_data(
+            urljoin(HPIT_URL_ROOT, '/disconnect'), {
+                'entity_id': self.entity_id,
+                'api_key': self.api_key
+            }
+        )
+
+        self.connected = False
+
+        return self.connected
+
 
     def _post_data(self, url, data=None):
         """

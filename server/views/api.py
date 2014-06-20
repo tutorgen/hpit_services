@@ -1,43 +1,26 @@
 from uuid import uuid4
 from bson.objectid import ObjectId
-from flask import session, jsonify, abort, request
+from flask import session, jsonify, abort, request, Response
 
-from server import app, mongo, _map_mongo_document, HPIT_STATUS
+from server import app, mongo, db, csrf, _map_mongo_document, HPIT_STATUS
 from server.models import Plugin, Tutor
 
 def bad_parameter_response(parameter):
-    return Response(
-        status="Missing parameter: " + parameter,
-        status_code=401,
-        mimetype="application/json")
-
+    return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))
 
 def auth_failed_response():
-    return Response(
-        status="Could not authenticate. Invalid entity_id/api_key combination.",
-        status_code=403,
-        mimetype="application/json")
-
+    return ("Could not authenticate. Invalid entity_id/api_key combination.",
+        403, dict(mimetype="application/json"))
 
 def not_found_response():
-    return Response(
-        status="Could not find the requested resource.",
-        status_code=404,
-        mimetype="application/json")
+    return ("Could not find the requested resource.", 404, dict(mimetype="application/json"))
    
-
 def exists_response():
-    return Response(
-        status="EXISTS", 
-        status_code=200, 
-        mimetype="application/json")
-
+    return ("EXISTS", 200, dict(mimetype="application/json"))
 
 def ok_response():
-    return Response(
-        status="OK", 
-        status_code=200, 
-        mimetype="application/json")
+    return ("OK", 200, dict(mimetype="application/json"))
+
 
     
 @app.route("/version", methods=["GET"])
@@ -54,6 +37,7 @@ def version():
     return jsonify(version_returned)
 
 
+@csrf.exempt
 @app.route("/connect", methods=["POST"])
 def connect():
     """
@@ -105,6 +89,7 @@ def connect():
     return ok_response()
 
 
+@csrf.exempt
 @app.route("/disconnect", methods=["POST"])
 def disconnect():
     """
@@ -146,6 +131,7 @@ def disconnect():
     return ok_response()
 
 
+@csrf.exempt
 @app.route("/plugin/subscribe", methods=["POST"])
 def subscribe():
     """
@@ -188,6 +174,7 @@ def subscribe():
     return ok_response()
 
 
+@csrf.exempt
 @app.route("/plugin/unsubscribe", methods=["POST"])
 def unsubscribe():
     """
@@ -367,6 +354,7 @@ def plugin_messages():
     return jsonify({'messages': result})
 
 
+@csrf.exempt
 @app.route("/message", methods=["POST"])
 def message():
     """
@@ -425,6 +413,7 @@ def message():
     return jsonify(message_id=str(message_id))
 
 
+@csrf.exempt
 @app.route("/response", methods=["POST"])
 def response():
     """

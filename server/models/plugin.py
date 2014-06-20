@@ -40,9 +40,9 @@ class Plugin(db.Model):
         return key
 
     def authenticate(self, key):
-        hsh = SHA512.new(settings.SECRET_KEY)
-        hsh.update(self.api_key_result)
-        hsh.update(key)
+        hsh = SHA512.new(bytes(settings.SECRET_KEY.encode('utf-8')))
+        hsh.update(bytes(self.api_key_salt.encode('utf-8')))
+        hsh.update(bytes(key.encode('utf-8')))
 
         if hsh.hexdigest() == self.api_key_result:
             return True

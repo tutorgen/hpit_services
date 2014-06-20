@@ -2,8 +2,8 @@ from client import Plugin
 
 class ExamplePlugin(Plugin):
 
-    def __init__(self, name, logger):
-        super().__init__(name)
+    def __init__(self, entity_id, api_key, logger):
+        super().__init__(entity_id, api_key)
         self.logger = logger
 
         self.subscribe(

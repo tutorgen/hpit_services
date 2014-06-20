@@ -6,10 +6,11 @@ from .settings import HPIT_URL_ROOT
 from .exceptions import PluginPollError
 
 class Plugin(MessageSenderMixin):
-    def __init__(self, name, wildcard_callback=None):
+    def __init__(self, entity_id, api_key, wildcard_callback=None):
         super().__init__()
 
-        self.name = name
+        self.entity_id = entity_id
+        self.api_key = api_key
         self.wildcard_callback = wildcard_callback
         self.callbacks = {}
         self.poll_wait = 5
@@ -29,34 +30,6 @@ class Plugin(MessageSenderMixin):
         can be overridden if a plugin is interested in transaction messages.
         """
         pass
-
-    def connect(self):
-        """
-        Register a connection with the HPIT Server.
-
-        This essentially sets up a session and logs that you are actively using
-        the system. This is mostly used to track plugin use with the site.
-        """
-        connection = self._post_data(urljoin(HPIT_URL_ROOT, '/plugin/connect/' + self.name))
-
-        if connection:
-            self.connected = True
-        else:
-            self.connected = False
-
-        return self.connected
-
-
-    def disconnect(self):
-        """
-        Tells the HPIT Server that you are not currently going to poll
-        the server for messages or responses. This also destroys the current session
-        with the HPIT server.
-        """
-        self._post_data(urljoin(HPIT_URL_ROOT, '/plugin/disconnect'))
-        self.connected = False
-
-        return self.connected
 
 
     def list_subscriptions(self):

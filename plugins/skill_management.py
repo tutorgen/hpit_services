@@ -3,8 +3,8 @@ from client import Plugin
 from pymongo import MongoClient
 
 class SkillManagementPlugin(Plugin):
-    def __init__(self, name, logger, args = None):
-        super().__init__(name)
+    def __init__(self, entity_id, api_key, logger, args = None):
+        super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit_skills
