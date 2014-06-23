@@ -1,6 +1,6 @@
 ## Overview
 
-The HyperPersonalize Intelligent Tutor (HPIT) is an schemaless, event driven system
+The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
 and specialized, machine learning algorithims, which we call plugins.
 
@@ -16,7 +16,7 @@ with the system by sending messages which consist of a named event and a data pa
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.
 
-In addition, HPIT packages several baseline plugins which peform basic functions related
+In addition, HPIT provides several baseline plugins which peform basic functions related
 to intelligent tutoring systems.
 
 ## Understanding Terminology
@@ -26,7 +26,7 @@ system of modules.
 
 Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
 and analyze intelligent information about student perforamance. A tutor could be a game, or a web application,
-a Macromedia Flash game, or some other system that interacts with students in an effort to educate or train.
+a Flash game, or some other system that interacts with students in an effort to educate or train.
 
 HPIT Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
 A plugin may exist inside of HPIT itself(at TutorGen) or on a network or system outside of HPIT. Regardless of
@@ -41,9 +41,11 @@ and plugins.
 HPIT Message - This is a event_name and payload pair, both of which are defined by the developer for
 their plugin.
 
-HPIT Transaction - A transaction is a message specifically for DataShop transactions.
+HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.
 
 ## Getting started
+
+### Python Requirements
 
 HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
@@ -55,9 +57,26 @@ Once you have the right version of Python installed you should also have `virtua
 and `pip` installed as well. If you are unfamiliar with either of these libraries I highly 
 encourage you research them, as they will make working with HPIT much simpler.
 
-Once you have pip and virtualenv installed you will need to install mongodb. 
-- On ubuntu type: `sudo apt-get install mongodb` On Mac with Brew install mongodb with: `brew install mongodb`
-- On Windows, installation binaries are available from mongodb.org
+Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.
+- On Ubuntu: `sudo apt-get install mongodb sqlite` 
+- On Mac OSX with HomeBrew: `brew install mongodb sqlite`. 
+- On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html
+
+### Production Considerations
+
+If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
+- On Ubuntutype: `sudo apt-get install postgresql-server`
+- On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/
+- On Windows: Installation binaries are available from http://www.postgresql.com
+
+It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
+then please read the tutorial here: http://www.postgresql.org/docs/9.3/static/tutorial.html In general you will need to 
+configure some security settings in postgres, create a database, then create login roles for that database. PostgreSQL by 
+default does not make itself discoverable, or connectible from outside the local machine. If it is installed in a location
+other than where you are installing HPIT you'll need to configure iptables, postgresql.conf and hba.conf in your postgreSQL
+installation directory.
+
+### Frontend Requirements
 
 HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
 you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
@@ -65,6 +84,8 @@ for downloading and installing node and npm to your system. IMPORTANT! If you ar
 you MUST download node and recompile from scratch. The version of node packaged with older versions of ubuntu is far out of date
 and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
 the binaries to either /usr/bin or /usr/local/bin
+
+### Installing HPIT
 
 Then you can begin installalling HPIT by:
 
@@ -74,10 +95,27 @@ Then you can begin installalling HPIT by:
 3. Activate that environment with: `source my_environment/bin/activate`
 4. Install HPIT's dependencies with: `pip3 install -r requirements.txt`
 5. Run the test suite by typing `python3 manager.py test`
+6. Sync the configuration database with sqlite. `python3 manager.py syncdb`
 6. Start the MongoDB instance with `mongod`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
-to http://127.0.0.1:8000.
+to http://127.0.0.1:8000. 
+
+## The HPIT Adminstration Panel
+
+After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
+page after registering. The system will just direct you back to the signin/register page. After logging in
+two new options are available for you. 'My Plugins' and 'My Tutors'. On each of these pages you can register
+new plugins and tutors, respectively. For each plugin or tutor you create HPIT will generate for you an Entity ID
+(which never changes), and an API Key(which can change). The API Key will only be displayed once, if you lose 
+it you'll have to generate another and update your plugin or tutor code to match the new key. You will need 
+to supply the API key and Entity ID to HPIT for the plugin or tutor to connect to HPIT, and to send and 
+retrieve messages. You can think of the Entity ID and API Key as a sort of username/password pair for connecting
+your tutor or plugin to HPIT. Keep these two pieces of information secure. The Entity ID can be told and released
+to others, but NEVER share your API Key with anyone.
+
+The Docs page on the adminsitration panel, shows these docs. The routes page on the administration panel shows
+the web service endpoints that HPIT exposes to tutors and plugins.
 
 ## The HPIT Manager
 
@@ -100,6 +138,12 @@ Currently the HPIT Manager has the following commands:
 - `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
 - `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
 - `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
+- `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
+- `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
+- `python3 manager.py docs` copies this documentation file to the server assets directory.
+- `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
+- `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
+- `python3 manager.py test` runs the suite of tests for components within HPIT.
 
 ## The tutor and plugin configuration
 
