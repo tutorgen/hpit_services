@@ -1,3 +1,4 @@
+import time
 from urllib.parse import urljoin
 
 from .mixins import MessageSenderMixin
@@ -13,6 +14,9 @@ class Tutor(MessageSenderMixin):
         self.callback = callback
         self.connected = False
 
+        self.poll_wait = 500
+        self.time_last_poll = time.time() * 1000
+
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -26,6 +30,14 @@ class Tutor(MessageSenderMixin):
             while True:
                 if not self.callback():
                     break;
+
+                #A better timer
+                cur_time = time.time() * 1000
+
+                if cur_time - self.time_last_poll < self.poll_wait:
+                    continue;
+
+                self.time_last_poll = cur_time
 
                 if not self._try_hook('pre_poll_responses'):
                     break;

@@ -13,7 +13,9 @@ class Plugin(MessageSenderMixin):
         self.api_key = api_key
         self.wildcard_callback = wildcard_callback
         self.callbacks = {}
-        self.poll_wait = 5
+
+        self.poll_wait = 500
+        self.time_last_poll = time.time() * 1000
 
         self._add_hooks('pre_poll', 'post_poll', 'pre_dispatch', 'post_dispatch')
         self.connected = False
@@ -125,6 +127,15 @@ class Plugin(MessageSenderMixin):
 
         try:
             while True:
+
+                #A better timer
+                cur_time = time.time() * 1000
+
+                if cur_time - self.time_last_poll < self.poll_wait:
+                    continue;
+
+                self.time_last_poll = cur_time
+
                 #Handle messages submitted by tutors
                 if not self._try_hook('pre_poll'):
                     break;
@@ -148,8 +159,6 @@ class Plugin(MessageSenderMixin):
 
                 if not self._dispatch_responses(responses):
                     break;
-
-                time.sleep(self.poll_wait)
 
         except KeyboardInterrupt:
             self.disconnect()

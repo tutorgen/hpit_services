@@ -1,8 +1,3 @@
-## Todo
-
-In the tutor loop, support not having a main callback.
-Add a throttle in the tutor main loop.
-
 ## Overview
 
 The HyperPersonalize Intelligent Tutor (HPIT) is an schemaless, event driven system
@@ -186,132 +181,10 @@ Anyone can wrap these RESTful webservices in a client side library and will be a
 with HPIT. We have delivered a client side library written in Python.
 
 The server supports a variety of routes to handle the connection, polling, and transfer of 
-data between HPIT entities.
-
----
-
-### /plugin/disconnect
-SUPPORTS: POST
-
-Destroys the session for the plugin calling this route.
-
-Returns: 200:OK
-
-### /tutor/disconnect
-SUPPORTS: POST
-
-Destroys the session for the tutor calling this route.
-
-Returns: 200:OK
-
-### /message
-SUPPORTS: POST
-Submit a message to the HPIT server. Expect the data formatted as JSON
-with the application/json mimetype given in the headers. Expects two fields in
-the JSON data.
-- name : string => The name of the event message to submit to the server
-- payload : Object => A JSON Object of the DATA to store in the database
-
-Returns 200:JSON -> 
-- message_id - The ID of the message submitted to the database
-
-### /responses
-SUPPORTS: GET
-Poll for responses queued to original sender of a message.
-
-Returns: JSON encoded list of responses.
-
-### /response
-SUPPORTS: POST
-Submits a response to an earlier message to the HPIT server. 
-Expects the data formatted as JSON with the application/json mimetype 
-given in the headers. Expects two fields in the JSON data.
-- message_id : string => The message id to the message you're responding to.
-- payload : Object => A JSON Object of the DATA to respond with
-
-Returns: 200:JSON ->
-- response_id - The ID of the response submitted to the database
-
-### /
-SUPPORTS: GET
-Shows the status dashboard and API route links for HPIT.
-
-### /plugin/\name\/unsubscribe/\event\
-SUPPORTS: POST
-
-Stop listening to an event type for a specific plugin with
-the name .
-
-Returns: 200:OK or 200:DOES_NOT_EXIST
-
-### /plugin/\name\/subscribe/\event\
-SUPPORTS: POST
-
-Start listening to an event type for a specific plugin with
-the name .
-
-Returns: 200:OK or 200:EXISTS
-
-### /plugin/connect/\name\
-SUPPORTS: POST
-
-Establishes a plugin session with HPIT.
-
-Returns: 200:JSON with the following fields:
-- entity_name : string -> Assigned entity name (not unique)
-- entity_id : string -> Assigned entity id (unique)
-Both assignments expire when you disconnect from HPIT.
-
-### /plugin/\name\/subscriptions
-SUPPORTS: GET
-Lists the event names for messages this plugin will listen to.
-If you are using the library then this is done under the hood to make sure
-when you perform a poll you are recieving the right messages.
-
-Returns the event_names as a JSON list.
-
-### /plugin/\name\/messages
-SUPPORTS: GET
-List the messages queued for a specific plugin.
-
-!!!DANGER!!!: Will mark the messages as recieved by the plugin 
-and they will not show again. If you wish to see a preview
-of the messages queued for a plugin use the /preview route instead.
-
-Returns JSON for the messages.
-
-### /plugin/\name\/history
-SUPPORTS: GET
-Lists the message history for a specific plugin - including queued messages.
-Does not mark them as recieved. 
-
-If you wish to preview queued messages only use the '/preview' route instead.
-If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
-
-DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
-
-Returns JSON for the messages.
-
-### /plugin/\name\/preview
-SUPPORTS: GET
-Lists the messages queued for a specific plugin. 
-Does not mark them as recieved. Only shows messages not marked as received.
-If you wish to see the entire message history for 
-the plugin use the '/history' route instead.
-
-DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
-
-Returns JSON for the messages.
-
-### /tutor/connect/\name\
-SUPPORTS: POST
-
-Establishes a tutor session with HPIT.
-
-Returns: 200:JSON with the following fields:
-- entity_name : string -> Assigned entity name (not unique)
-- entity_id : string -> Assigned entity id (unique)
-Both assignments expire when you disconnect from HPIT.
+data between HPIT entities. To get a list of these routes run the HPIT server with either 
+`python3 manager.py debug` or `python3 manager.py start` and open your browser to the HPIT
+administration page at http://localhost:8000/routes. Alternativately you can list the routes
+available with `python3 manager.py routes`
 
 ## Tutors in depth
 
@@ -543,21 +416,110 @@ HPIT exclusively uses Open Source Technologies. Currently our tech stack consist
 of the following:
 
 - Python 3.4
-- Flask
-- Flask-PyMongo
-- Jinja2
-- PyMongo
 - MongoDB
+- PostgreSQL
+- Flask
+- Jinja2
+- WTForms
+- PyMongo
+- SQLAlchemy
 - Daemonize
+- PyCrypto
 - Requests
 - Gunicorn
+- Gears
+- Twitter Bootstrap
+- BackboneJS
+- UnderscoreJS
+- JQuery
 
 Information about specific versions can be found inside of requirements.txt
 
 ## License
 
-HPIT is as of yet, unlicensed technology. It is a joint project between Carnegie Learning, 
-TutorGen, Inc., and Advanced Distributed Learning. As of this original writing, the 
-understood intention is to license this technology under a permissive Open Source License 
-such as the BSD or MIT License. The final decision on how to license the technology has 
-yet to be determined and this software should be thought of as proprietary in nature.
+This software is dual licensed under the MIT License and the BSD 3-clause license.
+
+==============================================================================
+The MIT License (MIT)
+
+Copyright (c) 2014 TutorGen, Inc.
+All rights reserved.
+
+Contributions by: 
+
+Raymond Chandler III
+Brian Sauer
+Jian Sun
+Ryan Carlson
+John Stamper
+Mary J. Blink
+Ted Carmichael
+
+In association with Carnegie Mellon University, Carnegie Learning, and 
+Advanced Distributed Learning.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+==============================================================================
+
+OR
+
+==============================================================================
+The BSD 3-Clause License
+
+Copyright (c) 2014, TutorGen, Inc.
+All rights reserved.
+
+Contributions by: 
+
+Raymond Chandler III
+Brian Sauer
+Jian Sun
+Ryan Carlson
+John Stamper
+Mary J. Blink
+Ted Carmichael
+
+In association with Carnegie Mellon University, Carnegie Learning, and 
+Advanced Distributed Learning.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this 
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, 
+this list of conditions and the following disclaimer in the documentation 
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors 
+may be used to endorse or promote products derived from this software without 
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+==============================================================================
