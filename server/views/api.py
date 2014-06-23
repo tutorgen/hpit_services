@@ -1,9 +1,10 @@
 from uuid import uuid4
 from bson.objectid import ObjectId
+from datetime import datetime
 from flask import session, jsonify, abort, request, Response
 
 from server import app, mongo, db, csrf, _map_mongo_document, HPIT_STATUS
-from server.models import Plugin, Tutor
+from server.models import Plugin, Tutor, Subscription
 
 def bad_parameter_response(parameter):
     return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))
@@ -159,7 +160,7 @@ def subscribe():
     if not plugin:
         return not_found_response()
 
-    subscription = plugin.subscriptions.filter_by(message_name=message_name).first()
+    subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
 
     if subscription:
         return exists_response()
@@ -203,7 +204,7 @@ def unsubscribe():
     if not plugin:
         return not_found_response()
 
-    subscription = plugin.subscriptions.filter_by(message_name=message_name).first()
+    subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
 
     if not subscription:
         return not_found_response()
@@ -239,7 +240,7 @@ def plugin_list_subscriptions():
     if not plugin:
         return not_found_response()
 
-    subscriptions = [x.message_name for x in plugin.subscriptions.all()]
+    subscriptions = [x.message_name for x in plugin.subscriptions]
 
     return jsonify({'subscriptions': subscriptions})
 
@@ -388,7 +389,7 @@ def message():
 
     message_id = mongo.db.messages.insert(message)
 
-    subscriptions = Subscription.query.filter_by(event_name=event_name)
+    subscriptions = Subscription.query.filter_by(message_name=event_name)
 
     for subscription in subscriptions:
         plugin_entity_id = subscription.plugin.entity_id

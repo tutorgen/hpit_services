@@ -10,6 +10,10 @@ class ProblemStepManagementPlugin(Plugin):
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit.problem_steps
 
+
+    def post_connect(self):
+        super().post_connect()
+        
         self.subscribe(
             add_problem_step=self.add_problem_step,
             remove_problem_step=self.remove_problem_step,

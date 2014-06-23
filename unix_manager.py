@@ -2,6 +2,7 @@ import argparse
 import json
 import subprocess
 import os
+import time
 import signal
 import shutil
 
@@ -19,6 +20,8 @@ def spin_up_all(entity_type, configuration):
             item['active'] = True
             name = item['name']
             entity_subtype = item['type']
+            entity_id = item['entity_id']
+            api_key = item['api_key']
             
             if 'args' in item:
                 entity_args = shlex.quote(json.dumps(item['args']))
@@ -34,7 +37,7 @@ def spin_up_all(entity_type, configuration):
                 raise Exception("Error: unknown entity type in spin_up_all")
             
             with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                subprocess.call(["python3", "entity_daemon.py", "--daemon","--entity",entity_type, "--pid", pidfile, name, entity_subtype], stdout = f, stderr = f)
+                subprocess.call(["python3", "entity_daemon.py", "--daemon", "--pid", pidfile, entity_id, api_key, entity_type, entity_subtype], stdout = f, stderr = f)
 
 def wind_down_collection(entity_type, entity_collection):
     """
@@ -74,6 +77,9 @@ def start(arguments, configuration):
     else:
         print("Starting the HPIT Hub Server for Unix...")
         subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE])
+
+        print("Waiting for the server to boot.")
+        time.sleep(5)
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)

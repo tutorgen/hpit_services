@@ -10,6 +10,10 @@ class KnowledgeTracingPlugin(Plugin):
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit.hpit_knowledge_tracing
 
+
+    def post_connect(self):
+        super().post_connect()
+        
         self.subscribe(
             kt_set_initial=self.kt_set_initial_callback,
             kt_reset=self.kt_reset,

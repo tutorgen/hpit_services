@@ -13,6 +13,8 @@ class RequestsMixin:
         self.api_key = ""
         self.session = requests.Session()
 
+        self._add_hooks('post_connect', 'post_disconnect')
+
 
     def connect(self):
         """
@@ -30,6 +32,7 @@ class RequestsMixin:
 
         if connection:
             self.connected = True
+            self._try_hook('post_connect')
         else:
             self.connected = False
 
@@ -50,6 +53,7 @@ class RequestsMixin:
         )
 
         self.connected = False
+        self._try_hook('post_disconnect')
 
         return self.connected
 
@@ -83,6 +87,17 @@ class RequestsMixin:
         if response.status_code != 200:
             raise ConnectionError("Could not GET Data from HPIT Server.")
         return response.json()
+
+
+    def _add_hooks(self, *hooks):
+        """
+        Adds hooks to this class. If the function is already defined, this leaves that definition. If 
+        it doesn't exists the hook is created and set to None
+        """
+        for hook in hooks:
+            if not hasattr(self, hook):
+                setattr(self, hook, None)
+
 
     def _try_hook(self, hook_name):
         """

@@ -2,6 +2,7 @@ import argparse
 import json
 import subprocess
 import os
+import time
 import signal
 import shlex
 
@@ -21,6 +22,8 @@ def spin_up_all(entity_type, configuration):
             item['active'] = True
             name = item['name']
             entity_subtype = item['type']
+            entity_id = item['entity_id']
+            api_key = item['api_key']
             
             if 'args' in item:
                 entity_args = shlex.quote(json.dumps(item['args']))
@@ -35,7 +38,7 @@ def spin_up_all(entity_type, configuration):
                 raise Exception("Error: unknown entity type in spin_up_all")
             
             with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                subp = subprocess.Popen(["python", "entity_daemon.py","--entity",entity_type, "--pid", pidfile, "--args", entity_args, name, entity_subtype], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+                subp = subprocess.Popen(["python", "entity_daemon.py", "--pid", pidfile, "--args", entity_args, entity_id, api_key, entity_type, entity_subtype], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
             with open(pidfile,"w") as pfile:
                 pfile.write(str(subp.pid))
                 
@@ -81,6 +84,10 @@ def start(arguments, configuration):
         subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS)
         with open(settings.HPIT_PID_FILE,"w") as pfile:
             pfile.write(str(subp.pid))
+
+        print("Waiting for the server to boot.")
+        time.sleep(5)
+
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
         print("Starting plugins...")

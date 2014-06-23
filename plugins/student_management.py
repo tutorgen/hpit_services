@@ -9,7 +9,11 @@ class StudentManagementPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit_students
+        
 
+    def post_connect(self):
+        super().post_connect()
+        
         self.subscribe(
             add_student=self.add_student_callback,
             remove_student=self.remove_student_callback,

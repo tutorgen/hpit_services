@@ -118,7 +118,6 @@ if __name__ == '__main__':
             entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
             entity.start()
         elif arguments.entity == 'tutor':
-            import pdb; pdb.set_trace()
             entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
             entity.start()
         

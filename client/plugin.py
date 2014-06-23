@@ -14,12 +14,14 @@ class Plugin(MessageSenderMixin):
         self.wildcard_callback = wildcard_callback
         self.callbacks = {}
         self.poll_wait = 5
-        self.pre_poll = None
-        self.post_poll = None
-        self.pre_dispatch = None
-        self.post_dispatch = None
+
+        self._add_hooks('pre_poll', 'post_poll', 'pre_dispatch', 'post_dispatch')
         self.connected = False
-        
+      
+    def post_connect(self):
+        """
+        Run this hook after connecting to HPIT.
+        """
         self.subscribe(
             transaction=self.transaction_callback
         )
@@ -36,7 +38,7 @@ class Plugin(MessageSenderMixin):
         """
         Polls the HPIT server for a list of event names we currently subscribing to.
         """
-        list_url = urljoin(HPIT_URL_ROOT, '/plugin/' + self.name + '/subscriptions')
+        list_url = urljoin(HPIT_URL_ROOT, '/plugin/subscriptions')
         subscriptions = self._get_data(list_url)['subscriptions']
 
         for sub in subscriptions:
@@ -52,10 +54,9 @@ class Plugin(MessageSenderMixin):
         the key is the event's name and the value is the callback function.
         """
         for event_name, callback in events.items():
-            subscribe_url = urljoin(HPIT_URL_ROOT, 
-                '/plugin/' + self.name + '/subscribe/' + event_name)
+            subscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/subscribe')
 
-            self._post_data(subscribe_url)
+            self._post_data(subscribe_url, {'message_name' : event_name})
             self.callbacks[event_name] = callback
 
 
@@ -65,10 +66,9 @@ class Plugin(MessageSenderMixin):
         """
         for event_name in event_names:
             if event_name in self.callbacks:
-                unsubscribe_url = urljoin(HPIT_URL_ROOT, 
-                    'plugin', self.name, 'unsubscribe', event_name)
+                unsubscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/unsubscribe')
 
-                self._post_data(unsubscribe_url)
+                self._post_data(unsubscribe_url, {'message_name': event_name})
                 del self.callbacks[event_name]
 
 
@@ -77,8 +77,7 @@ class Plugin(MessageSenderMixin):
         Get a list of new messages from the server for events we are listening 
         to.
         """
-        list_messages_url = urljoin(HPIT_URL_ROOT, 
-            '/plugin/' + self.name + '/messages')
+        list_messages_url = urljoin(HPIT_URL_ROOT, '/plugin/messages')
 
         return self._get_data(list_messages_url)['messages']
 

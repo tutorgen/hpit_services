@@ -10,6 +10,10 @@ class ProblemManagementPlugin(Plugin):
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit.problems
 
+
+    def post_connect(self):
+        super().post_connect()
+        
         self.subscribe(
             add_problem=self.add_problem_callback,
             remove_problem=self.remove_problem_callback,

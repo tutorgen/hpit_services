@@ -9,10 +9,8 @@ class MessageSenderMixin(RequestsMixin):
     def __init__(self):
         super().__init__()
         self.response_callbacks = {}
-        self.pre_poll_responses = None
-        self.post_poll_responses = None
-        self.pre_dispatch_responses = None
-        self.post_dispatch_responses = None
+        
+        self._add_hooks('pre_poll_responses', 'post_poll_responses', 'pre_dispatch_responses', 'post_dispatch_responses')
 
     def send(self, event_name, payload, callback=None):
         """
