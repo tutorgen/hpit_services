@@ -1,5 +1,5 @@
 class ServerSettings:
-    HPIT_VERSION = '(HPIT) Hyper Personalized Intelligent Tutor(version 0.2) - Codename Asura'
+    HPIT_VERSION = '(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut'
     DEBUG = True
 
     HPIT_PID_FILE = 'tmp/hpit_server.pid'

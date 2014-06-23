@@ -147,19 +147,18 @@ Currently the HPIT Manager has the following commands:
 
 ## The tutor and plugin configuration
 
-The goals behind the HPIT manager is to give TutorGen a way to create and destory large 
+The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
 amount of entities for testing and evaluation of the software. Creating a new hpit 
 entity (tutor/plugin) adds it to the 'configuration.json'. Removing an hpit entity 
 removes it from the 'configuration.json' file. All entities within the configuration specify
-4 things: 
+6 things: 
 
     1. Whether it is a tutor or plugin (by virtue of being in the tutor or plugin list)
     2. active - Whether the plugin is currently running. (True if it is)
     3. name - The name of the entity. This is how the entity will register itself with HPIT.
     4. type - The subtype of the entity. e.g. 'example' or 'knowledge_tracer'
-
-You normally will not need to edit this file by hand. It is recommended that you change the
-configuration with the `python3 manager.py` add and remove commands instead.
+    5. entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.
+    6. api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.
 
 ## Settings for Clients and Servers
 
@@ -170,28 +169,31 @@ clients/settings.py currently contains the following options:
 - HPIT_URL_ROOT : the URL root where the HPIT server lives
 
 server/settings.py currently contains the following options:
+- HPIT_VERSION : the version of this server
+- DEBUG : If the server should be ran in debug mode (DEPRECATED)
+
 - HPIT_PID_FILE : the location where the PID file of the server is stored, for tracking the server process
 - HPIT_BIND_IP : the IP address the server is listening on
 - HPIT_BIND_PORT : the port that the HPIT server listens on
-- HPIT_VERSION : the version of this server
+
+- MONGO_DBNAME : The name of the HPTI database in MongoDB.
+- SECRET_KEY : A cryptographic secret for generating other secrets. (Keep this secret)
+- SQLALCHEMY_DATABASE_URI : A database URL for SQLAlchemy to store administrative data. (Defaults to SQLite)
+- CSRF_ENABLED : True to enable protections against cross-site request forgery attacks.
+
+- USER_PASSWORD_HASH : How passwords for users should be generated. (Leave this alone unless you know what you're doing.)
 
 ## Database Structure
 
-The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions.  MongoDB uses a 
+The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
-and can be created with no prior configuration.  The database contains five core collections:
+and can be created with no prior configuration. The database contains five core collections:
 
 ### messages
 A list of messages sent to the system before being duplicated to plugin_messages
 It contains the following fields:
 entity_id: "The session ID of the sender"
 payload: "The data being sent."
-
-### plugin_subscriptions
-Maps the event names to the names of plugins that are actively listening for them.
-It contains the following fields:
-- name: "plugin name"
-- event: "event name"
 
 ### plugin_messages
 Contains messages sent to plugins, as copied from the messages collection.
@@ -212,6 +214,12 @@ It contains the following fields:
 
 ### sessions
 Stores session data for plugins and tutors. 
+
+HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
+database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
+By default this database is configured as sqlite and stored on the filesystem in the 
+server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
+directory or by running sqlite and using the command '.tables'.
 
 ## The HPIT Server in depth
 

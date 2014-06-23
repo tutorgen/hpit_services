@@ -1,11 +1,6 @@
-## Todo
-
-In the tutor loop, support not having a main callback.
-Add a throttle in the tutor main loop.
-
 ## Overview
 
-The HyperPersonalize Intelligent Tutor (HPIT) is an schemaless, event driven system
+The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
 and specialized, machine learning algorithims, which we call plugins.
 
@@ -21,7 +16,7 @@ with the system by sending messages which consist of a named event and a data pa
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.
 
-In addition, HPIT packages several baseline plugins which peform basic functions related
+In addition, HPIT provides several baseline plugins which peform basic functions related
 to intelligent tutoring systems.
 
 ## Understanding Terminology
@@ -31,7 +26,7 @@ system of modules.
 
 Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
 and analyze intelligent information about student perforamance. A tutor could be a game, or a web application,
-a Macromedia Flash game, or some other system that interacts with students in an effort to educate or train.
+a Flash game, or some other system that interacts with students in an effort to educate or train.
 
 HPIT Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
 A plugin may exist inside of HPIT itself(at TutorGen) or on a network or system outside of HPIT. Regardless of
@@ -46,9 +41,11 @@ and plugins.
 HPIT Message - This is a event_name and payload pair, both of which are defined by the developer for
 their plugin.
 
-HPIT Transaction - A transaction is a message specifically for DataShop transactions.
+HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.
 
 ## Getting started
+
+### Python Requirements
 
 HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
@@ -60,9 +57,26 @@ Once you have the right version of Python installed you should also have `virtua
 and `pip` installed as well. If you are unfamiliar with either of these libraries I highly 
 encourage you research them, as they will make working with HPIT much simpler.
 
-Once you have pip and virtualenv installed you will need to install mongodb. 
-- On ubuntu type: `sudo apt-get install mongodb` On Mac with Brew install mongodb with: `brew install mongodb`
-- On Windows, installation binaries are available from mongodb.org
+Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.
+- On Ubuntu: `sudo apt-get install mongodb sqlite` 
+- On Mac OSX with HomeBrew: `brew install mongodb sqlite`. 
+- On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html
+
+### Production Considerations
+
+If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
+- On Ubuntutype: `sudo apt-get install postgresql-server`
+- On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/
+- On Windows: Installation binaries are available from http://www.postgresql.com
+
+It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
+then please read the tutorial here: http://www.postgresql.org/docs/9.3/static/tutorial.html In general you will need to 
+configure some security settings in postgres, create a database, then create login roles for that database. PostgreSQL by 
+default does not make itself discoverable, or connectible from outside the local machine. If it is installed in a location
+other than where you are installing HPIT you'll need to configure iptables, postgresql.conf and hba.conf in your postgreSQL
+installation directory.
+
+### Frontend Requirements
 
 HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
 you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
@@ -70,6 +84,8 @@ for downloading and installing node and npm to your system. IMPORTANT! If you ar
 you MUST download node and recompile from scratch. The version of node packaged with older versions of ubuntu is far out of date
 and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
 the binaries to either /usr/bin or /usr/local/bin
+
+### Installing HPIT
 
 Then you can begin installalling HPIT by:
 
@@ -79,10 +95,27 @@ Then you can begin installalling HPIT by:
 3. Activate that environment with: `source my_environment/bin/activate`
 4. Install HPIT's dependencies with: `pip3 install -r requirements.txt`
 5. Run the test suite by typing `python3 manager.py test`
+6. Sync the configuration database with sqlite. `python3 manager.py syncdb`
 6. Start the MongoDB instance with `mongod`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
-to http://127.0.0.1:8000.
+to http://127.0.0.1:8000. 
+
+## The HPIT Adminstration Panel
+
+After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
+page after registering. The system will just direct you back to the signin/register page. After logging in
+two new options are available for you. 'My Plugins' and 'My Tutors'. On each of these pages you can register
+new plugins and tutors, respectively. For each plugin or tutor you create HPIT will generate for you an Entity ID
+(which never changes), and an API Key(which can change). The API Key will only be displayed once, if you lose 
+it you'll have to generate another and update your plugin or tutor code to match the new key. You will need 
+to supply the API key and Entity ID to HPIT for the plugin or tutor to connect to HPIT, and to send and 
+retrieve messages. You can think of the Entity ID and API Key as a sort of username/password pair for connecting
+your tutor or plugin to HPIT. Keep these two pieces of information secure. The Entity ID can be told and released
+to others, but NEVER share your API Key with anyone.
+
+The Docs page on the adminsitration panel, shows these docs. The routes page on the administration panel shows
+the web service endpoints that HPIT exposes to tutors and plugins.
 
 ## The HPIT Manager
 
@@ -105,22 +138,27 @@ Currently the HPIT Manager has the following commands:
 - `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
 - `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
 - `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
+- `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
+- `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
+- `python3 manager.py docs` copies this documentation file to the server assets directory.
+- `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
+- `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
+- `python3 manager.py test` runs the suite of tests for components within HPIT.
 
 ## The tutor and plugin configuration
 
-The goals behind the HPIT manager is to give TutorGen a way to create and destory large 
+The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
 amount of entities for testing and evaluation of the software. Creating a new hpit 
 entity (tutor/plugin) adds it to the 'configuration.json'. Removing an hpit entity 
 removes it from the 'configuration.json' file. All entities within the configuration specify
-4 things: 
+6 things: 
 
     1. Whether it is a tutor or plugin (by virtue of being in the tutor or plugin list)
     2. active - Whether the plugin is currently running. (True if it is)
     3. name - The name of the entity. This is how the entity will register itself with HPIT.
     4. type - The subtype of the entity. e.g. 'example' or 'knowledge_tracer'
-
-You normally will not need to edit this file by hand. It is recommended that you change the
-configuration with the `python3 manager.py` add and remove commands instead.
+    5. entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.
+    6. api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.
 
 ## Settings for Clients and Servers
 
@@ -131,28 +169,31 @@ clients/settings.py currently contains the following options:
 - HPIT_URL_ROOT : the URL root where the HPIT server lives
 
 server/settings.py currently contains the following options:
+- HPIT_VERSION : the version of this server
+- DEBUG : If the server should be ran in debug mode (DEPRECATED)
+
 - HPIT_PID_FILE : the location where the PID file of the server is stored, for tracking the server process
 - HPIT_BIND_IP : the IP address the server is listening on
 - HPIT_BIND_PORT : the port that the HPIT server listens on
-- HPIT_VERSION : the version of this server
+
+- MONGO_DBNAME : The name of the HPTI database in MongoDB.
+- SECRET_KEY : A cryptographic secret for generating other secrets. (Keep this secret)
+- SQLALCHEMY_DATABASE_URI : A database URL for SQLAlchemy to store administrative data. (Defaults to SQLite)
+- CSRF_ENABLED : True to enable protections against cross-site request forgery attacks.
+
+- USER_PASSWORD_HASH : How passwords for users should be generated. (Leave this alone unless you know what you're doing.)
 
 ## Database Structure
 
-The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions.  MongoDB uses a 
+The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
-and can be created with no prior configuration.  The database contains five core collections:
+and can be created with no prior configuration. The database contains five core collections:
 
 ### messages
 A list of messages sent to the system before being duplicated to plugin_messages
 It contains the following fields:
 entity_id: "The session ID of the sender"
 payload: "The data being sent."
-
-### plugin_subscriptions
-Maps the event names to the names of plugins that are actively listening for them.
-It contains the following fields:
-- name: "plugin name"
-- event: "event name"
 
 ### plugin_messages
 Contains messages sent to plugins, as copied from the messages collection.
@@ -174,6 +215,12 @@ It contains the following fields:
 ### sessions
 Stores session data for plugins and tutors. 
 
+HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
+database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
+By default this database is configured as sqlite and stored on the filesystem in the 
+server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
+directory or by running sqlite and using the command '.tables'.
+
 ## The HPIT Server in depth
 
 The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
@@ -186,132 +233,10 @@ Anyone can wrap these RESTful webservices in a client side library and will be a
 with HPIT. We have delivered a client side library written in Python.
 
 The server supports a variety of routes to handle the connection, polling, and transfer of 
-data between HPIT entities.
-
----
-
-### /plugin/disconnect
-SUPPORTS: POST
-
-Destroys the session for the plugin calling this route.
-
-Returns: 200:OK
-
-### /tutor/disconnect
-SUPPORTS: POST
-
-Destroys the session for the tutor calling this route.
-
-Returns: 200:OK
-
-### /message
-SUPPORTS: POST
-Submit a message to the HPIT server. Expect the data formatted as JSON
-with the application/json mimetype given in the headers. Expects two fields in
-the JSON data.
-- name : string => The name of the event message to submit to the server
-- payload : Object => A JSON Object of the DATA to store in the database
-
-Returns 200:JSON -> 
-- message_id - The ID of the message submitted to the database
-
-### /responses
-SUPPORTS: GET
-Poll for responses queued to original sender of a message.
-
-Returns: JSON encoded list of responses.
-
-### /response
-SUPPORTS: POST
-Submits a response to an earlier message to the HPIT server. 
-Expects the data formatted as JSON with the application/json mimetype 
-given in the headers. Expects two fields in the JSON data.
-- message_id : string => The message id to the message you're responding to.
-- payload : Object => A JSON Object of the DATA to respond with
-
-Returns: 200:JSON ->
-- response_id - The ID of the response submitted to the database
-
-### /
-SUPPORTS: GET
-Shows the status dashboard and API route links for HPIT.
-
-### /plugin/\name\/unsubscribe/\event\
-SUPPORTS: POST
-
-Stop listening to an event type for a specific plugin with
-the name .
-
-Returns: 200:OK or 200:DOES_NOT_EXIST
-
-### /plugin/\name\/subscribe/\event\
-SUPPORTS: POST
-
-Start listening to an event type for a specific plugin with
-the name .
-
-Returns: 200:OK or 200:EXISTS
-
-### /plugin/connect/\name\
-SUPPORTS: POST
-
-Establishes a plugin session with HPIT.
-
-Returns: 200:JSON with the following fields:
-- entity_name : string -> Assigned entity name (not unique)
-- entity_id : string -> Assigned entity id (unique)
-Both assignments expire when you disconnect from HPIT.
-
-### /plugin/\name\/subscriptions
-SUPPORTS: GET
-Lists the event names for messages this plugin will listen to.
-If you are using the library then this is done under the hood to make sure
-when you perform a poll you are recieving the right messages.
-
-Returns the event_names as a JSON list.
-
-### /plugin/\name\/messages
-SUPPORTS: GET
-List the messages queued for a specific plugin.
-
-!!!DANGER!!!: Will mark the messages as recieved by the plugin 
-and they will not show again. If you wish to see a preview
-of the messages queued for a plugin use the /preview route instead.
-
-Returns JSON for the messages.
-
-### /plugin/\name\/history
-SUPPORTS: GET
-Lists the message history for a specific plugin - including queued messages.
-Does not mark them as recieved. 
-
-If you wish to preview queued messages only use the '/preview' route instead.
-If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
-
-DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
-
-Returns JSON for the messages.
-
-### /plugin/\name\/preview
-SUPPORTS: GET
-Lists the messages queued for a specific plugin. 
-Does not mark them as recieved. Only shows messages not marked as received.
-If you wish to see the entire message history for 
-the plugin use the '/history' route instead.
-
-DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
-
-Returns JSON for the messages.
-
-### /tutor/connect/\name\
-SUPPORTS: POST
-
-Establishes a tutor session with HPIT.
-
-Returns: 200:JSON with the following fields:
-- entity_name : string -> Assigned entity name (not unique)
-- entity_id : string -> Assigned entity id (unique)
-Both assignments expire when you disconnect from HPIT.
+data between HPIT entities. To get a list of these routes run the HPIT server with either 
+`python3 manager.py debug` or `python3 manager.py start` and open your browser to the HPIT
+administration page at http://localhost:8000/routes. Alternativately you can list the routes
+available with `python3 manager.py routes`
 
 ## Tutors in depth
 
@@ -543,21 +468,110 @@ HPIT exclusively uses Open Source Technologies. Currently our tech stack consist
 of the following:
 
 - Python 3.4
-- Flask
-- Flask-PyMongo
-- Jinja2
-- PyMongo
 - MongoDB
+- PostgreSQL
+- Flask
+- Jinja2
+- WTForms
+- PyMongo
+- SQLAlchemy
 - Daemonize
+- PyCrypto
 - Requests
 - Gunicorn
+- Gears
+- Twitter Bootstrap
+- BackboneJS
+- UnderscoreJS
+- JQuery
 
 Information about specific versions can be found inside of requirements.txt
 
 ## License
 
-HPIT is as of yet, unlicensed technology. It is a joint project between Carnegie Learning, 
-TutorGen, Inc., and Advanced Distributed Learning. As of this original writing, the 
-understood intention is to license this technology under a permissive Open Source License 
-such as the BSD or MIT License. The final decision on how to license the technology has 
-yet to be determined and this software should be thought of as proprietary in nature.
+This software is dual licensed under the MIT License and the BSD 3-clause license.
+
+==============================================================================
+The MIT License (MIT)
+
+Copyright (c) 2014 TutorGen, Inc.
+All rights reserved.
+
+Contributions by: 
+
+Raymond Chandler III
+Brian Sauer
+Jian Sun
+Ryan Carlson
+John Stamper
+Mary J. Blink
+Ted Carmichael
+
+In association with Carnegie Mellon University, Carnegie Learning, and 
+Advanced Distributed Learning.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+==============================================================================
+
+OR
+
+==============================================================================
+The BSD 3-Clause License
+
+Copyright (c) 2014, TutorGen, Inc.
+All rights reserved.
+
+Contributions by: 
+
+Raymond Chandler III
+Brian Sauer
+Jian Sun
+Ryan Carlson
+John Stamper
+Mary J. Blink
+Ted Carmichael
+
+In association with Carnegie Mellon University, Carnegie Learning, and 
+Advanced Distributed Learning.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this 
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, 
+this list of conditions and the following disclaimer in the documentation 
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors 
+may be used to endorse or promote products derived from this software without 
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+==============================================================================
