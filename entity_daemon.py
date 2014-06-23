@@ -12,7 +12,7 @@ if platform.system() != "Windows":
     from daemonize import Daemonize
     
 #import tutors
-from tutors import ExampleTutor, KnowledgeTracingTutor
+from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
 
 #import plugins
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
@@ -21,7 +21,7 @@ from plugins import SkillManagementPlugin, StudentManagementPlugin
 
 random.seed(datetime.now())
 
-tutor_types = ['example', 'knowledge_tracing']
+tutor_types = ['example', 'knowledge_tracing','replay']
 
 plugin_types = [
     'example', 
@@ -102,6 +102,7 @@ if __name__ == '__main__':
         tutor_classes = {
             'example': ExampleTutor,
             'knowledge_tracing': KnowledgeTracingTutor,
+            'replay' : ReplayTutor,
         }
         
         if arguments.entity == 'plugin':
@@ -121,7 +122,9 @@ if __name__ == '__main__':
             entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
             entity.start()
         
-
+        if platform.system() == "Windows": #remove PID if process finishes on its own
+            os.remove(pid)
+            
     if arguments.daemon:
         daemon = Daemonize(app=arguments.entity_id, pid=pid, action=main)
         daemon.start()

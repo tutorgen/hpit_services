@@ -12,6 +12,7 @@ class Plugin(MessageSenderMixin):
         self.entity_id = entity_id
         self.api_key = api_key
         self.wildcard_callback = wildcard_callback
+        self.transaction_callback = lambda: 0
         self.callbacks = {}
 
         self.poll_wait = 500
@@ -28,12 +29,14 @@ class Plugin(MessageSenderMixin):
             transaction=self.transaction_callback
         )
     
-    def transaction_callback(self):
+    def register_transaction_callback(self,callback):
         """
-        This is the default callback to responding to transaction messages.  This
-        can be overridden if a plugin is interested in transaction messages.
+        Set a callback for transactions.  This defaults to a pass method in the constructor.
         """
-        pass
+        self.transaction_callback = callback
+        self.subscribe(
+            transaction=self.transaction_callback
+        )
 
 
     def list_subscriptions(self):
@@ -69,7 +72,6 @@ class Plugin(MessageSenderMixin):
         for event_name in event_names:
             if event_name in self.callbacks:
                 unsubscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/unsubscribe')
-
                 self._post_data(unsubscribe_url, {'message_name': event_name})
                 del self.callbacks[event_name]
 
