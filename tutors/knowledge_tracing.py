@@ -16,8 +16,11 @@ class KnowledgeTracingTutor(Tutor):
         self.run_once = run_once
         self.logger = logger
         self.skills = ['addition', 'subtraction', 'multiplication', 'division']
-        
-        self.args = json.loads(args[1:-1])
+      
+        if args: 
+            self.args = json.loads(args[1:-1])
+        else:
+            self.args = None
       
         
     def setup(self):
