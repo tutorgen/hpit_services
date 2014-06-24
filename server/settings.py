@@ -1,5 +1,5 @@
 class ServerSettings:
-    HPIT_VERSION = '(HPIT) Hyper Personalized Intelligent Tutor(version 0.2) - Codename Asura'
+    HPIT_VERSION = '(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut'
     DEBUG = False
 
     HPIT_PID_FILE = 'tmp/hpit_server.pid'
@@ -20,6 +20,9 @@ class ServerSettings:
     MAIL_USERNAME = 'hpit@tutorgen.com'
     MAIL_PASSWORD = 'abcd1234'
     MAIL_DEFAULT_SENDER = '"HPIT Production" <hpit@tutorgen.com>'
+
+    #Security
+    USER_PASSWORD_HASH = 'bcrypt_sha256'
 
     # Configure Flask-User
     USER_ENABLE_EMAIL            = False

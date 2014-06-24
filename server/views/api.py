@@ -1,9 +1,30 @@
 from uuid import uuid4
 from bson.objectid import ObjectId
-from flask import session, jsonify, abort, request
+from datetime import datetime
+from flask import session, jsonify, abort, request, Response
 
-from server import app, mongo, _map_mongo_document, HPIT_STATUS,settings
 
+from server import app, mongo, db, csrf, _map_mongo_document, HPIT_STATUS
+from server.models import Plugin, Tutor, Subscription
+
+def bad_parameter_response(parameter):
+    return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))
+
+def auth_failed_response():
+    return ("Could not authenticate. Invalid entity_id/api_key combination.",
+        403, dict(mimetype="application/json"))
+
+def not_found_response():
+    return ("Could not find the requested resource.", 404, dict(mimetype="application/json"))
+   
+def exists_response():
+    return ("EXISTS", 200, dict(mimetype="application/json"))
+
+def ok_response():
+    return ("OK", 200, dict(mimetype="application/json"))
+
+
+    
 @app.route("/version", methods=["GET"])
 def version():
     """
@@ -17,201 +38,266 @@ def version():
     version_returned = {"version": settings.HPIT_VERSION}
     return jsonify(version_returned)
 
-@app.route("/tutor/connect/<name>", methods=["POST"])
-def connect_tutor(name):
+
+@csrf.exempt
+@app.route("/connect", methods=["POST"])
+def connect():
     """
     SUPPORTS: POST
 
-    Establishes a tutor session with HPIT.
+    Establishes a RESTful session with HPIT.
 
-    Returns: 200:JSON with the following fields:
-        - entity_name : string -> Assigned entity name (not unique)
+    Accepts: JSON
         - entity_id : string -> Assigned entity id (unique)
-        Both assignments expire when you disconnect from HPIT.
+        - api_key : string -> Assigned api key for connection authentication
+
+    Returns: 
+        200 on success
+        404 if no entity or tutor is registered with the supplied entity_id
+        403 if failed to authenticate (entity_id or api_key is invalid)
     """
-    entity_identifier = dict(
-        entity_name='tutor_' + name,
-        entity_id=uuid4()
-    )
+    for x in ['entity_id', 'api_key']:
+        if x not in request.json:
+            return bad_parameter_response(x)
 
-    if entity_identifier not in HPIT_STATUS['tutors']:
-        HPIT_STATUS['tutors'].append(entity_identifier)
+    entity_id = request.json['entity_id']
+    api_key = request.json['api_key']
 
-    session['entity_name'] = entity_identifier['entity_name']
-    session['entity_id'] = entity_identifier['entity_id']
+    entity = Tutor.query.filter_by(entity_id=entity_id).first()
 
-    return jsonify(entity_identifier)
+    if not entity:
+        entity = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not entity:
+        return not_found_response()
+
+    if not entity.authenticate(api_key):
+        return auth_failed_response()
+
+    #Clear the session
+    session.clear()
+
+    entity.connected = True
+
+    #Renew Session
+    session['entity_name'] = entity.name
+    session['entity_description'] = entity.description
+    session['entity_id'] = entity_id
+
+    db.session.add(entity)
+    db.session.commit()
+
+    #All is well
+    return ok_response()
 
 
-@app.route("/plugin/connect/<name>", methods=["POST"])
-def connect_plugin(name):
+@csrf.exempt
+@app.route("/disconnect", methods=["POST"])
+def disconnect():
     """
     SUPPORTS: POST
 
-    Establishes a plugin session with HPIT.
+    Destroys the session for the entity calling this route.
 
-    Returns: 200:JSON with the following fields:
-        - entity_name : string -> Assigned entity name (not unique)
+    Accepts: JSON
         - entity_id : string -> Assigned entity id (unique)
-        Both assignments expire when you disconnect from HPIT.
-    """
-    entity_identifier = dict(
-        entity_name='plugin_' + name,
-        entity_id=uuid4()
-    )
+        - api_key : string -> Assigned api key for connection authentication
 
-    if entity_identifier not in HPIT_STATUS['plugins']:
-        HPIT_STATUS['plugins'].append(entity_identifier)
-
-    session['entity_name'] = entity_identifier['entity_name']
-    session['entity_id'] = entity_identifier['entity_id']
-
-    return jsonify(entity_identifier)
-
-
-@app.route("/tutor/disconnect", methods=["POST"])
-def disconnect_tutor():
-    """
-    SUPPORTS: POST
-
-    Destroys the session for the tutor calling this route.
-
-    Returns: 200:OK
+    Returns: 
+        200 on success
+        404 if no entity or tutor is registered with the supplied entity_id
+        403 if failed to authenticate (entity_id or api_key is invalid)
     """
 
-    entity_identifier = dict(
-        entity_name=session['entity_name'],
-        entity_id=session['entity_id']
-    )
+    for x in ['entity_id', 'api_key']:
+        if x not in request.json:
+            return bad_parameter_response(x)
 
-    try:
-        HPIT_STATUS['tutors'].remove(entity_identifier)
-    except ValueError:
-        pass
+    if session['entity_id'] != request.json['entity_id']:
+        return auth_failed_response()
 
-    session.pop('entity_name', None)
-    session.pop('entity_id', None)
+    entity_id = session['entity_id']
+    api_key = request.json['api_key']
 
-    return "OK"
+    entity = Tutor.query.filter_by(entity_id=entity_id).first()
 
-@app.route("/plugin/disconnect", methods=["POST"])
-def disconnect_plugin():
-    """
-    SUPPORTS: POST
+    if not entity:
+        entity = Plugin.query.filter_by(entity_id=entity_id).first()
 
-    Destroys the session for the plugin calling this route.
+    if not entity:
+        return not_found_response()
 
-    Returns: 200:OK
-    """
-    entity_identifier = dict(
-        entity_name=session['entity_name'],
-        entity_id=session['entity_id']
-    )
+    #Authenticate
+    if not entity.authenticate(api_key):
+        return auth_failed_response()
 
-    try:
-        HPIT_STATUS['plugins'].remove(entity_identifier)
-    except ValueError:
-        pass
+    entity.connected = False
+    db.session.add(entity)
+    db.session.commit()
 
-    session.pop('entity_name', None)
-    session.pop('entity_id', None)
+    session.clear()
 
-    return "OK"
+    return ok_response()
 
-@app.route("/plugin/<name>/subscribe/<event>", methods=["POST"])
-def subscribe(name, event):
+
+@csrf.exempt
+@app.route("/plugin/subscribe", methods=["POST"])
+def subscribe():
     """
     SUPPORTS: POST
 
-    Start listening to an event type <event> for a specific plugin with
-    the name <name>.
+    Start listening to a message for the plugin that sends this request.
 
-    Returns: 200:OK or 200:EXISTS
+    Accepts: JSON
+        - message_name - the name of the message to subscribe to
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session.
+        200:OK      - Mapped the message to the plugin
+        200:EXISTS  - The mapping already exists
     """
-    payload = {
-        'name': name,
-        'event': event
-    }
+    if 'message_name' not in request.json:
+        return bad_parameter_response()
 
-    found = mongo.db.plugin_subscriptions.find_one(payload)
+    if 'entity_id' not in session:
+        return auth_failed_response()
 
-    if not found:
-        mongo.db.plugin_subscriptions.insert(payload)
-        return "OK"
-    else:
-        return "EXISTS"
+    message_name = request.json['message_name']
+    entity_id = session['entity_id']
 
-@app.route("/plugin/<name>/unsubscribe/<event>", methods=["POST"])
-def unsubscribe(name, event):
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
+
+    if subscription:
+        return exists_response()
+
+    subscription = Subscription()
+    subscription.plugin = plugin
+    subscription.message_name = message_name
+
+    db.session.add(subscription)
+    db.session.commit()
+
+    return ok_response()
+
+
+@csrf.exempt
+@app.route("/plugin/unsubscribe", methods=["POST"])
+def unsubscribe():
     """
     SUPPORTS: POST
 
-    Stop listening to an event type <event> for a specific plugin with
-    the name <name>.
+    Stop listening to a message for the plugin that sends this request.
 
-    Returns: 200:OK or 200:DOES_NOT_EXIST
+    Accepts: JSON
+        - message_name - the name of the message to unsubscribe from
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session or could not find the subscription.
+        200:OK      - Mapped the message to the plugin
+        200:EXISTS  - The mapping already exists
     """
 
-    payload = {
-        'name': name,
-        'event': event
-    }
+    if 'message_name' not in request.json:
+        return bad_parameter_response()
 
-    found = mongo.db.plugin_subscriptions.find_one(payload)
+    if 'entity_id' not in session:
+        return auth_failed_response()
 
-    if found:
-        mongo.db.plugin_subscriptions.remove(payload)
-        return "OK"
-    else:
-        return "DOES_NOT_EXIST"
+    message_name = request.json['message_name']
+    entity_id = session['entity_id']
 
-@app.route('/plugin/<name>/subscriptions')
-def plugin_list_subscriptions(name):
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
+
+    if not subscription:
+        return not_found_response()
+
+    db.session.delete(subscription)
+    db.session.commit()
+
+    return ok_response()
+
+
+@app.route('/plugin/subscription/list')
+def plugin_list_subscriptions():
     """
     SUPPORTS: GET
-    Lists the event names for messages this plugin will listen to.
+
+    Lists the messages this plugin will listen to.
     If you are using the library then this is done under the hood to make sure
     when you perform a poll you are recieving the right messages.
 
-    Returns the event_names as a JSON list.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the plugin stored in the session.
+        200:OK      - A JSON list of the subscriptions for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
 
     def _map_subscriptions(subscription):
-        return subscription['name']
+        return subscription['message_name']
 
-    subscriptions = list(mongo.db.plugin_subscriptions.find({'name': name}))
-    subscriptions = [_map_subscriptions(sub) for sub in subscriptions]
+    entity_id = session['entity_id']
+
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    subscriptions = [x.message_name for x in plugin.subscriptions]
+
     return jsonify({'subscriptions': subscriptions})
 
 
-@app.route("/plugin/<name>/messages/history")
-def plugin_message_history(name):
+@app.route("/plugin/message/history")
+def plugin_message_history():
     """
     SUPPORTS: GET
-    Lists the message history for a specific plugin - including queued messages.
-    Does not mark them as recieved. 
+    Lists the message history for the plugin - including queued messages.
+
+    !!! IMPORTANT - Does not mark the messages as recieved. 
 
     If you wish to preview queued messages only use the '/message-preview' route instead.
     If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
-    my_messagess = mongo.db.plugin_messages.find({
-        'plugin_name': name,
-        'event_name' : {"$ne" : "transaction"}, 
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
+    my_messages = mongo.db.plugin_messages.find({
+        'plugin_entity_id': entity_id,
+        'message_name' : {"$ne" : "transaction"}, 
     })
 
     result = [{
-        'event_name': t['event_name'],
+        'message_name': t['message_name'],
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
     return jsonify({'message-history': result})
+
     
-app.route("/plugin/<name>/transactions/history")
-def plugin_transaction_history(name):
+@app.route("/plugin/transaction/history")
+def plugin_transaction_history():
     """
     SUPPORTS: GET
     Lists the transaction history for a specific plugin - including queued messages.
@@ -222,23 +308,31 @@ def plugin_transaction_history(name):
 
     DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
 
-    Returns JSON for the transactions.
-    
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
-    my_messagess = mongo.db.plugin_messages.find({
-        'plugin_name': name,
-        'event_name' : "transaction", 
+
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
+    my_messages = mongo.db.plugin_messages.find({
+        'plugin_entity_id': entity_id,
+        'message_name' : "transaction", 
     })
+
     result = [{
-        'event_name': t['event_name'],
+        'message_name': t['message_name'],
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
     return jsonify({'transaction-history': result})
 
 
-@app.route("/plugin/<name>/messages/preview")
-def plugin_message_preview(name):
+@app.route("/plugin/message/preview")
+def plugin_message_preview():
     """
     SUPPORTS: GET
     Lists the messages and transactions queued for a specific plugin. 
@@ -248,51 +342,65 @@ def plugin_message_preview(name):
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_name': name,
-        'event_name' : {"$ne" : "transaction"},
+        'plugin_entity_id': entity_id,
+        'message_name' : {"$ne" : "transaction"},
     })
 
     result = [{
-        'event_name': t['event_name'],
+        'message_name': t['message_name'],
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
     return jsonify({'message-preview': result})
-    
-    
-@app.route("/plugin/<name>/transactions/preview")
-def plugin_transaction_preview(name):
+
+
+@app.route("/plugin/transaction/preview")
+def plugin_transaction_preview():
     """
     SUPPORTS: GET
-    Lists the transactions queued for a specific plugin. 
-    Does not mark them as recieved. Only shows transactions not marked as received.
-    If you wish to see the entire transaction history for 
-    the plugin use the '/transaction-history' route instead.
+    Lists the messages and transactions queued for a specific plugin. 
+    Does not mark them as recieved. Only shows messagess not marked as received.
+    If you wish to see the entire message history for 
+    the plugin use the '/message-history' route instead.
 
-    DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO PREVIEW THEM.
+    DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_name': name,
-        'event_name' : "transaction",
+        'plugin_entity_id': entity_id,
+        'message_name' : "transaction",
     })
 
     result = [{
-        'event_name': t['event_name'],
+        'message_name': t['message_name'],
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
     return jsonify({'transaction-preview': result})
 
 
-@app.route("/plugin/<name>/messages/list")
-def plugin_messages(name):
+@app.route("/plugin/message/list")
+def plugin_message_list():
     """
     SUPPORTS: GET
     List the messages and transactions queued for a specific plugin.
@@ -301,34 +409,42 @@ def plugin_messages(name):
     and they will not show again. If you wish to see a preview
     of the messages queued for a plugin use the /message-preview route instead.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_name': name,
-        'event_name' : {"$ne" : "transaction"},
+        'receiver_entity_id': entity_id,
+        'message_name' : {"$ne" : "transaction"},
     })
 
     result = [
-        (t['_id'], t['event_name'], _map_mongo_document(t['message_payload']))
+        (t['_id'], t['message_name'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
     update_ids = [t[0] for t in result]
     result = [{
-        'event_name': t[1],
+        'message_name': t[1],
         'message': t[2]} for t in result]
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
-        {"$set": {'sent_to_plugin':True}}, 
+        {"$set": {'sent_to_plugin':True, 'time_received': datetime.now()}}, 
         multi=True
     )
 
     return jsonify({'messages': result})
 
-@app.route("/plugin/<name>/transactions/list")
-def plugin_transactions(name):
+
+@app.route("/plugin/transaction/list")
+def plugin_transaction_list():
     """
     SUPPORTS: GET
     List the transactions queued for a specific plugin.
@@ -337,23 +453,27 @@ def plugin_transactions(name):
     and they will not show again. If you wish to see a preview
     of the transactions queued for a plugin use the /transaction-preview route instead.
 
-    Returns JSON for the messages.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_name': name,
-        'event_name' : "transaction",
+        'receiver_entity_id': entity_id,
+        'message_name' : "transaction",
     })
 
     result = [
-        (t['_id'], t['event_name'], _map_mongo_document(t['message_payload']))
+        (t['_id'], t['message_name'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
     update_ids = [t[0] for t in result]
-    result = [{
-        'event_name': t[1],
-        'message': t[2]} for t in result]
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
@@ -361,8 +481,10 @@ def plugin_transactions(name):
         multi=True
     )
 
-    return jsonify({'messages': result})
+    return jsonify({'transactions': result})
 
+
+@csrf.exempt
 @app.route("/message", methods=["POST"])
 def message():
     """
@@ -370,69 +492,58 @@ def message():
     Submit a message to the HPIT server. Expect the data formatted as JSON
     with the application/json mimetype given in the headers. Expects two fields in
     the JSON data.
-        - name : string => The name of the event message to submit to the server
+
+    Accepts: JSON
+        - name : string => The name of the message to submit to the server
         - payload : Object => A JSON Object of the DATA to store in the database
 
-    Returns 200:JSON -> 
-        - message_id - The ID of the message submitted to the database
+    Returns:
+        403         - A connection with HPIT must be established first.
+        200: JSON   
+            - message_id - The ID of the message submitted to the database
     """
     if 'entity_id' not in session:
-        return abort(401)
+        return auth_failed_response()
 
-    name = request.json['name']
+    sender_entity_id = session['entity_id']
+    message_name = request.json['name']
     payload = request.json['payload']
-    entity_id = session['entity_id']
-    message_id = mongo.db.messages.insert({"event":name,"payload":payload,"entity_id":entity_id})
 
-    plugins = mongo.db.plugin_subscriptions.find({'event': name})
+    message = {
+        'sender_entity_id': sender_entity_id,
+        'time_created': datetime.now(),
+        'message_name': message_name,
+        'payload': payload,
+    }
 
-    for plugin in plugins:
+    message_id = mongo.db.messages.insert(message)
+
+    subscriptions = Subscription.query.filter_by(message_name=message_name)
+
+    for subscription in subscriptions:
+        plugin_entity_id = subscription.plugin.entity_id
+
         mongo.db.plugin_messages.insert({
-            'plugin_name': plugin['name'],
-            'event_name': name,
-            'message_id': message_id,
-            'entity_id': session['entity_id'],
-            'message_payload': payload,
-            'sent_to_plugin': False
-        })
+            '_message_id': message_id,
 
-    return jsonify(message_id=str(message_id))
-    
-@app.route("/transaction", methods=["POST"])
-def transaction():
-    """
-    SUPPORTS: POST
-    Submit a transaction to the HPIT server. Expect the data formatted as JSON
-    with the application/json mimetype given in the headers. Expects a single in
-    the JSON data.
-        - payload : Object => A JSON Object of the DATA to store in the database
+            'sender_entity_id': sender_entity_id,
+            'receiver_entity_id': plugin_entity_id,
 
-    Returns 200:JSON -> 
-        - message_id - The ID of the message submitted to the database
-    """
-    if 'entity_id' not in session:
-        return abort(401)
+            'time_created': datetime.now(),
+            'time_received': datetime.now(),
+            'time_responded': datetime.now(),
+            'time_response_received': datetime.now(),
 
-    name = "transaction"
-    payload = request.json['payload']
-    payload['entity_id'] = session['entity_id']
-    message_id = mongo.db.messages.insert(payload)
+            'message_name': message_name,
+            'payload': payload,
 
-    plugins = mongo.db.plugin_subscriptions.find({'event': name})
-
-    for plugin in plugins:
-        mongo.db.plugin_messages.insert({
-            'plugin_name': plugin['name'],
-            'event_name': name,
-            'message_id': message_id,
-            'entity_id': session['entity_id'],
-            'message_payload': payload,
-            'sent_to_plugin': False
+            'sent_to_plugin': False,
         })
 
     return jsonify(message_id=str(message_id))
 
 
+@csrf.exempt
 @app.route("/response", methods=["POST"])
 def response():
     """
@@ -440,19 +551,35 @@ def response():
     Submits a response to an earlier message to the HPIT server. 
     Expects the data formatted as JSON with the application/json mimetype 
     given in the headers. Expects two fields in the JSON data.
+
+    Accepts: JSON
         - message_id : string => The message id to the message you're responding to.
         - payload : Object => A JSON Object of the DATA to respond with
 
-    Returns: 200:JSON ->
-        - response_id - The ID of the response submitted to the database
+    Returns:
+        403         - A connection with HPIT must be established first.
+        200: JSON   
+            - response_id - The ID of the response submitted to the database
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    responder_entity_id = session['entity_id']
     message_id = request.json['message_id']
     payload = request.json['payload']
 
-    message = mongo.db.messages.find_one({'_id': ObjectId(message_id)})
+    plugin_message = mongo.db.plugin_messages.find_one({
+        '_message_id': ObjectId(message_id),
+        'receiver_entity_id': responder_entity_id
+    })
+
+    plugin_message.time_responded = datetime.now()
+    plugin_message.save()
 
     response_id = mongo.db.responses.insert({
-        'message_id': message_id,
+        '_message_id': plugin_message._message_id,
+        'sender_entity_id': responder_entity_id,
+        'receiver_entity_id': plugin_message.sender_entity_id,
         'message': message,
         'response': payload,
         'response_recieved': False
@@ -460,20 +587,24 @@ def response():
 
     return jsonify(response_id=str(response_id))
 
-@app.route("/responses", methods=["GET"])
+
+@app.route("/response/list", methods=["GET"])
 def responses():
     """
     SUPPORTS: GET
     Poll for responses queued to original sender of a message.
 
-    Returns: JSON encoded list of responses.
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the responses for this plugin.
     """
     if 'entity_id' not in session:
-        return abort(401)
+        return auth_failed_response()
 
     entity_id = session['entity_id']
+
     my_responses = mongo.db.responses.find({
-        'message.entity_id': entity_id,
+        'receiver_entity_id': entity_id,
         'response_recieved': False
     })
 
@@ -489,7 +620,7 @@ def responses():
 
     mongo.db.responses.update(
         {'_id':{'$in': update_ids}},
-        {"$set": {'response_recieved':True}}, 
+        {"$set": {'response_recieved':True, 'time_response_received': datetime.now()}}, 
         multi=True
     )
 
