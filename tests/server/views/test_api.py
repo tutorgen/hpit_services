@@ -81,8 +81,8 @@ def test_subscribe():
         -return OK if new, EXISTS if not new.
         -ensure new record in DB on OK, and no additional records added on EXISTS
     """
-    response = test_client.post("/plugin/test-plugin/subscribe/foo")
-    str(response.get_data()).should.contain("OK")
+    response = test_client.post("/plugin/someplugin/subscribe/someevent")
+    
 
 def test_unsubscribe():
     """
