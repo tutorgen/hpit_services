@@ -24,8 +24,12 @@ class Plugin(MessageSenderMixin):
             'pre_handle_transactions', 'post_handle_transcations')
 
         self.connected = False
-      
-    
+
+
+    def post_connect(self):
+        pass
+
+
     def register_transaction_callback(self,callback):
         """
         Set a callback for transactions.  This defaults to a pass method in the constructor.
@@ -87,7 +91,7 @@ class Plugin(MessageSenderMixin):
         Get a list of datashop transactions from the server. 
         """
 
-        list_transaction_url = urljoin(HPIT_URL_ROOT, '/plugin/transactions/list')
+        list_transaction_url = urljoin(HPIT_URL_ROOT, '/plugin/transaction/list')
 
         transaction_data = self._get_data(list_transaction_url)['transactions']
 
