@@ -146,7 +146,7 @@ def subscribe():
     Returns: 
         403         - A connection with HPIT must be established first.
         404         - Could not find the plugin stored in the session.
-        200:OK      - Mapped the event to the plugin
+        200:OK      - Mapped the message to the plugin
         200:EXISTS  - The mapping already exists
     """
     if 'message_name' not in request.json:
@@ -189,7 +189,7 @@ def unsubscribe():
     Returns: 
         403         - A connection with HPIT must be established first.
         404         - Could not find the plugin stored in the session or could not find the subscription.
-        200:OK      - Mapped the event to the plugin
+        200:OK      - Mapped the message to the plugin
         200:EXISTS  - The mapping already exists
     """
 
@@ -444,7 +444,7 @@ def message():
     the JSON data.
 
     Accepts: JSON
-        - name : string => The name of the event message to submit to the server
+        - name : string => The name of the message to submit to the server
         - payload : Object => A JSON Object of the DATA to store in the database
 
     Returns:

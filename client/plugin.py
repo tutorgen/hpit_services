@@ -41,7 +41,7 @@ class Plugin(MessageSenderMixin):
 
     def list_subscriptions(self):
         """
-        Polls the HPIT server for a list of event names we currently subscribing to.
+        Polls the HPIT server for a list of message names we currently subscribing to.
         """
         list_url = urljoin(HPIT_URL_ROOT, '/plugin/subscriptions')
         subscriptions = self._get_data(list_url)['subscriptions']
@@ -53,32 +53,32 @@ class Plugin(MessageSenderMixin):
         return self.callbacks
 
 
-    def subscribe(self, **events):
+    def subscribe(self, **messages):
         """
-        Subscribe to events, each argument is exepcted as a key value pair where
-        the key is the event's name and the value is the callback function.
+        Subscribe to messages, each argument is exepcted as a key value pair where
+        the key is the message's name and the value is the callback function.
         """
-        for event_name, callback in events.items():
+        for message_name, callback in messages.items():
             subscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/subscribe')
 
-            self._post_data(subscribe_url, {'message_name' : event_name})
-            self.callbacks[event_name] = callback
+            self._post_data(subscribe_url, {'message_name' : message_name})
+            self.callbacks[message_name] = callback
 
 
-    def unsubscribe(self, *event_names):
+    def unsubscribe(self, *message_names):
         """
-        Unsubscribe from events. Pass each event name as a separate parameter.
+        Unsubscribe from messages. Pass each message name as a separate parameter.
         """
-        for event_name in event_names:
-            if event_name in self.callbacks:
+        for message_name in message_names:
+            if message_name in self.callbacks:
                 unsubscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/unsubscribe')
-                self._post_data(unsubscribe_url, {'message_name': event_name})
-                del self.callbacks[event_name]
+                self._post_data(unsubscribe_url, {'message_name': message_name})
+                del self.callbacks[message_name]
 
 
     def _poll(self):
         """
-        Get a list of new messages from the server for events we are listening 
+        Get a list of new messages from the server for messages we are listening 
         to.
         """
         list_messages_url = urljoin(HPIT_URL_ROOT, '/plugin/messages')
@@ -86,19 +86,19 @@ class Plugin(MessageSenderMixin):
         return self._get_data(list_messages_url)['messages']
 
 
-    def _dispatch(self, event_data):
+    def _dispatch(self, message_data):
         """
         For each message recieved route it to the appropriate callback.
         """
         if not self._try_hook('pre_dispatch'):
             return False
 
-        for event_item in event_data:
-            event = event_item['event_name']
-            payload = event_item['message']
+        for message_item in message_data:
+            message = message_item['message_name']
+            payload = message_item['message']
             
             try:
-                self.callbacks[event](payload)
+                self.callbacks[message](payload)
             except KeyError:
                 #No callback registered try the wildcard
                 if self.wildcard_callback:
@@ -108,8 +108,8 @@ class Plugin(MessageSenderMixin):
                         raise PluginPollError("Wildcard Callback is not a callable")
             except TypeError as e:
                 #Callback isn't a function
-                if self.callbacks[event] is None:
-                    raise PluginPollError("No callback registered for event: <" + event + ">")
+                if self.callbacks[message] is None:
+                    raise PluginPollError("No callback registered for message: <" + message + ">")
                 else:
                     raise e
 
@@ -122,7 +122,7 @@ class Plugin(MessageSenderMixin):
     def start(self):
         """
         Start the plugin. Connect to the HPIT server. Then being polling and dispatching
-        event callbacks based on messages we subscribe to.
+        message callbacks based on messages we subscribe to.
         """
         self.connect()
         self.list_subscriptions()
@@ -142,12 +142,12 @@ class Plugin(MessageSenderMixin):
                 if not self._try_hook('pre_poll'):
                     break;
 
-                event_data = self._poll()
+                message_data = self._poll()
 
                 if not self._try_hook('post_poll'):
                     break;
 
-                if not self._dispatch(event_data):
+                if not self._dispatch(message_data):
                     return False
 
                 #Handle responses from other plugins
@@ -170,7 +170,7 @@ class Plugin(MessageSenderMixin):
 
     def send_response(self, message_id, payload):
         """
-        Sends a response to HPIT upon handling a specific event.
+        Sends a response to HPIT upon handling a specific message.
 
         Responses are handled differently than normal messages as they are destined
         for a only the original sender of the message_id to recieve the response.

@@ -28,7 +28,7 @@ def spin_up_all(entity_type, configuration):
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
             
-            subp_args = ["python", "entity_daemon.py", "--pid", pidfile, "--args", entity_args, entity_id, api_key, entity_type, entity_subtype]
+            subp_args = ["python", "entity_daemon.py", "--pid", pidfile]
             
             if 'args' in item:
                 entity_args = shlex.quote(json.dumps(item['args']))
@@ -38,9 +38,7 @@ def spin_up_all(entity_type, configuration):
             if 'once' in item:
                 subp_args.append("--once")
                 
-            subp_args.append(name)
-            subp_args.append(entity_subtype)
-                
+            subp_args.extend([entity_id, api_key, entity_type, entity_subtype])
             
             if entity_type != 'tutor' and entity_type !='plugin':
                 raise Exception("Error: unknown entity type in spin_up_all")
