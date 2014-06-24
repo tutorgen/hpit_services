@@ -242,6 +242,8 @@ def plugin_list_subscriptions():
         404         - Could not find the plugin stored in the session.
         200:OK      - A JSON list of the subscriptions for this plugin.
     """
+    if 'entity_id' not in session:
+        return auth_failed_response()
 
     def _map_subscriptions(subscription):
         return subscription['message_name']

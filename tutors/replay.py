@@ -18,7 +18,11 @@ class ReplayTutor(Tutor):
         super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
         self.run_once = run_once
         self.logger = logger
-        self.args = json.loads(args[1:-1]) #trim off the quotes
+        
+        if args: 
+            self.args = json.loads(args[1:-1])
+        else:
+            self.args = None
         
     def main_callback(self):
         client = MongoClient()
