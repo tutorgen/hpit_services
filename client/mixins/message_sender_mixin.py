@@ -85,7 +85,7 @@ class MessageSenderMixin(RequestsMixin):
         Returns: dict - The list of responses from the server for earlier messages 
         submitted by this message sender to HPIT.
         """
-        response_list_url = urljoin(HPIT_URL_ROOT, 'responses')
+        response_list_url = urljoin(HPIT_URL_ROOT, 'response/list')
 
         if not self._try_hook('pre_poll_responses'):
             return False

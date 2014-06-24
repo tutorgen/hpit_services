@@ -43,7 +43,7 @@ class Plugin(MessageSenderMixin):
         """
         Polls the HPIT server for a list of message names we currently subscribing to.
         """
-        list_url = urljoin(HPIT_URL_ROOT, '/plugin/subscriptions')
+        list_url = urljoin(HPIT_URL_ROOT, '/plugin/subscription/list')
         subscriptions = self._get_data(list_url)['subscriptions']
 
         for sub in subscriptions:
@@ -81,7 +81,7 @@ class Plugin(MessageSenderMixin):
         Get a list of new messages from the server for messages we are listening 
         to.
         """
-        list_messages_url = urljoin(HPIT_URL_ROOT, '/plugin/messages')
+        list_messages_url = urljoin(HPIT_URL_ROOT, '/plugin/message/list')
 
         return self._get_data(list_messages_url)['messages']
 

@@ -108,6 +108,13 @@ def disconnect():
         403 if failed to authenticate (entity_id or api_key is invalid)
     """
 
+    for x in ['entity_id', 'api_key']:
+        if x not in request.json:
+            return bad_parameter_response(x)
+
+    if session['entity_id'] != request.json['entity_id']:
+        return auth_failed_response()
+
     entity_id = session['entity_id']
     api_key = request.json['api_key']
 
@@ -151,6 +158,9 @@ def subscribe():
     """
     if 'message_name' not in request.json:
         return bad_parameter_response()
+
+    if 'entity_id' not in session:
+        return auth_failed_response()
 
     message_name = request.json['message_name']
     entity_id = session['entity_id']
@@ -196,6 +206,9 @@ def unsubscribe():
     if 'message_name' not in request.json:
         return bad_parameter_response()
 
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
     message_name = request.json['message_name']
     entity_id = session['entity_id']
 
@@ -215,7 +228,7 @@ def unsubscribe():
     return ok_response()
 
 
-@app.route('/plugin/subscriptions')
+@app.route('/plugin/subscription/list')
 def plugin_list_subscriptions():
     """
     SUPPORTS: GET
@@ -280,7 +293,7 @@ def plugin_message_history():
     return jsonify({'message-history': result})
 
     
-@app.route("/plugin/transactions/history")
+@app.route("/plugin/transaction/history")
 def plugin_transaction_history():
     """
     SUPPORTS: GET
@@ -315,7 +328,7 @@ def plugin_transaction_history():
     return jsonify({'transaction-history': result})
 
 
-@app.route("/plugin/preview")
+@app.route("/plugin/message/preview")
 def plugin_message_preview():
     """
     SUPPORTS: GET
@@ -346,11 +359,45 @@ def plugin_message_preview():
         'message': _map_mongo_document(t['message_payload'])
         } for t in my_messages]
 
+    return jsonify({'message-preview': result})
+
+
+@app.route("/plugin/transaction/preview")
+def plugin_transaction_preview():
+    """
+    SUPPORTS: GET
+    Lists the messages and transactions queued for a specific plugin. 
+    Does not mark them as recieved. Only shows messagess not marked as received.
+    If you wish to see the entire message history for 
+    the plugin use the '/message-history' route instead.
+
+    DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO PREVIEW THEM.
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - A JSON list of dicts of the messages for this plugin.
+    """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
+    my_messages = mongo.db.plugin_messages.find({
+        'sent_to_plugin': False,
+        'plugin_entity_id': entity_id,
+        'message_name' : "transaction",
+    })
+
+    result = [{
+        'message_name': t['message_name'],
+        'message': _map_mongo_document(t['message_payload'])
+        } for t in my_messages]
+
     return jsonify({'transaction-preview': result})
 
 
-@app.route("/plugin/messages")
-def plugin_messages():
+@app.route("/plugin/message/list")
+def plugin_message_list():
     """
     SUPPORTS: GET
     List the messages and transactions queued for a specific plugin.
@@ -393,8 +440,8 @@ def plugin_messages():
     return jsonify({'messages': result})
 
 
-@app.route("/plugin/transactions")
-def plugin_transactions():
+@app.route("/plugin/transaction/list")
+def plugin_transaction_list():
     """
     SUPPORTS: GET
     List the transactions queued for a specific plugin.
@@ -538,7 +585,7 @@ def response():
     return jsonify(response_id=str(response_id))
 
 
-@app.route("/responses", methods=["GET"])
+@app.route("/response/list", methods=["GET"])
 def responses():
     """
     SUPPORTS: GET
