@@ -18,16 +18,13 @@ class Plugin(MessageSenderMixin):
         self.poll_wait = 500
         self.time_last_poll = time.time() * 1000
 
-        self._add_hooks('pre_poll', 'post_poll', 'pre_dispatch', 'post_dispatch')
+        self._add_hooks(
+            'pre_poll_messages', 'post_poll_messages', 
+            'pre_dispatch_messages', 'post_dispatch_messages', 
+            'pre_handle_transactions', 'post_handle_transcations')
+
         self.connected = False
       
-    def post_connect(self):
-        """
-        Run this hook after connecting to HPIT.
-        """
-        self.subscribe(
-            transaction=self.transaction_callback
-        )
     
     def register_transaction_callback(self,callback):
         """
@@ -85,12 +82,28 @@ class Plugin(MessageSenderMixin):
 
         return self._get_data(list_messages_url)['messages']
 
+    def _handle_transactions(self):
+        """
+        Get a list of datashop transactions from the server. 
+        """
+
+        list_transaction_url = urljoin(HPIT_URL_ROOT, '/plugin/transactions/list')
+
+        transaction_data = self._get_data(list_transaction_url)['transactions']
+
+        for item in transaction_data:
+            if self.transaction_callback:
+                if not self.transaction_callback(item):
+                    return False
+
+        return True
+
 
     def _dispatch(self, message_data):
         """
         For each message recieved route it to the appropriate callback.
         """
-        if not self._try_hook('pre_dispatch'):
+        if not self._try_hook('pre_dispatch_messages'):
             return False
 
         for message_item in message_data:
@@ -113,7 +126,7 @@ class Plugin(MessageSenderMixin):
                 else:
                     raise e
 
-        if not self._try_hook('post_dispatch'):
+        if not self._try_hook('post_dispatch_messages'):
             return False
 
         return True
@@ -139,16 +152,25 @@ class Plugin(MessageSenderMixin):
                 self.time_last_poll = cur_time
 
                 #Handle messages submitted by tutors
-                if not self._try_hook('pre_poll'):
+                if not self._try_hook('pre_poll_messages'):
                     break;
 
                 message_data = self._poll()
 
-                if not self._try_hook('post_poll'):
+                if not self._try_hook('post_poll_messages'):
                     break;
 
                 if not self._dispatch(message_data):
                     return False
+
+                if not self._try_hook('pre_handle_transactions'):
+                    break;
+
+                if not self._handle_transactions():
+                    return False
+
+                if not self._try_hook('post_handle_transactions'):
+                    break;
 
                 #Handle responses from other plugins
                 if not self._try_hook('pre_poll_responses'):
