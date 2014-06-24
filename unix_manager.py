@@ -2,6 +2,7 @@ import argparse
 import json
 import subprocess
 import os
+import time
 import signal
 import shutil
 
@@ -19,13 +20,15 @@ def spin_up_all(entity_type, configuration):
             item['active'] = True
             name = item['name']
             entity_subtype = item['type']
+            entity_id = item['entity_id']
+            api_key = item['api_key']
             
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
             
-            subp_args = ["python", "entity_daemon.py", "--entity",entity_type, "--pid", pidfile]
-            
+            subp_args = ["python3", "entity_daemon.py", "--daemon", "--pid", pidfile]
+
             if 'args' in item:
                 entity_args = shlex.quote(json.dumps(item['args']))
                 subp_args.append("--args")
@@ -34,9 +37,7 @@ def spin_up_all(entity_type, configuration):
             if 'once' in item:
                 subp_args.append("--once")
                 
-            subp_args.append(name)
-            subp_args.append(entity_subtype)
-            
+            subp_args.extend([entity_id, api_key, entity_type, entity_subtype])
             
             if entity_type != 'tutor' and entity_type !='plugin':
                 raise Exception("Error: unknown entity type in spin_up_all")
@@ -84,6 +85,9 @@ def start(arguments, configuration):
         with open("tmp/output_server.txt","w") as f:
             subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE], stdout = f, stderr = f)
 
+        print("Waiting for the server to boot.")
+        time.sleep(5)
+
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
         print("Starting plugins...")
@@ -103,7 +107,7 @@ def stop(arguments, configuration):
         wind_down_all('tutor', configuration)
 
         print("Stopping the HPIT Hub Server...")
-        with open(setting.HPIT_PID_FILE) as f:
+        with open(settings.HPIT_PID_FILE) as f:
             pid = f.read()
         try:
             os.kill(int(pid), signal.SIGTERM)

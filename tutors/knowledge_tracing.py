@@ -11,13 +11,16 @@ import sys
 from client import Tutor
 
 class KnowledgeTracingTutor(Tutor):
-    def __init__(self, name, logger, run_once=None, args = None):
-        super().__init__(name, self.main_callback, run_once=run_once)
+    def __init__(self, entity_id, api_key, logger, run_once=None, args = None):
+        super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
         self.run_once = run_once
         self.logger = logger
         self.skills = ['addition', 'subtraction', 'multiplication', 'division']
-        
-        self.args = json.loads(args[1:-1])
+      
+        if args: 
+            self.args = json.loads(args[1:-1])
+        else:
+            self.args = None
       
         
     def setup(self):

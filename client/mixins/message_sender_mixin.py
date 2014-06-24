@@ -9,12 +9,10 @@ class MessageSenderMixin(RequestsMixin):
     def __init__(self):
         super().__init__()
         self.response_callbacks = {}
-        self.pre_poll_responses = None
-        self.post_poll_responses = None
-        self.pre_dispatch_responses = None
-        self.post_dispatch_responses = None
+        
+        self._add_hooks('pre_poll_responses', 'post_poll_responses', 'pre_dispatch_responses', 'post_dispatch_responses')
 
-    def send(self, event_name, payload, callback=None):
+    def send(self, message_name, payload, callback=None):
         """
         Sends a message to the HPIT server. Messages are the meat of how
         HPIT works. All messages are asyncronous and non-blocking. Responses
@@ -24,10 +22,10 @@ class MessageSenderMixin(RequestsMixin):
         constraints of the plugins.
 
         Each message consists of two main things:
-            - event_name: string - The name of the event we are sending to HPIT. This will determine
+            - message_name: string - The name of the message we are sending to HPIT. This will determine
             which plugins recieves the message.
             - payload: dict - A Python dictionary of the data to send to HPIT and to whatever plugins
-            are listening to and will process the event. The dictionary will be converted to JSON in
+            are listening to and will process the message. The dictionary will be converted to JSON in
             route to HPIT.
 
         Optionally you can pass a callback, and as this message sender polls HPIT for responses
@@ -39,13 +37,13 @@ class MessageSenderMixin(RequestsMixin):
         the data was recieved. You must send in a callback to handle the actual HPIT response.
         """
         
-        if event_name == "transaction":
-            raise InvalidMessageNameException("Cannot use event_name 'transaction'.  Use send_transaction() method for datashop transactions.")
+        if message_name == "transaction":
+            raise InvalidMessageNameException("Cannot use message_name 'transaction'.  Use send_transaction() method for datashop transactions.")
             
         message_url = urljoin(HPIT_URL_ROOT, 'message')
 
         response = self._post_data(message_url, {
-            'name': event_name,
+            'name': message_name,
             'payload': payload
         }).json()
 
@@ -56,7 +54,7 @@ class MessageSenderMixin(RequestsMixin):
         
     def send_transaction(self, payload, callback= None):
         """
-        This method functions identially as send, but inserts "transaction" as the event.
+        This method functions identially as send, but inserts "transaction" as the message.
         This is specifically for DataShop transactions.
         See send() method for more details.
         """
@@ -87,7 +85,7 @@ class MessageSenderMixin(RequestsMixin):
         Returns: dict - The list of responses from the server for earlier messages 
         submitted by this message sender to HPIT.
         """
-        response_list_url = urljoin(HPIT_URL_ROOT, 'responses')
+        response_list_url = urljoin(HPIT_URL_ROOT, 'response/list')
 
         if not self._try_hook('pre_poll_responses'):
             return False

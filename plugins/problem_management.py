@@ -4,12 +4,16 @@ from pymongo import MongoClient
 
 class ProblemManagementPlugin(Plugin):
 
-    def __init__(self, name, logger,args = None):
-        super().__init__(name)
+    def __init__(self, entity_id, api_key, logger,args = None):
+        super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit.problems
 
+
+    def post_connect(self):
+        super().post_connect()
+        
         self.subscribe(
             add_problem=self.add_problem_callback,
             remove_problem=self.remove_problem_callback,

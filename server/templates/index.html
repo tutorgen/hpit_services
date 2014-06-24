@@ -36,13 +36,4 @@
             </tr> 
         {% endfor %}
     </table>
-
-    <h3>Links for API</h3>
-    {% for link in links %}
-        <p>
-            <b>{{link.0}}</b><br/>
-            Documentation: {{link.1|safe}}
-            <hr/>
-        </p>
-    {% endfor %}
 {% endblock %}

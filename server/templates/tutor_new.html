@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>New Tutor</h1>
+
+<form role="form" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    {% for field in form %}
+        <div class="form-group">
+            <p>
+                {{ field.label }}
+                {{ field(class="form-control") }}
+            </p>
+        </div>
+    {% endfor %}
+
+    <input class="btn btn-info" type="submit" value="Create Tutor"/>
+</form>
+
+{% endblock %}

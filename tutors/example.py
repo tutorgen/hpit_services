@@ -9,8 +9,8 @@ from time import sleep
 from client import Tutor
 
 class ExampleTutor(Tutor):
-    def __init__(self, name, logger=None, run_once=None, args = None):
-        super().__init__(name, self.main_callback)
+    def __init__(self, entity_id, api_key, logger=None, run_once=None, args = None):
+        super().__init__(entity_id, api_key, self.main_callback)
         self.run_once = run_once
         self.logger = logger
         self.event_names = [
