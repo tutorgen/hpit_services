@@ -13,11 +13,13 @@ if platform.system() != "Windows":
     
 #import tutors
 from tutors import ExampleTutor, KnowledgeTracingTutor
+from tutors import StudentActivityLoggingTutor
 
 #import plugins
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
+from plugins import StudentActivityLoggingPlugin
 
  
 main_parser = argparse.ArgumentParser(
@@ -35,7 +37,7 @@ main_parser.add_argument('--args', type=str, help = "JSON string of command line
 
 random.seed(datetime.now())
 
-tutor_types = ['example', 'knowledge_tracing']
+tutor_types = ['example', 'knowledge_tracing', 'activity_logging']
 
 plugin_types = [
     'example', 
@@ -44,8 +46,8 @@ plugin_types = [
     'student', 
     'problem',
     'problem_step',
-    'data']
-
+    'data',
+    'activity_logging']
 
 if __name__ == '__main__':
     arguments = main_parser.parse_args()
@@ -75,16 +77,13 @@ if __name__ == '__main__':
         raise ValueError("Invalid entity argument:  must be tutor or plugin.")
     
     def main():
-        
         logging.basicConfig(
             filename=logger_path,
             level=logging.DEBUG,
             propagate=False,
             format='%(asctime)s %(levelname)s:----:%(message)s', 
             datefmt='%m/%d/%Y %I:%M:%S %p')
-
         logger = logging.getLogger(__name__)
-
         plugin_classes = {
             'example': ExamplePlugin,
             'knowledge_tracing': KnowledgeTracingPlugin,
@@ -93,30 +92,28 @@ if __name__ == '__main__':
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
+            'activity_logging': StudentActivityLoggingPlugin,
         }
         tutor_classes = {
             'example': ExampleTutor,
             'knowledge_tracing': KnowledgeTracingTutor,
+            'activity_logging': StudentActivityLoggingTutor,
         }
-        
         if arguments.entity == 'plugin':
             if entity_subtype not in plugin_classes.keys():
                 raise Exception("Internal Error: Plugin type not supported.")
         elif arguments.entity == 'tutor':
             if entity_subtype not in tutor_classes.keys():
                 raise Exception("Internal Error: Tutor type not supported.")
-
-        logger = logging.getLogger(__name__)
-        
+        #logger = logging.getLogger(__name__)
         entity = None
         if arguments.entity == 'plugin':
-            entity = plugin_classes[entity_subtype](arguments.name, logger, args = arguments.args)
+            entity = plugin_classes[entity_subtype](arguments.name, logger=logger, args = arguments.args)
             entity.start()
         elif arguments.entity == 'tutor':
-            entity = tutor_classes[entity_subtype](arguments.name,logger=logger,run_once=run_once, args = arguments.args)
-            entity.run()
+            entity = tutor_classes[entity_subtype](arguments.name, logger=logger,run_once=run_once, args = arguments.args)
+            entity.start()
         
-
     if arguments.daemon:
         daemon = Daemonize(app=arguments.name, pid=pid, action=main)
         daemon.start()
