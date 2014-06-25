@@ -3,16 +3,16 @@ from urllib.parse import urljoin
 
 from .mixins import MessageSenderMixin
 from .settings import HPIT_URL_ROOT
-from .exceptions import PluginPollError
+from .exceptions import PluginPollError, BadCallbackException
 
 class Plugin(MessageSenderMixin):
     def __init__(self, entity_id, api_key, wildcard_callback=None):
         super().__init__()
 
-        self.entity_id = entity_id
-        self.api_key = api_key
+        self.entity_id = str(entity_id)
+        self.api_key = str(api_key)
         self.wildcard_callback = wildcard_callback
-        self.transaction_callback = lambda: 0
+        self.transaction_callback = None
         self.callbacks = {}
 
         self.poll_wait = 500
@@ -23,8 +23,6 @@ class Plugin(MessageSenderMixin):
             'pre_dispatch_messages', 'post_dispatch_messages', 
             'pre_handle_transactions', 'post_handle_transcations')
 
-        self.connected = False
-
 
     def post_connect(self):
         pass
@@ -32,13 +30,23 @@ class Plugin(MessageSenderMixin):
 
     def register_transaction_callback(self,callback):
         """
-        Set a callback for transactions.  This defaults to a pass method in the constructor.
+        Set a callback for transactions and start listening for them.
         """
+        if not hasattr(callback,"__call__"):
+            raise BadCallbackException("The callback submitted is not callable.")
+        subscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/subscribe')
+        self._post_data(subscribe_url, {'message_name' : "transaction"})
         self.transaction_callback = callback
-        self.subscribe(
-            transaction=self.transaction_callback
-        )
-
+        
+        
+    def clear_transaction_callback(self):
+        """
+        Clear the callback for transactions and stop listening for them.
+        """
+        unsubscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/unsubscribe')
+        self._post_data(unsubscribe_url, {'message_name': "transaction"})
+        self.transaction_callback = None
+        
 
     def list_subscriptions(self):
         """
@@ -64,7 +72,7 @@ class Plugin(MessageSenderMixin):
 
             self._post_data(subscribe_url, {'message_name' : message_name})
             self.callbacks[message_name] = callback
-
+            
 
     def unsubscribe(self, *message_names):
         """

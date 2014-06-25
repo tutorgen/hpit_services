@@ -2,7 +2,7 @@ import json
 import requests
 from urllib.parse import urljoin
 
-from ..exceptions import ConnectionError
+from ..exceptions import AuthenticationError, ResourceNotFoundError,InternalServerError
 from ..settings import HPIT_URL_ROOT
 
 JSON_HTTP_HEADERS = {'content-type': 'application/json'}
@@ -12,7 +12,8 @@ class RequestsMixin:
         self.entity_id = ""
         self.api_key = ""
         self.session = requests.Session()
-
+        self.connected = False
+        
         self._add_hooks('post_connect', 'post_disconnect')
 
 
@@ -30,12 +31,9 @@ class RequestsMixin:
             }
         )
 
-        if connection:
-            self.connected = True
-            self._try_hook('post_connect')
-        else:
-            self.connected = False
-
+        self.connected = True
+        self._try_hook('post_connect')
+       
         return self.connected
 
 
@@ -70,10 +68,15 @@ class RequestsMixin:
             response = self.session.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
         else:
             response = self.session.post(url)
-
-        if response.status_code != 200:
-            raise ConnectionError("Could not POST Data to HPIT Server.")
-        return response
+        
+        if response.status_code == 200:
+            return response
+        elif response.status_code == 403:
+            raise AuthenticationError("Request could not be authenticated")
+        elif response.status_code == 404:
+            raise ResourceNotFoundError("Requested resource not found")
+        elif response.status_code == 500:
+            raise InternalServerError("Internal server error")
 
     def _get_data(self, url):
         """
@@ -84,9 +87,14 @@ class RequestsMixin:
         """
         response = self.session.get(url)
 
-        if response.status_code != 200:
-            raise ConnectionError("Could not GET Data from HPIT Server.")
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 403:
+            raise AuthenticationError("Request could not be authenticated")
+        elif response.status_code == 404:
+            raise ResourceNotFoundError("Requested resource not found")
+        elif response.status_code == 500:
+            raise InternalServerError("Internal server error")
 
 
     def _add_hooks(self, *hooks):

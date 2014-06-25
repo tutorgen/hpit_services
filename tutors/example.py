@@ -43,4 +43,4 @@ class ExampleTutor(Tutor):
         self.setup()
         self.start()
         self.shutdown()
-        self.disconnnect()
+        self.disconnect()

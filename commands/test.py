@@ -7,4 +7,4 @@ class Command:
         self.args = args
         self.configuration = configuration
 
-        pytest.main(['-x', 'tests'])
+        pytest.main(['tests','--tb=short'])

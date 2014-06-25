@@ -166,6 +166,7 @@ def create_command(sub, name, description, func):
     return parser
 
 
+
 def run_test(arguments, configuration):
     from commands.test import Command
     Command(arguments, configuration).run()

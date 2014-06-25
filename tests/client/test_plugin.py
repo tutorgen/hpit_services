@@ -5,8 +5,20 @@ import requests
 
 from client import Plugin
 from client.settings import HPIT_URL_ROOT
-from client.exceptions import ConnectionError
-from client.exceptions import PluginPollError
+from client.exceptions import ConnectionError, PluginPollError, BadCallbackException
+
+
+test_entity_id = 1234
+test_api_key = 4567
+test_plugin = None
+
+def setup_function(function):
+    global test_plugin
+    test_plugin = Plugin(test_entity_id,test_api_key,None)
+
+def teardown_function(function):
+    global test_plugin    
+    test_plugin = None
 
 @httpretty.activate
 def test_constructor():
@@ -14,60 +26,51 @@ def test_constructor():
     Plugin.__init__() Test plan:
         -ensure connected is false
         -ensure name is argument
-        -ensure is subscribed to transaction
+        -entity id and api key are strings
     """
-    test_name = "test_name"
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     
-    test_plugin = Plugin(test_name,None)
-    
     test_plugin.connected.should.equal(False)
-    test_plugin.name.should.equal(test_name)
-    test_plugin.callbacks.should.have.key("transaction")
+    test_plugin.entity_id.should.equal(str(test_entity_id))
+    test_plugin.api_key.should.equal(str(test_api_key))
     
 
 @httpretty.activate
-def test_connect():
+def test_register_transaction_callback():
     """
-    Plugin.test_connect() Test plan:
-        -ensure that true returned on good connection
-        -ensure that exception thrown on bad connection
+    Plugin.register_transaction_callback() Test plan:
+        -check if transaction_callback = param
+        -make sure callback is callable
     """
-    
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/connect/test_name",
-                            body='{"entity_name":"tutor_name","entity_id":"4"}',
-                            )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
+   
+    def simple_callback():
+        pass
     
-    test_plugin = Plugin("test_name",None)
-    
-    test_plugin.connected.should.equal(False)
-    test_plugin.connect().should.equal(True)
-    test_plugin.connected.should.equal(True)
-    
+    test_plugin.register_transaction_callback.when.called_with(4).should.throw(BadCallbackException)
+    test_plugin.register_transaction_callback(simple_callback)
+    test_plugin.transaction_callback.should.equal(simple_callback)
+
+
 @httpretty.activate
-def test_disconnect():
+def test_clear_transaction_callback():
     """
-    Plugin.test_disconnect() Test plan:
-        -ensure that connected is false after calling.
+    Plugin.clear_transaction_callback() Test plan:
+        - make sure self.transaction_callback is None
     """
-    
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/disconnect",
-                            body='OK',
-                            )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/unsubscribe",
                             body='',
                             )
     
-    test_plugin = Plugin("test_name",None)
-    test_plugin.connected = True
-    
-    test_plugin.disconnect().should.equal(False)
-    test_plugin.connected.should.equal(False)
+    def simple_callback():
+        pass
+    test_plugin.transaction_callback = simple_callback
+    test_plugin.clear_transaction_callback()
+    test_plugin.transaction_callback.should.equal(None)
     
     
 @httpretty.activate
@@ -79,19 +82,17 @@ def test_list_subscriptions():
         -ensure that 'known' subsriptsion still have their callbacks set
         -ensure that the return value is a dictionary
     """
-    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/test_name/subscriptions",
-                            body='{"subscriptions":["transactions","subscription1","subscription2"]}',
+    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/subscription/list",
+                            body='{"subscriptions":["subscription1","subscription2"]}',
                             )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     
-    test_plugin = Plugin("test_name",None)
     test_plugin.callbacks["subscription1"] = 4
     
     subscriptions = test_plugin.list_subscriptions()
     
-    "transaction".should.be.within(subscriptions)
     "subscription1".should.be.within(subscriptions)
     "subscription2".should.be.within(subscriptions)
     
@@ -108,11 +109,8 @@ def test_subscribe():
     Plugin.subscribe() Test plan:
         -ensure that args passed are then in callbacks dict 
     """
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/test_event",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='OK',
-                            )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
-                            body='',
                             )
     
     def test_callback():
@@ -132,14 +130,11 @@ def test_unsubscribe():
         -ensure event name is removed from callbacks
         -if not in callbacks, make sure keyerror not raised
     """
-    
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/unsubscribe/test_event",
+   
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/unsubscribe",
                             body='OK',
                             )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/unsubscribe/test_event2",
-                            body='OK',
-                            )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     
@@ -163,10 +158,10 @@ def test_poll():
         -ensure we get something from server
     """
     
-    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/test_name/messages",
+    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/plugin/message/list",
                             body='{"messages":"4"}',
                             )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     
@@ -174,8 +169,15 @@ def test_poll():
     test_plugin._poll().should_not.equal(None)
     
 
-wildCardCalled = False
+def test_handle_transactions():
+    """
+    Plugin._handle_transactions() Test plan:
+        -
+    """
+    pass
 
+
+wildCardCalled = False
 @httpretty.activate
 def test_dispatch():
     """
@@ -200,7 +202,7 @@ def test_dispatch():
         returnTrue     returnTrue       set                 *             Yes                   true
     """
     
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     
@@ -213,16 +215,15 @@ def test_dispatch():
     def wildCard(param):
         global wildCardCalled
         wildCardCalled = True      
-    event_param = [{"event_name":"test_event","message":"test message"}]
+    event_param = [{"message_name":"test_event","message":"test message"}]
     
     
-    test_plugin = Plugin("test_name",None)
     
-    setattr(test_plugin,"pre_dispatch",returnFalse)
+    setattr(test_plugin,"pre_dispatch_messages",returnFalse)
     test_plugin._dispatch(event_param).should.equal(False)
     
-    setattr(test_plugin,"pre_dispatch",returnTrue)
-    setattr(test_plugin,"post_dispatch",returnFalse)
+    setattr(test_plugin,"pre_dispatch_messages",returnTrue)
+    setattr(test_plugin,"post_dispatch_messages",returnFalse)
     test_plugin.callbacks["test_event"] = testCallback
     test_plugin._dispatch(event_param).should.equal(False)
     
@@ -230,7 +231,7 @@ def test_dispatch():
     test_plugin.wildcard_callback = 4
     test_plugin._dispatch.when.called_with(event_param).should.throw(PluginPollError)
     
-    setattr(test_plugin,"post_dispatch",returnTrue)
+    setattr(test_plugin,"post_dispatch_messages",returnTrue)
     test_plugin.wildcard_callback = wildCard
     test_plugin._dispatch(event_param).should.equal(True)
     wildCardCalled.should.equal(True)
@@ -254,7 +255,7 @@ def test_send_reponse():
     httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/response",
                             body='OK',
                             )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     

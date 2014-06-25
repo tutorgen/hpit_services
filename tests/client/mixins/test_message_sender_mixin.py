@@ -28,7 +28,7 @@ def test_send():
     
     subject = MessageSenderMixin()
     
-    subject.send("transaction",test_payload,None).should.throw(InvalidMessageNameException)
+    subject.send.when.called_with("transaction",test_payload,None).should.throw(InvalidMessageNameException)
     
     response = subject.send("test_event",test_payload,send_callback)
     subject.response_callbacks["4"].should.equal(globals()["send_callback"])
@@ -65,7 +65,7 @@ def test_poll_responses():
         -Ensure a collection of responses returned on success
     """
     
-    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/responses",
+    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/response/list",
                             body='{"responses":"4"}',
                             )
     

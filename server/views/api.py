@@ -3,6 +3,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from flask import session, jsonify, abort, request, Response
 
+
 from server import app, mongo, db, csrf, _map_mongo_document, HPIT_STATUS
 from server.models import Plugin, Tutor, Subscription
 
@@ -34,7 +35,7 @@ def version():
     Returns: 200:JSON with the following fields:
         - version : string -> version of HPIT
     """
-    version_returned = {"version": HPIT_VERSION}
+    version_returned = {"version": settings.HPIT_VERSION}
     return jsonify(version_returned)
 
 

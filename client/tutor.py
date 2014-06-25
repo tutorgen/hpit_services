@@ -9,10 +9,9 @@ class Tutor(MessageSenderMixin):
     def __init__(self, entity_id, api_key, callback, **kwargs):
         super().__init__()
 
-        self.entity_id = entity_id
-        self.api_key = api_key
+        self.entity_id = str(entity_id)
+        self.api_key = str(api_key)
         self.callback = callback
-        self.connected = False
 
         self.poll_wait = 500
         self.time_last_poll = time.time() * 1000

@@ -1,7 +1,23 @@
 class ConnectionError(Exception):
     """
-    This exception indicates that an connection to the HPIT central server
-    could not be completed.
+    This exception indicates a generic HPIT connection problem.
+    """
+
+class AuthenticationError(Exception):
+    """
+    This exception raised on HPIT 403.
+    """
+    pass
+
+class ResourceNotFoundError(Exception):
+    """
+    This exception raised on HPIT 403.
+    """
+    pass
+
+class InternalServerError(Exception):
+    """
+    This exception raised on HPIT 500.
     """
     pass
 
@@ -27,3 +43,9 @@ class InvalidMessageNameException(Exception):
     """
     This exception is raised when a user attempts to use a system message name, like 'transaction'.
     """
+    
+class BadCallbackException(Exception):
+    """
+    Raised when a callback is not callable
+    """
+    
