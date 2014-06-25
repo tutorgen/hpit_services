@@ -19,20 +19,14 @@ def setup_function(function):
     global test_subject
     
     httpretty.enable()
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/connect/test_name",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/connect",
                             body='{"entity_name":"example_plugin","entity_id":"4"}',
                             )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/transaction",
-                            body='',
-                            )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/test",
-                            body='',
-                            )
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/test_name/subscribe/example",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
                             body='',
                             )
     
-    test_subject = ExamplePlugin("test_name",None)
+    test_subject = ExamplePlugin(1234,5678,5)
 
 def teardown_function(function):
     """ teardown any state that was previously setup with a setup_method
@@ -50,8 +44,15 @@ def test_constructor():
         -ensure logger is set to param
         -ensure that callbacks are set
     """
-    test_subject.name.should.equal("test_name")
-    test_subject.logger.should.equal(None)
+    test_subject.logger.should.equal(5)
+
+
+def test_post_connect():
+    """
+    ExamplePlugin.post_connect() Test plan:
+        -ensure callbacks are set for test and example
+    """
+    test_subject.post_connect()
     test_subject.callbacks["test"].should.equal(test_subject.test_plugin_callback)
     test_subject.callbacks["example"].should.equal(test_subject.example_plugin_callback)
 

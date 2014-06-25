@@ -65,7 +65,7 @@ def test_poll_responses():
         -Ensure a collection of responses returned on success
     """
     
-    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/responses",
+    httpretty.register_uri(httpretty.GET,HPIT_URL_ROOT+"/response/list",
                             body='{"responses":"4"}',
                             )
     

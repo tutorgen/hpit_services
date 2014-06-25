@@ -20,14 +20,14 @@ def setup_function(function):
     """
     global test_subject
     
-    test_subject = ExampleTutor("test_name",None)
+    test_subject = ExampleTutor(1234,5678,None)
     
     httpretty.enable()
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/connect/test_name",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/connect",
                             body='{"entity_name":"example_tutor","entity_id":"4"}',
                             )
     
-    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/tutor/disconnect",
+    httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/disconnect",
                             body='OK',
                             )
     httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/message",
@@ -47,11 +47,9 @@ def teardown_function(function):
 def test_constructor():
     """
     ExampleTutor.__init__() Test plan:
-        -Ensure name, logger set correctly
-        -Ensure event_names set correctly
+        -Ensure event_names,run_once, logger set correctly
     """
     
-    test_subject.name.should.equal("test_name")
     test_subject.logger.should.equal(None)
     test_subject.event_names.should.equal([
             'test', 'example', 'add_student', 
