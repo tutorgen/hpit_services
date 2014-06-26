@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Your Plugin</h1>
+
+<div class="row"><div class="spacer"></div></div>
+
+<div class="panel panel-danger">
+    <div class="panel-heading">
+        <h3 class="panel-title">Plugin API Access Key</h3>
+    </div>
+
+    <div class="panel-body">
+        <p><b>KEEP THIS KEY SECRET!</b></p>
+
+        <p>
+            This access key will only be shown once. Treat it as if it were a password to your bank account. Write it down and put 
+            it somewhere safe. We do not store API access tokens in our database. We use a form of encryption that protects 
+            your key, even from us. We can only validate that this is the correct key for you, but we cannot ever make one 
+            exactly like it again.
+        </p>
+
+        <div class="form-group">
+            <label for="api_key">Your API Access Key:</label>
+            <input class="form-control" id="api_key" type="text" value="{{key}}">
+        </div>
+    </div>
+</div>
+
+<div class="row"><div class="spacer"></div></div>
+
+{% include '_plugin_detail_partial.html' %}
+
+{% endblock %}

@@ -2,6 +2,7 @@ import argparse
 import json
 import subprocess
 import os
+import time
 import signal
 import shutil
 
@@ -19,22 +20,30 @@ def spin_up_all(entity_type, configuration):
             item['active'] = True
             name = item['name']
             entity_subtype = item['type']
+            entity_id = item['entity_id']
+            api_key = item['api_key']
             
-            if 'args' in item:
-                entity_args = shlex.quote(json.dumps(item['args']))
-            else:
-                entity_args = "none"
-                
             print("Starting entity: " + name)
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
             
+            subp_args = ["python3", "entity_daemon.py", "--daemon", "--pid", pidfile]
+
+            if 'args' in item:
+                entity_args = shlex.quote(json.dumps(item['args']))
+                subp_args.append("--args")
+                subp_args.append(entity_args)
+                
+            if 'once' in item:
+                subp_args.append("--once")
+                
+            subp_args.extend([entity_id, api_key, entity_type, entity_subtype])
             
             if entity_type != 'tutor' and entity_type !='plugin':
                 raise Exception("Error: unknown entity type in spin_up_all")
             
             with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                subprocess.call(["python3", "entity_daemon.py", "--daemon","--entity",entity_type, "--pid", pidfile, name, entity_subtype], stdout = f, stderr = f)
+                subprocess.call(subp_args, stdout = f, stderr = f)
 
 def wind_down_collection(entity_type, entity_collection):
     """
@@ -73,7 +82,11 @@ def start(arguments, configuration):
         print("The HPIT Server is already running.")
     else:
         print("Starting the HPIT Hub Server for Unix...")
-        subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE])
+        with open("tmp/output_server.txt","w") as f:
+            subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE], stdout = f, stderr = f)
+
+        print("Waiting for the server to boot.")
+        time.sleep(5)
 
         print("Starting tutors...")
         spin_up_all('tutor', configuration)
@@ -94,7 +107,7 @@ def stop(arguments, configuration):
         wind_down_all('tutor', configuration)
 
         print("Stopping the HPIT Hub Server...")
-        with open(setting.HPIT_PID_FILE) as f:
+        with open(settings.HPIT_PID_FILE) as f:
             pid = f.read()
         try:
             os.kill(int(pid), signal.SIGTERM)

@@ -9,3 +9,7 @@ class User(db.Model, UserMixin):
     #email = db.Column(db.String(255), nullable=False, unique=True)
     #confirmed_at = db.Column(db.DateTime())
     #reset_password_token = db.Column(db.String(100), nullable=False, default='')
+
+    #Relationships
+    tutors = db.relationship('Tutor', backref='user')
+    plugins = db.relationship('Plugin', backref='user')

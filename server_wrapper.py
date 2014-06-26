@@ -4,7 +4,7 @@ is used to start the server, which is coded using relative imports.  This is a
 workaround so the relative imports are preserved in Windows.
 """
 
-import server
-from server.settings import HPIT_BIND_PORT
+from server import app
+from server.settings import settings
 
-server.app.run(port = int(HPIT_BIND_PORT))
+app.run(port = int(settings.HPIT_BIND_PORT))

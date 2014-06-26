@@ -1,13 +1,60 @@
 import json
 import requests
+from urllib.parse import urljoin
 
-from ..exceptions import ConnectionError
+from ..exceptions import AuthenticationError, ResourceNotFoundError,InternalServerError
+from ..settings import HPIT_URL_ROOT
 
 JSON_HTTP_HEADERS = {'content-type': 'application/json'}
 
 class RequestsMixin:
     def __init__(self):
+        self.entity_id = ""
+        self.api_key = ""
         self.session = requests.Session()
+        self.connected = False
+        
+        self._add_hooks('post_connect', 'post_disconnect')
+
+
+    def connect(self):
+        """
+        Register a connection with the HPIT Server.
+
+        This essentially sets up a session and logs that you are actively using
+        the system. This is mostly used to track plugin use with the site.
+        """
+        connection = self._post_data(
+            urljoin(HPIT_URL_ROOT, '/connect'), {
+                'entity_id': self.entity_id, 
+                'api_key': self.api_key
+            }
+        )
+
+        self.connected = True
+        self._try_hook('post_connect')
+       
+        return self.connected
+
+
+    def disconnect(self):
+        """
+        Tells the HPIT Server that you are not currently going to poll
+        the server for messages or responses. This also destroys the current session
+        with the HPIT server.
+        """
+        self._post_data(
+            urljoin(HPIT_URL_ROOT, '/disconnect'), {
+                'entity_id': self.entity_id,
+                'api_key': self.api_key
+            }
+        )
+
+        self.connected = False
+        self._try_hook('post_disconnect')
+
+        return self.connected
+
 
     def _post_data(self, url, data=None):
         """
@@ -21,10 +68,15 @@ class RequestsMixin:
             response = self.session.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
         else:
             response = self.session.post(url)
-
-        if response.status_code != 200:
-            raise ConnectionError("Could not POST Data to HPIT Server.")
-        return response
+        
+        if response.status_code == 200:
+            return response
+        elif response.status_code == 403:
+            raise AuthenticationError("Request could not be authenticated")
+        elif response.status_code == 404:
+            raise ResourceNotFoundError("Requested resource not found")
+        elif response.status_code == 500:
+            raise InternalServerError("Internal server error")
 
     def _get_data(self, url):
         """
@@ -35,9 +87,25 @@ class RequestsMixin:
         """
         response = self.session.get(url)
 
-        if response.status_code != 200:
-            raise ConnectionError("Could not GET Data from HPIT Server.")
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 403:
+            raise AuthenticationError("Request could not be authenticated")
+        elif response.status_code == 404:
+            raise ResourceNotFoundError("Requested resource not found")
+        elif response.status_code == 500:
+            raise InternalServerError("Internal server error")
+
+
+    def _add_hooks(self, *hooks):
+        """
+        Adds hooks to this class. If the function is already defined, this leaves that definition. If 
+        it doesn't exists the hook is created and set to None
+        """
+        for hook in hooks:
+            if not hasattr(self, hook):
+                setattr(self, hook, None)
+
 
     def _try_hook(self, hook_name):
         """

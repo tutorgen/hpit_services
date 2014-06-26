@@ -4,12 +4,16 @@ from pymongo import MongoClient
 
 class KnowledgeTracingPlugin(Plugin):
 
-    def __init__(self, name, logger, args = None):
-        super().__init__(name)
+    def __init__(self, entity_id, api_key, logger, args = None):
+        super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit.hpit_knowledge_tracing
 
+
+    def post_connect(self):
+        super().post_connect()
+        
         self.subscribe(
             kt_set_initial=self.kt_set_initial_callback,
             kt_reset=self.kt_reset,

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Plugins</h1>
+
+<div class="row"><div class="spacer"></div></div>
+
+{% for plugin in plugins %}
+    {% include '_plugin_detail_partial.html' %}
+
+    <div class="row"><div class="spacer"></div></div>
+{% endfor %}
+
+<a href="/plugin/new">
+    <div class="btn btn-primary">
+        <span class="glyphicon glyphicon-plus"></span> Add a new plugin
+    </div>
+</a>
+
+{% endblock %}

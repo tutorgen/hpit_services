@@ -3,67 +3,56 @@ from urllib.parse import urljoin
 
 from .mixins import MessageSenderMixin
 from .settings import HPIT_URL_ROOT
-from .exceptions import PluginPollError
+from .exceptions import PluginPollError, BadCallbackException
 
 class Plugin(MessageSenderMixin):
-    def __init__(self, name, wildcard_callback=None):
+    def __init__(self, entity_id, api_key, wildcard_callback=None):
         super().__init__()
 
-        self.name = name
+        self.entity_id = str(entity_id)
+        self.api_key = str(api_key)
         self.wildcard_callback = wildcard_callback
+        self.transaction_callback = None
         self.callbacks = {}
-        self.poll_wait = 5
-        self.pre_poll = None
-        self.post_poll = None
-        self.pre_dispatch = None
-        self.post_dispatch = None
-        self.connected = False
-        
-        self.subscribe(
-            transaction=self.transaction_callback
-        )
-    
-    def transaction_callback(self):
-        """
-        This is the default callback to responding to transaction messages.  This
-        can be overridden if a plugin is interested in transaction messages.
-        """
+
+        self.poll_wait = 500
+        self.time_last_poll = time.time() * 1000
+
+        self._add_hooks(
+            'pre_poll_messages', 'post_poll_messages', 
+            'pre_dispatch_messages', 'post_dispatch_messages', 
+            'pre_handle_transactions', 'post_handle_transcations')
+
+
+    def post_connect(self):
         pass
 
-    def connect(self):
+
+    def register_transaction_callback(self,callback):
         """
-        Register a connection with the HPIT Server.
-
-        This essentially sets up a session and logs that you are actively using
-        the system. This is mostly used to track plugin use with the site.
+        Set a callback for transactions and start listening for them.
         """
-        connection = self._post_data(urljoin(HPIT_URL_ROOT, '/plugin/connect/' + self.name))
-
-        if connection:
-            self.connected = True
-        else:
-            self.connected = False
-
-        return self.connected
-
-
-    def disconnect(self):
+        if not hasattr(callback,"__call__"):
+            raise BadCallbackException("The callback submitted is not callable.")
+        subscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/subscribe')
+        self._post_data(subscribe_url, {'message_name' : "transaction"})
+        self.transaction_callback = callback
+        
+        
+    def clear_transaction_callback(self):
         """
-        Tells the HPIT Server that you are not currently going to poll
-        the server for messages or responses. This also destroys the current session
-        with the HPIT server.
+        Clear the callback for transactions and stop listening for them.
         """
-        self._post_data(urljoin(HPIT_URL_ROOT, '/plugin/disconnect'))
-        self.connected = False
-
-        return self.connected
-
+        unsubscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/unsubscribe')
+        self._post_data(unsubscribe_url, {'message_name': "transaction"})
+        self.transaction_callback = None
+        
 
     def list_subscriptions(self):
         """
-        Polls the HPIT server for a list of event names we currently subscribing to.
+        Polls the HPIT server for a list of message names we currently subscribing to.
         """
-        list_url = urljoin(HPIT_URL_ROOT, '/plugin/' + self.name + '/subscriptions')
+        list_url = urljoin(HPIT_URL_ROOT, '/plugin/subscription/list')
         subscriptions = self._get_data(list_url)['subscriptions']
 
         for sub in subscriptions:
@@ -73,56 +62,68 @@ class Plugin(MessageSenderMixin):
         return self.callbacks
 
 
-    def subscribe(self, **events):
+    def subscribe(self, **messages):
         """
-        Subscribe to events, each argument is exepcted as a key value pair where
-        the key is the event's name and the value is the callback function.
+        Subscribe to messages, each argument is exepcted as a key value pair where
+        the key is the message's name and the value is the callback function.
         """
-        for event_name, callback in events.items():
-            subscribe_url = urljoin(HPIT_URL_ROOT, 
-                '/plugin/' + self.name + '/subscribe/' + event_name)
+        for message_name, callback in messages.items():
+            subscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/subscribe')
 
-            self._post_data(subscribe_url)
-            self.callbacks[event_name] = callback
+            self._post_data(subscribe_url, {'message_name' : message_name})
+            self.callbacks[message_name] = callback
+            
 
-
-    def unsubscribe(self, *event_names):
+    def unsubscribe(self, *message_names):
         """
-        Unsubscribe from events. Pass each event name as a separate parameter.
+        Unsubscribe from messages. Pass each message name as a separate parameter.
         """
-        for event_name in event_names:
-            if event_name in self.callbacks:
-                unsubscribe_url = urljoin(HPIT_URL_ROOT, 
-                    'plugin', self.name, 'unsubscribe', event_name)
-
-                self._post_data(unsubscribe_url)
-                del self.callbacks[event_name]
+        for message_name in message_names:
+            if message_name in self.callbacks:
+                unsubscribe_url = urljoin(HPIT_URL_ROOT, '/plugin/unsubscribe')
+                self._post_data(unsubscribe_url, {'message_name': message_name})
+                del self.callbacks[message_name]
 
 
     def _poll(self):
         """
-        Get a list of new messages from the server for events we are listening 
+        Get a list of new messages from the server for messages we are listening 
         to.
         """
-        list_messages_url = urljoin(HPIT_URL_ROOT, 
-            '/plugin/' + self.name + '/messages')
+        list_messages_url = urljoin(HPIT_URL_ROOT, '/plugin/message/list')
 
         return self._get_data(list_messages_url)['messages']
 
+    def _handle_transactions(self):
+        """
+        Get a list of datashop transactions from the server. 
+        """
 
-    def _dispatch(self, event_data):
+        list_transaction_url = urljoin(HPIT_URL_ROOT, '/plugin/transaction/list')
+
+        transaction_data = self._get_data(list_transaction_url)['transactions']
+
+        for item in transaction_data:
+            if self.transaction_callback:
+                if not self.transaction_callback(item):
+                    return False
+
+        return True
+
+
+    def _dispatch(self, message_data):
         """
         For each message recieved route it to the appropriate callback.
         """
-        if not self._try_hook('pre_dispatch'):
+        if not self._try_hook('pre_dispatch_messages'):
             return False
 
-        for event_item in event_data:
-            event = event_item['event_name']
-            payload = event_item['message']
+        for message_item in message_data:
+            message = message_item['message_name']
+            payload = message_item['message']
             
             try:
-                self.callbacks[event](payload)
+                self.callbacks[message](payload)
             except KeyError:
                 #No callback registered try the wildcard
                 if self.wildcard_callback:
@@ -132,12 +133,12 @@ class Plugin(MessageSenderMixin):
                         raise PluginPollError("Wildcard Callback is not a callable")
             except TypeError as e:
                 #Callback isn't a function
-                if self.callbacks[event] is None:
-                    raise PluginPollError("No callback registered for event: <" + event + ">")
+                if self.callbacks[message] is None:
+                    raise PluginPollError("No callback registered for message: <" + message + ">")
                 else:
                     raise e
 
-        if not self._try_hook('post_dispatch'):
+        if not self._try_hook('post_dispatch_messages'):
             return False
 
         return True
@@ -146,24 +147,42 @@ class Plugin(MessageSenderMixin):
     def start(self):
         """
         Start the plugin. Connect to the HPIT server. Then being polling and dispatching
-        event callbacks based on messages we subscribe to.
+        message callbacks based on messages we subscribe to.
         """
         self.connect()
         self.list_subscriptions()
 
         try:
             while True:
+
+                #A better timer
+                cur_time = time.time() * 1000
+
+                if cur_time - self.time_last_poll < self.poll_wait:
+                    continue;
+
+                self.time_last_poll = cur_time
+
                 #Handle messages submitted by tutors
-                if not self._try_hook('pre_poll'):
+                if not self._try_hook('pre_poll_messages'):
                     break;
 
-                event_data = self._poll()
+                message_data = self._poll()
 
-                if not self._try_hook('post_poll'):
+                if not self._try_hook('post_poll_messages'):
                     break;
 
-                if not self._dispatch(event_data):
+                if not self._dispatch(message_data):
                     return False
+
+                if not self._try_hook('pre_handle_transactions'):
+                    break;
+
+                if not self._handle_transactions():
+                    return False
+
+                if not self._try_hook('post_handle_transactions'):
+                    break;
 
                 #Handle responses from other plugins
                 if not self._try_hook('pre_poll_responses'):
@@ -177,8 +196,6 @@ class Plugin(MessageSenderMixin):
                 if not self._dispatch_responses(responses):
                     break;
 
-                time.sleep(self.poll_wait)
-
         except KeyboardInterrupt:
             self.disconnect()
 
@@ -187,7 +204,7 @@ class Plugin(MessageSenderMixin):
 
     def send_response(self, message_id, payload):
         """
-        Sends a response to HPIT upon handling a specific event.
+        Sends a response to HPIT upon handling a specific message.
 
         Responses are handled differently than normal messages as they are destined
         for a only the original sender of the message_id to recieve the response.

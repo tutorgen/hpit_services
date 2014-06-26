@@ -1,9 +1,8 @@
 import argparse
 import json
-import subprocess
 import os
-import signal
-import pytest
+import commands
+import pkgutil
 
 from server.settings import settings
 
@@ -167,33 +166,41 @@ def create_command(sub, name, description, func):
     return parser
 
 
-def run_unit_tests(arguments, configuration):
-    pytest.main(['-x', 'tests'])
+
+def run_test(arguments, configuration):
+    from commands.test import Command
+    Command(arguments, configuration).run()
 
 def run_debug(arguments, configuration):
-    from server import app
-    app.run(debug=True, port=8000)
+    from commands.debug import Command
+    Command(arguments, configuration).run()
 
 def run_syncdb(arguments, configuration):
-    from server import db
-    db.create_all()
+    from commands.syncdb import Command
+    Command(arguments, configuration).run()
 
-def run_listroutes(arguments, configuration):
-    from server import app
-    import urllib.parse
+def run_routes(arguments, configuration):
+    from commands.routes import Command
+    Command(arguments, configuration).run()
 
-    output = []
-    for rule in app.url_map.iter_rules():
+def run_docs(arguments, configuration):
+    from commands.docs import Command
+    Command(arguments, configuration).run()
 
-        options = {}
-        for arg in rule.arguments:
-            options[arg] = "[{0}]".format(arg)
+def run_assets(arguments, configuration):
+    from commands.assets import Command
+    Command(arguments, configuration).run()
 
-        methods = ','.join(rule.methods)
-        output.append(urllib.parse.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, str(rule))))
 
-    for line in sorted(output):
-        print(line)
+def build_sub_commands(subparsers):
+    pkgpath = os.path.dirname(commands.__file__)
+    pkgs = pkgutil.iter_modules([pkgpath])
+    for _, name, _ in pkgs:
+        pkg = __import__('commands.' + name, globals(), locals(), ['Command'], 0)
+        cmd = pkg.Command()
+        pkg_parser = subparsers.add_parser(name, description=cmd.description)
+        pkg_parser.set_defaults(func=cmd.run)
+
 
 def build_argument_parser():
     """
@@ -212,17 +219,7 @@ def build_argument_parser():
     remove_parser = create_command(subparsers, 'remove', 
         "Remove an entity by name.", remove_entity)
 
-    test_parser = subparsers.add_parser('test', description="Unit Test the code.")
-    test_parser.set_defaults(func=run_unit_tests)
-
-    run_debug_parser = subparsers.add_parser('debug', description="Runs the server in debug mode.")
-    run_debug_parser.set_defaults(func=run_debug)
-
-    run_syncdb_parser = subparsers.add_parser('syncdb', description="Creates all the tables in the database.")
-    run_syncdb_parser.set_defaults(func=run_syncdb)
-
-    run_listroutes_parser = subparsers.add_parser('routes', description="Lists all the available routes.")
-    run_listroutes_parser.set_defaults(func=run_listroutes)
+    build_sub_commands(subparsers)
 
     add_parser.add_argument('--count', type=int, 
                         help="The number of entities to create. Will append '.N' to the name.")

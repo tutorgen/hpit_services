@@ -1,3 +1,4 @@
+import time
 from urllib.parse import urljoin
 
 from .mixins import MessageSenderMixin
@@ -5,12 +6,15 @@ from .settings import HPIT_URL_ROOT
 from .exceptions import ResponseDispatchError
 
 class Tutor(MessageSenderMixin):
-    def __init__(self, name, callback, **kwargs):
+    def __init__(self, entity_id, api_key, callback, **kwargs):
         super().__init__()
 
-        self.name = name
+        self.entity_id = str(entity_id)
+        self.api_key = str(api_key)
         self.callback = callback
-        self.connected = False
+
+        self.poll_wait = 500
+        self.time_last_poll = time.time() * 1000
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -19,10 +23,20 @@ class Tutor(MessageSenderMixin):
         """
         Starts the tutor in event-driven mode.
         """
+        self.connect()
+        
         try:
             while True:
                 if not self.callback():
                     break;
+
+                #A better timer
+                cur_time = time.time() * 1000
+
+                if cur_time - self.time_last_poll < self.poll_wait:
+                    continue;
+
+                self.time_last_poll = cur_time
 
                 if not self._try_hook('pre_poll_responses'):
                     break;
@@ -40,18 +54,3 @@ class Tutor(MessageSenderMixin):
 
         except KeyboardInterrupt:
             self.disconnect()
-
-    def connect(self):
-        connection = self._post_data(urljoin(HPIT_URL_ROOT, '/tutor/connect/' + self.name))
-        if connection:
-            self.connected = True
-        else:
-            self.connected = False
-
-        return self.connected
-
-    def disconnect(self):
-        self._post_data(urljoin(HPIT_URL_ROOT, '/tutor/disconnect'))
-        self.connected = False
-
-        return self.connected

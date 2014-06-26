@@ -1,0 +1,45 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            {{ plugin.name|title }}
+
+            {% if plugin.connected %}
+                <span style="color:green">(Online)</span>
+            {% else %}
+                <span style="color:red">(Offline)</span>
+            {% endif %}
+        </h3>
+    </div>
+    
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-4">
+                <b>Entity ID</b>
+            </div>
+            <div class="col-md-8">
+                {{ plugin.entity_id }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <b>Description</b>
+            </div>
+            <div class="col-md-8">
+                {{ plugin.description }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="spacer"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <a class="btn btn-primary" href="/plugin/edit/{{plugin.id}}">Edit</a>
+                <a class="btn btn-info" href="/plugin/genkey/{{plugin.id}}">Generate API Key</a>
+                <a class="btn btn-danger" href="/plugin/delete/{{plugin.id}}">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
