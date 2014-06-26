@@ -1,3 +1,5 @@
+import pdb; pdb.set_trace()
+
 class ServerSettings:
     HPIT_VERSION = '(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut'
     DEBUG = False
@@ -69,12 +71,9 @@ class TestServerSettings:
     USER_LOGIN_TEMPLATE = 'flask_user/login_or_register.html'
     USER_REGISTER_TEMPLATE = 'flask_user/register.html'
 
-from pyenvi.pyenvi import PyEnvi
-
-if PyEnvi.get_instance().is_running():
-    if PyEnvi.get_instance().exists("mode"):
-        settings = TestServerSettings()
-    else:
-        settings = ServerSettings()
-else:
-    settings = ServerSettings()
+class Settings:
+    def get_settings(self, environment):
+        if environment == 'test':
+            return TestServerSettings()
+        else:
+            return ServerSettings()
