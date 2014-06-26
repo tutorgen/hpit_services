@@ -5,6 +5,7 @@ import os
 import time
 import signal
 import shutil
+import sys
 
 from server.settings import settings
 
@@ -27,7 +28,7 @@ def spin_up_all(entity_type, configuration):
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
             
-            subp_args = ["python3", "entity_daemon.py", "--daemon", "--pid", pidfile]
+            subp_args = [sys.executable, "entity_daemon.py", "--daemon", "--pid", pidfile]
 
             if 'args' in item:
                 entity_args = shlex.quote(json.dumps(item['args']))

@@ -2,7 +2,7 @@ import platform
 import sys
 from pyenvi.pyenvi import PyEnvi
 
-if sys.argv[1] == "test":
+if "test" in sys.argv:
     pyenvi = PyEnvi({"mode":"TEST"})
     pyenvi.start()
     print(PyEnvi.get_instance())
