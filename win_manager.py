@@ -5,6 +5,7 @@ import os
 import time
 import signal
 import shlex
+import sys 
 
 from server.settings import settings
 
@@ -28,7 +29,7 @@ def spin_up_all(entity_type, configuration):
             filename = get_entity_py_file(entity_type, item['type'])
             pidfile = get_entity_pid_file(entity_type, name)
             
-            subp_args = ["python", "entity_daemon.py", "--pid", pidfile]
+            subp_args = [sys.executable, "entity_daemon.py", "--pid", pidfile]
             
             if 'args' in item:
                 entity_args = shlex.quote(json.dumps(item['args']))
@@ -88,7 +89,7 @@ def start(arguments, configuration):
     else:
         print("Starting the HPIT Hub Server for Windows...")
         with open("tmp/output_server.txt","w") as f:
-            subp = subprocess.Popen(["python", "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+            subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
         with open(settings.HPIT_PID_FILE,"w") as pfile:
             pfile.write(str(subp.pid))
 
