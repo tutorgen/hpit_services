@@ -58,16 +58,16 @@ and `pip` installed as well. If you are unfamiliar with either of these librarie
 encourage you research them, as they will make working with HPIT much simpler.
 
 Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.
-- On Ubuntu: `sudo apt-get install mongodb sqlite` 
-- On Mac OSX with HomeBrew: `brew install mongodb sqlite`. 
-- On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html
+    * On Ubuntu: `sudo apt-get install mongodb sqlite` 
+    * On Mac OSX with HomeBrew: `brew install mongodb sqlite`. 
+    * On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html
 
 ### Production Considerations
 
 If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
-- On Ubuntutype: `sudo apt-get install postgresql-server`
-- On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/
-- On Windows: Installation binaries are available from http://www.postgresql.com
+    * On Ubuntutype: `sudo apt-get install postgresql-server`
+    * On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/
+    * On Windows: Installation binaries are available from http://www.postgresql.com
 
 It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
 then please read the tutorial here: http://www.postgresql.org/docs/9.3/static/tutorial.html In general you will need to 
@@ -132,19 +132,20 @@ will give you a list of commands that manager understands. Then typing
 brief overview of what that command does.
 
 Currently the HPIT Manager has the following commands:
-* `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
-* `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
-* `python3 manager.py status` will show you whether or not the HPIT server is currently running.
-* `python3 manager.py add plugin <name> <subtype>` will help you create plugins with the specified name and subtype.
-* `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
-* `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
-* `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
-* `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
-* `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
-* `python3 manager.py docs` copies this documentation file to the server assets directory.
-* `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
-* `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
-* `python3 manager.py test` runs the suite of tests for components within HPIT.
+
+    * `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
+    * `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
+    * `python3 manager.py status` will show you whether or not the HPIT server is currently running.
+    * `python3 manager.py add plugin <name> <subtype>` will help you create plugins with the specified name and subtype.
+    * `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
+    * `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
+    * `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
+    * `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
+    * `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
+    * `python3 manager.py docs` copies this documentation file to the server assets directory.
+    * `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
+    * `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
+    * `python3 manager.py test` runs the suite of tests for components within HPIT.
 
 ## The tutor and plugin configuration
 
