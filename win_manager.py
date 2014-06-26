@@ -7,8 +7,6 @@ import signal
 import shlex
 import sys 
 
-from server.settings import settings
-
 from base_manager import BaseManager
 
 DETACHED_PROCESS = 8 #code for windows subprocess
@@ -93,8 +91,8 @@ class WindowsManager(BaseManager):
         else:
             print("Starting the HPIT Hub Server for Windows...")
             with open("tmp/output_server.txt","w") as f:
-                subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
-            with open(settings.HPIT_PID_FILE,"w") as pfile:
+                subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", self.settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+            with open(self.settings.HPIT_PID_FILE,"w") as pfile:
                 pfile.write(str(subp.pid))
 
             print("Waiting for the server to boot.")
@@ -119,10 +117,10 @@ class WindowsManager(BaseManager):
             self.wind_down_all('tutor', configuration)
 
             print("Stopping the HPIT Hub Server...")
-            with open(settings.HPIT_PID_FILE) as f:
+            with open(self.settings.HPIT_PID_FILE) as f:
                 pid = f.read()
                 os.kill(int(pid), signal.SIGTERM)
-            os.remove(settings.HPIT_PID_FILE)
+            os.remove(self.settings.HPIT_PID_FILE)
         else:
             print("The HPIT Server is not running.")
         print("DONE!")

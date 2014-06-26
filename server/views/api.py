@@ -4,8 +4,25 @@ from datetime import datetime
 from flask import session, jsonify, abort, request, Response
 
 
-from server import app, mongo, db, csrf, _map_mongo_document, HPIT_STATUS
+from server.app import ServerApp
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+mongo = app_instance.mongo
+db = app_instance.db
+csrf = app_instance.csrf
+
 from server.models import Plugin, Tutor, Subscription
+
+
+def _map_mongo_document(document):
+    mapped_doc = {k: v for k, v in document.items()}
+
+    if '_id' in mapped_doc:
+        mapped_doc['id'] = str(mapped_doc['_id'])
+        del mapped_doc['_id']
+
+    return mapped_doc
+
 
 def bad_parameter_response(parameter):
     return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))

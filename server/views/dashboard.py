@@ -4,7 +4,11 @@ from uuid import uuid4
 from flask import request, render_template, redirect, url_for
 from flask.ext.user import login_required, current_user
 
-from server import app, db, HPIT_STATUS
+from server.app import ServerApp
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+db = app_instance.db
+
 from server.models import Plugin, Tutor
 from server.forms import PluginForm, TutorForm
 

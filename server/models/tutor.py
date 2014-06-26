@@ -2,7 +2,8 @@ import random
 from datetime import datetime
 from Crypto.Hash import HMAC, SHA512
 
-from server import db, settings
+from server.app import ServerApp
+db = ServerApp.get_instance().db
 
 class Tutor(db.Model):
     id = db.Column(db.Integer, primary_key=True)

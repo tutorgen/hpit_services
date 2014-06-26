@@ -4,11 +4,14 @@ import os
 import commands
 import pkgutil
 
-from server.settings import settings
+from server.app import ServerApp
+from server.settings import ServerSettingsManager
 
 class BaseManager:
+
     def __init__(self):
-        pass
+        self.settings = ServerSettingsManager.get_instance().settings
+        self.app_instance = ServerApp.get_instance()
 
     def read_configuration(self):
         """
@@ -75,7 +78,7 @@ class BaseManager:
         """
         If the PID is there, then it must be running
         """
-        return os.path.isfile(settings.HPIT_PID_FILE)
+        return os.path.isfile(self.settings.HPIT_PID_FILE)
         
         
     def add_entity(self, arguments, configuration):
@@ -204,7 +207,7 @@ class BaseManager:
         main_parser = argparse.ArgumentParser(
             description='Manager that spins up plugins, tutors, and web services.')
         main_parser.add_argument('--version', action='version', 
-            version=settings.HPIT_VERSION)
+            version=self.settings.HPIT_VERSION)
 
         subparsers = main_parser.add_subparsers(title='Sub-Commands')
 
@@ -234,7 +237,6 @@ class BaseManager:
         """
         Replaces the old main entry point
         """
-        
         configuration = self.read_configuration()
         main_parser = self.build_argument_parser()
         arguments = main_parser.parse_args()

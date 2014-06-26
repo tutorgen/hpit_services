@@ -7,9 +7,6 @@ import signal
 import shutil
 import sys
 
-import pdb; pdb.set_trace()
-from server.settings import settings
-
 from base_manager import BaseManager
 
 class UnixManager(BaseManager):
@@ -88,7 +85,7 @@ class UnixManager(BaseManager):
         else:
             print("Starting the HPIT Hub Server for Unix...")
             with open("tmp/output_server.txt","w") as f:
-                subprocess.call(["gunicorn", "server:app", "--bind", settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", settings.HPIT_PID_FILE], stdout = f, stderr = f)
+                subprocess.call(["gunicorn", "server:app", "--bind", self.settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
 
             print("Waiting for the server to boot.")
             time.sleep(5)
@@ -112,11 +109,11 @@ class UnixManager(BaseManager):
             self.wind_down_all('tutor', configuration)
 
             print("Stopping the HPIT Hub Server...")
-            with open(settings.HPIT_PID_FILE) as f:
+            with open(self.settings.HPIT_PID_FILE) as f:
                 pid = f.read()
             try:
                 os.kill(int(pid), signal.SIGTERM)
-                os.remove(settings.HPIT_PID_FILE) #Force for Mac
+                os.remove(self.settings.HPIT_PID_FILE) #Force for Mac
             except FileNotFoundError: #On Linux
                 pass #On linux file is removed when process dies, on mac it needs forced.
             except ProcessLookupError:
