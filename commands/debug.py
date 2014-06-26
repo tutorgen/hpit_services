@@ -1,4 +1,5 @@
-from server import app
+from server.app import ServerApp
+app = ServerApp.get_instance().app
 
 class Command:
     description = "Runs the server in debug mode."

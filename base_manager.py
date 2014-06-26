@@ -12,6 +12,7 @@ class BaseManager:
     def __init__(self):
         self.settings = ServerSettingsManager.get_instance().settings
         self.app_instance = ServerApp.get_instance()
+        self.app_instance.bootstrap_user()
 
     def read_configuration(self):
         """
@@ -241,6 +242,7 @@ class BaseManager:
         main_parser = self.build_argument_parser()
         arguments = main_parser.parse_args()
 
+        import pdb; pdb.set_trace()
         try:
             arguments.func(arguments, configuration)
         except AttributeError:

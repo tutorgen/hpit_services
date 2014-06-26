@@ -40,6 +40,10 @@ def exists_response():
 def ok_response():
     return ("OK", 200, dict(mimetype="application/json"))
 
+@app.errorhandler(401)
+def custom_401(error):
+    return Response('You must establish a connection with HPIT first.', 
+        401, {'WWWAuthenticate':'Basic realm="Login Required"'})
 
     
 @app.route("/version", methods=["GET"])

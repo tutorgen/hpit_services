@@ -58,21 +58,12 @@ class ServerApp:
         self.md = Markdown(self.app)
         self.csrf = CsrfProtect(self.app)
 
-    def bootstrap(self):
-        import pdb; pdb.set_trace()
+        self.app.session_interface = MongoSessionInterface(self.app, self.mongo)
 
-        #Session Store
-        app.session_interface = MongoSessionInterface(app, mongo)
-
+    def bootstrap_user(self):
         from .models import User
-        db_adapter = SQLAlchemyAdapter(db, User)
-        user_manager = UserManager(db_adapter, app)
-
-        @app.errorhandler(401)
-        def custom_401(error):
-            return Response('You must establish a connection with HPIT first.', 
-                401, {'WWWAuthenticate':'Basic realm="Login Required"'})
-
+        self.db_adapter = SQLAlchemyAdapter(self.db, User)
+        self.user_manager = UserManager(self.db_adapter, self.app)
 
 from .views.api import *
 from .views.dashboard import *
