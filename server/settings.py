@@ -73,11 +73,8 @@ from pyenvi.pyenvi import PyEnvi
 
 if PyEnvi.get_instance().is_running():
     if PyEnvi.get_instance().exists("mode"):
-        print ("Good settings")
         settings = TestServerSettings()
     else:
-        print ("Default settings")
         settings = ServerSettings()
 else:
-    print ("Default settings")
     settings = ServerSettings()

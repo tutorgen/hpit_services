@@ -15,4 +15,7 @@ else:
     
 run_manager()
 
-PyEnvi.get_instance().stop()
+try:
+    PyEnvi.get_instance().stop()
+except Exception:
+    pass
