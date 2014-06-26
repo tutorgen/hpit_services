@@ -7,30 +7,53 @@ from gears.assets import build_asset
 from gears.finders import FileSystemFinder
 from gears.exceptions import FileNotFound
 
+from server.flask_gears import Gears
+from gears_less import LESSCompiler
+from gears_coffeescript import CoffeeScriptCompiler
+
+from server.app import ServerApp
+app = ServerApp.get_instance().app
+
 class Command:
     description = "Build Gears assets for production deployments."
     
     def __init__(self, manager, parser):
         self.manager = manager
+        self.gears = Gears(
+            compilers={
+            '.less': LESSCompiler.as_handler(),
+            '.coffee': CoffeeScriptCompiler.as_handler(),
+            #    '.hbs': 'gears_handlebars.HandlebarsCompiler'
+            }
+        )
+
+        parser.add_argument('src', metavar='src', type=str, 
+                            help='The source directory of the assets to compile.',
+                            default=os.path.join(os.getcwd(), 'server/assets'))
+        parser.add_argument('dest', type=str, 
+                            help="The destination directory of where to put these assets.")
+
     
-    def get_absolute_path(path):
+    def get_absolute_path(self, path):
         return os.path.normpath(os.path.abspath(os.path.join(os.getcwd(), path)))
 
-    def run(self, args, configuration):
-        self.args = args
+
+    def run(self, arguments, configuration):
+        self.arguments = arguments
         self.configuration = configuration
 
-        self.environment = Environment(self.get_absolute_path(self.args.output))
-        self.environment.finders.register(FileSystemFinder([self.get_absolute_path(self.args.source)]))
-        self.environment.register_defaults()
+        assets = self.gears.get_public_assets(app)
+        environment = self.gears.get_environment(app)
 
-        for path in self.environment.public_assets:
+        for path in assets:
             try:
-                asset = build_asset(self.environment, path)
+                asset = build_asset(environment, path)
             except FileNotFound:
                 continue
+            except TypeError:
+                continue
 
-            self.environment.save_file(path, str(asset))
-            source_path = os.path.relpath(asset.absolute_path)
-            output_path = os.path.relpath(os.path.join(self.environment.root, path))
-            puts(colored.green('- compiled %s to %s' % (source_path, output_path)))
+            environment.save_file(path, str(asset))
+            src_path = os.path.relpath(asset.absolute_path)
+            dest_path = os.path.relpath(os.path.join(self.environment.root, path))
+            puts(colored.green('- compiled %s to %s' % (src_path, dest_path)))
