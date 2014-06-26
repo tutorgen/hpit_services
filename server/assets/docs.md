@@ -132,19 +132,19 @@ will give you a list of commands that manager understands. Then typing
 brief overview of what that command does.
 
 Currently the HPIT Manager has the following commands:
-- `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
-- `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
-- `python3 manager.py status` will show you whether or not the HPIT server is currently running.
-- `python3 manager.py add plugin <name> <subtype>` will help you create plugins with the specified name and subtype.
-- `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
-- `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
-- `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
-- `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
-- `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
-- `python3 manager.py docs` copies this documentation file to the server assets directory.
-- `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
-- `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
-- `python3 manager.py test` runs the suite of tests for components within HPIT.
+* `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
+* `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
+* `python3 manager.py status` will show you whether or not the HPIT server is currently running.
+* `python3 manager.py add plugin <name> <subtype>` will help you create plugins with the specified name and subtype.
+* `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
+* `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
+* `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
+* `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
+* `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
+* `python3 manager.py docs` copies this documentation file to the server assets directory.
+* `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
+* `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
+* `python3 manager.py test` runs the suite of tests for components within HPIT.
 
 ## The tutor and plugin configuration
 
@@ -493,6 +493,7 @@ Information about specific versions can be found inside of requirements.txt
 This software is dual licensed under the MIT License and the BSD 3-clause license.
 
 ==============================================================================
+
 The MIT License (MIT)
 
 Copyright (c) 2014 TutorGen, Inc.
@@ -534,6 +535,7 @@ THE SOFTWARE.
 OR
 
 ==============================================================================
+
 The BSD 3-Clause License
 
 Copyright (c) 2014, TutorGen, Inc.

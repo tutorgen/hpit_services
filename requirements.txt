@@ -12,6 +12,7 @@ Gears==0.7.2
 Jinja2==2.7.2
 Markdown==2.4.1
 MarkupSafe==0.21
+PyEnvi==1.0
 SQLAlchemy==0.9.4
 WTForms==1.0.5
 Werkzeug==0.9.4
