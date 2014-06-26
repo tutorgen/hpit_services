@@ -3,6 +3,9 @@ import urllib.parse
 
 class Command:
     description = "Lists all the available routes."
+    
+    def __init__(self, manager, parser):
+        self.manager = manager
 
     def run(self, args, configuration):
         self.args = args

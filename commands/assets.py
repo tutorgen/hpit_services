@@ -10,6 +10,9 @@ from gears.exceptions import FileNotFound
 class Command:
     description = "Build Gears assets for production deployments."
     
+    def __init__(self, manager, parser):
+        self.manager = manager
+    
     def get_absolute_path(path):
         return os.path.normpath(os.path.abspath(os.path.join(os.getcwd(), path)))
 
