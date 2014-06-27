@@ -21,13 +21,12 @@ class UnixManager(BaseManager):
         for item in entity_collection:
             if not item['active']:
                 item['active'] = True
-                name = item['name']
                 entity_subtype = item['type']
                 entity_id = item['entity_id']
                 api_key = item['api_key']
                 
-                print("Starting entity: " + name)
-                pidfile = self.get_entity_pid_file(entity_type, name)
+                print("Starting entity: " + entity_id)
+                pidfile = self.get_entity_pid_file(entity_type, entity_id)
                 
                 subp_args = [sys.executable, "entity_daemon.py", "--daemon", "--pid", pidfile]
 
@@ -55,9 +54,9 @@ class UnixManager(BaseManager):
         for item in entity_collection:
             if item['active']:
                 item['active'] = False
-                name = item['name']
-                print("Stopping entity: " + name)
-                pidfile = self.get_entity_pid_file(entity_type, name)
+                entity_id = item['entity_id']
+                print("Stopping entity: " + entity_id)
+                pidfile = self.get_entity_pid_file(entity_type, entity_id)
 
                 try:
                     with open(pidfile) as f:
@@ -66,7 +65,7 @@ class UnixManager(BaseManager):
 
                     os.remove(pidfile)
                 except FileNotFoundError:
-                    print("Error: Could not find PIDfile for entity: " + name)
+                    print("Error: Could not find PIDfile for entity: " + entity_id)
 
 
     def start(self, arguments, configuration):

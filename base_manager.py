@@ -58,12 +58,12 @@ class BaseManager:
         configuration[plural] = collection
         
         
-    def get_entity_pid_file(self, entity_type, entity_name):
+    def get_entity_pid_file(self, entity_type, entity_id):
         """
         Get the PID filename, which helps the system keep track of running processes.
         """
         
-        return os.path.join('tmp', entity_type + '_' + entity_name + '.pid')
+        return os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
         
         
     def server_is_running(self):
