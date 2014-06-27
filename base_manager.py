@@ -151,7 +151,6 @@ class BaseManager:
         main_parser = self.build_argument_parser()
         arguments = main_parser.parse_args()
 
-        import pdb; pdb.set_trace()
         try:
             arguments.func(arguments, configuration)
         except AttributeError:

@@ -446,15 +446,16 @@ def plugin_message_list():
     })
 
     result = [
-        (t['_id'], t['message_id'], t['message_name'], _map_mongo_document(t['payload']))
+        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
     update_ids = [t[0] for t in result]
     result = [{
-        'message_id': t[1],
+        'message_id': str(t[1]),
         'message_name': t[2],
-        'message': t[3]} for t in result]
+        'sender_entity_id': t[3],
+        'message': t[4]} for t in result]
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
@@ -491,15 +492,16 @@ def plugin_transaction_list():
     })
 
     result = [
-        (t['_id'], t['message_id'], t['message_name'], _map_mongo_document(t['payload']))
+        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
     update_ids = [t[0] for t in result]
     result = [{
-        'message_id': t[1],
+        'message_id': str(t[1]),
         'message_name': t[2],
-        'message': t[3]} for t in result]
+        'sender_entity_id': t[3],
+        'message': t[4]} for t in result]
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
@@ -594,6 +596,8 @@ def response():
     message_id = request.json['message_id']
     payload = request.json['payload']
 
+    import pdb; pdb.set_trace()
+
     plugin_message = mongo.db.plugin_messages.find_one({
         'message_id': ObjectId(message_id),
         'receiver_entity_id': responder_entity_id
@@ -643,6 +647,9 @@ def responses():
     result = [{
         'message': t[1],
         'response': t[2]} for t in result]
+
+    if len(result) > 0:
+        import pdb; pdb.set_trace()
 
     mongo.db.responses.update(
         {'_id':{'$in': update_ids}},

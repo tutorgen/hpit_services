@@ -22,18 +22,18 @@ class ProblemManagementPlugin(Plugin):
 
     #Problem Management Plugin
     def add_problem_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
         problem_name = message['problem_name']
         problem_text = message['problem_text']
 
         problem = self.db.find_one({
-            'entity_id': entity_id,
+            'sender_entity_id': sender_entity_id,
             'problem_name': problem_name,
             })
 
         if not problem:
             self.db.insert({
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name,
                 'problem_text': problem_text,
             })
@@ -46,7 +46,7 @@ class ProblemManagementPlugin(Plugin):
             })
         else:
             self.db.update({'_id': problem['_id']}, {
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name,
                 'problem_text': problem_text,
             })
@@ -60,17 +60,17 @@ class ProblemManagementPlugin(Plugin):
 
 
     def remove_problem_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
         problem_name = message['problem_name']
 
         problem = self.db.find_one({
-            'entity_id': entity_id,
+            'sender_entity_id': sender_entity_id,
             'problem_name': problem_name,
         })
 
         if problem:
             self.db.remove({
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name,
             })
 
@@ -88,11 +88,11 @@ class ProblemManagementPlugin(Plugin):
 
 
     def get_problem_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
         problem_name = message['problem_name']
 
         problem = self.db.find_one({
-            'entity_id': entity_id,
+            'sender_entity_id': sender_entity_id,
             'problem_name': problem_name,
         })
 
@@ -111,10 +111,10 @@ class ProblemManagementPlugin(Plugin):
             })
 
     def list_problems_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
 
         problems = self.db.find({
-            'entity_id': entity_id
+            'sender_entity_id': sender_entity_id
         })
 
         problems = [p for p in problems]

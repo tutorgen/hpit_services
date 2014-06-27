@@ -124,6 +124,7 @@ class Plugin(MessageSenderMixin):
 
             #Inject the message_id into the payload
             payload['message_id'] = message_item['message_id']
+            payload['sender_entity_id'] = message_item['sender_entity_id']
 
             try:
                 self.callbacks[message](payload)

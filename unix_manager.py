@@ -110,7 +110,6 @@ class UnixManager(BaseManager):
             self.wind_down_all('tutor', configuration)
 
             print("Stopping the HPIT Hub Server...")
-            import pdb; pdb.set_trace()
             with open(self.settings.HPIT_PID_FILE) as f:
                 pid = f.read()
             try:

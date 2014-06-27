@@ -24,12 +24,13 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger.debug("RECV: kt_trace with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': message['entity_id'],
+            'sender_entity_id': message['sender_entity_id'],
             'skill': message['skill']
         })
 
         if not kt_config:
             self.logger.debug("ERROR: Could not find inital setting for knowledge tracer.")
+
             self.send_response(message['id'], {
                 'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
                 'send': {
@@ -81,13 +82,13 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger.debug("RECV: kt_set_initial with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': message['entity_id'],
+            'sender_entity_id': message['sender_entity_id'],
             'skill': message['skill']
         })
 
         if not kt_config:
             self.db.insert({
-                'entity_id': message['entity_id'],
+                'sender_entity_id': message['sender_entity_id'],
                 'skill': message['skill'],
                 'probability_known': message['probability_known'],
                 'probability_learned': message['probability_learned'],
@@ -115,7 +116,7 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger.debug("RECV: kt_reset with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': message['entity_id'],
+            'sender_entity_id': message['sender_entity_id'],
             'skill': message['skill']
         })
 
