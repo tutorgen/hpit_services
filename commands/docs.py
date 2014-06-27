@@ -11,3 +11,4 @@ class Command:
         self.configuration = configuration
 
         shutil.copy('./README.md', './server/assets/docs.md')
+        print("Copied README.md into server/assets/docs.md")

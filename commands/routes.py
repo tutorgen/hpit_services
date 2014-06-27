@@ -1,5 +1,7 @@
-from server import app
 import urllib.parse
+
+from server.app import ServerApp
+app = ServerApp.get_instance().app
 
 class Command:
     description = "Lists all the available routes."
@@ -7,8 +9,8 @@ class Command:
     def __init__(self, manager, parser):
         self.manager = manager
 
-    def run(self, args, configuration):
-        self.args = args
+    def run(self, arguments, configuration):
+        self.arguments = arguments
         self.configuration = configuration
 
         output = []
