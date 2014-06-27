@@ -452,7 +452,7 @@ def plugin_message_list():
 
     update_ids = [t[0] for t in result]
     result = [{
-        'message_id': t[1]
+        'message_id': t[1],
         'message_name': t[2],
         'message': t[3]} for t in result]
 
@@ -497,7 +497,7 @@ def plugin_transaction_list():
 
     update_ids = [t[0] for t in result]
     result = [{
-        'message_id': t[1]
+        'message_id': t[1],
         'message_name': t[2],
         'message': t[3]} for t in result]
 
