@@ -84,15 +84,15 @@ class UnixManager(BaseManager):
         else:
             print("Starting the HPIT Hub Server for Unix...")
             with open("tmp/output_server.txt","w") as f:
-                subprocess.call(["gunicorn", "server:app", "--bind", self.settings.HPIT_BIND_ADDRESS, "--daemon", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
+                subprocess.call(["python3", "start_server.py", "--daemon", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
 
             print("Waiting for the server to boot.")
             time.sleep(5)
 
             print("Starting tutors...")
-            self.spin_up_all('tutor', configuration)
+            #self.spin_up_all('tutor', configuration)
             print("Starting plugins...")
-            self.spin_up_all('plugin', configuration)
+            #self.spin_up_all('plugin', configuration)
         print("DONE!")
 
 

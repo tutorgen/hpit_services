@@ -1,4 +1,5 @@
-import shutil
+import os
+import markdown
 
 class Command:
     description = "Copy's the root project README.md to the server assets folder."
@@ -10,5 +11,13 @@ class Command:
         self.args = args
         self.configuration = configuration
 
-        shutil.copy('./README.md', './server/assets/docs.md')
-        print("Copied README.md into server/assets/docs.md")
+        doc_md = ""
+        with open(os.path.join(os.getcwd(), 'README.md'), 'r') as f:
+            doc_md = f.read()
+
+        doc_html = markdown.markdown(doc_md)
+
+        with open(os.path.join(os.getcwd(), 'server/templates/_docs_md.html'), 'w') as f:
+            f.write(doc_html)
+
+        print("Updated documentation HTML based on README.md")
