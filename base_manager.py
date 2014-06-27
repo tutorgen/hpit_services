@@ -160,13 +160,13 @@ class BaseManager:
         self.write_configuration(configuration)
         
         
-    def wind_down_all(entity_type, configuration):
+    def wind_down_all(self, entity_type, configuration):
         """
         Stop all entities of a certain type
         """
         
         entity_collection = self.get_entity_collection(entity_type, configuration)
-        wind_down_collection(entity_type, entity_collection)
+        self.wind_down_collection(entity_type, entity_collection)
     
 
 
