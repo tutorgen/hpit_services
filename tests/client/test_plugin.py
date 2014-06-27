@@ -215,7 +215,7 @@ def test_dispatch():
     def wildCard(param):
         global wildCardCalled
         wildCardCalled = True      
-    event_param = [{"message_id": '1234', "message_name":"test_event","message":{"thing": "test message"}}]
+    event_param = [{"message_id": '1234', "sender_entity_id": '4567', "message_name":"test_event","message":{"thing": "test message"}}]
     
     
     
