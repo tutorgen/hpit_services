@@ -33,11 +33,14 @@ class ServerApp:
     @classmethod
     def get_instance(cls):
         if not cls.instance:
-            instance = ServerApp()
+            cls.instance = ServerApp()
 
-        return instance
+        return cls.instance
 
     def __init__(self):
+        if self.instance:
+            raise ValueError("ServerApp instance already created.")
+
         self.gears = Gears(
             compilers={
             '.less': LESSCompiler.as_handler(),
@@ -64,8 +67,3 @@ class ServerApp:
         from .models import User
         self.db_adapter = SQLAlchemyAdapter(self.db, User)
         self.user_manager = UserManager(self.db_adapter, self.app)
-
-from .views.api import *
-from .views.dashboard import *
-from .models import *
-

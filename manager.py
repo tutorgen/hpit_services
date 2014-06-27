@@ -10,11 +10,17 @@ elif 'production' in sys.argv:
 else:
     settings = ServerSettingsManager.init_instance('debug')
 
+manager = None
 if platform.system() == "Windows":
     from win_manager import WindowsManager
     manager = WindowsManager()
-    manager.run_manager()
 else:
     from unix_manager import UnixManager
     manager = UnixManager()
+
+import server.views.api
+import server.views.dashboard
+import server.models
+
+if manager:
     manager.run_manager()
