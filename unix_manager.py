@@ -86,13 +86,15 @@ class UnixManager(BaseManager):
             with open("tmp/output_server.txt","w") as f:
                 subprocess.call(["python3", "start_server.py", "--daemon", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
 
-            print("Waiting for the server to boot.")
-            time.sleep(5)
+            for i in range(0, 10):
+                print("Waiting " + str(10 - i) + " seconds for the server to boot.\r", end='')
+                time.sleep(1)
+            print("")
 
             print("Starting tutors...")
-            #self.spin_up_all('tutor', configuration)
+            self.spin_up_all('tutor', configuration)
             print("Starting plugins...")
-            #self.spin_up_all('plugin', configuration)
+            self.spin_up_all('plugin', configuration)
         print("DONE!")
 
 
@@ -108,10 +110,11 @@ class UnixManager(BaseManager):
             self.wind_down_all('tutor', configuration)
 
             print("Stopping the HPIT Hub Server...")
+            import pdb; pdb.set_trace()
             with open(self.settings.HPIT_PID_FILE) as f:
                 pid = f.read()
             try:
-                os.kill(int(pid), signal.SIGTERM)
+                os.kill(int(pid), signal.SIGKILL)
                 os.remove(self.settings.HPIT_PID_FILE) #Force for Mac
             except FileNotFoundError: #On Linux
                 pass #On linux file is removed when process dies, on mac it needs forced.

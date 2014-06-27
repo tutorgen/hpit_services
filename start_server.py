@@ -44,6 +44,9 @@ if arguments.daemon:
     if arguments.pid:
         pid = arguments.pid
 
+        if not os.path.isabs(pid):
+            pid = os.path.join(os.getcwd(), pid)
+
     daemon = Daemonize(app="hpit_server", pid=pid, action=main)
     daemon.start()
 else:
