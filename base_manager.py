@@ -73,17 +73,9 @@ class BaseManager:
         return os.path.isfile(self.settings.HPIT_PID_FILE)
         
         
-    def status(self, arguments, configuration):
-        """
-        Print the running status of the server.
-        """
-        
-        print("Status is...")
-        if self.server_is_running():
-            print("The HPIT Server is running.")
-        else:
-            print("The HPIT Server it not running.")
-
+    def run_status(self, arguments, configuration):
+        from commands.status import Command
+        Command(arguments, configuration).run()
 
     def run_add(self, arguments, configuration):
         from commands.add import Command
@@ -141,9 +133,6 @@ class BaseManager:
         subparsers = main_parser.add_subparsers(title='Sub-Commands')
 
         self.build_sub_commands(subparsers)
-
-        status_parser = subparsers.add_parser('status', description='Status of HPIT System')
-        status_parser.set_defaults(func=self.status)
 
         start_parser = subparsers.add_parser('start', description='Bring all entities online.')
         start_parser.set_defaults(func=self.start)
