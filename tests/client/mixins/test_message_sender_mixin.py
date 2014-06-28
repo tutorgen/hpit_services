@@ -101,8 +101,8 @@ def test_dispatch_responses():
         -Ensure true returned on completions
      """
     bad_response = [{"bad_response": "boo"}]
-    bad_response2 = [{"message":{"id":"4"}}]
-    good_response = [{"message": {"id":"4"},"response":"2"}]
+    bad_response2 = [{"message":{"message_id":"4"}}]
+    good_response = [{"message": {"message_id":"4"},"response":"2"}]
 
     
     def returnFalse():
