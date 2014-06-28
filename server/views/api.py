@@ -15,11 +15,17 @@ from server.models import Plugin, Tutor, Subscription
 
 
 def _map_mongo_document(document):
-    mapped_doc = {k: v for k, v in document.items()}
+    mapped_doc = {}
 
-    if '_id' in mapped_doc:
-        mapped_doc['id'] = str(mapped_doc['_id'])
-        del mapped_doc['_id']
+    for k, v in document.items():
+        if k == '_id':
+            v = str(v)
+        elif k == 'message_id':
+            v = str(v)
+        elif isinstance(v, datetime):
+            v = v.isoformat()
+
+        mapped_doc[k] = v
 
     return mapped_doc
 
@@ -596,21 +602,21 @@ def response():
     message_id = request.json['message_id']
     payload = request.json['payload']
 
-    import pdb; pdb.set_trace()
-
     plugin_message = mongo.db.plugin_messages.find_one({
         'message_id': ObjectId(message_id),
         'receiver_entity_id': responder_entity_id
     })
 
-    plugin_message.time_responded = datetime.now()
-    plugin_message.save()
+    mongo.db.plugin_messages.update(
+        {'_id':plugin_message['_id']},
+        {"$set": {'time_responded': datetime.now()}}
+    )
 
     response_id = mongo.db.responses.insert({
-        'message_id': plugin_message.message_id,
+        'message_id': plugin_message['message_id'],
         'sender_entity_id': responder_entity_id,
-        'receiver_entity_id': plugin_message.sender_entity_id,
-        'message': message,
+        'receiver_entity_id': plugin_message['sender_entity_id'],
+        'message': plugin_message,
         'response': payload,
         'response_recieved': False
     })
@@ -647,9 +653,6 @@ def responses():
     result = [{
         'message': t[1],
         'response': t[2]} for t in result]
-
-    if len(result) > 0:
-        import pdb; pdb.set_trace()
 
     mongo.db.responses.update(
         {'_id':{'$in': update_ids}},

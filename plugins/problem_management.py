@@ -38,7 +38,7 @@ class ProblemManagementPlugin(Plugin):
                 'problem_text': problem_text,
             })
 
-            self.send_response(message['id'], {
+            self.send_response(message['message_id'], {
                 'problem_name': problem_name,
                 'problem_text': problem_text,
                 'success': True,
@@ -51,7 +51,7 @@ class ProblemManagementPlugin(Plugin):
                 'problem_text': problem_text,
             })
 
-            self.send_response(message['id'], {
+            self.send_response(message['message_id'], {
                 'problem_name': problem_name,
                 'problem_text': problem_text,
                 'success': True,
@@ -74,13 +74,13 @@ class ProblemManagementPlugin(Plugin):
                 'problem_name': problem_name,
             })
 
-            self.send_response(message['id'], {
+            self.send_response(message['message_id'], {
                 'problem_name': problem_name,
                 'exists': True,
                 'success': True,
             })
         else:
-            self.send_response(message['id'], {
+            self.send_response(message['message_id'], {
                 'problem_name': problem_name,
                 'exists': False,
                 'success': False
@@ -97,13 +97,13 @@ class ProblemManagementPlugin(Plugin):
         })
 
         if not problem:
-            self.send_response(message['id'], {
+            self.send_response(message['message_id'], {
                 'problem_name': problem_name,
                 'exists': False,
                 'success': False
             })
         else:
-            self.send_response(message['id'], {
+            self.send_response(message['message_id'], {
                 'problem_name': problem_name,
                 'problem_text': problem['problem_text'],
                 'exists': True,
@@ -119,7 +119,7 @@ class ProblemManagementPlugin(Plugin):
 
         problems = [p for p in problems]
 
-        self.send_response(message['id'], {
+        self.send_response(message['message_id'], {
             'problems': problems,
             'success': True
         })

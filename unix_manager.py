@@ -84,7 +84,14 @@ class UnixManager(BaseManager):
         else:
             print("Starting the HPIT Hub Server for Unix...")
             with open("tmp/output_server.txt","w") as f:
-                subprocess.call(["python3", "start_server.py", "--daemon", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
+                subprocess.call(['uwsgi', 
+                    '--http-socket', self.settings.HPIT_BIND_ADDRESS, 
+                    '--venv', os.path.join(os.getcwd(), 'env'),
+                    '--wsgi-file', 'start_server.py',
+                    '--callable', 'app',
+                    '--pidfile', self.settings.HPIT_PID_FILE,
+                    '--daemonize2', 'tmp/server_wsgi.txt'],
+                    stdout = f, stderr = f)
 
             for i in range(0, 10):
                 print("Waiting " + str(10 - i) + " seconds for the server to boot.\r", end='')

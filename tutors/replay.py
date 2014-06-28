@@ -57,13 +57,3 @@ class ReplayTutor(Tutor):
             return False
         else:
             return True
-   
-        
-    def run(self):
-        self.connect()
-        
-        self.start()
-        
-        self.disconnect()
-        
-    
