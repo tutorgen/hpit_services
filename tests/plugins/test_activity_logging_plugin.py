@@ -22,28 +22,27 @@ def setup_function(function):
 def teardown_function(function):
 	""" teardown any state that was previously setup with a setup_method
     call.
-    """
-    global test_subject
-
-    httpretty.disable()
-    httpretty.reset()
-    test_subject = None
+	"""
+	global test_subject
+	httpretty.disable()
+	httpretty.reset()
+	test_subject = None
 
 def test_constructor():
 	"""
-    StudentActivityLoggingPlugin.__init__() Test Plan:
+	StudentActivityLoggingPlugin.__init__() Test Plan:
         -ensure logger is set to param
-    """
-    test_subject.logger.should.equal(None)
+	"""
+	test_subject.logger.should.equal(None)
 
 def test_post_connect():
 	"""
-    StudentActivityLoggingPlugin.post_connect() Test plan:
+	StudentActivityLoggingPlugin.post_connect() Test plan:
         -ensure callbacks are set for test and example
-    """
-    test_subject.post_connect()
-    test_subject.callbacks['activity_logging'].should.equal(test_subject.log_student_activity_callback)
-
+	"""
+	test_subject.post_connect()
+	test_subject.callbacks['activity_logging'].should.equal(test_subject.log_student_activity_callback)
+ 
 
 def test_log_student_activity_callback():
 	"""
@@ -52,20 +51,30 @@ def test_log_student_activity_callback():
         -Mock mongodb, ensure written to when called
         -Mock send_response, ensure called
     """
-	test_message = "This is a message"
+
+	test_message = {"subject": "i", "verb": "made", "object": "it", "entity_id": 1, "id": 2}
 	calls = [call("LOG_STUDENT_ACTIVITY"), call(test_message)]
 	test_subject.logger = Mock()
-	test_subject.logger.debug.assert_has_calls(calls)
-
 	test_subject.validateMessage = MagicMock(return_value=True)
-	#test mongodb is written
 	test_subject.mongo.db.student_activity_log.insert = MagicMock()
-	test_subject.mongo.db.student_activity_log.insert.assert_called_with()
+	
+	test_subject.log_student_activity_callback(test_message)
+
+
+	test_subject.logger.debug.assert_has_calls(calls)
+	test_subject.mongo.db.student_activity_log.insert.assert_called_with({
+				'subject' : "i",
+				'verb' : "verb",
+				'object' : "made",
+				'entity_id' : 1
+			})
 
 	test_subject.validateMessage = MagicMock(return_value=False)
-	#test send_response is called correctly
 	test_subject.send_response = MagicMock()
-	test_subject.send_response.assert_called_with()
+
+	test_subject.log_student_activity_callback(test_message)
+
+	test_subject.send_response.assert_called_with(message_id=2, payload={'error': 'sub, verb, and obj all have to be strings'})
 
 def test_validateMessage():
 	"""
