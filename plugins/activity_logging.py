@@ -2,11 +2,14 @@ from client import Plugin
 from pymongo import MongoClient
 
 class StudentActivityLoggingPlugin(Plugin):
-	def __init__(self, name, logger, args=None):
-		super().__init__(name=name)
+	def __init__(self, entity_id, api_key, logger, args=None):
+		super().__init__(entity_id=entity_id, api_key=api_key)
 		self.logger = logger
 		self.mongo = MongoClient('mongodb://localhost:27017')
+	
 
+	def post_connect(self):
+		super().post_connect()
 		self.subscribe(activity_logging=self.log_student_activity_callback)
 
 	def log_student_activity_callback(self, message):
@@ -17,7 +20,7 @@ class StudentActivityLoggingPlugin(Plugin):
 		"""
 		#log
 		self.logger.debug("LOG_STUDENT_ACTIVITY")
-        self.logger.debug(message)
+		self.logger.debug(message)
 		#validate the message
 		sub = message['subject']
 		verb = message['verb']
@@ -40,23 +43,13 @@ class StudentActivityLoggingPlugin(Plugin):
 		"""
 		Validate the message
 		Return True if the message is valid
-		Return False otherwise
+		Return False and populate error otherwise
 		"""
-		#mbox field is required
-		if not 'mbox' in sub:
-			error.update({'format_error' : 'miss mbox field in subject'})
+		#for now, as long as sub, verb, and obj are strings, return True
+		if type(sub) is type('str') and type(verb) is type('str') and type(obj) is type('str'):
+			return True
+		else:
+			error.update({'error': 'sub, verb, and obj all have to be strings'})
 			return False
-
-		#id, display fields are required
-		if not ('id' in verb and 'display' in verb):
-			error.update({'format_error' : 'miss id or display field in verb'})
-			return False
-
-		#id is required
-		if not 'id' in obj:
-			error.update({'format_error' : 'miss id field in object'})
-			return False
-
-		return True
 
 
