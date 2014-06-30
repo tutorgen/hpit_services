@@ -1,4 +1,5 @@
-from server import db
+from server.app import ServerApp
+db = ServerApp.get_instance().db
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -21,20 +21,20 @@ class ProblemStepManagementPlugin(Plugin):
             list_problem_steps=self.list_problem_steps_callback)
 
     def add_problem_step_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
         problem_name = message['problem_name']
         problem_step_name = message['problem_step_name']
         problem_step_text = message['problem_step_text']
 
         problem_step = self.db.find_one({
-            'entity_id': entity_id,
+            'sender_entity_id': sender_entity_id,
             'problem_name': problem_name,
             'problem_step_name': problem_step_name
         })
 
         if not problem_step:
             self.db.insert({
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'problem_step_text': problem_step_text,
@@ -49,7 +49,7 @@ class ProblemStepManagementPlugin(Plugin):
             })
         else:
             self.db.update({'_id': problem['_id']}, {
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name,
                 'problem_step_text': problem_step_text,
@@ -64,19 +64,19 @@ class ProblemStepManagementPlugin(Plugin):
             })
 
     def remove_problem_step_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
         problem_name = message['problem_name']
         problem_step_name = message['problem_step_name']
 
         problem_step = self.db.find_one({
-            'entity_id': entity_id,
+            'sender_entity_id': sender_entity_id,
             'problem_name': problem_name,
             'problem_step_name': problem_step_name
         })
 
         if problem_step:
             self.db.remove({
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name,
                 'problem_step_name': problem_step_name
             })
@@ -96,12 +96,12 @@ class ProblemStepManagementPlugin(Plugin):
             })
 
     def get_problem_step_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
         problem_name = message['problem_name']
         problem_step_name = message['problem_step_name']
 
         problem_step = self.db.find_one({
-            'entity_id': entity_id,
+            'sender_entity_id': sender_entity_id,
             'problem_name': problem_name,
             'problem_step_name': problem_step_name
         })
@@ -123,12 +123,12 @@ class ProblemStepManagementPlugin(Plugin):
             })
 
     def list_problem_steps_callback(self, message):
-        entity_id = message['entity_id']
+        sender_entity_id = message['sender_entity_id']
 
         if 'problem_name' in message:
             problem_name = message['problem_name']
             problem_steps = self.db.find({
-                'entity_id': entity_id,
+                'sender_entity_id': sender_entity_id,
                 'problem_name': problem_name
             })
 
@@ -140,7 +140,7 @@ class ProblemStepManagementPlugin(Plugin):
             })
         else:
             problem_steps = self.db.find({
-                'entity_id': entity_id
+                'sender_entity_id': sender_entity_id
             })
 
             problem_steps = [p for p in problem_steps]

@@ -17,12 +17,6 @@ class ExampleTutor(Tutor):
             'test', 'example', 'add_student', 
             'remove_student', 'trace']
 
-    def setup(self):
-        pass
-
-    def shutdown(self):
-        pass
-
     def main_callback(self):
         event = random.choice(self.event_names)
 
@@ -37,10 +31,3 @@ class ExampleTutor(Tutor):
             return False
         else:
             return True
-
-    def run(self):
-        self.connect()
-        self.setup()
-        self.start()
-        self.shutdown()
-        self.disconnect()

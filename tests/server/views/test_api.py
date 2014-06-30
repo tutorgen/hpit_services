@@ -7,8 +7,13 @@ from unittest.mock import *
 from flask import jsonify
 from flask import request
 
-from server import app
-from server import settings
+from server.app import ServerApp
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+
+from server.settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
+
 from flask.ext.pymongo import PyMongo
 
 test_client = None

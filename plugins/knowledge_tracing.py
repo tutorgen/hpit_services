@@ -24,13 +24,14 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger.debug("RECV: kt_trace with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': message['entity_id'],
+            'sender_entity_id': message['sender_entity_id'],
             'skill': message['skill']
         })
 
         if not kt_config:
             self.logger.debug("ERROR: Could not find inital setting for knowledge tracer.")
-            self.send_response(message['id'], {
+
+            self.send_response(message['message_id'], {
                 'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
                 'send': {
                     'event_name': 'kt_set_initial',
@@ -69,7 +70,7 @@ class KnowledgeTracingPlugin(Plugin):
 
         self.logger.debug("SUCCESS: kt_trace with new data: " + str(kt_config))
 
-        self.send_response(message['id'], {
+        self.send_response(message['message_id'], {
             'skill': kt_config['skill'],
             'probability_known': p_known,
             'probability_learned': p_learned,
@@ -81,13 +82,13 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger.debug("RECV: kt_set_initial with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': message['entity_id'],
+            'sender_entity_id': message['sender_entity_id'],
             'skill': message['skill']
         })
 
         if not kt_config:
             self.db.insert({
-                'entity_id': message['entity_id'],
+                'sender_entity_id': message['sender_entity_id'],
                 'skill': message['skill'],
                 'probability_known': message['probability_known'],
                 'probability_learned': message['probability_learned'],
@@ -103,7 +104,7 @@ class KnowledgeTracingPlugin(Plugin):
                     'probability_mistake' : message['probability_mistake']
                 }})
 
-        self.send_response(message['id'], {
+        self.send_response(message['message_id'], {
             'skill': message['skill'],
             'probability_known': message['probability_known'],
             'probability_learned': message['probability_learned'],
@@ -115,7 +116,7 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger.debug("RECV: kt_reset with message: " + str(message))
 
         kt_config = self.db.find_one({
-            'entity_id': message['entity_id'],
+            'sender_entity_id': message['sender_entity_id'],
             'skill': message['skill']
         })
 
@@ -127,7 +128,7 @@ class KnowledgeTracingPlugin(Plugin):
                 'probability_mistake': 0.0
             }})
 
-        self.send_response(message['id'], {
+        self.send_response(message['message_id'], {
             'skill': kt_config['skill'],
             'probability_known': 0.0,
             'probability_learned': 0.0,

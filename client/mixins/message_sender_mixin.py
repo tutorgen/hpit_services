@@ -117,7 +117,7 @@ class MessageSenderMixin(RequestsMixin):
 
         for res in responses:
             try:
-                message_id = res['message']['id']
+                message_id = res['message']['message_id']
             except KeyError:
                 raise ResponseDispatchError('Invalid response from HPIT. No message id supplied in response.')
 

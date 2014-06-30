@@ -1,18 +1,26 @@
 import platform
 import sys
-from pyenvi.pyenvi import PyEnvi
 
-if sys.argv[1] == "test":
-    pyenvi = PyEnvi({"mode":"TEST"})
-    pyenvi.start()
-    print(PyEnvi.get_instance())
+from server.settings import ServerSettingsManager
 
-
-if platform.system() == "Windows":
-    from win_manager import *
+if 'test' in sys.argv:
+    settings = ServerSettingsManager.init_instance('test')
+elif 'production' in sys.argv:
+    settings = ServerSettingsManager.init_instance('production')
 else:
-    from unix_manager import *
-    
-run_manager()
+    settings = ServerSettingsManager.init_instance('debug')
 
-PyEnvi.get_instance().stop()
+manager = None
+if platform.system() == "Windows":
+    from win_manager import WindowsManager
+    manager = WindowsManager()
+else:
+    from unix_manager import UnixManager
+    manager = UnixManager()
+
+import server.views.api
+import server.views.dashboard
+import server.models
+
+if manager:
+    manager.run_manager()

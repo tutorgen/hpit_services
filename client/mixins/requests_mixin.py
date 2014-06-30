@@ -14,7 +14,7 @@ class RequestsMixin:
         self.session = requests.Session()
         self.connected = False
         
-        self._add_hooks('post_connect', 'post_disconnect')
+        self._add_hooks('pre_connect', 'post_connect', 'pre_disconnect', 'post_disconnect')
 
 
     def connect(self):
@@ -24,6 +24,8 @@ class RequestsMixin:
         This essentially sets up a session and logs that you are actively using
         the system. This is mostly used to track plugin use with the site.
         """
+        self._try_hook('pre_connect')
+
         connection = self._post_data(
             urljoin(HPIT_URL_ROOT, '/connect'), {
                 'entity_id': self.entity_id, 
@@ -43,6 +45,8 @@ class RequestsMixin:
         the server for messages or responses. This also destroys the current session
         with the HPIT server.
         """
+        self._try_hook('pre_disconnect')
+        
         self._post_data(
             urljoin(HPIT_URL_ROOT, '/disconnect'), {
                 'entity_id': self.entity_id,

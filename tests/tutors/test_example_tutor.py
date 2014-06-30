@@ -93,22 +93,3 @@ def test_main_callback():
     test_subject.run_once = True
 
     test_subject.main_callback().should.equal(False)
-    
-    
-    
-
-def test_run():
-    """
-    ExampleTutor.run() Test plan:
-        -mock start, ensured called
-        -ensure starts disconnected, finishes disconnected
-    """
-    mock = MagicMock()
-    test_subject.start = mock
-    test_subject.connected.should.equal(False)
-    test_subject.run()
-    test_subject.start.assert_any_call()
-    test_subject.connected.should.equal(False)
-    
-    
-    

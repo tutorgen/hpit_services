@@ -1,4 +1,6 @@
-from server import db
+from server.app import ServerApp
+db = ServerApp.get_instance().db
+
 from flask.ext.user import UserMixin
 
 class User(db.Model, UserMixin):
