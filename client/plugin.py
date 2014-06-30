@@ -121,7 +121,11 @@ class Plugin(MessageSenderMixin):
         for message_item in message_data:
             message = message_item['message_name']
             payload = message_item['message']
-            
+
+            #Inject the message_id into the payload
+            payload['message_id'] = message_item['message_id']
+            payload['sender_entity_id'] = message_item['sender_entity_id']
+
             try:
                 self.callbacks[message](payload)
             except KeyError:

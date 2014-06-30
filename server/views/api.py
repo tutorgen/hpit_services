@@ -4,8 +4,31 @@ from datetime import datetime
 from flask import session, jsonify, abort, request, Response
 
 
-from server import app, mongo, db, csrf, _map_mongo_document, HPIT_STATUS
+from server.app import ServerApp
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+mongo = app_instance.mongo
+db = app_instance.db
+csrf = app_instance.csrf
+
 from server.models import Plugin, Tutor, Subscription
+
+
+def _map_mongo_document(document):
+    mapped_doc = {}
+
+    for k, v in document.items():
+        if k == '_id':
+            v = str(v)
+        elif k == 'message_id':
+            v = str(v)
+        elif isinstance(v, datetime):
+            v = v.isoformat()
+
+        mapped_doc[k] = v
+
+    return mapped_doc
+
 
 def bad_parameter_response(parameter):
     return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))
@@ -23,6 +46,10 @@ def exists_response():
 def ok_response():
     return ("OK", 200, dict(mimetype="application/json"))
 
+@app.errorhandler(401)
+def custom_401(error):
+    return Response('You must establish a connection with HPIT first.', 
+        401, {'WWWAuthenticate':'Basic realm="Login Required"'})
 
     
 @app.route("/version", methods=["GET"])
@@ -425,14 +452,16 @@ def plugin_message_list():
     })
 
     result = [
-        (t['_id'], t['message_name'], _map_mongo_document(t['payload']))
+        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
     update_ids = [t[0] for t in result]
     result = [{
-        'message_name': t[1],
-        'message': t[2]} for t in result]
+        'message_id': str(t[1]),
+        'message_name': t[2],
+        'sender_entity_id': t[3],
+        'message': t[4]} for t in result]
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
@@ -469,11 +498,16 @@ def plugin_transaction_list():
     })
 
     result = [
-        (t['_id'], t['message_name'], _map_mongo_document(t['payload']))
+        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
     update_ids = [t[0] for t in result]
+    result = [{
+        'message_id': str(t[1]),
+        'message_name': t[2],
+        'sender_entity_id': t[3],
+        'message': t[4]} for t in result]
 
     mongo.db.plugin_messages.update(
         {'_id':{'$in': update_ids}},
@@ -524,7 +558,7 @@ def message():
         plugin_entity_id = subscription.plugin.entity_id
 
         mongo.db.plugin_messages.insert({
-            '_message_id': message_id,
+            'message_id': message_id,
 
             'sender_entity_id': sender_entity_id,
             'receiver_entity_id': plugin_entity_id,
@@ -569,18 +603,20 @@ def response():
     payload = request.json['payload']
 
     plugin_message = mongo.db.plugin_messages.find_one({
-        '_message_id': ObjectId(message_id),
+        'message_id': ObjectId(message_id),
         'receiver_entity_id': responder_entity_id
     })
 
-    plugin_message.time_responded = datetime.now()
-    plugin_message.save()
+    mongo.db.plugin_messages.update(
+        {'_id':plugin_message['_id']},
+        {"$set": {'time_responded': datetime.now()}}
+    )
 
     response_id = mongo.db.responses.insert({
-        '_message_id': plugin_message._message_id,
+        'message_id': plugin_message['message_id'],
         'sender_entity_id': responder_entity_id,
-        'receiver_entity_id': plugin_message.sender_entity_id,
-        'message': message,
+        'receiver_entity_id': plugin_message['sender_entity_id'],
+        'message': plugin_message,
         'response': payload,
         'response_recieved': False
     })

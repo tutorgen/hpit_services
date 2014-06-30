@@ -4,7 +4,11 @@ from uuid import uuid4
 from flask import request, render_template, redirect, url_for
 from flask.ext.user import login_required, current_user
 
-from server import app, db, HPIT_STATUS
+from server.app import ServerApp
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+db = app_instance.db
+
 from server.models import Plugin, Tutor
 from server.forms import PluginForm, TutorForm
 
@@ -15,21 +19,11 @@ def index():
     Shows the main page for HPIT.
     """
     return render_template('index.html', 
-        tutor_count=len(HPIT_STATUS['tutors']),
-        plugin_count=len(HPIT_STATUS['plugins']),
-        tutors=HPIT_STATUS['tutors'],
-        plugins=HPIT_STATUS['plugins']
+        tutor_count=0,
+        plugin_count=0,
+        tutors=[],
+        plugins=[]
     )
-
-
-def documentation_markdown():
-    if not documentation_markdown.docs_read:
-        with open(os.path.join(os.getcwd(), 'server/assets/docs.md'), 'r') as f:
-            documentation_markdown.markdown = f.read()
-        documentation_markdown.docs_read = True
-
-    return documentation_markdown.markdown
-documentation_markdown.docs_read = False
 
 
 @app.route("/docs")
@@ -38,8 +32,7 @@ def docs():
     SUPPORTS: GET
     Shows the API documentation for HPIT.
     """
-    doc_markdown = documentation_markdown()
-    return render_template('docs.html', docs=doc_markdown)
+    return render_template('docs.html')
 
 
 @app.route("/routes")

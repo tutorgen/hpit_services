@@ -23,7 +23,7 @@ class KnowledgeTracingTutor(Tutor):
             self.args = None
       
         
-    def setup(self):
+    def post_connect(self):
         for sk in self.skills:
             self.send('kt_set_initial', {
                 'skill': sk,
@@ -33,7 +33,7 @@ class KnowledgeTracingTutor(Tutor):
                 'probability_mistake': random.randint(0, 1000) / 1000.0,
                 }, self.initial_response_callback)
 
-    def shutdown(self):
+    def pre_disconnect(self):
         for sk in self.skills:
             self.send('kt_reset', {
                 'skill': sk,
@@ -58,10 +58,3 @@ class KnowledgeTracingTutor(Tutor):
 
     def initial_response_callback(self, response):
         self.logger.debug("RECV: kt_set_initial response recieved. " + str(response))
-
-    def run(self):
-        self.connect()
-        self.setup()
-        self.start()
-        self.shutdown()
-        self.disconnect()

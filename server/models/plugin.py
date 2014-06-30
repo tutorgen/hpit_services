@@ -2,7 +2,11 @@ import random
 from datetime import datetime
 from Crypto.Hash import HMAC, SHA512
 
-from server import db, settings
+from server.app import ServerApp
+db = ServerApp.get_instance().db
+
+from server.settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
 
 class Plugin(db.Model):
     id = db.Column(db.Integer, primary_key=True)

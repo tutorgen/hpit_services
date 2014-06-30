@@ -1,0 +1,20 @@
+{
+    "tutors": [
+        {
+            "api_key": "96498f664c4151427fa91008906144f5",
+            "active": false,
+            "name": "kt.0",
+            "entity_id": "82534c1e-746a-4fd9-a505-08fbe2ac000f",
+            "type": "knowledge_tracing"
+        }
+    ],
+    "plugins": [
+        {
+            "api_key": "98268d1bd4635334f88cf9eb4ef4d782",
+            "active": false,
+            "name": "kt.0",
+            "entity_id": "4e77a67e-cbc7-40f3-8053-10a57b2289e4",
+            "type": "knowledge_tracing"
+        }
+    ]
+}
