@@ -502,13 +502,13 @@ All rights reserved.
 
 Contributions by: 
 
-Raymond Chandler III
-Brian Sauer
-Jian Sun
-Ryan Carlson
-John Stamper
-Mary J. Blink
-Ted Carmichael
+* Raymond Chandler III 
+* Brian Sauer 
+* Jian Sun 
+* Ryan Carlson 
+* John Stamper 
+* Mary J. Blink 
+* Ted Carmichael 
 
 In association with Carnegie Mellon University, Carnegie Learning, and 
 Advanced Distributed Learning.
@@ -544,13 +544,14 @@ All rights reserved.
 
 Contributions by: 
 
-Raymond Chandler III
-Brian Sauer
-Jian Sun
-Ryan Carlson
-John Stamper
-Mary J. Blink
-Ted Carmichael
+* Raymond Chandler III 
+* Brian Sauer 
+* Jian Sun 
+* Ryan Carlson 
+* John Stamper 
+* Mary J. Blink 
+* Ted Carmichael 
+
 
 In association with Carnegie Mellon University, Carnegie Learning, and 
 Advanced Distributed Learning.
