@@ -116,7 +116,7 @@ if __name__ == '__main__':
         
         entity = None
         if arguments.entity == 'plugin':
-            entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
+            entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, args = arguments.args)
             entity.start()
         elif arguments.entity == 'tutor':
             entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
