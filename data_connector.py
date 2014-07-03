@@ -31,16 +31,16 @@ class DataShopConnectorTutor(Tutor):
         
         if choice == 0:
             return False
-        if choice == 1:
+        elif choice == 1:
             choice = int(input("Dataset id? "))
             self.send("get_dataset_metadata",{"dataset_id":choice},self.print_response_callback)
             time.sleep(2)
-        if choice == 2:
+        elif choice == 2:
             did = int(input("Dataset id? "))
             sid = int(input("Sample id? "))
             self.send("get_sample_metadata",{"dataset_id":did,"sample_id":sid},self.print_response_callback)
             time.sleep(2)
-        if choice == 3:
+        elif choice == 3:
             did = int(input("Dataset id? "))
             sid = int(input("Sample id?  (optional, -1 for none)"))
             if sid != -1:
@@ -48,7 +48,7 @@ class DataShopConnectorTutor(Tutor):
             else:
                 self.send("get_transactions",{"dataset_id":did},self.print_response_callback)
             time.sleep(2)
-        if choice == 4:
+        elif choice == 4:
             did = int(input("Dataset id? "))
             sid = int(input("Sample id?  (optional, -1 for none)"))
             if sid != -1:
@@ -56,7 +56,7 @@ class DataShopConnectorTutor(Tutor):
             else:
                 self.send("get_student_steps",{"dataset_id":did},self.print_response_callback)
             time.sleep(2)
-        if choice == 5:
+        elif choice == 5:
             did = int(input("Dataset id? "))
             self.send("add_custom_field",{"dataset_id":did},self.print_response_callback)
             time.sleep(2) 

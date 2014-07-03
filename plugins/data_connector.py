@@ -34,10 +34,11 @@ class DataShopConnectorPlugin(Plugin):
         
         path = "/datasets"
         dataset_id = payload['dataset_id']
-        response_to_send = self.datashop_request(str(path)+"/"+str(dataset_id))
+        response_to_send = self.datashop_request("GET",str(path)+"/"+str(dataset_id))
  
-        self.send_response(payload['_message_id'], {
-            'reponse_xml':str(response_to_send.text),       
+        self.send_response(payload['message_id'], {
+            'reponse_xml':str(response_to_send.text),
+            'status_code':str(response_to_send.status_code)
         })
    
     def get_sample_metadata(self,payload):
@@ -47,10 +48,11 @@ class DataShopConnectorPlugin(Plugin):
         sample_id = payload['sample_id']
         path = "/datasets/"+str(dataset_id) + "/samples/" + str(sample_id)
         
-        response_to_send = self.datashop_request(str(path))
+        response_to_send = self.datashop_request("GET",str(path))
  
-        self.send_response(payload['_message_id'], {
-            'reponse_xml':str(response_to_send.text),       
+        self.send_response(payload['message_id'], {
+            'reponse_xml':str(response_to_send.text),
+            'status_code':str(response_to_send.status_code)
         })
     
     def get_transactions(self,payload):
@@ -64,10 +66,11 @@ class DataShopConnectorPlugin(Plugin):
         else:
             path = "/datasets/"+str(dataset_id) + "/transactions"
         
-        response_to_send = self.datashop_request(str(path))
+        response_to_send = self.datashop_request("GET",str(path))
  
-        self.send_response(payload['_message_id'], {
-            'reponse_xml':str(response_to_send.text),       
+        self.send_response(payload['message_id'], {
+            'reponse_xml':str(response_to_send.text),
+            'status_code':str(response_to_send.status_code)
         })
     
     def get_student_steps(self,payload):
@@ -81,10 +84,11 @@ class DataShopConnectorPlugin(Plugin):
         else:
             path = "/datasets/"+str(dataset_id) + "/steps"
         
-        response_to_send = self.datashop_request(str(path))
+        response_to_send = self.datashop_request("GET",str(path))
  
-        self.send_response(payload['_message_id'], {
-            'reponse_xml':str(response_to_send.text),       
+        self.send_response(payload['message_id'], {
+            'reponse_xml':str(response_to_send.text),
+            'status_code':str(response_to_send.status_code)
         })
     
     def add_custom_field(self,payload):
@@ -93,17 +97,18 @@ class DataShopConnectorPlugin(Plugin):
         dataset_id = payload['dataset_id']
         path = "/datasets/"+str(dataset_id) + "/customfields/add"
         
-        response_to_send = self.datashop_request(str(path),{"name":"HPIT Field","description":"A custom field added from HPIT","type":"string","level":"transaction"})
+        response_to_send = self.datashop_request("POST",str(path),data='postData=<?xml version="1.0" encoding="UTF-8"?><pslc_datashop_message><custom_field><name>HPIT Field</name><description>A custom field added by HPIT</description><type>number</type><level>transaction</level></custom_field></pslc_datashop_message>')
  
-        self.send_response(payload['_message_id'], {
-            'reponse_xml':str(response_to_send.text),       
+        self.send_response(payload['message_id'], {
+            'reponse_xml':str(response_to_send.text),
+            'status_code':str(response_to_send.status_code)
         })
         
         
-    def datashop_request(self,path, headers={}):
+    def datashop_request(self,method,path, headers={},data = ""):
         date_string = strftime("%a, %d %b %Y %H:%M:%S", gmtime()) + " GMT"
         
-        encode_string = "GET\n\n\n"+date_string+"\n"+path
+        encode_string = method+"\n\n\n"+date_string+"\n"+path
         
         secret_key = "QsNrGW5mJl55nWgqRe33xSsWSvaWPR1J6tRrwXOc"
         public_key = "8ZCR1X2018MJ1120TW7S"
@@ -119,11 +124,12 @@ class DataShopConnectorPlugin(Plugin):
         headers['date'] = date_string
         headers['authorization'] = "DATASHOP " + public_key +":" + keyhash
         headers['accept'] = "text/xml"
-        
+        if method == "POST":
+            headers["content-type"] = "application/x-www-form-urlencoded;charset=utf-8"
         
         s = Session()
         
-        req = Request("GET","https://pslcdatashop.web.cmu.edu/services"+path,headers=headers)#,data ="here is the data")
+        req = Request(method,"https://pslcdatashop.web.cmu.edu/services"+path,headers=headers,data =data)
        
         prepared_req = s.prepare_request(req)
         
