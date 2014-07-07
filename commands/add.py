@@ -66,7 +66,7 @@ class Command:
         things.append({
             'entity_id': entity_id,
             'api_key': api_key,
-            'type': entity_type,
+            'type': entity_kind,
             'active': False
             })
 

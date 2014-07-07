@@ -6,6 +6,7 @@ class DebugServerSettings:
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
     HPIT_BIND_ADDRESS = HPIT_BIND_IP+":"+HPIT_BIND_PORT
+    VENV_DIRNAME = 'env'
     
     MONGO_DBNAME = 'hpit_development'
     SECRET_KEY = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
@@ -43,6 +44,7 @@ class TestServerSettings:
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
     HPIT_BIND_ADDRESS = HPIT_BIND_IP+":"+HPIT_BIND_PORT
+    VENV_DIRNAME = 'env'
     
     MONGO_DBNAME = 'hpit_unit_test_db'
     SECRET_KEY = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
@@ -77,6 +79,7 @@ class ProductionServerSettings:
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
     HPIT_BIND_ADDRESS = HPIT_BIND_IP+":"+HPIT_BIND_PORT
+    VENV_DIRNAME = 'env'
     
     MONGO_DBNAME = 'hpit_development'
     SECRET_KEY = 'j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+'
