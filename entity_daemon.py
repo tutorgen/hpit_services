@@ -12,16 +12,21 @@ if platform.system() != "Windows":
     from daemonize import Daemonize
     
 #import tutors
-from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
+from tutors import ExampleTutor, KnowledgeTracingTutor
+from tutors import StudentActivityLoggingTutor, ReplayTutor
+
 
 #import plugins
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
+from plugins import StudentActivityLoggingPlugin
 
 random.seed(datetime.now())
 
-tutor_types = ['example', 'knowledge_tracing','replay']
+
+tutor_types = ['example', 'knowledge_tracing', 'activity_logging', 'replay']
+
 
 plugin_types = [
     'example', 
@@ -30,6 +35,7 @@ plugin_types = [
     'student', 
     'problem',
     'problem_step',
+    'activity_logging',
     'data']
 
 subtype_help = "The sub type of entity. tutor=(" + ', '.join(tutor_types) + ") plugin=(" + ', '.join(plugin_types) + ")"
@@ -80,16 +86,13 @@ if __name__ == '__main__':
         raise ValueError("Invalid entity argument:  must be tutor or plugin.")
     
     def main():
-        
         logging.basicConfig(
             filename=logger_path,
             level=logging.DEBUG,
             propagate=False,
             format='%(asctime)s %(levelname)s:----:%(message)s', 
             datefmt='%m/%d/%Y %I:%M:%S %p')
-
         logger = logging.getLogger(__name__)
-
         plugin_classes = {
             'example': ExamplePlugin,
             'knowledge_tracing': KnowledgeTracingPlugin,
@@ -98,22 +101,22 @@ if __name__ == '__main__':
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
+            'activity_logging': StudentActivityLoggingPlugin,
         }
         tutor_classes = {
             'example': ExampleTutor,
             'knowledge_tracing': KnowledgeTracingTutor,
+            'activity_logging': StudentActivityLoggingTutor,
             'replay' : ReplayTutor,
+
         }
-        
         if arguments.entity == 'plugin':
             if entity_subtype not in plugin_classes.keys():
                 raise Exception("Internal Error: Plugin type not supported.")
         elif arguments.entity == 'tutor':
             if entity_subtype not in tutor_classes.keys():
                 raise Exception("Internal Error: Tutor type not supported.")
-
-        logger = logging.getLogger(__name__)
-        
+        #logger = logging.getLogger(__name__)
         entity = None
         if arguments.entity == 'plugin':
             entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
