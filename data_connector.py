@@ -58,7 +58,11 @@ class DataShopConnectorTutor(Tutor):
             time.sleep(2)
         elif choice == 5:
             did = int(input("Dataset id? "))
-            self.send("add_custom_field",{"dataset_id":did},self.print_response_callback)
+            name = input("Custom field name: ")
+            description  = input("Custom field description: ")
+            typ = input("Type? (number, string, date, big) ")
+            
+            self.send("add_custom_field",{"dataset_id":did,"name":name,"description":description,"type":typ},self.print_response_callback)
             time.sleep(2) 
            
         

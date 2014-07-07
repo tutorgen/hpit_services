@@ -95,9 +95,13 @@ class DataShopConnectorPlugin(Plugin):
         self.logger.debug("RECV: add_custom_field with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
+        name = payload['name']
+        description = payload['description']
+        typ = payload['type']
+        
         path = "/datasets/"+str(dataset_id) + "/customfields/add"
         
-        response_to_send = self.datashop_request("POST",str(path),data='postData=<?xml version="1.0" encoding="UTF-8"?><pslc_datashop_message><custom_field><name>HPIT Field</name><description>A custom field added by HPIT</description><type>number</type><level>transaction</level></custom_field></pslc_datashop_message>')
+        response_to_send = self.datashop_request("POST",str(path),data='postData=<?xml version="1.0" encoding="UTF-8"?><pslc_datashop_message><custom_field><name>'+name+'</name><description>'+description+'</description><type>'+typ+'</type><level>transaction</level></custom_field></pslc_datashop_message>')
  
         self.send_response(payload['message_id'], {
             'reponse_xml':str(response_to_send.text),
@@ -110,8 +114,11 @@ class DataShopConnectorPlugin(Plugin):
         
         encode_string = method+"\n\n\n"+date_string+"\n"+path
         
-        secret_key = "QsNrGW5mJl55nWgqRe33xSsWSvaWPR1J6tRrwXOc"
-        public_key = "8ZCR1X2018MJ1120TW7S"
+        #secret_key = "QsNrGW5mJl55nWgqRe33xSsWSvaWPR1J6tRrwXOc"
+        #public_key = "8ZCR1X2018MJ1120TW7S"
+        
+        secret_key = "8woBw0ihGB5z5h7H7w5jPOmoSVfr6BzU6WRGTY33"
+        public_key = "ICGU50AVJHGQIIHOWUXZ"
         
         dig = hmac.new(bytes(secret_key,"utf-8"), msg=bytes(encode_string,"utf-8"), digestmod=hashlib.sha1).digest()
         keyhash = binascii.b2a_base64(dig)
@@ -129,8 +136,10 @@ class DataShopConnectorPlugin(Plugin):
         
         s = Session()
         
-        req = Request(method,"https://pslcdatashop.web.cmu.edu/services"+path,headers=headers,data =data)
-       
+        #req = Request(method,"https://pslcdatashop.web.cmu.edu/services"+path,headers=headers,data =data)
+        
+        req = Request(method,"http://pslc-qa.andrew.cmu.edu/datashop/services"+path,headers=headers,data =data)
+        
         prepared_req = s.prepare_request(req)
         
         response = s.send(prepared_req)
