@@ -102,6 +102,24 @@ Then you can begin installalling HPIT by:
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000. 
 
+#### Optional Installation for Hint Factory Plugin
+
+If you are wanting to use the hint factory plugin you will need to install neo4j graph database,
+the neo4j Gremlin plugin, and the bulbs python package located in the `vendor` directory.
+
+1. Install Neo4j
+    - On Mac OSX: `brew install neo4j`.
+    - On Ubuntu: `sudo apt-get install neo4j`.
+2. Copy the Gremlin plugin into the NEO4J plugin directory. 
+    - On Mac OSX: `sudo unzip vendor/neo4j-gremlin-plugin-2.1-SNAPSHOT-server-plugin.zip -d /usr/local/opt/neo4j/libexec/plugins/gremlin-plugin`
+3. Install bulbs from monkey patched version.
+    1. cd vendor
+    2. tar -xvfz bulbs-0.3.29-20140708
+    3. cd bulbs-0.3.29-20140708
+    4. source $HPIT_DIR/my_enviornment/bin/activate
+    5. python3 setup.py install
+3. Start NEO4J. `neo4j start`
+
 ## The HPIT Adminstration Panel
 
 After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
