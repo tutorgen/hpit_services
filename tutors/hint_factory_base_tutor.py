@@ -2,7 +2,7 @@ import logging
 import json
 from json import JSONEncoder, JSONDecoder
 
-from client import Tutor
+from client import Tutor      
 
 class HintFactoryBaseTutor(Tutor):
     
@@ -28,7 +28,7 @@ class HintFactoryBaseTutor(Tutor):
         self.send("hf_get_hint",{"state":hint_factory_state_encoder.encode(hint_factory_state)},self.get_hint_callback)
         
     def init_problem(self,hint_factory_start_state, hint_factory_goal_state):
-        self.send("hf_get_hint",{"start_state":hint_factory_start_state,"goal_state":hint_factory_goal_state},self.init_problem_callback)
+        self.send("hf_get_hint",{"start_state":hint_factory_start_state,"goal_problem":goal_problem_string},self.init_problem_callback)
         
     def main_callback(self):
         raise NotImplementedError("Please implement a main_callback for your tutor.")
@@ -77,11 +77,61 @@ class HintFactoryState(object):
     def append_step(self,step):
         self.steps.append(step)
         
-    
-    
-if __name__== "__main__":
-    s = HintFactoryState()
-    print(json.dumps(s))
+ 
+ 
+#------------------------------------------------------------------------------
+#  HINT FACTORY TUTOR
+#------------------------------------------------------------------------------
+
+class HintFactoryTutor(HintFactoryBaseTutor):
+        
+    class GameState(object):
+        def __init__(self,problem_text,transition_list):
+            self.possible_transitions = transition_list
+            self.problem = problem_text
+           
+        def __str__(self):
+            output = "\n\n"+self.problem + "\n----------------------\n"
+            count = 1
+            for transition in self.possible_transitions:
+                output += str(count) + ". " + transition[0] + "\n\n"
+                count+=1
+            return output
+            
+            
+
+    def __init__(self, entity_id, api_key, logger, run_once = None, args = None):
+        super().__init__(entity_id,api_key,logger,run_once,args)
+        
+        self.game_states = {
+            "2x + 4 = 12" : HintFactoryTutor.GameState("2x + 4 = 12", [("Subtract 4","2x = 8"),("Subtract 12","2x + 4 - 12 = 0"),("Divide 2","(2x + 4) / 2 = 6")]),
+            "2x = 8" : HintFactoryTutor.GameState("2x = 8",[("Add 4","2x + 4 = 12"),("Subtract 8","2x - 8 = 0"),("Divide 2","x = 4")]),
+        }
+        
+        self.cur_state = self.game_states["2x + 4 = 12"]
+        self.goal = "x = 4"
+        
+    def main_callback(self):
+
+        print(str(self.cur_state))
+        choice = input("Operation: (0 to quit, h for hint) ")
+        
+        if choice == "0":
+            return False
+        elif choice == "h":
+            print ("Hint")
+        else:
+            self.cur_state = self.game_states[self.cur_state.possible_transitions[int(choice)-1][1]]
+        
+        print ("=======================================")
+        
+        if self.cur_state.problem == self.goal:
+            print("You solved the problem!")
+            return false
+            
+        
+        return True
+        
     
     
     

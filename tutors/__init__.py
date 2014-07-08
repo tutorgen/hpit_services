@@ -1,7 +1,7 @@
 from .example import ExampleTutor
 from .knowledge_tracing import KnowledgeTracingTutor
 from .replay import ReplayTutor
-from .hint_factory_base_tutor import HintFactoryBaseTutor, HintFactoryState, HintFactoryStateEncoder, HintFactoryStateDecoder
+from .hint_factory_base_tutor import HintFactoryBaseTutor, HintFactoryState, HintFactoryStateEncoder, HintFactoryStateDecoder, HintFactoryTutor
 
 __all__ = [
     'ExampleTutor', 
@@ -11,4 +11,5 @@ __all__ = [
     'HintFactoryState',
     'HintFactoryStateEncoder',
     'HintFactoryStateDecoder',
+    'HintFactoryTutor',
 ]
