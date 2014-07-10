@@ -169,7 +169,6 @@ class MDPStateNode(Node, StateFinderMixin):
     state_hash = prop.String()
     state_string = prop.String()
     store_count = prop.Integer(default=1)
-    reward = prop.Float(default=0.0)
     bellman_value = prop.Float(default=0.0)
 
 
