@@ -9,6 +9,7 @@ class Tutor(MessageSenderMixin):
     def __init__(self, entity_id, api_key, callback, **kwargs):
         super().__init__()
 
+        self.run_loop = True
         self.entity_id = str(entity_id)
         self.api_key = str(api_key)
         self.callback = callback
@@ -19,6 +20,7 @@ class Tutor(MessageSenderMixin):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+
     def start(self):
         """
         Starts the tutor in event-driven mode.
@@ -26,7 +28,7 @@ class Tutor(MessageSenderMixin):
         self.connect()
         
         try:
-            while True:
+            while self.run_loop:
                 if not self.callback():
                     break;
 
@@ -53,4 +55,10 @@ class Tutor(MessageSenderMixin):
                     print(str(e))
 
         except KeyboardInterrupt:
-            self.disconnect()
+            pass
+
+        self.disconnect()
+
+
+    def stop(self):
+        self.run_loop = False

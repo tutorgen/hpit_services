@@ -49,6 +49,75 @@ main_parser.add_argument('--pid', type=str, help="The location of the pid file."
 main_parser.add_argument('--args', type=str, help = "JSON string of command line arguments.")
 
 
+class MyDaemonize(Daemonize):
+
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, pid=None):
+        self.entity_type = entity_type
+        self.entity_subtype = entity_subtype
+        self.entity_id = entity_id
+        self.api_key = api_key
+
+        super().__init__(app=self.entity_id, pid=pid, action=self._main)
+
+    def _main(self):
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        logger = logging.getLogger(__name__)
+
+        plugin_classes = {
+            'example': ExamplePlugin,
+            'knowledge_tracing': KnowledgeTracingPlugin,
+            'student': StudentManagementPlugin,
+            'skill': SkillManagementPlugin,
+            'problem': ProblemManagementPlugin,
+            'problem_step': ProblemStepManagementPlugin,
+            'data': DataStoragePlugin,
+        }
+        tutor_classes = {
+            'example': ExampleTutor,
+            'knowledge_tracing': KnowledgeTracingTutor,
+            'replay' : ReplayTutor,
+        }
+        
+        if self.entity_type == 'plugin':
+            if self.entity_subtype not in plugin_classes.keys():
+                raise Exception("Internal Error: Plugin type not supported.")
+        elif self.entity_type == 'tutor':
+            if self.entity_subtype not in tutor_classes.keys():
+                raise Exception("Internal Error: Tutor type not supported.")
+
+        logger = logging.getLogger(__name__)
+        
+        entity = None
+        if self.entity_type == 'plugin':
+            self.entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
+            self.entity.start()
+        elif self.entity_type == 'tutor':
+            self.entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
+            self.entity.start()
+        
+        if platform.system() == "Windows": #remove PID if process finishes on its own
+            os.remove(pid)
+
+
+    def start(self):
+        if self.pid == None:
+            self._main()
+        else:
+            super().start()
+
+
+    def sigterm(self, signum, frame):
+        self.entity.stop()
+        self.entity.disconnect()
+        super().sigterm(signum, frame)
+
+
 if __name__ == '__main__':
 
     main_parser.print_help()
@@ -79,55 +148,11 @@ if __name__ == '__main__':
     else:
         raise ValueError("Invalid entity argument:  must be tutor or plugin.")
     
-    def main():
-        
-        logging.basicConfig(
-            filename=logger_path,
-            level=logging.DEBUG,
-            propagate=False,
-            format='%(asctime)s %(levelname)s:----:%(message)s', 
-            datefmt='%m/%d/%Y %I:%M:%S %p')
-
-        logger = logging.getLogger(__name__)
-
-        plugin_classes = {
-            'example': ExamplePlugin,
-            'knowledge_tracing': KnowledgeTracingPlugin,
-            'student': StudentManagementPlugin,
-            'skill': SkillManagementPlugin,
-            'problem': ProblemManagementPlugin,
-            'problem_step': ProblemStepManagementPlugin,
-            'data': DataStoragePlugin,
-        }
-        tutor_classes = {
-            'example': ExampleTutor,
-            'knowledge_tracing': KnowledgeTracingTutor,
-            'replay' : ReplayTutor,
-        }
-        
-        if arguments.entity == 'plugin':
-            if entity_subtype not in plugin_classes.keys():
-                raise Exception("Internal Error: Plugin type not supported.")
-        elif arguments.entity == 'tutor':
-            if entity_subtype not in tutor_classes.keys():
-                raise Exception("Internal Error: Tutor type not supported.")
-
-        logger = logging.getLogger(__name__)
-        
-        entity = None
-        if arguments.entity == 'plugin':
-            entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
-            entity.start()
-        elif arguments.entity == 'tutor':
-            entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
-            entity.start()
-        
-        if platform.system() == "Windows": #remove PID if process finishes on its own
-            os.remove(pid)
-            
     if arguments.daemon:
-        daemon = Daemonize(app=arguments.entity_id, pid=pid, action=main)
+        daemon = MyDaemonize(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, pid)
         daemon.start()
     else:
-        main()
+        #Not passing the PID file causes this to run normally (not daemonized)
+        not_daemon = MyDaemonize(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key)
+        not_daemon.start()
 
