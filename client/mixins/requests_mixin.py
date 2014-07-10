@@ -1,9 +1,19 @@
 import json
 import requests
+import logging
 from urllib.parse import urljoin
 
 from ..exceptions import AuthenticationError, ResourceNotFoundError,InternalServerError
-from ..settings import HPIT_URL_ROOT
+from ..settings import HPIT_URL_ROOT, REQUESTS_LOG_LEVEL
+
+requests_log = logging.getLogger("requests")
+
+if REQUESTS_LOG_LEVEL == 'warning':
+    requests_log.setLevel(logging.WARNING)
+elif REQUESTS_LOG_LEVEL == 'debug':
+    requests_log.setLevel(logging.DEBUG)
+elif REQUESTS_LOG_LEVEL == 'info':
+    requests_log.setLevel(logging.INFO)
 
 JSON_HTTP_HEADERS = {'content-type': 'application/json'}
 
