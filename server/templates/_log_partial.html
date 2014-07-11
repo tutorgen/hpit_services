@@ -6,7 +6,7 @@
     <div class="panel-body panel-code">
         <div class="well code-well">
             {% for entry in logs %}
-                {{log.created_on}} {{log.log_entry}}
+                {{entry.created_on}} {{entry.log_entry}} <br />
             {% endfor %}
         </div>
     </div>
