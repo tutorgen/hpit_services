@@ -133,7 +133,7 @@ def plugin_clear_log(plugin_id):
         multi=True
     )
 
-    return render_template('plugin_detail.html', plugin=plugin, logs=[])
+    return redirect(''.join(['/plugin/', plugin_id, '/detail']))
 
 
 @app.route('/plugin/<plugin_id>/edit', methods=["GET", "POST"])
@@ -280,7 +280,7 @@ def tutor_clear_log(tutor_id):
         multi=True
     )
 
-    return render_template('tutor_detail.html', tutor=tutor, logs=[])
+    return redirect(''.join(['/tutor/', tutor_id, '/detail']))
 
 
 @app.route('/tutor/<tutor_id>/edit', methods=["GET", "POST"])

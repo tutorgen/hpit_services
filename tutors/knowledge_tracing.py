@@ -49,7 +49,7 @@ class KnowledgeTracingTutor(Tutor):
                     'correct': True if 50 < random.randint(0, 100) else False
                     }, self.trace_response_callback)
 
-        sleep(1)
+        sleep(.1)
 
         return True
 
