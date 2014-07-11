@@ -5,6 +5,7 @@ import time
 
 from client import Tutor
 from client.exceptions import ConnectionError
+from client.hint_factory_state import *
 
 class HintFactoryBaseTutor(Tutor):
     
@@ -21,8 +22,8 @@ class HintFactoryBaseTutor(Tutor):
         self.hint_factory_state_encoder = HintFactoryStateEncoder()
             
     def post_state(self,hint_factory_state):
-        #self.send("hf_push_state",{"state":hint_factory_state_encoder.encode(hint_factory_state)},self.post_state_callback)
-        self.post_state_callback({"status":"OK"})
+        self.send("hf_push_state",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.post_state_callback)
+        #self.post_state_callback({"status":"OK"})
         
     def hint_exists(self,hint_factory_state):
         #self.send("hf_hint_exists",{"state":hint_factory_state_encoder.encode(hint_factory_state)},self.hint_exists_callback)
@@ -33,9 +34,9 @@ class HintFactoryBaseTutor(Tutor):
         time.sleep(3)
         self.get_hint_callback({"status":"OK","exists":"YES","hint_text":"This is a hint."})
     
-    def init_problem(self,hint_factory_start_state, hint_factory_goal_state):
-        #self.send("hf_get_hint",{"start_state":hint_factory_start_state,"goal_problem":goal_problem_string},self.init_problem_callback)
-        self.init_problem_callback({"status":"OK"})
+    def init_problem(self,start_problem_string, goal_problem_string):
+        self.send("hf_init_problem",{"start_state":start_problem_string,"goal_problem":goal_problem_string},self.init_problem_callback)
+        #self.init_problem_callback({"status":"OK"})
     
     def main_callback(self):
         raise NotImplementedError("Please implement a main_callback for your tutor.")
@@ -52,7 +53,7 @@ class HintFactoryBaseTutor(Tutor):
     def init_problem_callback(self,response):
         pass
     
-    
+"""    
 class HintFactoryStateEncoder(JSONEncoder):
     def default(self,o):
         return {"steps": o.steps, "problem_state": o.problem_state}
@@ -83,7 +84,7 @@ class HintFactoryState(object):
 
     def append_step(self,step):
         self.steps.append(step)
-        
+"""        
         
 class BadHintFactoryResponseError(Exception):
     """
@@ -126,6 +127,10 @@ class HintFactoryTutor(HintFactoryBaseTutor):
         }
         
         self.cur_state = self.game_states["2x + 4 = 12"]
+        
+        self.hf_state = HintFactoryState()
+        self.hf_state.problem_sate = "2x + 4 = 12"
+        
         self.goal = "x = 4"
         self.hint = None
         self.waiting_for_hint = False
@@ -189,9 +194,9 @@ class HintFactoryTutor(HintFactoryBaseTutor):
                 return True
         
         else:
-            self.hint_exists(self.cur_state)
+            self.hint_exists(self.hf_state)
             time.sleep(1)
-            self.post_state(self.cur_state)
+            self.post_state(self.hf_state)
     
             print(str(self.cur_state))
             if self.exists == True:
@@ -204,10 +209,11 @@ class HintFactoryTutor(HintFactoryBaseTutor):
             elif choice == "h":
                 self.waiting_for_hint = True
                 print("Waiting for hint...")
-                self.get_hint(self.cur_state)
+                self.get_hint(self.hf_state)
                 return True
             else:
                 self.cur_state = self.game_states[self.cur_state.possible_transitions[int(choice)-1][1]]
+                self.hf_state = self.hf_state.append_step(step,self.cur_state.problem)
                 self.exists = False
                 
             print ("=======================================")
