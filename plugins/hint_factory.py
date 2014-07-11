@@ -1,4 +1,4 @@
-from client import Plugin
+#from client import Plugin
 import hashlib
 from itertools import groupby
 
@@ -7,7 +7,7 @@ from bulbs.neo4jserver import Graph
 from bulbs import property as prop
 from bulbs.utils import current_datetime
 
-from client.hint_factory_state import *
+#from client.hint_factory_state import *
 
 class StateFinderMixin:
 
@@ -60,7 +60,7 @@ class StateFinderMixin:
 
     def direct_decendent_matches_state_action(self, state_hash, action_hash):
         edges = self.outE()
-
+        
         for e in edges:
             if e.action_hash == action_hash:
                 node = e.outV()
@@ -197,7 +197,8 @@ class MasterGraph(Graph):
         exists = self.find_problem(start_text, goal_text)
         if exists:
             return exists
-
+        
+        print("here")
         #Create the problem
         new_problem = self.problems.create(start_text=start_text, goal_text=goal_text)
 
@@ -206,18 +207,18 @@ class MasterGraph(Graph):
 
     def find_problem(self, start_text, goal_text):
         nodes = self.problems.index.lookup(start_text=start_text, goal_text=goal_text)
-
         #Only one should exists
         return next(nodes) if nodes else None
 
 
-
+"""
 class HintFactoryPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.db = MasterGraph()
+        self.state = None
 
 
     def post_connect(self):
@@ -231,10 +232,10 @@ class HintFactoryPlugin(Plugin):
 
     #Hint Factory Plugin
     def init_problem_callback(self, message):
-        """
-            problem_text - The text of the problem
-            problem_goal_text - The goal of the problem
-        """
+        #""
+        #    problem_text - The text of the problem
+        #    problem_goal_text - The goal of the problem
+        #""
         self.db.create_problem(message["start_state"],message["goal_problem"])
         self.send_response(message["message_id"],{"status":"OK"})
         
@@ -255,15 +256,18 @@ class HintFactoryPlugin(Plugin):
     def get_hint_callback(self, message):
         self.logger.debug("GET HINT")
         self.logger.debug(message)
-
 """
+
 if __name__ == '__main__':
     db = MasterGraph()
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     problem = db.create_problem('4x-6=10', 'x=4')
+    print(str(problem))
     state = problem.push_state(db, 'addition', '4x-6+6=10+6')
     state = state.push_state(db, 'simplification', '4x=16')
     state = state.push_state(db, 'division', '4x/4=16/4')
     state = state.push_state(db, 'simplification', 'x=4')
     x = 5
-"""
+    print("done")
+    
+

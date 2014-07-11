@@ -213,7 +213,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
                 return True
             else:
                 self.cur_state = self.game_states[self.cur_state.possible_transitions[int(choice)-1][1]]
-                self.hf_state = self.hf_state.append_step(step,self.cur_state.problem)
+                self.hf_state = self.hf_state.append_step(self.cur_state.possible_transitions[int(choice)-1][0],self.cur_state.problem)
                 self.exists = False
                 
             print ("=======================================")
