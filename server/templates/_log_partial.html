@@ -1,0 +1,13 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Logs</h3>
+    </div>
+    
+    <div class="panel-body panel-code">
+        <div class="well code-well">
+            {% for entry in logs %}
+                {{log.created_on}} {{log.log_entry}}
+            {% endfor %}
+        </div>
+    </div>
+</div>

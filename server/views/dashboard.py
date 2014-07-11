@@ -8,6 +8,7 @@ from server.app import ServerApp
 app_instance = ServerApp.get_instance()
 app = app_instance.app
 db = app_instance.db
+mongo = app_instance.mongo
 
 from server.models import Plugin, Tutor
 from server.forms import PluginForm, TutorForm
@@ -94,7 +95,48 @@ def plugin_new():
     return render_template('plugin_new.html', form=plugin_form)
 
 
-@app.route('/plugin/edit/<plugin_id>', methods=["GET", "POST"])
+@app.route('/plugin/<plugin_id>/detail', methods=["GET"])
+@login_required
+def plugin_detail(plugin_id):
+    """
+    SUPPORTS: GET, POST
+    Allows the user to view a plugin's details
+    """
+    plugin = Plugin.query.get(plugin_id)
+
+    if plugin.user != current_user:
+        abort(403)
+
+    log_entries = mongo.db.entity_log.find({
+        'entity_id': plugin.entity_id,
+        'deleted': False
+    })
+
+    return render_template('plugin_detail.html', plugin=plugin, logs=log_entries)
+
+
+@app.route('/plugin/<plugin_id>/log/clear', methods=["GET"])
+@login_required
+def plugin_clear_log(plugin_id):
+    """
+    SUPPORTS: GET, POST
+    Allows the user to view a plugin's details
+    """
+    plugin = Plugin.query.get(plugin_id)
+
+    if plugin.user != current_user:
+        abort(403)
+
+    mongo.db.entity_log.update(
+        {'entity_id': plugin.entity_id, 'deleted': False},
+        {"$set": {'deleted':True}}, 
+        multi=True
+    )
+
+    return render_template('plugin_detail.html', plugin=plugin, logs=[])
+
+
+@app.route('/plugin/<plugin_id>/edit', methods=["GET", "POST"])
 @login_required
 def plugin_edit(plugin_id):
     """
@@ -121,7 +163,7 @@ def plugin_edit(plugin_id):
     return render_template('plugin_edit.html', form=plugin_form)
 
 
-@app.route('/plugin/genkey/<plugin_id>', methods=["GET"])
+@app.route('/plugin/<plugin_id>/genkey', methods=["GET"])
 @login_required
 def plugin_genkey(plugin_id):
     """
@@ -142,7 +184,7 @@ def plugin_genkey(plugin_id):
     return render_template('plugin_key.html', plugin=plugin, key=key)
 
 
-@app.route('/plugin/delete/<plugin_id>', methods=["GET"])
+@app.route('/plugin/<plugin_id>/delete', methods=["GET"])
 @login_required
 def plugin_delete(plugin_id):
     """
@@ -200,7 +242,48 @@ def tutor_new():
     return render_template('tutor_new.html', form=tutor_form)
 
 
-@app.route('/tutor/edit/<tutor_id>', methods=["GET", "POST"])
+@app.route('/tutor/<tutor_id>/detail', methods=["GET"])
+@login_required
+def tutor_detail(tutor_id):
+    """
+    SUPPORTS: GET, POST
+    Allows the user to view a tutor's details
+    """
+    tutor = Tutor.query.get(tutor_id)
+
+    if tutor.user != current_user:
+        abort(403)
+
+    log_entries = mongo.db.entity_log.find({
+        'entity_id': tutor.entity_id,
+        'deleted': False
+    })
+
+    return render_template('tutor_detail.html', tutor=tutor, logs=log_entries)
+
+    
+@app.route('/tutor/<tutor_id>/log/clear', methods=["GET"])
+@login_required
+def tutor_clear_log(tutor_id):
+    """
+    SUPPORTS: GET, POST
+    Allows the user to clear the tutor's logs
+    """
+    tutor = Tutor.query.get(tutor_id)
+
+    if tutor.user != current_user:
+        abort(403)
+
+    mongo.db.entity_log.update(
+        {'entity_id': tutor.entity_id, 'deleted': False},
+        {"$set": {'deleted':True}}, 
+        multi=True
+    )
+
+    return render_template('tutor_detail.html', tutor=tutor, logs=[])
+
+
+@app.route('/tutor/<tutor_id>/edit', methods=["GET", "POST"])
 @login_required
 def tutor_edit(tutor_id):
     """
@@ -227,7 +310,7 @@ def tutor_edit(tutor_id):
     return render_template('tutor_edit.html', form=tutor_form)
 
 
-@app.route('/tutor/genkey/<tutor_id>', methods=["GET"])
+@app.route('/tutor/<tutor_id>/genkey', methods=["GET"])
 @login_required
 def tutor_genkey(tutor_id):
     """
@@ -248,9 +331,7 @@ def tutor_genkey(tutor_id):
     return render_template('tutor_key.html', tutor=tutor, key=key)
 
 
-
-
-@app.route('/tutor/delete/<tutor_id>', methods=["GET"])
+@app.route('/tutor/<tutor_id>/delete', methods=["GET"])
 @login_required
 def tutor_delete(tutor_id):
     """

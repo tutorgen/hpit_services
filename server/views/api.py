@@ -195,7 +195,7 @@ def log():
     mongo.db.entity_log.insert({
         'entity_id': session['entity_id'],
         'log_entry': request.json['log_entry'],
-        'create_on': datetime.now().isoformat(),
+        'created_on': datetime.now().isoformat(),
         'deleted': False
     })
 

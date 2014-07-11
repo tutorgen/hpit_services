@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import random
+import signal
 import uuid
 from datetime import datetime
 from time import sleep
@@ -93,29 +94,24 @@ class MyDaemonize(Daemonize):
 
         logger = logging.getLogger(__name__)
         
-        entity = None
+        self.entity = None
         if self.entity_type == 'plugin':
             self.entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
-            self.entity.start()
         elif self.entity_type == 'tutor':
             self.entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
+
+        if self.entity:
+            signal.signal(signal.SIGTERM, self.entity.disconnect)
             self.entity.start()
-        
+
         if platform.system() == "Windows": #remove PID if process finishes on its own
             os.remove(pid)
-
 
     def start(self):
         if self.pid == None:
             self._main()
         else:
             super().start()
-
-
-    def sigterm(self, signum, frame):
-        self.entity.stop()
-        self.entity.disconnect()
-        super().sigterm(signum, frame)
 
 
 if __name__ == '__main__':
