@@ -59,29 +59,40 @@ class StateFinderMixin:
 
 
     def direct_decendent_matches_state_action(self, state_hash, action_hash):
+        """
+        Check if there is a direct descendent matching the state hash and action hash provided.
+        """
+        
         edges = self.outE()
         
-        for e in edges:
-            if e.action_hash == action_hash:
-                node = e.outV()
-                if node.state_hash == state_hash:
-                    return (node, e)
+        #TODO: look for a more concise/efficient way of doing this
+        if edges:
+            for e in edges:
+                if e.action_hash == action_hash:
+                    node = e.inV()
+                    if node:
+                        if node.state_hash == state_hash:
+                            return (node, e)
 
-        return None
+        return (None,None)
 
 
     def direct_decendent_matches_state(self, state_hash):
+        """
+        Check if there is a direct descendent matching the state.
+        """
         nodes = self.outV()
-
-        for node in nodes:
-            if node.state_hash == state_hash:
-                return node
+        
+        if nodes:
+            for node in nodes:
+                if node.state_hash == state_hash:
+                    return node
 
         return None
 
         
     def update_action_probabilites(self, action):
-        siblings = [(s.outV().store_count, s) for s in action.inV().outE() if s.action_hash == action.action_hash]
+        siblings = [(s.inV().store_count, s) for s in action.outV().outE() if s.action_hash == action.action_hash]
         total_store_count = sum(map(lambda s: s[0], siblings))
 
         if total_store_count <= 0:
@@ -261,8 +272,7 @@ class HintFactoryPlugin(Plugin):
 if __name__ == '__main__':
     db = MasterGraph()
     #import pdb; pdb.set_trace()
-    problem = db.create_problem('4x-6=10', 'x=4')
-    print(str(problem))
+    problem = db.create_problem('2x+4=12', 'x=4')
     state = problem.push_state(db, 'addition', '4x-6+6=10+6')
     state = state.push_state(db, 'simplification', '4x=16')
     state = state.push_state(db, 'division', '4x/4=16/4')
