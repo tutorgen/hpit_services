@@ -50,7 +50,7 @@ main_parser.add_argument('--pid', type=str, help="The location of the pid file."
 main_parser.add_argument('--args', type=str, help = "JSON string of command line arguments.")
 
 
-class MyDaemonize(Daemonize):
+class MyDaemonize:
 
     def __init__(self, entity_type, entity_subtype, entity_id, api_key, pid=None):
         self.entity_type = entity_type
@@ -58,7 +58,10 @@ class MyDaemonize(Daemonize):
         self.entity_id = entity_id
         self.api_key = api_key
 
-        super().__init__(app=self.entity_id, pid=pid, action=self._main)
+        if platform.system() != "Windows":
+            self.daemon = Daemonize(app=self.entity_id, pid=pid, action=self._main)
+        else:
+            self.daemon = None
 
     def _main(self):
         logging.basicConfig(
@@ -108,10 +111,10 @@ class MyDaemonize(Daemonize):
             os.remove(pid)
 
     def start(self):
-        if self.pid == None:
+        if self.pid == None or platform.system() == "Windows":
             self._main()
         else:
-            super().start()
+            self.daemon.start()
 
 
 if __name__ == '__main__':
