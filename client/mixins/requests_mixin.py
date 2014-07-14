@@ -3,7 +3,7 @@ import requests
 import logging
 from urllib.parse import urljoin
 
-from ..exceptions import AuthenticationError, ResourceNotFoundError,InternalServerError
+from ..exceptions import AuthenticationError, ResourceNotFoundError, InternalServerError, ConnectionError
 from ..settings import HPIT_URL_ROOT, REQUESTS_LOG_LEVEL
 
 requests_log = logging.getLogger("requests")
@@ -89,10 +89,12 @@ class RequestsMixin:
 
             except requests.exceptions.ConnectionError as e:
                 if failure_count == 3:
-                    raise e
+                    raise ConnectionError("Could not connect to server. Tried 3 times.")
 
                 failure_count += 1
                 continue
+            except Exception:
+                raise ConnectionError("The remote address is bogus.")
         
         if response.status_code == 200:
             return response
