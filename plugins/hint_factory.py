@@ -1,4 +1,3 @@
-#from client import Plugin
 import hashlib
 from itertools import groupby
 
@@ -7,7 +6,8 @@ from bulbs.neo4jserver import Graph
 from bulbs import property as prop
 from bulbs.utils import current_datetime
 
-#from client.hint_factory_state import *
+from client import Plugin
+from client.hint_factory_state import *
 
 class StateFinderMixin:
 
@@ -20,6 +20,8 @@ class StateFinderMixin:
             graph - the graph that this node is part of
             action_string - a string representation of the action taken
             problem_string - a string representation of the problem at it's current state
+        """
+        
         """
         #Check if this state exists directly off this node
         problem_hash = self.hash_string(problem_string)
@@ -56,7 +58,55 @@ class StateFinderMixin:
         self.update_action_probabilites(new_action)
 
         return new_state
-
+        """
+        return_state = None
+        
+        #check if state already exists
+        problem_hash = self.hash_string(problem_string)
+        action_hash = self.hash_string(action_string)
+        
+        states = graph.states.index.lookup(state_hash=problem_hash)
+        if states != None:
+            to_state = next(states)
+            #state exists, attach action to it.
+            connections = self.outE('actions')
+            if connections:
+                for connection in connections:
+                    if connection.action_hash == action_hash:
+                        to_state.store_count += 1
+                        to_state.save()
+                        self.update_action_probabilities(connection)
+                        connection.save()
+                        break
+                    else:
+                        connection = graph.actions.create(self,to_state)
+                        connection.action_string = action_string
+                        connection.action_hash = action_hash
+                        connection.save()
+            else:
+                connection = graph.actions.create(self,to_state)
+                connection.action_string = action_string
+                connection.action_hash = action_hash
+                connection.save()
+               
+            return_state = to_state
+            
+        else:
+            #state does not exist, create a state and connecting action
+            new_state = graph.states.create(state_string=problem_string, state_hash=problem_hash)
+            new_action = graph.actions.create(self, new_state)
+            new_action.action_string = action_string
+            new_action.action_hash = action_hash
+            self.update_action_probabilites(new_action)
+            new_state.save()
+            new_action.save()
+            return_state = new_state   
+            
+        if return_state == None:
+            raise Exception("Something went wrong when pushing a state...")
+        else:
+            return return_state
+       
 
     def direct_decendent_matches_state_action(self, state_hash, action_hash):
         """
@@ -98,7 +148,10 @@ class StateFinderMixin:
         if total_store_count <= 0:
             total_store_count = 1
 
+        print(action.action_string)
+        
         for store_count, s in siblings:
+            print(str(s.get_bundle()))
             s.probability = store_count / total_store_count
             s.save()
 
@@ -221,8 +274,6 @@ class MasterGraph(Graph):
         #Only one should exists
         return next(nodes) if nodes else None
 
-
-"""
 class HintFactoryPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
@@ -247,18 +298,21 @@ class HintFactoryPlugin(Plugin):
         #    problem_text - The text of the problem
         #    problem_goal_text - The goal of the problem
         #""
-        self.db.create_problem(message["start_state"],message["goal_problem"])
+        self.state = self.db.create_problem(message["start_state"],message["goal_problem"])
         self.send_response(message["message_id"],{"status":"OK"})
         
         self.logger.debug("INIT PROBLEM")
         self.logger.debug(message)
 
     def push_state_callback(self, message):
-         
-        #incoming_state = message["state"]
-         
         self.logger.debug("PUSH PROBLEM STATE")
         self.logger.debug(message)
+        self.logger.debug(message["state"])
+            
+        incoming_state = HintFactoryStateDecoder().decode(message["state"])
+        self.state = self.state.push_state(self.db,incoming_state.steps[-1],incoming_state.problem_state)
+         
+        
 
     def hint_exists_callback(self, message):
         self.logger.debug("HINT EXISTS")
@@ -267,8 +321,8 @@ class HintFactoryPlugin(Plugin):
     def get_hint_callback(self, message):
         self.logger.debug("GET HINT")
         self.logger.debug(message)
+        
 """
-
 if __name__ == '__main__':
     db = MasterGraph()
     #import pdb; pdb.set_trace()
@@ -279,5 +333,5 @@ if __name__ == '__main__':
     state = state.push_state(db, 'simplification', 'x=4')
     x = 5
     print("done")
-    
+""" 
 

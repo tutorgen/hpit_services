@@ -22,6 +22,7 @@ class HintFactoryBaseTutor(Tutor):
         self.hint_factory_state_encoder = HintFactoryStateEncoder()
             
     def post_state(self,hint_factory_state):
+        print(str(hint_factory_state))
         self.send("hf_push_state",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.post_state_callback)
         #self.post_state_callback({"status":"OK"})
         
@@ -51,40 +52,7 @@ class HintFactoryBaseTutor(Tutor):
         pass
     
     def init_problem_callback(self,response):
-        pass
-    
-"""    
-class HintFactoryStateEncoder(JSONEncoder):
-    def default(self,o):
-        return {"steps": o.steps, "problem_state": o.problem_state}
-        
-class HintFactoryStateDecoder():
-    def decode(self, json):
-        state_object = JSONDecoder(object_hook = self.decode_hook).decode(json)
-        return state_object
-        
-    def decode_hook(self,json):
-        new_state  = HintFactoryState()
-        try:
-            new_state.steps = json["steps"]
-            new_state.problem_state = json["problem_state"]
-        except KeyError:
-            print("The json object does not conform to expected HintFactoryState format")
-            raise
-            
-        return new_state
-
-class HintFactoryState(object):
-    def __init__(self):
-        self.steps = []
-        self.problem_state = ""
-    
-    def __str__(self):
-        return "HintFactoryState: " + str(self.steps) + " " + str(self.problem_state)
-
-    def append_step(self,step):
-        self.steps.append(step)
-"""        
+        pass    
         
 class BadHintFactoryResponseError(Exception):
     """
@@ -129,7 +97,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
         self.cur_state = self.game_states["2x + 4 = 12"]
         
         self.hf_state = HintFactoryState()
-        self.hf_state.problem_sate = "2x + 4 = 12"
+        self.hf_state.problem_state = "2x + 4 = 12"
         
         self.goal = "x = 4"
         self.hint = None
@@ -196,7 +164,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
         else:
             self.hint_exists(self.hf_state)
             time.sleep(1)
-            self.post_state(self.hf_state)
+            
     
             print(str(self.cur_state))
             if self.exists == True:
@@ -212,8 +180,10 @@ class HintFactoryTutor(HintFactoryBaseTutor):
                 self.get_hint(self.hf_state)
                 return True
             else:
+                step = self.cur_state.possible_transitions[int(choice)-1][0]
                 self.cur_state = self.game_states[self.cur_state.possible_transitions[int(choice)-1][1]]
-                self.hf_state = self.hf_state.append_step(self.cur_state.possible_transitions[int(choice)-1][0],self.cur_state.problem)
+                self.hf_state.append_step(step,self.cur_state.problem)
+                self.post_state(self.hf_state)
                 self.exists = False
                 
             print ("=======================================")

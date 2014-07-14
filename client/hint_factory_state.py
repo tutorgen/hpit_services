@@ -32,3 +32,17 @@ class HintFactoryState(object):
     def append_step(self,step,problem):
         self.steps.append(step)
         self.problem_state = problem
+        
+        
+if __name__ == "__main__":
+    s = HintFactoryState()
+    s.steps.append("step1")
+    s.steps.append("step2")
+    s.problem_state = "problem string"
+    
+    j = HintFactoryStateEncoder().encode(s)
+    print(str(j))
+    
+    s = HintFactoryStateDecoder().decode(j)
+    
+    print(str(s))
