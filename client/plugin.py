@@ -1,5 +1,4 @@
 import time
-import signal
 from urllib.parse import urljoin
 
 from .mixins import MessageSenderMixin
