@@ -57,6 +57,7 @@ class MyDaemonize:
         self.entity_subtype = entity_subtype
         self.entity_id = entity_id
         self.api_key = api_key
+        self.pid = pid
 
         if platform.system() != "Windows":
             self.daemon = Daemonize(app=self.entity_id, pid=pid, action=self._main)
