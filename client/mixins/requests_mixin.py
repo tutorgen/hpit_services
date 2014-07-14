@@ -1,9 +1,19 @@
 import json
 import requests
+import logging
 from urllib.parse import urljoin
 
 from ..exceptions import AuthenticationError, ResourceNotFoundError,InternalServerError
-from ..settings import HPIT_URL_ROOT
+from ..settings import HPIT_URL_ROOT, REQUESTS_LOG_LEVEL
+
+requests_log = logging.getLogger("requests")
+
+if REQUESTS_LOG_LEVEL == 'warning':
+    requests_log.setLevel(logging.WARNING)
+elif REQUESTS_LOG_LEVEL == 'debug':
+    requests_log.setLevel(logging.DEBUG)
+elif REQUESTS_LOG_LEVEL == 'info':
+    requests_log.setLevel(logging.INFO)
 
 JSON_HTTP_HEADERS = {'content-type': 'application/json'}
 
@@ -68,10 +78,21 @@ class RequestsMixin:
         Returns: requests.Response : class - The response from HPIT. Normally a 200:OK.
         """
 
-        if data:
-            response = self.session.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
-        else:
-            response = self.session.post(url)
+        failure_count = 0
+        while failure_count < 3:
+            try:
+                if data:
+                    response = self.session.post(url, data=json.dumps(data), headers=JSON_HTTP_HEADERS)
+                else:
+                    response = self.session.post(url)
+                break
+
+            except requests.exceptions.ConnectionError as e:
+                if failure_count == 3:
+                    raise e
+
+                failure_count += 1
+                continue
         
         if response.status_code == 200:
             return response
@@ -82,6 +103,7 @@ class RequestsMixin:
         elif response.status_code == 500:
             raise InternalServerError("Internal server error")
 
+
     def _get_data(self, url):
         """
         Gets arbitrary data from the HPIT server. This is mainly a thin
@@ -89,7 +111,18 @@ class RequestsMixin:
 
         Returns: dict() - A Python dictionary representing the JSON recieved in the request.
         """
-        response = self.session.get(url)
+        failure_count = 0
+        while failure_count < 3:
+            try:
+                response = self.session.get(url)
+                break
+
+            except requests.exceptions.ConnectionError as e:
+                if failure_count == 3:
+                    raise e
+
+                failure_count += 1
+                continue
 
         if response.status_code == 200:
             return response.json()
@@ -99,6 +132,16 @@ class RequestsMixin:
             raise ResourceNotFoundError("Requested resource not found")
         elif response.status_code == 500:
             raise InternalServerError("Internal server error")
+
+
+    def send_log_entry(self, text):
+        """
+        Send a log entry to the HPIT server.
+        """
+        self._post_data(
+            urljoin(HPIT_URL_ROOT, "/log"), 
+            data={'log_entry':text}
+        )
 
 
     def _add_hooks(self, *hooks):

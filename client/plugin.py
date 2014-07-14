@@ -9,6 +9,7 @@ class Plugin(MessageSenderMixin):
     def __init__(self, entity_id, api_key, wildcard_callback=None):
         super().__init__()
 
+        self.run_loop = True
         self.entity_id = str(entity_id)
         self.api_key = str(api_key)
         self.wildcard_callback = wildcard_callback
@@ -157,7 +158,7 @@ class Plugin(MessageSenderMixin):
         self.list_subscriptions()
 
         try:
-            while True:
+            while self.run_loop:
 
                 #A better timer
                 cur_time = time.time() * 1000
@@ -201,9 +202,13 @@ class Plugin(MessageSenderMixin):
                     break;
 
         except KeyboardInterrupt:
-            self.disconnect()
+            pass
 
         self.disconnect()
+
+
+    def stop(self):
+        self.run_loop = False
 
 
     def send_response(self, message_id, payload):

@@ -49,12 +49,14 @@ class KnowledgeTracingTutor(Tutor):
                     'correct': True if 50 < random.randint(0, 100) else False
                     }, self.trace_response_callback)
 
-        sleep(1)
+        sleep(.1)
 
         return True
 
     def trace_response_callback(self, response):
+        self.send_log_entry("RECV: kt_trace response recieved. " + str(response))
         self.logger.debug("RECV: kt_trace response recieved. " + str(response))
 
     def initial_response_callback(self, response):
+        self.send_log_entry("RECV: kt_set_initial response recieved. " + str(response))
         self.logger.debug("RECV: kt_set_initial response recieved. " + str(response))

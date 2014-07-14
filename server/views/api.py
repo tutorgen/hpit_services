@@ -140,6 +140,9 @@ def disconnect():
         if x not in request.json:
             return bad_parameter_response(x)
 
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
     if session['entity_id'] != request.json['entity_id']:
         return auth_failed_response()
 
@@ -163,6 +166,89 @@ def disconnect():
     db.session.commit()
 
     session.clear()
+
+    return ok_response()
+
+
+@csrf.exempt
+@app.route("/log", methods=["POST"])
+def log():
+    """
+    SUPPORTS: POST
+
+    Stores a string as a log entry agains't the connected tutor or plugin.
+
+    Accepts: JSON
+        - log_entry - the text to log
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the entity stored in the session.
+        200:OK      - Added the log entry
+    """
+    if 'log_entry' not in request.json:
+        return bad_parameter_response()
+
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    mongo.db.entity_log.insert({
+        'entity_id': session['entity_id'],
+        'log_entry': request.json['log_entry'],
+        'created_on': datetime.now().isoformat(),
+        'deleted': False
+    })
+
+    return ok_response()
+
+
+@csrf.exempt
+@app.route("/log/list", methods=["GET"])
+def log_list():
+    """
+    SUPPORTS: GET
+
+    Returns a list of strings that are things that were logged.
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the entity stored in the session.
+        200:JSON    - A list of strings.
+    """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    log_entries = mongo.db.entity_log.find({
+        'entity_id': session['entity_id'],
+        'deleted': False
+    })
+
+    result = [_map_mongo_document(t) for t in log_entries]
+
+    return jsonify({'log': result})
+
+
+@csrf.exempt
+@app.route("/log/clear", methods=["GET"])
+def log_clear():
+    """
+    SUPPORTS: GET
+
+    Clears all the log entries for this entity.
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        404         - Could not find the entity stored in the session.
+        200:OK      - The log list was cleared.
+    """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    mongo.db.entity_log.update(
+        {'entity_id': session['entity_id'], 'deleted': False},
+        {"$set": {'deleted':True}}, 
+        multi=True
+    )
 
     return ok_response()
 
