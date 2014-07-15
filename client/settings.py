@@ -1,2 +1,0 @@
-HPIT_URL_ROOT = 'http://23.239.14.159:80'
-REQUESTS_LOG_LEVEL = 'debug'
