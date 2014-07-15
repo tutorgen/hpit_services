@@ -1,11 +1,9 @@
-import sure
-import pytest
 import httpretty
-import requests
 from unittest.mock import *
 
-from client import Plugin
-from client.settings import HPIT_URL_ROOT
+from hpitclient.settings import HpitClientSettings
+
+HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
 
 from plugins import ExamplePlugin
 
