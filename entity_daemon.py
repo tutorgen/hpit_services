@@ -11,6 +11,10 @@ import sys
 import platform
 if platform.system() != "Windows":
     from daemonize import Daemonize
+
+from hpitclient.settings import HpitClientSettings
+settings = HpitClientSettings.settings()
+settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
     
 #import tutors
 from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor

@@ -1,4 +1,4 @@
-from client import Plugin
+from hpitclient import Plugin
 
 class ExamplePlugin(Plugin):
 

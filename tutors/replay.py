@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import pytz
 
-from client import Tutor
+from hpitclient import Tutor
 
 class ReplayTutor(Tutor):
     def __init__(self, entity_id, api_key, logger, run_once=None, args=None):
