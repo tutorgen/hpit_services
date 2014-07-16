@@ -5,8 +5,10 @@ import requests
 from unittest.mock import *
 
 import logging
-from client import Tutor
-from client.settings import HPIT_URL_ROOT
+from hpitclient import Tutor
+from hpitclient.settings import HpitClientSettings
+
+HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
 import random
 
 from tutors import ExampleTutor

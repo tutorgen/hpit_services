@@ -5,12 +5,14 @@ import random
 import signal
 import uuid
 from datetime import datetime
-from time import sleep
-import sys
 
 import platform
 if platform.system() != "Windows":
     from daemonize import Daemonize
+
+from hpitclient.settings import HpitClientSettings
+settings = HpitClientSettings.settings()
+settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
     
 #import tutors
 from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
@@ -50,30 +52,19 @@ main_parser.add_argument('--pid', type=str, help="The location of the pid file."
 main_parser.add_argument('--args', type=str, help = "JSON string of command line arguments.")
 
 
-class MyDaemonize:
+class BaseDaemon:
 
-    def __init__(self, entity_type, entity_subtype, entity_id, api_key, pid=None):
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, run_once, args, pid):
         self.entity_type = entity_type
         self.entity_subtype = entity_subtype
         self.entity_id = entity_id
         self.api_key = api_key
+        self.run_once = run_once
+        self.args = args
         self.pid = pid
 
-        if platform.system() != "Windows":
-            self.daemon = Daemonize(app=self.entity_id, pid=pid, action=self._main)
-        else:
-            self.daemon = None
 
-    def _main(self):
-        logging.basicConfig(
-            filename=logger_path,
-            level=logging.DEBUG,
-            propagate=False,
-            format='%(asctime)s %(levelname)s:----:%(message)s', 
-            datefmt='%m/%d/%Y %I:%M:%S %p')
-
-        logger = logging.getLogger(__name__)
-
+    def get_entity_class(self):
         plugin_classes = {
             'example': ExamplePlugin,
             'knowledge_tracing': KnowledgeTracingPlugin,
@@ -96,26 +87,69 @@ class MyDaemonize:
             if self.entity_subtype not in tutor_classes.keys():
                 raise Exception("Internal Error: Tutor type not supported.")
 
-        logger = logging.getLogger(__name__)
-        
-        self.entity = None
+        entity = None
         if self.entity_type == 'plugin':
-            self.entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger, args = arguments.args)
+            entity = plugin_classes[entity_subtype](self.entity_id, self.api_key, self.logger, args=self.args)
         elif self.entity_type == 'tutor':
-            self.entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
+            entity = tutor_classes[entity_subtype](self.entity_id, self.api_key, logger=self.logger, run_once=self.run_once, args=self.args)
+
+        return entity
+
+
+class PosixDaemon(BaseDaemon):
+
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, run_once=False, args=None, pid=None):
+        super().__init__(entity_type, entity_subtype, entity_id, api_key, run_once, args, pid)
+
+    def _main(self):
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        self.logger = logging.getLogger(__name__)
+
+        self.entity = self.get_entity_class()
 
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)
             self.entity.start()
 
-        if platform.system() == "Windows": #remove PID if process finishes on its own
-            os.remove(pid)
-
     def start(self):
-        if self.pid == None or platform.system() == "Windows":
+        if not self.pid:
             self._main()
         else:
-            self.daemon.start()
+            daemon = Daemonize(app=self.entity_id, pid=self.pid, action=self._main)
+            daemon.start()
+
+
+class WindowsDaemon(BaseDaemon):
+
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, run_once=False, args=None, pid=None):
+        super().__init__(entity_type, entity_subtype, entity_id, api_key, run_once, args, pid)
+
+    def _main(self):
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        self.logger = logging.getLogger(__name__)
+
+        self.entity = self.get_entity_class()
+        
+        if self.entity:
+            signal.signal(signal.SIGTERM, self.entity.disconnect)
+            self.entity.start()
+
+        os.remove(pid)
+
+    def start(self):
+        self._main()
 
 
 if __name__ == '__main__':
@@ -133,10 +167,6 @@ if __name__ == '__main__':
         if not os.path.isabs(pid):
             pid = os.path.join(os.getcwd(), pid)
 
-    run_once = False
-    if arguments.once:
-        run_once = True
-
     entity_subtype = arguments.type
     
     if arguments.entity == 'plugin':
@@ -147,12 +177,15 @@ if __name__ == '__main__':
             raise ValueError("Invalid Example Tutor Type. Choices are: " + repr(tutor_types))
     else:
         raise ValueError("Invalid entity argument:  must be tutor or plugin.")
-    
-    if arguments.daemon:
-        daemon = MyDaemonize(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, pid)
+
+    if platform.system() == "Windows":
+        daemon = WindowsDaemon(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, arguments.once, arguments.args, pid)
+        daemon.start()
+    elif arguments.daemon:
+        daemon = PosixDaemon(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, arguments.once, arguments.args, pid)
         daemon.start()
     else:
         #Not passing the PID file causes this to run normally (not daemonized)
-        not_daemon = MyDaemonize(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key)
+        not_daemon = PosixDaemon(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, arguments.once, arguments.args)
         not_daemon.start()
 

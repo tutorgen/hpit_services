@@ -8,7 +8,7 @@ from time import sleep
 import json
 import sys
 
-from client import Tutor
+from hpitclient import Tutor
 
 class KnowledgeTracingTutor(Tutor):
     def __init__(self, entity_id, api_key, logger, run_once=None, args = None):
