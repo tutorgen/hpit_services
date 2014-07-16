@@ -1,287 +1,143 @@
 import hashlib
 from itertools import groupby
+import sys
 
 from bulbs.model import Node, Relationship
 from bulbs.neo4jserver import Graph
 from bulbs import property as prop
 from bulbs.utils import current_datetime
 
-from client import Plugin
-from client.hint_factory_state import *
+#from client import Plugin
+#from client.hint_factory_state import *
 
-class StateFinderMixin:
-
-    def hash_string(self, string):
-        return hashlib.sha256(bytes(string.encode('utf-8'))).hexdigest()
+from py2neo import neo4j
 
 
-    def push_state(self, graph, action_string, problem_string):
-        """
-            graph - the graph that this node is part of
-            action_string - a string representation of the action taken
-            problem_string - a string representation of the problem at it's current state
-        """
-        
-        """
-        #Check if this state exists directly off this node
-        problem_hash = self.hash_string(problem_string)
-        action_hash = self.hash_string(action_string)
-
-        #Does a direct decendent match the state and action?
-        state, action = self.direct_decendent_matches_state_action(problem_hash, action_hash)
-
-        if state:
-            state.store_count = state.store_count + 1
-            state.save()
-            self.update_action_probabilites(action)
-            return state
-
-        #Does a direct decendent match the state but not the action?
-        state = self.direct_decendent_matches_state(problem_hash)
-
-        if state:
-            new_action = graph.actions.create(self, state)
-            new_action.action_string = action_string
-            new_action.action_hash = action_hash
-            new_action.save()
-            self.update_action_probabilites(new_action)
-            return state
-
-        #No decendent state - Add new state and action to connect it.
-        new_state = graph.states.create(state_string=problem_string, state_hash=problem_hash)
-
-        new_action = graph.actions.create(self, new_state)
-        new_action.action_string = action_string
-        new_action.action_hash = action_hash
-        new_action.save()
-
-        self.update_action_probabilites(new_action)
-
-        return new_state
-        """
-        return_state = None
-        
-        #check if state already exists
-        problem_hash = self.hash_string(problem_string)
-        action_hash = self.hash_string(action_string)
-        
-        states = graph.states.index.lookup(state_hash=problem_hash)
-        if states != None:
-            to_state = next(states)
-            #state exists, attach action to it.
-            connections = self.outE('actions')
-            if connections:
-                for connection in connections:
-                    if connection.action_hash == action_hash:
-                        to_state.store_count += 1
-                        to_state.save()
-                        self.update_action_probabilities(connection)
-                        connection.save()
-                        break
-                    else:
-                        connection = graph.actions.create(self,to_state)
-                        connection.action_string = action_string
-                        connection.action_hash = action_hash
-                        connection.save()
-            else:
-                connection = graph.actions.create(self,to_state)
-                connection.action_string = action_string
-                connection.action_hash = action_hash
-                connection.save()
-               
-            return_state = to_state
-            
-        else:
-            #state does not exist, create a state and connecting action
-            new_state = graph.states.create(state_string=problem_string, state_hash=problem_hash)
-            new_action = graph.actions.create(self, new_state)
-            new_action.action_string = action_string
-            new_action.action_hash = action_hash
-            self.update_action_probabilites(new_action)
-            new_state.save()
-            new_action.save()
-            return_state = new_state   
-            
-        if return_state == None:
-            raise Exception("Something went wrong when pushing a state...")
-        else:
-            return return_state
-       
-
-    def direct_decendent_matches_state_action(self, state_hash, action_hash):
-        """
-        Check if there is a direct descendent matching the state hash and action hash provided.
-        """
-        
-        edges = self.outE()
-        
-        #TODO: look for a more concise/efficient way of doing this
-        if edges:
-            for e in edges:
-                if e.action_hash == action_hash:
-                    node = e.inV()
-                    if node:
-                        if node.state_hash == state_hash:
-                            return (node, e)
-
-        return (None,None)
-
-
-    def direct_decendent_matches_state(self, state_hash):
-        """
-        Check if there is a direct descendent matching the state.
-        """
-        nodes = self.outV()
-        
-        if nodes:
-            for node in nodes:
-                if node.state_hash == state_hash:
-                    return node
-
-        return None
-
-        
-    def update_action_probabilites(self, action):
-        siblings = [(s.inV().store_count, s) for s in action.outV().outE() if s.action_hash == action.action_hash]
-        total_store_count = sum(map(lambda s: s[0], siblings))
-
-        if total_store_count <= 0:
-            total_store_count = 1
-
-        print(action.action_string)
-        
-        for store_count, s in siblings:
-            print(str(s.get_bundle()))
-            s.probability = store_count / total_store_count
-            s.save()
-
-
-    #We could speed this up by doing a probabilistic search.
-    #For now it is a naive bredth first search. - Ray
-    def find_state_by_hash(self, state_hash, visited=None):
-        search_states = set(self.outV())
-
-        if not visited:
-            visited = set()
-
-        search_states = search_states - visited
-
-        #Breadth first
-        for s in search_states:
-            if s.state_hash == state_hash:
-                return s
-
-        #Don't search me again
-        visited = search_states + visited
-
-        for s in search_states:
-            found = s.find_state_by_hash(state_hash, visited)
-
-            if found:
-                return found
-
-        return None
-
-
-    def find_state_by_string(self, state_string):
-        return self.find_state_by_hash(self.hash_string(state_string))
-
-
-class MDPProblemNode(Node, StateFinderMixin):
-    element_type = "mdp_problem"
-
-    created = prop.DateTime(default=current_datetime, nullable=False)
-    start_text = prop.String()
-    goal_text = prop.String()
-    discount_factor = prop.Float(default=0.5)
-
-    def find_goal_state(self):
-        self.find_state_by_string(self.goal_text)
-
-
-    def _do_bellman(self, state, goal_hash):
-        GOAL_REWARD = 100
-        STD_REWARD = 10
-
-        if state.state_hash == goal_hash:
-            state.bellman_value = GOAL_REWARD
-        else:
-            child_edges = state.outE()
-
-            action_values = []
-            for action, edges in groupby(child_edges, lambda x: x.action_hash):
-                bellman_sum = sum([e.probability * self.discount_factor * self._do_bellman(e.outV(), goal_hash) for e in edges])
-                action_values.append(STD_REWARD + bellman_sum)
-
-            state.bellman_value = max(action_values)
-
-        state.save()
-        return state.bellman_value
-
-
-    def do_bellman_update(self):
-        """
-        Perform Bellman value iteration upon the whole graph to assign
-        reward values.
-        """
-
-        self._do_bellman(self, self.hash_string(self.goal_text))
-
-
-class MDPStateNode(Node, StateFinderMixin):
-    element_type = "mdp_state"
-
-    created = prop.DateTime(default=current_datetime, nullable=False)
-    state_hash = prop.String()
-    state_string = prop.String()
-    store_count = prop.Integer(default=1)
-    bellman_value = prop.Float(default=0.0)
-
-
-class MDPAction(Relationship):
-    label = "action"
-
-    created = prop.DateTime(default=current_datetime, nullable=False)
-    action_hash = prop.String()
-    action_string = prop.String()
-    probability = prop.Float(default=0.0)
-
-
-class MasterGraph(Graph):
-
+class SimpleHintFactory(object):
+    
     def __init__(self):
-        super().__init__()
-        self.add_proxy("problems", MDPProblemNode)
-        self.add_proxy("states", MDPStateNode)
-        self.add_proxy("actions", MDPAction)
-
-
-    def create_problem(self, start_text, goal_text):
-
-        exists = self.find_problem(start_text, goal_text)
-        if exists:
-            return exists
+        self.db = neo4j.GraphDatabaseService()
         
-        print("here")
-        #Create the problem
-        new_problem = self.problems.create(start_text=start_text, goal_text=goal_text)
+        self.DISCOUNT_FACTOR = .5
+        self.GOAL_REWARD = 20
+        self.STD_REWARD = 10
+        
+    def push_node(self,problem_string,from_state_string,action_string,to_state_string):
+        #problem used, from_string, action_string, to_string
+        problem_node = self.db.get_indexed_node("problems_index","start_string",problem_string)
+        
+        if not problem_node:
+            raise Exception("Problem node with start_string " + problem_string + " does not exist")
+        
+        from_state_hash = self.hash_string(from_state_string)
+        action_hash = self.hash_string(action_string)
+        to_state_hash = self.hash_string(to_state_string)
+    
+        return_node = None
+        
+        from_node = self.db.get_indexed_node("problems_index","start_string",from_state_string)
+        if not from_node:
+            from_node = self.db.get_indexed_node("problem_states_index","state_hash",from_state_hash)
+            if not from_node:
+                raise Exception("From node does not exist.")
+        
+        existing_node = self.db.get_indexed_node("problem_states_index","state_hash",to_state_hash)
+        if not existing_node:
+            #make a new state
+            new_node, new_rel = self.db.create({"state_string":to_state_string,"state_hash":to_state_hash,"bellman_value":0,"store_count":1,"discount_factor":self.DISCOUNT_FACTOR},(from_node,"action",0))
+            new_node.add_labels("ProblemState")
+            problem_states_index = self.db.get_or_create_index(neo4j.Node,"problem_states_index")
+            problem_states_index.add("state_hash",to_state_hash,new_node)
+            
+            new_rel["action_string"] = action_string
+            new_rel["action_hash"] = action_hash
+            new_rel["probability"] = 0.0
+            
+            hf.update_action_probabilities(new_rel)
+            return_node = new_node
+        else:
+            #connect old state to new state
+            existing_node["store_count"] +=1
+            try:
+                edge = next(from_node.match_outgoing("action",existing_node)) #if there are no edges, will raise exception.
+                hf.update_action_probabilities(edge)
+            except StopIteration:
+                new_rel, = self.db.create((from_node,"action",existing_node))
+                new_rel["action_string"] = action_string
+                new_rel["action_hash"] = action_hash
+                new_rel["probability"] = 0.0
+                hf.update_action_probabilities(new_rel)
+            
+            return_node = existing_node
+        return return_node
+    
+    def hash_string(self, string):
+        #hashing used for problem states and action strings
+        return hashlib.sha256(bytes(string.encode('utf-8'))).hexdigest()
+    
+    def update_action_probabilities(self,relationship):
+        #take a relationship, get parent, and update probabilities based on neighbors store_count
+        parent_node = relationship.start_node
+        edges = parent_node.match_outgoing("action")
+        total_count = 0
+        for edge in edges:
+            total_count += edge.end_node["store_count"]
+        if total_count<1:
+            total_count= 1
+        edges = parent_node.match_outgoing("action")
+        for edge in edges:
+            edge["probability"] = edge.end_node["store_count"] / total_count
+                 
+    def _do_bellman(self,node,goal_hash):
+        #do a bellman update on the graph stemming from problem node
+        
+        if "start_string" in node.get_properties():
+            print(node["start_string"])
+        else:
+            print(node["state_string"])
+        
+        if node["state_hash"] == goal_hash:
+            node["bellman_value"] = self.GOAL_REWARD
+        else:
+            child_edges = node.match_outgoing("action")
 
-        return new_problem
+            action_values = [0]
+            bellman_sum =0 
+            for edge in child_edges:
+                print(edge["action_string"])
+                #bellman_sum = sum([e.probability * self.discount_factor * self._do_bellman(e.inV(), goal_hash) for e in edges])
+                bellman_sum += edge["probability"] * node["discount_factor"] * self._do_bellman(edge.end_node,goal_hash)
+                action_values.append(self.STD_REWARD + bellman_sum)
 
+            node["bellman_value"] = max(action_values)
+        
+        return node["bellman_value"]
+    
+    def bellman_update(self,start_string,goal_string):
+        problem_node = self.create_or_get_problem_node(start_string,goal_string)
+        goal_hash = self.hash_string(goal_string)
+        self._do_bellman(problem_node,goal_hash)
+    
+    def create_or_get_problem_node(self, start_string, goal_string):
+        #create a new problem node in the graph, or, if exists, return problem node 
 
-    def find_problem(self, start_text, goal_text):
-        nodes = self.problems.index.lookup(start_text=start_text, goal_text=goal_text)
-        #Only one should exists
-        return next(nodes) if nodes else None
+        problem_node = self.db.get_indexed_node("problems_index","start_string",start_string)
+        if problem_node:
+            return problem_node
+        else:
+            problem_node, = self.db.create({"start_string":start_string,"goal_string":goal_string,"discount_factor":self.DISCOUNT_FACTOR})
+            problem_node.add_labels("Problem")
+            problem_index = self.db.get_or_create_index(neo4j.Node,"problems_index")
+            problem_index.add("start_string",start_string,problem_node)
+            return problem_node
 
+"""
 class HintFactoryPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
-        self.db = MasterGraph()
-        self.state = None
-
+        self.hf = SimpleHintFactory()
 
     def post_connect(self):
         super().post_connect()
@@ -292,25 +148,24 @@ class HintFactoryPlugin(Plugin):
              hf_hint_exists=self.hint_exists_callback,
              hf_get_hint=self.get_hint_callback)
 
-    #Hint Factory Plugin
     def init_problem_callback(self, message):
-        #""
-        #    problem_text - The text of the problem
-        #    problem_goal_text - The goal of the problem
-        #""
-        self.state = self.db.create_problem(message["start_state"],message["goal_problem"])
-        self.send_response(message["message_id"],{"status":"OK"})
-        
         self.logger.debug("INIT PROBLEM")
         self.logger.debug(message)
+        
+        if self.hf.create_or_get_problem_node(message["start_state"],message["goal_problem"]):
+            self.send_response(message["message_id"],{"status":"OK"})
+        else:
+            self.send_response(message["message_id"],{"status":"NOT_OK"})
+        
+        
 
     def push_state_callback(self, message):
         self.logger.debug("PUSH PROBLEM STATE")
         self.logger.debug(message)
-        self.logger.debug(message["state"])
             
         incoming_state = HintFactoryStateDecoder().decode(message["state"])
-        self.state = self.state.push_state(self.db,incoming_state.steps[-1],incoming_state.problem_state)
+        self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
+        #self.problem_state.do_bellman_update()
          
         
 
@@ -321,17 +176,16 @@ class HintFactoryPlugin(Plugin):
     def get_hint_callback(self, message):
         self.logger.debug("GET HINT")
         self.logger.debug(message)
-        
 """
+
 if __name__ == '__main__':
-    db = MasterGraph()
-    #import pdb; pdb.set_trace()
-    problem = db.create_problem('2x+4=12', 'x=4')
-    state = problem.push_state(db, 'addition', '4x-6+6=10+6')
-    state = state.push_state(db, 'simplification', '4x=16')
-    state = state.push_state(db, 'division', '4x/4=16/4')
-    state = state.push_state(db, 'simplification', 'x=4')
-    x = 5
+    hf = SimpleHintFactory()
+    hf.db.clear()
+    hf.create_or_get_problem_node("2 + 4 = 6", "1 = 1")
+    hf.push_node("2 + 4 = 6","2 + 4 = 6", "Simplify", "6 = 6")
+    hf.push_node("2 + 4 = 6","6 = 6", "Subtract", "1 = 1")
+    hf.push_node("2 + 4 = 6","2 + 4 = 6", "Skip", "1 = 1")
+    hf.push_node("2 + 4 = 6","2 + 4 = 6", "Skip", "1 = 1")
+    hf.bellman_update("2 + 4 = 6", "1 = 1")
     print("done")
-""" 
 

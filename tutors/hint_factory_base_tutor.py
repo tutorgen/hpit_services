@@ -96,8 +96,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
         
         self.cur_state = self.game_states["2x + 4 = 12"]
         
-        self.hf_state = HintFactoryState()
-        self.hf_state.problem_state = "2x + 4 = 12"
+        self.hf_state = HintFactoryState("2x + 4 = 12")
         
         self.goal = "x = 4"
         self.hint = None
