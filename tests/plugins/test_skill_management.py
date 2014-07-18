@@ -1,3 +1,4 @@
+import sure
 import httpretty
 from unittest.mock import *
 

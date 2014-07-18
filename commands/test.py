@@ -1,4 +1,5 @@
-import pytest
+import os
+import nose
 
 class Command:
     description = "Unit Test the code."
@@ -10,4 +11,4 @@ class Command:
         self.args = args
         self.configuration = configuration
 
-        pytest.main(['tests','--tb=short'])
+        nose.main(argv=['-w', os.path.join(os.getcwd(), 'tests')])
