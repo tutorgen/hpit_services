@@ -22,18 +22,17 @@ class HintFactoryBaseTutor(Tutor):
         self.hint_factory_state_encoder = HintFactoryStateEncoder()
             
     def post_state(self,hint_factory_state):
-        print(str(hint_factory_state))
         self.send("hf_push_state",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.post_state_callback)
         #self.post_state_callback({"status":"OK"})
         
     def hint_exists(self,hint_factory_state):
-        #self.send("hf_hint_exists",{"state":hint_factory_state_encoder.encode(hint_factory_state)},self.hint_exists_callback)
-        self.hint_exists_callback({"status":"OK","exists":"YES"})
+        self.send("hf_hint_exists",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.hint_exists_callback)
+        #self.hint_exists_callback({"status":"OK","exists":"YES"})
     
     def get_hint(self,hint_factory_state):
-        #self.send("hf_get_hint",{"state":hint_factory_state_encoder.encode(hint_factory_state)},self.get_hint_callback)
-        time.sleep(3)
-        self.get_hint_callback({"status":"OK","exists":"YES","hint_text":"This is a hint."})
+        self.send("hf_get_hint",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.get_hint_callback)
+        #time.sleep(3)
+        #self.get_hint_callback({"status":"OK","exists":"YES","hint_text":"This is a hint."})
     
     def init_problem(self,start_problem_string, goal_problem_string):
         self.send("hf_init_problem",{"start_state":start_problem_string,"goal_problem":goal_problem_string},self.init_problem_callback)
@@ -161,14 +160,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
                 return True
         
         else:
-            self.hint_exists(self.hf_state)
-            time.sleep(1)
-            
-    
             print(str(self.cur_state))
-            if self.exists == True:
-                print("**Hint exists**")
-                
             choice = input("Operation: (0 to quit, h for hint) ")
             
             if choice == "0":
