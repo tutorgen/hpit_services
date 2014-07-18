@@ -3,9 +3,9 @@ import json
 from json import JSONEncoder, JSONDecoder
 import time
 
-from client import Tutor
-from client.exceptions import ConnectionError
-from client.hint_factory_state import *
+from hpitclient import Tutor
+from hpitclient.exceptions import ConnectionError
+from utils.hint_factory_state import *
 
 class HintFactoryBaseTutor(Tutor):
     
