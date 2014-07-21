@@ -75,7 +75,7 @@ class BaseDaemon:
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
-            'hint_factory':HintFactoryPlugin
+            'hint_factory' : HintFactoryPlugin
         }
         tutor_classes = {
             'example': ExampleTutor,

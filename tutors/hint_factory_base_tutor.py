@@ -7,6 +7,10 @@ from hpitclient import Tutor
 from hpitclient.exceptions import ConnectionError
 from utils.hint_factory_state import *
 
+class BadHintFactoryResponseError(Exception):
+    """
+    Raised when a response is invalid or bad.
+    """
 
 class HintFactoryBaseTutor(Tutor):
     def __init__(self, entity_id, api_key, logger, run_once=None, args = None):      
@@ -47,11 +51,6 @@ class HintFactoryBaseTutor(Tutor):
     
     def init_problem_callback(self,response):
         pass    
-        
-class BadHintFactoryResponseError(Exception):
-    """
-    Raised when a response is invalid or bad.
-    """
  
  
 #------------------------------------------------------------------------------

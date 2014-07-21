@@ -2,11 +2,6 @@ import hashlib
 from itertools import groupby
 import sys
 
-from bulbs.model import Node, Relationship
-from bulbs.neo4jserver import Graph
-from bulbs import property as prop
-from bulbs.utils import current_datetime
-
 from hpitclient import Plugin
 from utils.hint_factory_state import *
 

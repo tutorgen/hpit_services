@@ -110,15 +110,8 @@ the neo4j Gremlin plugin, and the bulbs python package located in the `vendor` d
 1. Install Neo4j
     - On Mac OSX: `brew install neo4j`.
     - On Ubuntu: `sudo apt-get install neo4j`.
-2. Copy the Gremlin plugin into the NEO4J plugin directory. 
-    - On Mac OSX: `sudo unzip vendor/neo4j-gremlin-plugin-2.1-SNAPSHOT-server-plugin.zip -d /usr/local/opt/neo4j/libexec/plugins/gremlin-plugin`
-3. Install bulbs from monkey patched version.
-    1. cd vendor
-    2. tar -xvfz bulbs-0.3.29-20140708
-    3. cd bulbs-0.3.29-20140708
-    4. source $HPIT_DIR/my_enviornment/bin/activate
-    5. python3 setup.py install
-3. Start NEO4J. `neo4j start`
+    - On Windows, binaries are available.
+2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
 
 ## The HPIT Adminstration Panel
 
