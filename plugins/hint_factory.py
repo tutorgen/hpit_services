@@ -167,7 +167,6 @@ class SimpleHintFactory(object):
 
 
 class HintFactoryPlugin(Plugin):
-
     def __init__(self, entity_id, api_key, logger, args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
@@ -198,8 +197,6 @@ class HintFactoryPlugin(Plugin):
         incoming_state = HintFactoryStateDecoder().decode(message["state"])
         self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
         self.send_response(message["message_id"],{"status":"OK"})
-         
-        
 
     def hint_exists_callback(self, message):
         self.logger.debug("HINT EXISTS")
@@ -217,7 +214,6 @@ class HintFactoryPlugin(Plugin):
 
         incoming_state = HintFactoryStateDecoder().decode(message["state"])
         hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
-        print("--"+ str(hint))
         sys.stdout.flush()
         if hint:
             self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint})
