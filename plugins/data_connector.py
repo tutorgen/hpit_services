@@ -8,7 +8,7 @@ import hashlib
 import base64
 import binascii
 
-from client import Plugin
+from hpitclient import Plugin
 
 class DataShopConnectorPlugin(Plugin):
     

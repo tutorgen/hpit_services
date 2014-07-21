@@ -1,7 +1,9 @@
-from client import Tutor
+from hpitclient import Tutor
+from hpitclient.settings import HpitClientSettings
 import logging
 import os
 import time
+import argparse
 
 class DataShopConnectorTutor(Tutor):
     
@@ -74,13 +76,18 @@ class DataShopConnectorTutor(Tutor):
     
     def print_response_callback(self,response):
         print("Response from HIPT: " + str(response))
-    
-    def run(self):
-        self.connect()
-        self.start()
-        self.disconnect()
+ 
         
 if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description='Entity id and secret')
+    parser.add_argument('entity_id', type=str, help="The entity ID of the entity.")
+    parser.add_argument('api_key', type=str, help="The api key of the entity.")
+    arguments = parser.parse_args()
+    
+    settings = HpitClientSettings.settings()
+    settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
+    
     logger_path = os.path.join(os.getcwd(), 'log/tutor_71f476d0-55c0-4173-84c2-811edb350d02.log')
     logging.basicConfig(
             filename=logger_path,
@@ -89,5 +96,5 @@ if __name__ == "__main__":
             format='%(asctime)s %(levelname)s:----:%(message)s', 
             datefmt='%m/%d/%Y %I:%M:%S %p')
     logger = logging.getLogger(__name__)
-    d = DataShopConnectorTutor("71f476d0-55c0-4173-84c2-811edb350d02","479490e3488367963dd96cd9513afe4c",logger,None,None)
-    d.run()
+    d = DataShopConnectorTutor(arguments.entity_id,arguments.api_key,logger,None,None)
+    d.start()
