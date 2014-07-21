@@ -13,7 +13,7 @@ if platform.system() != "Windows":
 from hpitclient.settings import HpitClientSettings
 settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
-    
+
 #import tutors
 from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
 
@@ -75,6 +75,7 @@ class BaseDaemon:
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
+            'hint_factory':HintFactoryPlugin
         }
         tutor_classes = {
             'example': ExampleTutor,

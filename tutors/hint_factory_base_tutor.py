@@ -7,9 +7,9 @@ from hpitclient import Tutor
 from hpitclient.exceptions import ConnectionError
 from utils.hint_factory_state import *
 
+
 class HintFactoryBaseTutor(Tutor):
-    
-    def __init__(self, entity_id, api_key, logger, run_once=None, args = None):
+    def __init__(self, entity_id, api_key, logger, run_once=None, args = None):      
         super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
         self.run_once = run_once
         self.logger = logger
@@ -77,8 +77,6 @@ class HintFactoryTutor(HintFactoryBaseTutor):
                 output += str(count) + ". " + transition[0] + "\n\n"
                 count+=1
             return output
-            
-            
 
     def __init__(self, entity_id, api_key, logger, run_once = None, args = None):
         super().__init__(entity_id,api_key,logger,run_once,args)

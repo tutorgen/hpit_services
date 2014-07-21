@@ -7,8 +7,8 @@ from bulbs.neo4jserver import Graph
 from bulbs import property as prop
 from bulbs.utils import current_datetime
 
-from client import Plugin
-from client.hint_factory_state import *
+from hpitclient import Plugin
+from utils.hint_factory_state import *
 
 from py2neo import neo4j
 
