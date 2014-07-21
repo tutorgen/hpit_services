@@ -21,11 +21,12 @@ from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
+from plugins import DataShopConnectorPlugin
 from plugins import HintFactoryPlugin
 
 random.seed(datetime.now())
 
-tutor_types = ['example', 'knowledge_tracing','replay']
+tutor_types = ['example', 'knowledge_tracing','replay','data_connector']
 
 plugin_types = [
     'example', 
@@ -35,6 +36,7 @@ plugin_types = [
     'problem',
     'problem_step',
     'data',
+    'data_connector',
     'hint_factory']
 
 subtype_help = "The sub type of entity. tutor=(" + ', '.join(tutor_types) + ") plugin=(" + ', '.join(plugin_types) + ")"
@@ -75,6 +77,7 @@ class BaseDaemon:
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
+            'data_connector' : DataShopConnectorPlugin,
             'hint_factory' : HintFactoryPlugin
         }
         tutor_classes = {
