@@ -13,7 +13,7 @@ if platform.system() != "Windows":
 from hpitclient.settings import HpitClientSettings
 settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
-    
+
 #import tutors
 from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
 
@@ -21,6 +21,7 @@ from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
+from plugins import HintFactoryPlugin
 
 random.seed(datetime.now())
 
@@ -33,7 +34,8 @@ plugin_types = [
     'student', 
     'problem',
     'problem_step',
-    'data']
+    'data',
+    'hint_factory']
 
 subtype_help = "The sub type of entity. tutor=(" + ', '.join(tutor_types) + ") plugin=(" + ', '.join(plugin_types) + ")"
 
@@ -73,6 +75,7 @@ class BaseDaemon:
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
+            'hint_factory' : HintFactoryPlugin
         }
         tutor_classes = {
             'example': ExampleTutor,

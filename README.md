@@ -102,6 +102,16 @@ Then you can begin installalling HPIT by:
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000. 
 
+#### Optional Installation for Hint Factory Plugin
+
+If you are wanting to use the hint factory plugin you will need to install neo4j graph database.
+
+1. Install Neo4j
+    - On Mac OSX: `brew install neo4j`.
+    - On Ubuntu: `sudo apt-get install neo4j`.
+    - On Windows, binaries are available.
+2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
+
 ## The HPIT Adminstration Panel
 
 After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
