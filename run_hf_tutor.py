@@ -1,8 +1,15 @@
 from tutors import HintFactoryTutor
-
+import argparse
 from hpitclient.settings import HpitClientSettings
+
 settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
 
-h = HintFactoryTutor("e59139f1-7b30-47a5-b042-8b12689cb1fa","9e97d36835aff7d5f51646723f31fd20",None)
+parser = argparse.ArgumentParser(description='Entity id and secret')
+parser.add_argument('entity_id', type=str, help="The entity ID of the entity.")
+parser.add_argument('api_key', type=str, help="The api key of the entity.")
+
+arguments = parser.parse_args()
+
+h = HintFactoryTutor(arguments.entity_id,arguments.api_key,None)
 h.start()

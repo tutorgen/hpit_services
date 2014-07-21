@@ -104,8 +104,7 @@ to http://127.0.0.1:8000.
 
 #### Optional Installation for Hint Factory Plugin
 
-If you are wanting to use the hint factory plugin you will need to install neo4j graph database,
-the neo4j Gremlin plugin, and the bulbs python package located in the `vendor` directory.
+If you are wanting to use the hint factory plugin you will need to install neo4j graph database.
 
 1. Install Neo4j
     - On Mac OSX: `brew install neo4j`.
