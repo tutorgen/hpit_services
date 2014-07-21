@@ -95,12 +95,22 @@ Then you can begin installalling HPIT by:
 3. Activate that environment with: `source my_environment/bin/activate`
 4. On Mac or Linux, install HPIT's dependencies with: `pip3 install -r requirements.txt`.  On Windows, run: 'pip install -r requirements-win.txt'.
 5. If on Windows, install PyCrypto via a binary. 
-6. Sync the configuration database with sqlite. `python3 manager.py syncdb`
 6. Start the MongoDB instance with `mongod`
-7. Run the test suite by typing `python3 manager.py test`
+7. Sync the configuration database with sqlite. `python3 manager.py syncdb`
+8. Run the test suite by typing `python3 manager.py test`
 
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000. 
+
+#### Optional Installation for Hint Factory Plugin
+
+If you are wanting to use the hint factory plugin you will need to install neo4j graph database.
+
+1. Install Neo4j
+    - On Mac OSX: `brew install neo4j`.
+    - On Ubuntu: `sudo apt-get install neo4j`.
+    - On Windows, binaries are available.
+2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
 
 ## The HPIT Adminstration Panel
 

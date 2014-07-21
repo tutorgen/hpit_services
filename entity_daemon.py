@@ -2,15 +2,18 @@ import argparse
 import logging
 import os
 import random
+import signal
 import uuid
 from datetime import datetime
-from time import sleep
-import sys
 
 import platform
 if platform.system() != "Windows":
     from daemonize import Daemonize
-    
+
+from hpitclient.settings import HpitClientSettings
+settings = HpitClientSettings.settings()
+settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
+
 #import tutors
 from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
 
@@ -19,6 +22,7 @@ from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
 from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
 from plugins import DataShopConnectorPlugin
+from plugins import HintFactoryPlugin
 
 random.seed(datetime.now())
 
@@ -32,7 +36,8 @@ plugin_types = [
     'problem',
     'problem_step',
     'data',
-    'data_connector']
+    'data_connector',
+    'hint_factory']
 
 subtype_help = "The sub type of entity. tutor=(" + ', '.join(tutor_types) + ") plugin=(" + ', '.join(plugin_types) + ")"
 
@@ -51,6 +56,107 @@ main_parser.add_argument('--pid', type=str, help="The location of the pid file."
 main_parser.add_argument('--args', type=str, help = "JSON string of command line arguments.")
 
 
+class BaseDaemon:
+
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, run_once, args, pid):
+        self.entity_type = entity_type
+        self.entity_subtype = entity_subtype
+        self.entity_id = entity_id
+        self.api_key = api_key
+        self.run_once = run_once
+        self.args = args
+        self.pid = pid
+
+
+    def get_entity_class(self):
+        plugin_classes = {
+            'example': ExamplePlugin,
+            'knowledge_tracing': KnowledgeTracingPlugin,
+            'student': StudentManagementPlugin,
+            'skill': SkillManagementPlugin,
+            'problem': ProblemManagementPlugin,
+            'problem_step': ProblemStepManagementPlugin,
+            'data': DataStoragePlugin,
+            'hint_factory' : HintFactoryPlugin
+        }
+        tutor_classes = {
+            'example': ExampleTutor,
+            'knowledge_tracing': KnowledgeTracingTutor,
+            'replay' : ReplayTutor,
+        }
+        
+        if self.entity_type == 'plugin':
+            if self.entity_subtype not in plugin_classes.keys():
+                raise Exception("Internal Error: Plugin type not supported.")
+        elif self.entity_type == 'tutor':
+            if self.entity_subtype not in tutor_classes.keys():
+                raise Exception("Internal Error: Tutor type not supported.")
+
+        entity = None
+        if self.entity_type == 'plugin':
+            entity = plugin_classes[entity_subtype](self.entity_id, self.api_key, self.logger, args=self.args)
+        elif self.entity_type == 'tutor':
+            entity = tutor_classes[entity_subtype](self.entity_id, self.api_key, logger=self.logger, run_once=self.run_once, args=self.args)
+
+        return entity
+
+
+class PosixDaemon(BaseDaemon):
+
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, run_once=False, args=None, pid=None):
+        super().__init__(entity_type, entity_subtype, entity_id, api_key, run_once, args, pid)
+
+    def _main(self):
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        self.logger = logging.getLogger(__name__)
+
+        self.entity = self.get_entity_class()
+
+        if self.entity:
+            signal.signal(signal.SIGTERM, self.entity.disconnect)
+            self.entity.start()
+
+    def start(self):
+        if not self.pid:
+            self._main()
+        else:
+            daemon = Daemonize(app=self.entity_id, pid=self.pid, action=self._main)
+            daemon.start()
+
+
+class WindowsDaemon(BaseDaemon):
+
+    def __init__(self, entity_type, entity_subtype, entity_id, api_key, run_once=False, args=None, pid=None):
+        super().__init__(entity_type, entity_subtype, entity_id, api_key, run_once, args, pid)
+
+    def _main(self):
+        logging.basicConfig(
+            filename=logger_path,
+            level=logging.DEBUG,
+            propagate=False,
+            format='%(asctime)s %(levelname)s:----:%(message)s', 
+            datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        self.logger = logging.getLogger(__name__)
+
+        self.entity = self.get_entity_class()
+        
+        if self.entity:
+            signal.signal(signal.SIGTERM, self.entity.disconnect)
+            self.entity.start()
+
+        os.remove(pid)
+
+    def start(self):
+        self._main()
+
+
 if __name__ == '__main__':
 
     main_parser.print_help()
@@ -66,10 +172,6 @@ if __name__ == '__main__':
         if not os.path.isabs(pid):
             pid = os.path.join(os.getcwd(), pid)
 
-    run_once = False
-    if arguments.once:
-        run_once = True
-
     entity_subtype = arguments.type
     
     if arguments.entity == 'plugin':
@@ -80,57 +182,15 @@ if __name__ == '__main__':
             raise ValueError("Invalid Example Tutor Type. Choices are: " + repr(tutor_types))
     else:
         raise ValueError("Invalid entity argument:  must be tutor or plugin.")
-    
-    def main():
-        
-        logging.basicConfig(
-            filename=logger_path,
-            level=logging.DEBUG,
-            propagate=False,
-            format='%(asctime)s %(levelname)s:----:%(message)s', 
-            datefmt='%m/%d/%Y %I:%M:%S %p')
 
-        logger = logging.getLogger(__name__)
-
-        plugin_classes = {
-            'example': ExamplePlugin,
-            'knowledge_tracing': KnowledgeTracingPlugin,
-            'student': StudentManagementPlugin,
-            'skill': SkillManagementPlugin,
-            'problem': ProblemManagementPlugin,
-            'problem_step': ProblemStepManagementPlugin,
-            'data': DataStoragePlugin,
-            'data_connector': DataShopConnectorPlugin
-        }
-        tutor_classes = {
-            'example': ExampleTutor,
-            'knowledge_tracing': KnowledgeTracingTutor,
-            'replay' : ReplayTutor,
-        }
-        
-        if arguments.entity == 'plugin':
-            if entity_subtype not in plugin_classes.keys():
-                raise Exception("Internal Error: Plugin type not supported.")
-        elif arguments.entity == 'tutor':
-            if entity_subtype not in tutor_classes.keys():
-                raise Exception("Internal Error: Tutor type not supported.")
-
-        logger = logging.getLogger(__name__)
-        
-        entity = None
-        if arguments.entity == 'plugin':
-            entity = plugin_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, args = arguments.args)
-            entity.start()
-        elif arguments.entity == 'tutor':
-            entity = tutor_classes[entity_subtype](arguments.entity_id, arguments.api_key, logger=logger, run_once=run_once, args = arguments.args)
-            entity.start()
-        
-        if platform.system() == "Windows": #remove PID if process finishes on its own
-            os.remove(pid)
-            
-    if arguments.daemon:
-        daemon = Daemonize(app=arguments.entity_id, pid=pid, action=main)
+    if platform.system() == "Windows":
+        daemon = WindowsDaemon(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, arguments.once, arguments.args, pid)
+        daemon.start()
+    elif arguments.daemon:
+        daemon = PosixDaemon(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, arguments.once, arguments.args, pid)
         daemon.start()
     else:
-        main()
+        #Not passing the PID file causes this to run normally (not daemonized)
+        not_daemon = PosixDaemon(arguments.entity, entity_subtype, arguments.entity_id, arguments.api_key, arguments.once, arguments.args)
+        not_daemon.start()
 

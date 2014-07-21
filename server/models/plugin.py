@@ -1,5 +1,4 @@
-import random
-from datetime import datetime
+import os
 from Crypto.Hash import HMAC, SHA512
 
 from server.app import ServerApp
@@ -22,15 +21,14 @@ class Plugin(db.Model):
     subscriptions = db.relationship('Subscription', backref='plugin')
 
     def generate_key(self):
-        now = datetime.now()
-        random.seed(now)
-
-        #Generate a randomize salt and HMAC it for posterity
-        self.api_key_salt = str(random.randrange(16**30))
+        #Generate a cryptographically secure key with HMAC
         hsh = HMAC.new(bytes(settings.SECRET_KEY.encode('utf-8')))
-        hsh.update(bytes(self.api_key_salt.encode('utf-8')))
+        hsh.update(os.urandom(128))
 
         key = hsh.hexdigest()
+
+        #Generate a cryptographically secure random salt
+        self.api_key_salt = str(os.urandom(32))
 
         #Generate the resulting hash of key + salt + our_secret
         hsh = SHA512.new(bytes(settings.SECRET_KEY.encode('utf-8')))

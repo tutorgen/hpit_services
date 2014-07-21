@@ -70,7 +70,7 @@ class WindowsManager(BaseManager):
                         try:
                             os.kill(int(pid), signal.SIGTERM)
                         except OSError:
-                            print("Error shutting down entity with PID " + str(entity_id))
+                            print("Failed to kill plugin " + str(entity_id))
                     os.remove(pidfile)
                 except FileNotFoundError:
                     print("Error: Could not find PIDfile for entity: " + entity_id)
@@ -123,7 +123,7 @@ class WindowsManager(BaseManager):
                 try:
                     os.kill(int(pid), signal.SIGTERM)
                 except OSError:
-                    print ("Error shutting down server with PID " + str(pid))
+                    print ("Failed to kill server.")
             os.remove(self.settings.HPIT_PID_FILE)
         else:
             print("The HPIT Server is not running.")

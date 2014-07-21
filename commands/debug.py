@@ -1,6 +1,9 @@
 from server.app import ServerApp
 app = ServerApp.get_instance().app
 
+from server.settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
+
 class Command:
     description = "Runs the server in debug mode."
     
@@ -11,4 +14,4 @@ class Command:
         self.args = args
         self.configuration = configuration
 
-        app.run(debug=True, port=8000)
+        app.run(debug=True, port=int(settings.HPIT_BIND_PORT), host=settings.HPIT_BIND_IP)

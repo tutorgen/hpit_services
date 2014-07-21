@@ -86,11 +86,11 @@ class UnixManager(BaseManager):
             with open("tmp/output_server.txt","w") as f:
                 subprocess.call(['uwsgi', 
                     '--http-socket', self.settings.HPIT_BIND_ADDRESS, 
-                    '--venv', os.path.join(os.getcwd(), 'env'),
+                    '--venv', os.path.join(os.getcwd(), self.settings.VENV_DIRNAME),
                     '--wsgi-file', 'start_server.py',
                     '--callable', 'app',
                     '--pidfile', self.settings.HPIT_PID_FILE,
-                    '--daemonize2', 'tmp/server_wsgi.txt'],
+                    '--daemonize2', 'log/hpit_server.log'],
                     stdout = f, stderr = f)
 
             for i in range(0, 10):
@@ -120,7 +120,7 @@ class UnixManager(BaseManager):
             with open(self.settings.HPIT_PID_FILE) as f:
                 pid = f.read()
             try:
-                os.kill(int(pid), signal.SIGKILL)
+                os.kill(int(pid), signal.SIGTERM)
                 os.remove(self.settings.HPIT_PID_FILE) #Force for Mac
             except FileNotFoundError: #On Linux
                 pass #On linux file is removed when process dies, on mac it needs forced.

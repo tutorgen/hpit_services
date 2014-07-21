@@ -6,6 +6,7 @@ from .problem_step_management import ProblemStepManagementPlugin
 from .skill_management import SkillManagementPlugin
 from .student_management import StudentManagementPlugin
 from .data_connector import DataShopConnectorPlugin
+from .hint_factory import HintFactoryPlugin
 
 __all__ = [
     'ExamplePlugin', 
@@ -15,5 +16,6 @@ __all__ = [
     'ProblemStepManagementPlugin',
     'SkillManagementPlugin',
     'StudentManagementPlugin',
-    'DataShopConnectorPlugin'
+    'DataShopConnectorPlugin',
+    'HintFactoryPlugin'
 ]

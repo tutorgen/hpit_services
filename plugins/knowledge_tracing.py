@@ -1,4 +1,4 @@
-from client import Plugin
+from hpitclient import Plugin
 
 from pymongo import MongoClient
 
@@ -21,6 +21,7 @@ class KnowledgeTracingPlugin(Plugin):
 
     #Knowledge Tracing Plugin
     def kt_trace(self, message):
+        self.send_log_entry("RECV: kt_trace with message: " + str(message))
         self.logger.debug("RECV: kt_trace with message: " + str(message))
 
         kt_config = self.db.find_one({
@@ -29,6 +30,7 @@ class KnowledgeTracingPlugin(Plugin):
         })
 
         if not kt_config:
+            self.send_log_entry("ERROR: Could not find inital setting for knowledge tracer.")
             self.logger.debug("ERROR: Could not find inital setting for knowledge tracer.")
 
             self.send_response(message['message_id'], {
@@ -68,6 +70,7 @@ class KnowledgeTracingPlugin(Plugin):
             'probability_known': p_known
         }})
 
+        self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
         self.logger.debug("SUCCESS: kt_trace with new data: " + str(kt_config))
 
         self.send_response(message['message_id'], {
@@ -79,6 +82,7 @@ class KnowledgeTracingPlugin(Plugin):
             })
 
     def kt_set_initial_callback(self, message):
+        self.send_log_entry("RECV: kt_set_initial with message: " + str(message))
         self.logger.debug("RECV: kt_set_initial with message: " + str(message))
 
         kt_config = self.db.find_one({
@@ -113,6 +117,7 @@ class KnowledgeTracingPlugin(Plugin):
             })
 
     def kt_reset(self, message):
+        self.send_log_entry("RECV: kt_reset with message: " + str(message))
         self.logger.debug("RECV: kt_reset with message: " + str(message))
 
         kt_config = self.db.find_one({

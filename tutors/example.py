@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from time import sleep
 
-from client import Tutor
+from hpitclient import Tutor
 
 class ExampleTutor(Tutor):
     def __init__(self, entity_id, api_key, logger=None, run_once=None, args = None):
