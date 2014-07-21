@@ -36,7 +36,6 @@ py==1.4.20
 py-bcrypt==0.4
 pycrypto==2.6.1
 pymongo==2.7
-pytest==2.5.2
 python-dateutil==2.2
 pytz==2014.4
 requests==2.2.1
