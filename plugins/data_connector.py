@@ -30,7 +30,8 @@ class DataShopConnectorPlugin(Plugin):
         
    
     def get_dataset_metadata(self,payload):
-        self.logger.debug("RECV: get_dataset_metadata with message: " + str(payload))
+        if self.logger:
+            self.logger.debug("RECV: get_dataset_metadata with message: " + str(payload))
         
         path = "/datasets"
         dataset_id = payload['dataset_id']
@@ -42,7 +43,8 @@ class DataShopConnectorPlugin(Plugin):
         })
    
     def get_sample_metadata(self,payload):
-        self.logger.debug("RECV: get_sample_metadata with message: " + str(payload))
+        if self.logger:
+            self.logger.debug("RECV: get_sample_metadata with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
         sample_id = payload['sample_id']
@@ -56,7 +58,8 @@ class DataShopConnectorPlugin(Plugin):
         })
     
     def get_transactions(self,payload):
-        self.logger.debug("RECV: get_transactions with message: " + str(payload))
+        if self.logger:
+            self.logger.debug("RECV: get_transactions with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
         sample_id = None
@@ -65,7 +68,7 @@ class DataShopConnectorPlugin(Plugin):
             path = "/datasets/"+str(dataset_id) + "/samples/" + str(sample_id)+"/transactions"
         else:
             path = "/datasets/"+str(dataset_id) + "/transactions"
-        
+
         response_to_send = self.datashop_request("GET",str(path))
  
         self.send_response(payload['message_id'], {
@@ -74,7 +77,8 @@ class DataShopConnectorPlugin(Plugin):
         })
     
     def get_student_steps(self,payload):
-        self.logger.debug("RECV: get_student_steps with message: " + str(payload))
+        if self.logger:
+            self.logger.debug("RECV: get_student_steps with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
         sample_id = None
@@ -92,12 +96,17 @@ class DataShopConnectorPlugin(Plugin):
         })
     
     def add_custom_field(self,payload):
-        self.logger.debug("RECV: add_custom_field with message: " + str(payload))
+        if self.logger:
+            self.logger.debug("RECV: add_custom_field with message: " + str(payload))
         
-        dataset_id = payload['dataset_id']
-        name = payload['name']
-        description = payload['description']
-        typ = payload['type']
+        try:
+            dataset_id = payload['dataset_id']
+            name = payload['name']
+            description = payload['description']
+            typ = payload['type']
+        except KeyError:
+            print("Make sure your mayload has a data_id, name, description, and type for the custom field.")
+            raise
         
         path = "/datasets/"+str(dataset_id) + "/customfields/add"
         
