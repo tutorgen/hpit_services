@@ -35,7 +35,7 @@ class ReplayTutor(Tutor):
                 should be replayed that happened before this date.
             afterTime:  like before time, but specifies the date that only messages created after
                 should be replayed
-            filter: a JSON object that serves as the custom filter for the MongoDB messages
+            filter:  (required) a JSON object that serves as the custom filter for the MongoDB messages
             db_name: (required)  The name of the database to look in
         """
         super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
@@ -51,34 +51,43 @@ class ReplayTutor(Tutor):
             self.db_name = self.args["db_name"]
         except KeyError:
             raise InvalidArgumentsException("Args need to at least contain db_name")
+            
+        try:
+            filter = self.args["filter"]
+        except KeyError:
+            raise InvalidArgumentsException("Args need to at least contain filter")
         
     def main_callback(self):
         client = MongoClient()
         messages = client[self.db_name].messages
-        self.logger.debug("filter is: " + str(self.args["filter"]))
+        if self.logger:
+            self.logger.debug("filter is: " + str(self.args["filter"]))
+
         for message in messages.find(self.args["filter"]):
             
             criteriaFlag = 0
             successFlag = 0
-            documentTime = ObjectId(message["_id"]).generation_time
+            documentTime = datetime.strptime(message["time_created"], "%m-%d-%Y %H:%M:%S")
             documentTime = documentTime.replace(tzinfo=pytz.utc)
+            
             if "afterTime" in self.args:
                 criteriaFlag = criteriaFlag | 1 
                 afterTime  = datetime.strptime(self.args["afterTime"], "%m-%d-%Y %H:%M:%S")
                 afterTime = afterTime.replace(tzinfo=pytz.utc)
                 if afterTime <= documentTime:
-                    successFlag  = criteriaFlag | 1
+                    successFlag  = successFlag | 1
                     
             if "beforeTime" in self.args:
                 criteriaFlag = criteriaFlag | 2
                 beforeTime = datetime.strptime(self.args["beforeTime"], "%m-%d-%Y %H:%M:%S")
                 beforeTime = beforeTime.replace(tzinfo=pytz.utc)
                 if beforeTime >= documentTime:
-                    successFlag = criteriaFlag | 2
-                    
+                    successFlag = successFlag | 2
+            
             if criteriaFlag == successFlag:
                 self.send(message["event"],message["payload"])
-                self.logger.debug("REPLAYED: "+str(message))
+                if self.logger:
+                    self.logger.debug("REPLAYED: "+str(message))
             
         
         if self.run_once:
