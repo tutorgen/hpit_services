@@ -1,8 +1,6 @@
 import os
 import nose
 
-from httpretty.core import fakesock
-
 class Command:
     description = "Unit Test the code."
     
