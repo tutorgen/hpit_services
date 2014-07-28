@@ -1,4 +1,3 @@
-import httpretty
 import unittest
 from unittest.mock import *
 from pymongo import MongoClient
@@ -13,21 +12,10 @@ from plugins import DataStoragePlugin
 class TestDataStoragePlugin(unittest.TestCase):
     
     def setUp(self):
-        httpretty.enable()
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/connect",
-                                body='{"entity_name":"example_plugin","entity_id":"4"}',
-                                )
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
-                                body='',
-                                )
-        
         self.test_subject = DataStoragePlugin(1234,5678,None)
         self.test_subject.db = self.test_subject.mongo.test_hpit_data_storage.data
     
     def tearDown(self):
-        httpretty.disable()
-        httpretty.reset()
-        
         client = MongoClient()
         client.drop_database("test_hpit_data_storage")
         
