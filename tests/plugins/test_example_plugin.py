@@ -1,4 +1,4 @@
-import httpretty
+import responses
 import unittest
 from unittest.mock import *
 
@@ -15,22 +15,12 @@ class TestExamplePlugin(unittest.TestCase):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
-        httpretty.enable()
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/connect",
-                                body='{"entity_name":"example_plugin","entity_id":"4"}',
-                                )
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
-                                body='',
-                                )
-        
         self.test_subject = ExamplePlugin(1234,5678,5)
 
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
-        httpretty.disable()
-        httpretty.reset()
         self.test_subject = None
 
     def test_constructor(self):

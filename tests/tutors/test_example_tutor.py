@@ -1,6 +1,6 @@
 import sure
 import unittest
-import httpretty
+import responses
 from unittest.mock import *
 
 import logging
@@ -18,19 +18,6 @@ class TestExampleTutor(unittest.TestCase):
         class.  setup_method is invoked for every test method of a class.
         """
         self.test_subject = ExampleTutor(1234,5678,None)
-        
-        httpretty.enable()
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/connect",
-                                body='{"entity_name":"example_tutor","entity_id":"4"}',
-                                )
-        
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/disconnect",
-                                body='OK',
-                                )
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/message",
-                                body='{"message_id":"4"}',
-                                )
-
 
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
@@ -65,6 +52,7 @@ class TestExampleTutor(unittest.TestCase):
         """
         pass
 
+    @responses.activate
     def test_main_callback(self):
         """
         ExampleTutor.main_callback() Test plan:
@@ -74,6 +62,17 @@ class TestExampleTutor(unittest.TestCase):
             -if run_once is false, returns false
             -if run_once is true, returns true
         """
+        responses.add(responses.POST,HPIT_URL_ROOT+"/connect",
+                                body='{"entity_name":"example_tutor","entity_id":"4"}',
+                                )
+        
+        responses.add(responses.POST,HPIT_URL_ROOT+"/disconnect",
+                                body='OK',
+                                )
+        responses.add(responses.POST,HPIT_URL_ROOT+"/message",
+                                body='{"message_id":"4"}',
+                                )
+
         logger_mock = MagicMock()
         logger_calls = [call("Sending a random event: test"),call("RECV: {'message_id': '4'}")]
         

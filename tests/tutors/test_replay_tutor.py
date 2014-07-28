@@ -1,6 +1,6 @@
 import sure
 import unittest
-import httpretty
+import responses
 from unittest.mock import *
 
 import logging
@@ -22,7 +22,7 @@ class TestReplayTutor(unittest.TestCase):
     def tearDown(self):
         client = MongoClient()
         client.drop_database("test_replay")
-    
+
     def test_constructor(self):
         """
         ReplayTutor.__init__() Test plan:
