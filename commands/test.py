@@ -21,4 +21,4 @@ class Command:
 
         fakesock.socket = MySocket
         
-        nose.main(argv=['-w', os.path.join(os.getcwd(), 'tests')])
+        nose.main(argv=['-w', os.path.join(os.getcwd(), 'tests'), '--verbose'])
