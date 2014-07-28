@@ -15,8 +15,8 @@ class SimpleHintFactory(object):
         
         self.DISCOUNT_FACTOR = .5
         self.GOAL_REWARD = 100
-        self.STD_REWARD = 10
-        
+        self.STD_REWARD = 0
+       
     def push_node(self,problem_string,from_state_string,action_string,to_state_string):
         #problem used, from_string, action_string, to_string
         problem_node = self.db.get_indexed_node("problems_index","start_string",problem_string)
