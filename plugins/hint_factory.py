@@ -39,7 +39,7 @@ class SimpleHintFactory(object):
         existing_node = self.db.get_indexed_node("problem_states_index","state_hash",to_state_hash)
         if not existing_node:
             #make a new state
-            new_node, new_rel = self.db.create({"state_string":to_state_string,"state_hash":to_state_hash,"bellman_value":0,"store_count":1,"discount_factor":self.DISCOUNT_FACTOR},(from_node,"action",0))
+            new_node, new_rel = self.db.create({"state_string":to_state_string,"state_hash":to_state_hash,"bellman_value":0,"discount_factor":self.DISCOUNT_FACTOR},(from_node,"action",0))
             new_node.add_labels("ProblemState")
             problem_states_index = self.db.get_or_create_index(neo4j.Node,"problem_states_index")
             problem_states_index.add("state_hash",to_state_hash,new_node)
@@ -47,20 +47,22 @@ class SimpleHintFactory(object):
             new_rel["action_string"] = action_string
             new_rel["action_hash"] = action_hash
             new_rel["probability"] = 0.0
+            new_rel["taken_count"] = 1
             
             self.update_action_probabilities(new_rel)
             return_node = new_node
         else:
             #connect old state to new state
-            existing_node["store_count"] +=1
             try:
                 edge = next(from_node.match_outgoing("action",existing_node)) #if there are no edges, will raise exception.
+                edge["taken_count"]+=1
                 self.update_action_probabilities(edge)
             except StopIteration:
                 new_rel, = self.db.create((from_node,"action",existing_node))
                 new_rel["action_string"] = action_string
                 new_rel["action_hash"] = action_hash
                 new_rel["probability"] = 0.0
+                new_rel["taken_count"] = 1
                 self.update_action_probabilities(new_rel)
             
             return_node = existing_node
@@ -78,12 +80,12 @@ class SimpleHintFactory(object):
         edges = parent_node.match_outgoing("action")
         total_count = 0
         for edge in edges:
-            total_count += edge.end_node["store_count"]
+            total_count += edge["taken_count"]
         if total_count<1:
             total_count= 1
         edges = parent_node.match_outgoing("action")
         for edge in edges:
-            edge["probability"] = edge.end_node["store_count"] / total_count
+            edge["probability"] = edge["taken_count"] / total_count
                  
     def _do_bellman(self,node,goal_hash):
         #do a bellman update on the graph stemming from problem node
