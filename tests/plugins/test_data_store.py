@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import *
+from mock import *
 from pymongo import MongoClient
 from pymongo.collection import Collection
 

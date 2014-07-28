@@ -1,6 +1,6 @@
 import sure
 import unittest
-from unittest.mock import *
+from mock import *
 
 import logging
 import random
