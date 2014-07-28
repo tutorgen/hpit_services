@@ -166,8 +166,8 @@ class TestDataShopConnectorPlugin(unittest.TestCase):
         DataShopConnectorPlugin.datashop_request() Test plan:
             -issue hello world request. make sure status is ok
         """
-        httpretty.disable()
+        httpretty.register_uri(httpretty.GET, 'http://pslc-qa.andrew.cmu.edu/datashop/services', 
+                                body='{"entity_name":"example_plugin","entity_id":"4"}')
+
         d = DataShopConnectorPlugin("1234","1234",None,None)
         d.datashop_request("GET","/helloworld").text.should.equal('<?xml version="1.0" encoding="UTF-8"?>\n<pslc_datashop_message result_code="0" result_message="Success. Hello World!"/>\n')
-        
-        
