@@ -42,6 +42,7 @@ pytest==2.5.2
 python-dateutil==2.2
 pytz==2014.4
 pyyaml==3.11
+responses==0.2.2
 requests==2.2.1
 six==1.6.1
 speaklater==1.3
