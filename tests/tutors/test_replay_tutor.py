@@ -1,6 +1,5 @@
 import sure
 import unittest
-import responses
 from unittest.mock import *
 
 import logging
