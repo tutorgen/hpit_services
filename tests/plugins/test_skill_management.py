@@ -1,5 +1,5 @@
 import sure
-import httpretty
+import responses
 import unittest
 from unittest.mock import *
 
@@ -17,22 +17,10 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """
         self.test_subject = SkillManagementPlugin(123,456,None)
        
-        httpretty.enable()
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/connect/test_name",
-                                body='{"entity_name":"skill_management_plugin","entity_id":"4"}',
-                                )
-
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe/",
-                                body='',
-                                )
-        
-       
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
-        httpretty.disable()
-        httpretty.reset()
         self.test_subject = None
 
 

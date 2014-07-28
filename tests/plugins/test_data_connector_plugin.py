@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import *
-import httpretty
+import responses
 
 from hpitclient.settings import HpitClientSettings
 HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
@@ -13,18 +13,6 @@ class TestDataShopConnectorPlugin(unittest.TestCase):
         def __init__(self):
             self.text = "text"
             self.status_code = "200"
-    
-    def setUp(self):
-        httpretty.enable()
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/connect",
-                                body='{"entity_name":"example_plugin","entity_id":"4"}',
-                                )
-        httpretty.register_uri(httpretty.POST,HPIT_URL_ROOT+"/plugin/subscribe",
-                                body='',
-                                )   
-    def tearDown(self):
-        httpretty.disable()
-        httpretty.reset()
     
     def test_constructor(self):
         """
@@ -166,8 +154,5 @@ class TestDataShopConnectorPlugin(unittest.TestCase):
         DataShopConnectorPlugin.datashop_request() Test plan:
             -issue hello world request. make sure status is ok
         """
-        httpretty.register_uri(httpretty.GET, 'http://pslc-qa.andrew.cmu.edu/datashop/services', 
-                                body='{"entity_name":"example_plugin","entity_id":"4"}')
-
         d = DataShopConnectorPlugin("1234","1234",None,None)
         d.datashop_request("GET","/helloworld").text.should.equal('<?xml version="1.0" encoding="UTF-8"?>\n<pslc_datashop_message result_code="0" result_message="Success. Hello World!"/>\n')
