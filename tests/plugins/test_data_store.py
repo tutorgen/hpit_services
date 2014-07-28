@@ -3,10 +3,6 @@ from unittest.mock import *
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-from hpitclient.settings import HpitClientSettings
-
-HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
-
 from plugins import DataStoragePlugin
 
 class TestDataStoragePlugin(unittest.TestCase):

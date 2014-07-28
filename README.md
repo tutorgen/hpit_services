@@ -1,3 +1,5 @@
+[ ![Codeship Status for tutorgen/hpit_services](https://codeship.io/projects/d0ff7820-f8ca-0131-f61d-5a47552ce69e/status)](https://codeship.io/projects/28762)
+
 ## Overview
 
 The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
