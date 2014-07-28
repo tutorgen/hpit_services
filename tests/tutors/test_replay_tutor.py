@@ -23,9 +23,6 @@ class TestReplayTutor(unittest.TestCase):
         client = MongoClient()
         client.drop_database("test_replay")
 
-    def test_plus(self):
-        (2).should.equal(2)
-    
     def test_constructor(self):
         """
         ReplayTutor.__init__() Test plan:
