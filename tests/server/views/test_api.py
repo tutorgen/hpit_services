@@ -15,7 +15,7 @@ class TestServerAPI(unittest.TestCase):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
-        selftest_client = app.test_client()
+        self.test_client = app.test_client()
         
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
@@ -29,45 +29,25 @@ class TestServerAPI(unittest.TestCase):
         api.version() Test plan:
             -ensure that return value contains version from settings
         """
-        #response = test_client.get("/version")
-        #str(response.get_data()).should.contain(settings.HPIT_VERSION)
-        pass
+        response = self.test_client.get("/version")
+        str(response.get_data()).should.contain(settings.HPIT_VERSION)
         
-    def test_connect_tutor(self):
+        
+    def test_connect(self):
         """
-        api.connect_tutor() Test plan:
-            -ensure response contains the tutor name passed
-            -ensure that HPIT_STATUS contains a new entry, that contains tutor name
-            -ensure that the session has been set correctly
-            -ensure not crash on parameters: #__ plugin, 439034, ""
-        """
-        pass
-
-    def test_connect_plugin(self):
-        """
-        api.connect_plugin() Test plan:
-            -ensure response contains the plugin name passed
-            -ensure that HPIT_STATUS contains a new entry, that contains plugin name
-            -ensure that the session has been set correctly
-            -ensure not crash on parameters: #__ tutor, 439034, ""
+        api.connect() Test plan:
+            -ensure that entity_id and api_key, if either missing, will return a bad parameter
+            -mock tutor.query.filter_by and plugin.query.filter_by, ensure plugin.query called if tutor.query returns nothing
+            -if not found, should issue a not_found_response
+            -mock authenticate to fail, issuing auth_failed response
+            
         """
         pass
 
-    def test_tutor_disconnect(self):
+    def test_disconnect(self):
         """
-        api.disconnect_tutor() Test plan:
-            -ensure that HPIT_STATUS loses entity, if exists
-            -ensure that HPIT_STATUS is fine if session does not exist
-            -ensure remove session entity_name and id
-        """
-        pass
-
-    def test_plugin_disconnect(self):
-        """
-        api.disconnect_plugin() Test plan:
-            -ensure that HPIT_STATUS loses entity, if exists
-            -ensure that HPIT_STATUS is fine if session does not exist
-            -ensure remove session entity_name and id
+        api.disconnect() Test plan:
+            
         """
         pass
 
