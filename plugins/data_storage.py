@@ -44,6 +44,7 @@ class DataStoragePlugin(Plugin):
             return
             
         data = self.db.find_one({"key":key})
+        
         self.send_response(message["message_id"],{"data":data})
 
     def remove_data_callback(self, message):
@@ -57,6 +58,6 @@ class DataStoragePlugin(Plugin):
             self.send_response(message["message_id"],{"error":"Error: remove_data message must contain a 'key'"})
             return
             
-        self.db.remove({"key":key})
+        response = self.db.remove({"key":key})
         
-        self.send_response(message["message_id"],{"status":"OK"})
+        self.send_response(message["message_id"],{"status":response})

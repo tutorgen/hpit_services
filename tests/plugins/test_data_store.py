@@ -1,6 +1,8 @@
 import httpretty
 import unittest
 from unittest.mock import *
+from pymongo import MongoClient
+from pymongo.collection import Collection
 
 from hpitclient.settings import HpitClientSettings
 
@@ -20,7 +22,7 @@ class TestDataStoragePlugin(unittest.TestCase):
                                 )
         
         self.test_subject = DataStoragePlugin(1234,5678,None)
-        self.test_subject.db = test_subject.mongo.test_hpit_data_storage
+        self.test_subject.db = self.test_subject.mongo.test_hpit_data_storage
     
     def tearDown(self):
         httpretty.disable()
@@ -49,18 +51,37 @@ class TestDataStoragePlugin(unittest.TestCase):
     def test_store_data_callback(self):
         """
         DataStoragePlugin.store_data_callback() Test plan:
+            - If logger exists, logger shouldn't be called.  If it does, it should
+            - send message with nothing, just key, just data.  response should contain an error
+            - ensure database is empty
+            -   call insert, ensure id is returned
+            -   call insert again, id should be different
         """
         pass
     
     def test_retrieve_data_callback(self):
         """
         DataStoragePlugin.retrieve_data_callback() Test plan:
+            - If logger exists, logger shouldn't be called.  If it does, it should
+            - send message with no key.  response should contain error
+            - ensure database is empty
+            -   should send response with data being none
+            - insert two records with same key
+            -   should send response with most recent entry
         """
         pass
         
     def test_remove_data_callback(self):
         """
         DataStoragePlugin.remove_data_callback() Test plan:
+            - If logger exists, logger shouldn't be called.  If it does, it should
+            - send message with no key.  response should contain error
+            - with no records matching filter
+            -   remove should send response with n:0 ok:1
+            - with 1 record matching filter
+            -   remove should send response with n:1 ok:1
+            - with 2 records matching filter
+            -   remove should send response with n:2 ok:1
         """
         pass
         
