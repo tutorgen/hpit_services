@@ -97,6 +97,10 @@ class BaseManager:
         from commands.syncdb import Command
         Command(arguments, configuration).run()
 
+    def run_mongo(self, arguments, configuration):
+        from commands.mongo import Command
+        Command(arguments, configuration).run()
+
     def run_routes(self, arguments, configuration):
         from commands.routes import Command
         Command(arguments, configuration).run()
