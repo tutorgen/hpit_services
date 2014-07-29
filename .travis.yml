@@ -14,7 +14,8 @@ before_install:
   - "sudo apt-get update"
   - "sudo apt-get install mongodb-org-server"
   - "sudo apt-get install python2.7-dev python3-dev"
-  - "sudo service mongodb restart"
+  - "sudo service mongodb stop"
+  - "sudo service mongodb start"
 before_script:
   - mongo --version
 install: 
