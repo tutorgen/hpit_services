@@ -9,12 +9,34 @@ app = app_instance.app
 from server.settings import ServerSettingsManager
 settings = ServerSettingsManager.get_instance().settings
 
-class TestServerAPI(unittest.TestCase):
+import flask
+from flask import session, jsonify, abort, request, Response
+from server.models import Plugin, Tutor, Subscription
+from server.app import ServerApp
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+mongo = app_instance.mongo
+db = app_instance.db
+csrf = app_instance.csrf
 
+class TestServerAPI(unittest.TestCase):
+    
+    class DummyEntity():
+        def __init__(self):
+            self.name = "name"
+            self.description= "description"
+            self.entity_id = "3"
+        def first(self):
+            return self
+        def authenticate(self,api_key):
+            return True
+    
     def setUp(self):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
+        app.config['TESTING'] = True
+        app.testing = True
         self.test_client = app.test_client()
         
     def tearDown(self):
@@ -40,9 +62,28 @@ class TestServerAPI(unittest.TestCase):
             -mock tutor.query.filter_by and plugin.query.filter_by, ensure plugin.query called if tutor.query returns nothing
             -if not found, should issue a not_found_response
             -mock authenticate to fail, issuing auth_failed response
-            
+            -make sure session conatins entity name, description and id
+            -mock db.session.add, called with entity
+            -mock db.session.commit, ensure called
+            -make sure an ok response is returned
         """
-        pass
+        
+     
+        
+        #response = self.test_client.post("/connect",data = {})
+        #response.data.should.contain(b'Missing parameter:')
+        response = self.test_client.post("/connect",data = {"api_key":"1234"})
+        response.data.should.contain(b'Missing parameter:')
+        response = self.test_client.post("/connect",data = {"entity_id":"1234"},content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        db.session.add = MagicMock()
+        db.session.commit = MagicMock()
+        Tutor.query.filter_by = MagicMock(return_value = TestServerAPI.DummyEntity())
+        
+        response = self.test_client.post("/connect",data = {"entity_id":"1234","api_key":"1234"},content_type="application/json")
+        response.data.should.contain(b'OK')
+        
 
     def test_disconnect(self):
         """

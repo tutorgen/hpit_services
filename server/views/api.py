@@ -85,10 +85,12 @@ def connect():
         404 if no entity or tutor is registered with the supplied entity_id
         403 if failed to authenticate (entity_id or api_key is invalid)
     """
+    print(request.data)
+    
     for x in ['entity_id', 'api_key']:
         if x not in request.json:
             return bad_parameter_response(x)
-
+   
     entity_id = request.json['entity_id']
     api_key = request.json['api_key']
 
