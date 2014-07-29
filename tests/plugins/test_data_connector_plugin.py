@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import *
+from mock import *
 import responses
 
 from hpitclient.settings import HpitClientSettings

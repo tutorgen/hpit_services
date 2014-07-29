@@ -1,7 +1,7 @@
 import sure
 import responses
 import unittest
-from unittest.mock import *
+from mock import *
 
 from hpitclient.settings import HpitClientSettings
 

@@ -1,6 +1,6 @@
 import sure
 import unittest
-from unittest.mock import *
+from mock import *
 
 from server.app import ServerApp
 app_instance = ServerApp.get_instance()

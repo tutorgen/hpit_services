@@ -11,6 +11,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flaskext.markdown import Markdown
 from flask.ext.user import current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
 from flask_wtf.csrf import CsrfProtect
+from pymongo.errors import ConnectionFailure
 
 from gears_less import LESSCompiler
 from gears_coffeescript import CoffeeScriptCompiler
@@ -54,14 +55,17 @@ class ServerApp:
 
         self.app.config.from_object(settings_manager.settings)
 
-        self.mongo = PyMongo(self.app)
+        try:
+            self.mongo = PyMongo(self.app)
+            self.app.session_interface = MongoSessionInterface(self.app, self.mongo)
+        except ConnectionFailure:
+            self.mongo = None
+
         self.babel = Babel(self.app)
         self.db = SQLAlchemy(self.app)
         self.mail = Mail(self.app)
         self.md = Markdown(self.app)
         self.csrf = CsrfProtect(self.app)
-
-        self.app.session_interface = MongoSessionInterface(self.app, self.mongo)
 
     def bootstrap_user(self):
         from .models import User

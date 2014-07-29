@@ -1,3 +1,4 @@
+import os
 from server.app import ServerApp
 db = ServerApp.get_instance().db
 
@@ -12,5 +13,7 @@ class Command:
         self.configuration = configuration
 
         db.create_all()
+
+        os.mkdir(os.path.join(os.getcwd(), 'server/db/mongo'))
 
         print("DONE! - Sync'd the database with the data model")
