@@ -13,7 +13,7 @@ class Command:
 
         test_path = os.path.join(os.getcwd(), 'tests')
 
-        if test_path in arguments:
+        if 'test_path' in arguments:
             test_path = arguments['test_path']
         
         nose.main(argv=['-w', test_path, '--verbose'])
