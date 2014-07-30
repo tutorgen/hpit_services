@@ -123,6 +123,10 @@ class BaseManager:
             cmd = pkg.Command(self, pkg_parser)
             pkg_parser.set_defaults(description=cmd.description, func=cmd.run)
 
+            if hasattr(cmd, 'arguments'):
+                for argument in cmd.arguments:
+                    pkg_parser.add_argument(argument)
+
 
     def build_argument_parser(self):
         """
