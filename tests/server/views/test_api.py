@@ -356,122 +356,110 @@ class TestServerAPI(unittest.TestCase):
     def test_plugin_list_subscriptions(self):
         """
         api.plugin_list_subscriptions() Test plan:
-            -mock a list of subscriptions in a db for some plugin name
-            -ensure list of subscriptions returned on success
-            -try to get subscriptions of non existant plugin name
-            -ensure that plugins that share names don't share subscriptions
+            - if not connected, return auth_failed
+            - if a tutor connected, should return a not_found response
+            - if no subscriptions, subscriptions should still be in the response
+            - put some subscriptions in the sql database
+            - their names should be in the response also
         """
         pass
 
     def test_plugin_message_history(self):
         """
         api.plugin_message_history() Test plan:
-            -mock a db with some events for a given plugin name (at least event need "transaction" as name)
-            -ensure a list of names and payloads are returned matches those in DB
-            -make sure that plugins that share names do not share histories
-            -make sure none of the messages have "transaction" as a name
-            -make sure is in the format of event_name and message
+            - if not connected, should return an auth_failed
+            - if no messages in mongodb, then message-history should be in result
+            - put some messages in the mongo db, and a transaction, and one from another entity
+            - should be returned in response (not transactions)
         """
         pass
 
     def test_plugin_transaction_history(self):
         """
         api.plugin_transaction_history() Test plan:
-            -mock a db with some events for a given plugin name (at least event need not "transaction" as name)
-            -ensure a list of names and payloads are returned matches those in DB
-            -make sure that plugins that share names do not share histories
-            -make sure all of the messages have "transaction" as a name
-            -make sure is in the format of event_name and message
+            - if not connected, should return an auth_failed
+            - if no messages in mongodb, then transaction-history should be in result
+            - put some messages in the mongo db, some transactions, some not, some from another entity
+            - transaction be returned in response
         """
         pass
 
     def test_plugin_message_preview(self):
         """
         api.plugin_message_preview() Test plan:
-            -mock database with transactions, messages, some processed, some not
-            -ensure list of names returned matches those in db
-            -ensure that none of the returned values have sent_to_plugin be true
-            -make sure that plugins that share names do not share previews
-            -make sure is in the format of event_name and message
+            - if not connected, should return an auth_failed
+            - if nothing in messages, message-preview should still be in response
+            - add some messages; some transactions, some of other entity ids, some sent to plugin
+            - response should only contain those not sent to plugin, with this entity_id, and no transactions
         """
         pass
 
     def test_plugin_transaction_preview(self):
         """
         api.plugin_transaction_preview() Test plan:
-            -mock database with transactions, messages, some processed, some not
-            -ensure list of names returned matches those in db
-            -ensure that none of the returned values have sent_to_plugin be true
-            -make sure that plugins that share names do not share previews
-            -make sure is in the format of event_name and message
+            - if not connected, should return an auth_failed
+            - if nothing in messages, transaction-preview should still be in response
+            - add some messages; some transactions, some of other entity ids, some sent to plugin
+            - response should only contain those not sent to plugin, with this entity_id, and only transactions
         """
         pass
 
-    def test_plugin_messages(self):
+    def test_plugin_message_list(self):
         """
-        api.plugin_messages() Test plan:
-            -mock db, add some messages; some sent, some not, some transactions, some not
-            -on get, ensure that only sent_to_plugin = false messages are received
-            -make sure none of them transactions
-            -make sure return value in the form of event,message dict
-            -ensure that after fetch, those returned sent_to_plugin is changed to true in the db
-            -make sure that two plugins cannot accidentally share messages
-            -make sure untouched messages remain unchanged in db
+        api.plugin_message_list() Test plan:
+            - If not connected, should return an auth_failed
+            - if empty, result should still be in response
+            - put some messages in db, some sent to plugin = true, some false, some transactions, some of other entity_id
+            - those messages should have sent to plugin set to false
+            - the messages with equal entity_id, not transaction, and origionally sent to plugin false should be in the result
         """
         pass
 
-    def test_plugin_transactions(self):
+    def test_plugin_transaction_list(self):
         """
-        api.plugin_transactions() Test plan:
-            -mock db, add some messages; some sent, some not, some transactions, some not
-            -on get, ensure that only sent_to_plugin = false transactions are received
-            -make sure none of them normal messages
-            -make sure return value in the form of event,message dict
-            -ensure that after fetch, those returned sent_to_plugin is changed to true in the db
-            -make sure that two plugins cannot accidentally share transactions
-            -make sure untouched messages remain unchanged in db
+        api.plugin_transaction_list() Test plan:
+            - If not connected, should return an auth_failed
+            - if empty, result should still be in response
+            - put some messages in db, some sent to plugin = true, some false, some transactions, some of other entity_id
+            - those messages should have sent to plugin set to false
+            - the messages with equal entity_id, transaction, and origionally sent to plugin false should be in the result
         """
         pass
 
     def test_message(self):
         """
         api.message() Test plan:
-            -mock a database, empty
-            -send a fake request with some data
-            -make sure data is correctly propogated to plugin_messagse (fields match)
-            -make sure duplicate plugins get duplicate messages (name querying problem probably exists)
-            -make sure the returned id is in the plugin_message entries added by the system
-        """
-        pass
-
-    def test_transaction(self):
-        """
-        api.transaction() Test plan:
-            -mock a database, empty
-            -send a fake request with some data
-            -make sure data is correctly propogated to plugin_messagse (fields match)
-            -transactions should be put in plugin_messages for every plugin that exists (all subscribe to transactions)
-            -make sure same named plugins get duplicate messages (name querying problem probably exists)
-            -make sure the returned id is in the plugin_message entries added by the system
+            - if not conected, should return an auth_failed
+            - request should have name and payload params, otherwise bad response
+            - message should be written to db, sender id correctly set
+            - if a subscription exists
+                - message should be written to plugin_messages
+                - receiver_entity_id should be the subscription plugin_entity_id
+                - sender_id same as sender's entity_id
+            -response should have message_id
         """
         pass
 
     def test_response(self):
         """
         api.response() Test plan:
-            -mock db with a message, and no responses
-            -Test for invalid message_id... what does it do
-            -On success, make sure response written to database
-            -reutrned ID should be listed in response database
+            - if not connected, should return an auth_failed
+            - add two messages to plugin_messages
+                - one has responsder_entity_id to entity_id, one has bogus value
+            - respondes should have a record inserted
+                - message id should equal plugin_message id
+                - responder_id should equal the senders entity_id
+                - receiver_id should be the plugin_message sender_entity_id
+            - response should contain response_id
         """
         pass
 
-    def test_responses(self):
+    def test_response_list(self):
         """
-        api.responses() Test plan:
-            -ensure 401 returned if session data not available
-            -ensure return value is proper format {response: {message: ,response: }}
-            -ensure that after response is polled, its received value is set to true
-            -ensure that other responses are not touched
+        api.response_list() Test plan:
+            - if not connected, should return an auth_failed
+            - if no responses, responses should still be in response
+            - add some responses to the db, with some with received as false, some true
+            - those with recieved as false should be updated to true and returned
         """
         pass
