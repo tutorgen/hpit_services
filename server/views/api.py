@@ -273,7 +273,7 @@ def subscribe():
         200:EXISTS  - The mapping already exists
     """
     if 'message_name' not in request.json:
-        return bad_parameter_response()
+        return bad_parameter_response('message_name')
 
     if 'entity_id' not in session:
         return auth_failed_response()
@@ -320,7 +320,7 @@ def unsubscribe():
     """
 
     if 'message_name' not in request.json:
-        return bad_parameter_response()
+        return bad_parameter_response('message_name')
 
     if 'entity_id' not in session:
         return auth_failed_response()

@@ -334,11 +334,31 @@ class TestServerAPI(unittest.TestCase):
         api.subscribe() Test plan:
             - if message_name not in request, then bad_parameter response
             - if not connected, return auth_failed_response
-            - not round response if a tutor tries to subscribe
+            - not found response if a tutor tries to subscribe
             - first time around, ok response, a subscription should be in the db
             - second time around, exists response, nothing should be added
         """
-        pass
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("tutor")
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'Could not find the requested resource.')
+        self.disconnect_helper("tutor")
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'OK')
+        plugin = Plugin.query.filter_by(entity_id=self.plugin_entity_id).first()
+        subscription = Subscription.query.filter_by(plugin=plugin, message_name="test_message").first()
+        subscription.should_not.equal(None)
+        
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'EXISTS')
+        self.disconnect_helper("plugin")
         
     def test_unsubscribe(self):
         """
@@ -348,10 +368,32 @@ class TestServerAPI(unittest.TestCase):
             - if a tutor tries to do all this, should be a not_found_response
             - with no subscriptions in database, should return not_found_response
             - with a subscription in the database, should return ok_response, no subscription left
-            - without a subscription, it will reutrn not_found_response
             
         """
-        pass
+        response = self.test_client.post("/plugin/unsubscribe",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/plugin/unsubscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("tutor")
+        response = self.test_client.post("/plugin/unsubscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'Could not find the requested resource.')
+        self.disconnect_helper("tutor")
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/plugin/unsubscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        response.data.should.contain(b'Could not find the requested resource.')
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json") #subscribe to message
+        response = self.test_client.post("/plugin/unsubscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        
+        plugin = Plugin.query.filter_by(entity_id=self.plugin_entity_id).first()
+        subscription = Subscription.query.filter_by(plugin=plugin, message_name="test_message").first()
+        subscription.should.equal(None)
+        response.get_data().should.contain(b'OK')
+        
+        self.disconnect_helper("plugin")
 
     def test_plugin_list_subscriptions(self):
         """
@@ -362,8 +404,23 @@ class TestServerAPI(unittest.TestCase):
             - put some subscriptions in the sql database
             - their names should be in the response also
         """
-        pass
-
+        response = self.test_client.get("/plugin/subscription/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("tutor")
+        response = self.test_client.get("/plugin/subscription/list",data = json.dumps({}),content_type="application/json")
+        response.get_data().should.contain(b'Could not find the requested resource.')
+        self.disconnect_helper("tutor")
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/subscription/list",data = json.dumps({}),content_type="application/json")
+        response.get_data().should.contain(b'subscriptions')
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json") #subscribe to message
+        
+        response = self.test_client.get("/plugin/subscription/list",data = json.dumps({}),content_type="application/json")
+        response.get_data().should.contain(b'test_message')
+        
     def test_plugin_message_history(self):
         """
         api.plugin_message_history() Test plan:
