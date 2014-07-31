@@ -85,15 +85,13 @@ def connect():
         404 if no entity or tutor is registered with the supplied entity_id
         403 if failed to authenticate (entity_id or api_key is invalid)
     """
-    print(request.data)
-    
     for x in ['entity_id', 'api_key']:
         if x not in request.json:
             return bad_parameter_response(x)
    
     entity_id = request.json['entity_id']
     api_key = request.json['api_key']
-
+    
     entity = Tutor.query.filter_by(entity_id=entity_id).first()
 
     if not entity:
@@ -191,7 +189,7 @@ def log():
         200:OK      - Added the log entry
     """
     if 'log_entry' not in request.json:
-        return bad_parameter_response()
+        return bad_parameter_response('log_entry')
 
     if 'entity_id' not in session:
         return auth_failed_response()
