@@ -21,6 +21,8 @@ csrf = app_instance.csrf
 from uuid import uuid4
 
 from pymongo import MongoClient
+from bson.objectid import ObjectId
+
 
 from datetime import datetime
 
@@ -82,7 +84,6 @@ class TestServerAPI(unittest.TestCase):
         client = MongoClient()
         client.drop_database(settings.MONGO_DBNAME)
         
-        
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
@@ -91,7 +92,6 @@ class TestServerAPI(unittest.TestCase):
         db.drop_all()
         db.session.commit()
      
-
     def test_version(self):
         """
         api.version() Test plan:
@@ -99,8 +99,7 @@ class TestServerAPI(unittest.TestCase):
         """
         response = self.test_client.get("/version")
         str(response.get_data()).should.contain(settings.HPIT_VERSION)
-        
-        
+           
     def test_connect(self):
         """
         api.connect() Test plan:
@@ -113,7 +112,6 @@ class TestServerAPI(unittest.TestCase):
             -mock db.session.commit, ensure called
             -make sure an ok response is returned
         """
-
         response = self.test_client.post("/connect",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Missing parameter:')
         response = self.test_client.post("/connect",data = json.dumps({"api_key":"1234"}),content_type="application/json")
@@ -152,7 +150,6 @@ class TestServerAPI(unittest.TestCase):
         db.session.add = olddbsessionadd
         db.session.commit = olddbsessioncommit
         
-
     def test_disconnect(self):
         """
         api.disconnect() Test plan:
@@ -429,7 +426,44 @@ class TestServerAPI(unittest.TestCase):
             - put some messages in the mongo db, and a transaction, and one from another entity
             - should be returned in response (not transactions)
         """
-        pass
+        response = self.test_client.get("/plugin/message/history",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/message/history",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'message-history')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 1"},
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 2"},
+            },
+            {
+                'receiver_entity_id':"1234",
+                'message_name':"some message",
+                'payload':{"msg":"Bad value"},
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 2"},
+            },
+        ])
+        
+        response = self.test_client.get("/plugin/message/history",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Valid payload 1')
+        response.data.should.contain(b'Valid payload 2')
+        response.data.should_not.contain(b'Bad value')
+        response.data.should_not.contain(b'Bad value 2')
+       
+        self.disconnect_helper("plugin")
 
     def test_plugin_transaction_history(self):
         """
@@ -439,7 +473,44 @@ class TestServerAPI(unittest.TestCase):
             - put some messages in the mongo db, some transactions, some not, some from another entity
             - transaction be returned in response
         """
-        pass
+        response = self.test_client.get("/plugin/transaction/history",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/transaction/history",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'transaction-history')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Valid payload 1"},
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Valid payload 2"},
+            },
+            {
+                'receiver_entity_id':"1234",
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value"},
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 2"},
+            },
+        ])
+        
+        response = self.test_client.get("/plugin/transaction/history",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Valid payload 1')
+        response.data.should.contain(b'Valid payload 2')
+        response.data.should_not.contain(b'Bad value')
+        response.data.should_not.contain(b'Bad value 2')
+       
+        self.disconnect_helper("plugin")
 
     def test_plugin_message_preview(self):
         """
@@ -449,7 +520,62 @@ class TestServerAPI(unittest.TestCase):
             - add some messages; some transactions, some of other entity ids, some sent to plugin
             - response should only contain those not sent to plugin, with this entity_id, and no transactions
         """
-        pass
+        response = self.test_client.get("/plugin/message/preview",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/message/preview",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'message-preview')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 1"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 2"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':"1234",
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 2"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 3"},
+                'sent_to_plugin': True,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 4"},
+                'send_to_plugin': True,
+            },
+        ])
+        
+        response = self.test_client.get("/plugin/message/preview",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Valid payload 1')
+        response.data.should.contain(b'Valid payload 2')
+        response.data.should_not.contain(b'Bad value')
+        response.data.should_not.contain(b'Bad value 2')
+        response.data.should_not.contain(b'Bad value 3')
+        response.data.should_not.contain(b'Bad value 4')
+       
+        self.disconnect_helper("plugin")
 
     def test_plugin_transaction_preview(self):
         """
@@ -459,7 +585,62 @@ class TestServerAPI(unittest.TestCase):
             - add some messages; some transactions, some of other entity ids, some sent to plugin
             - response should only contain those not sent to plugin, with this entity_id, and only transactions
         """
-        pass
+        response = self.test_client.get("/plugin/transaction/preview",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/transaction/preview",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'transaction-preview')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Valid payload 1"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Valid payload 2"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':"1234",
+                'message_name':"transaction",
+                'message_payload':{"msg":"Bad value"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 2"},
+                'sent_to_plugin': False,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 3"},
+                'sent_to_plugin': True,
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 4"},
+                'send_to_plugin': True,
+            },
+        ])
+        
+        response = self.test_client.get("/plugin/transaction/preview",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Valid payload 1')
+        response.data.should.contain(b'Valid payload 2')
+        response.data.should_not.contain(b'Bad value')
+        response.data.should_not.contain(b'Bad value 2')
+        response.data.should_not.contain(b'Bad value 3')
+        response.data.should_not.contain(b'Bad value 4')
+       
+        self.disconnect_helper("plugin")
 
     def test_plugin_message_list(self):
         """
@@ -467,10 +648,86 @@ class TestServerAPI(unittest.TestCase):
             - If not connected, should return an auth_failed
             - if empty, result should still be in response
             - put some messages in db, some sent to plugin = true, some false, some transactions, some of other entity_id
-            - those messages should have sent to plugin set to false
-            - the messages with equal entity_id, not transaction, and origionally sent to plugin false should be in the result
+            - those messages should have sent_to_plugin set to false
+            - the messages with equal entity_id, not transaction, and origionally sent_to_plugin false should be in the result
         """
-        pass
+        response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'messages')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 1"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 2"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':"1234",
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 2"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 3"},
+                'sent_to_plugin': True,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 4"},
+                'send_to_plugin': True,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+        ])
+        
+        response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Valid payload 1')
+        response.data.should.contain(b'Valid payload 2')
+        response.data.should_not.contain(b'Bad value')
+        response.data.should_not.contain(b'Bad value 2')
+        response.data.should_not.contain(b'Bad value 3')
+        response.data.should_not.contain(b'Bad value 4')
+       
+        client[settings.MONGO_DBNAME].plugin_messages.find(
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'sent_to_plugin': True,
+            }     
+        ).count().should.equal(3)
+        
+       
+        self.disconnect_helper("plugin")
 
     def test_plugin_transaction_list(self):
         """
@@ -481,7 +738,83 @@ class TestServerAPI(unittest.TestCase):
             - those messages should have sent to plugin set to false
             - the messages with equal entity_id, transaction, and origionally sent to plugin false should be in the result
         """
-        pass
+        response = self.test_client.get("/plugin/transaction/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/plugin/transaction/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'transactions')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Valid payload 1"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Valid payload 2"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':"1234",
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 2"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload':{"msg":"Bad value 3"},
+                'sent_to_plugin': True,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Bad value 4"},
+                'send_to_plugin': True,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
+        ])
+        
+        response = self.test_client.get("/plugin/transaction/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Valid payload 1')
+        response.data.should.contain(b'Valid payload 2')
+        response.data.should_not.contain(b'Bad value')
+        response.data.should_not.contain(b'Bad value 2')
+        response.data.should_not.contain(b'Bad value 3')
+        response.data.should_not.contain(b'Bad value 4')
+       
+        client[settings.MONGO_DBNAME].plugin_messages.find(
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'sent_to_plugin': True,
+            }     
+        ).count().should.equal(3)
+        
+       
+        self.disconnect_helper("plugin")
 
     def test_message(self):
         """
@@ -495,28 +828,141 @@ class TestServerAPI(unittest.TestCase):
                 - sender_id same as sender's entity_id
             -response should have message_id
         """
-        pass
+        response = self.test_client.post("/message",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/message",data = json.dumps({"name":"test"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/message",data = json.dumps({"payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/message",data = json.dumps({"name":"test","payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'message_id')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].messages.find(
+            {
+                'sender_entity_id':self.plugin_entity_id,
+                'message_name':"test",
+                'payload': {"test":"test"},
+            }     
+        ).count().should.equal(1)
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test"}),content_type="application/json") #subscribe to message
+
+        response = self.test_client.post("/message",data = json.dumps({"name":"test","payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'message_id')
+        
+        client[settings.MONGO_DBNAME].plugin_messages.find(
+            {
+                'sender_entity_id':self.plugin_entity_id,
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"test",
+                'payload': {"test":"test"},
+                'sent_to_plugin':False,
+            }     
+        ).count().should.equal(1)
+        
 
     def test_response(self):
         """
         api.response() Test plan:
             - if not connected, should return an auth_failed
+            - if no message_id or payload, should issue bad_parameter response
             - add two messages to plugin_messages
-                - one has responsder_entity_id to entity_id, one has bogus value
+                - one has receiver_entity_id to entity_id, one has bogus value
             - respondes should have a record inserted
-                - message id should equal plugin_message id
-                - responder_id should equal the senders entity_id
+                - message id should equal plugin_message message_id
+                - sender_id should equal the plugins entity_id
                 - receiver_id should be the plugin_message sender_entity_id
             - response should contain response_id
         """
-        pass
+        response = self.test_client.post("/response",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test"}),content_type="application/json") #subscribe to message
+        response = self.test_client.post("/response",data = json.dumps({"name":"name"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        response = self.test_client.post("/response",data = json.dumps({"payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        self.disconnect_helper("plugin")
+        
+        self.connect_helper("tutor")
+        response = self.test_client.post("/message",data = json.dumps({"name":"test","payload":{"test":"test"}}),content_type="application/json")#put a message
+        response_string= response.get_data().decode('utf-8')
+        message_id = json.loads(response_string)["message_id"]
+        response = self.test_client.post("/message",data = json.dumps({"name":"test","payload":{"bogus":"bogus"}}),content_type="application/json")#put a message
+        self.disconnect_helper("tutor")
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/response",data = json.dumps({"message_id":str(message_id),"payload":{"response":"test response"}}),content_type="application/json")
+        response.data.should.contain(b'response_id')
 
+        client=MongoClient()
+        client[settings.MONGO_DBNAME].responses.find(
+            {
+                'message_id':ObjectId(message_id),
+                'sender_entity_id':self.plugin_entity_id,
+                'receiver_entity_id':self.tutor_entity_id,
+                'response': {"response":"test response"},
+                'response_received':False,
+            }     
+        ).count().should.equal(1)
+        self.disconnect_helper("plugin")
+        
     def test_response_list(self):
         """
         api.response_list() Test plan:
             - if not connected, should return an auth_failed
             - if no responses, responses should still be in response
             - add some responses to the db, with some with received as false, some true
-            - those with recieved as false should be updated to true and returned
+            - those with received as false should be updated to true and returned
         """
-        pass
+        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'responses')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].responses.insert([
+                {
+                    "receiver_entity_id":self.plugin_entity_id,
+                    "response_received":False,
+                    "response":{"res":"Good value 1"},
+                    "message":{"m":"some message"},
+                },
+                {
+                    "receiver_entity_id":self.plugin_entity_id,
+                    "response_received":False,
+                    "response":{"res":"Good value 2"},
+                    "message":{"m":"some message"},
+                },
+                {
+                    "receiver_entity_id":self.plugin_entity_id,
+                    "response_received":True,
+                    "response":{"res":"Bad value 1"},
+                    "message":{"m":"some message"},
+                },
+                {
+                    "receiver_entity_id":"1234",
+                    "response_received":False,
+                    "response":{"res":"Bad value 2"},
+                    "message":{"m":"some message"},
+                },
+        ])
+        
+        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Good value 1')
+        response.data.should.contain(b'Good value 2')
+        response.data.should_not.contain(b'Bad value 1')
+        response.data.should_not.contain(b'Bad value 2')
+        
+        client[settings.MONGO_DBNAME].responses.find({"response_received":True}).count().should.equal(3)
+        
+        self.disconnect_helper("plugin")
+
