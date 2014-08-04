@@ -4,8 +4,6 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from bson.objectid import ObjectId
 
-import nose
-
 from plugins import StudentManagementPlugin
 
 class TestStudentManagementPlugin(unittest.TestCase):
@@ -26,7 +24,6 @@ class TestStudentManagementPlugin(unittest.TestCase):
         
         self.test_subject = None
 
-
     def test_constructor(self):
         """
         StudentManagementPlugin.__init__() Test plan:
@@ -40,7 +37,6 @@ class TestStudentManagementPlugin(unittest.TestCase):
         isinstance(smp.db,Collection).should.equal(True)
         smp.db.full_name.should.equal("hpit_students.students")
         
-    
     def test_add_student_callback(self):
         """
         StudentManagementPlugin.add_student_callback() Test plan:
@@ -50,7 +46,6 @@ class TestStudentManagementPlugin(unittest.TestCase):
             -Should be two distinc messages now
             -mock response, should have a call with the message id and student id
         """
-        
         test_message = {"message_id":"2"}
         calls = [call("ADD_STUDENT"),call(test_message)]
         self.test_subject.logger = MagicMock()

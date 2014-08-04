@@ -68,8 +68,7 @@ class StudentManagementPlugin(Plugin):
         else:
             record = self.db.find_one({"_id":ObjectId(str(student_id))})
             self.send_response(message["message_id"],{"student_id":str(record["_id"]),"attributes":record["attributes"]})
-            
-        
+               
     def get_attribute_callback(self, message):
         self.logger.debug("GET_ATTRIBUTE")
         self.logger.debug(message)
