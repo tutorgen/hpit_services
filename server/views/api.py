@@ -13,6 +13,8 @@ csrf = app_instance.csrf
 
 from server.models import Plugin, Tutor, Subscription
 
+from server.settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
 
 def _map_mongo_document(document):
     mapped_doc = {}
@@ -86,10 +88,10 @@ def connect():
     for x in ['entity_id', 'api_key']:
         if x not in request.json:
             return bad_parameter_response(x)
-
+   
     entity_id = request.json['entity_id']
     api_key = request.json['api_key']
-
+    
     entity = Tutor.query.filter_by(entity_id=entity_id).first()
 
     if not entity:
@@ -187,7 +189,7 @@ def log():
         200:OK      - Added the log entry
     """
     if 'log_entry' not in request.json:
-        return bad_parameter_response()
+        return bad_parameter_response('log_entry')
 
     if 'entity_id' not in session:
         return auth_failed_response()
@@ -271,7 +273,7 @@ def subscribe():
         200:EXISTS  - The mapping already exists
     """
     if 'message_name' not in request.json:
-        return bad_parameter_response()
+        return bad_parameter_response('message_name')
 
     if 'entity_id' not in session:
         return auth_failed_response()
@@ -318,7 +320,7 @@ def unsubscribe():
     """
 
     if 'message_name' not in request.json:
-        return bad_parameter_response()
+        return bad_parameter_response('message_name')
 
     if 'entity_id' not in session:
         return auth_failed_response()
@@ -380,10 +382,10 @@ def plugin_message_history():
     SUPPORTS: GET
     Lists the message history for the plugin - including queued messages.
 
-    !!! IMPORTANT - Does not mark the messages as recieved. 
+    !!! IMPORTANT - Does not mark the messages as received. 
 
     If you wish to preview queued messages only use the '/message-preview' route instead.
-    If you wish to actually CONSUME the queue (mark as recieved) use the '/messages' route instead.
+    If you wish to actually CONSUME the queue (mark as received) use the '/messages' route instead.
 
     DO NOT USE THIS ROUTE TO GET YOUR MESSAGES -- ONLY TO VIEW THEIR HISTORY.
 
@@ -397,13 +399,13 @@ def plugin_message_history():
     entity_id = session['entity_id']
 
     my_messages = mongo.db.plugin_messages.find({
-        'plugin_entity_id': entity_id,
+        'receiver_entity_id': entity_id,
         'message_name' : {"$ne" : "transaction"}, 
     })
 
     result = [{
         'message_name': t['message_name'],
-        'message': _map_mongo_document(t['message_payload'])
+        'message': _map_mongo_document(t['payload'])
         } for t in my_messages]
 
     return jsonify({'message-history': result})
@@ -414,10 +416,10 @@ def plugin_transaction_history():
     """
     SUPPORTS: GET
     Lists the transaction history for a specific plugin - including queued messages.
-    Does not mark them as recieved. 
+    Does not mark them as received. 
 
     If you wish to preview queued transactions only use the '/transaction-preview' route instead.
-    If you wish to actually CONSUME the queue (mark as recieved) use the '/transactions' route instead.
+    If you wish to actually CONSUME the queue (mark as received) use the '/transactions' route instead.
 
     DO NOT USE THIS ROUTE TO GET YOUR TRANSACTIONS -- ONLY TO VIEW THEIR HISTORY.
 
@@ -432,13 +434,13 @@ def plugin_transaction_history():
     entity_id = session['entity_id']
 
     my_messages = mongo.db.plugin_messages.find({
-        'plugin_entity_id': entity_id,
+        'receiver_entity_id': entity_id,
         'message_name' : "transaction", 
     })
 
     result = [{
         'message_name': t['message_name'],
-        'message': _map_mongo_document(t['message_payload'])
+        'message': _map_mongo_document(t['payload'])
         } for t in my_messages]
 
     return jsonify({'transaction-history': result})
@@ -449,7 +451,7 @@ def plugin_message_preview():
     """
     SUPPORTS: GET
     Lists the messages and transactions queued for a specific plugin. 
-    Does not mark them as recieved. Only shows messagess not marked as received.
+    Does not mark them as received. Only shows messagess not marked as received.
     If you wish to see the entire message history for 
     the plugin use the '/message-history' route instead.
 
@@ -466,13 +468,13 @@ def plugin_message_preview():
 
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_entity_id': entity_id,
+        'receiver_entity_id': entity_id,
         'message_name' : {"$ne" : "transaction"},
     })
 
     result = [{
         'message_name': t['message_name'],
-        'message': _map_mongo_document(t['message_payload'])
+        'message': _map_mongo_document(t['payload'])
         } for t in my_messages]
 
     return jsonify({'message-preview': result})
@@ -483,7 +485,7 @@ def plugin_transaction_preview():
     """
     SUPPORTS: GET
     Lists the messages and transactions queued for a specific plugin. 
-    Does not mark them as recieved. Only shows messagess not marked as received.
+    Does not mark them as received. Only shows messagess not marked as received.
     If you wish to see the entire message history for 
     the plugin use the '/message-history' route instead.
 
@@ -500,13 +502,13 @@ def plugin_transaction_preview():
 
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
-        'plugin_entity_id': entity_id,
+        'receiver_entity_id': entity_id,
         'message_name' : "transaction",
     })
 
     result = [{
         'message_name': t['message_name'],
-        'message': _map_mongo_document(t['message_payload'])
+        'message': _map_mongo_document(t['payload'])
         } for t in my_messages]
 
     return jsonify({'transaction-preview': result})
@@ -518,7 +520,7 @@ def plugin_message_list():
     SUPPORTS: GET
     List the messages and transactions queued for a specific plugin.
 
-    !!!DANGER!!!: Will mark the messages as recieved by the plugin 
+    !!!DANGER!!!: Will mark the messages as received by the plugin 
     and they will not show again. If you wish to see a preview
     of the messages queued for a plugin use the /message-preview route instead.
 
@@ -564,7 +566,7 @@ def plugin_transaction_list():
     SUPPORTS: GET
     List the transactions queued for a specific plugin.
 
-    !!!DANGER!!!: Will mark the transactions as recieved by the plugin 
+    !!!DANGER!!!: Will mark the transactions as received by the plugin 
     and they will not show again. If you wish to see a preview
     of the transactions queued for a plugin use the /transaction-preview route instead.
 
@@ -624,6 +626,10 @@ def message():
     """
     if 'entity_id' not in session:
         return auth_failed_response()
+        
+    for x in ['name', 'payload']:
+        if x not in request.json:
+            return bad_parameter_response(x)
 
     sender_entity_id = session['entity_id']
     message_name = request.json['name']
@@ -683,6 +689,10 @@ def response():
     """
     if 'entity_id' not in session:
         return auth_failed_response()
+        
+    for x in ['message_id', 'payload']:
+        if x not in request.json:
+            return bad_parameter_response(x)
 
     responder_entity_id = session['entity_id']
     message_id = request.json['message_id']
@@ -704,7 +714,7 @@ def response():
         'receiver_entity_id': plugin_message['sender_entity_id'],
         'message': plugin_message,
         'response': payload,
-        'response_recieved': False
+        'response_received': False
     })
 
     return jsonify(response_id=str(response_id))
@@ -727,7 +737,7 @@ def responses():
 
     my_responses = mongo.db.responses.find({
         'receiver_entity_id': entity_id,
-        'response_recieved': False
+        'response_received': False
     })
 
     result = [
@@ -742,7 +752,7 @@ def responses():
 
     mongo.db.responses.update(
         {'_id':{'$in': update_ids}},
-        {"$set": {'response_recieved':True, 'time_response_received': datetime.now()}}, 
+        {"$set": {'response_received':True, 'time_response_received': datetime.now()}}, 
         multi=True
     )
 
