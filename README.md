@@ -1,7 +1,7 @@
 [ ![Codeship Build Status](https://codeship.io/projects/d0ff7820-f8ca-0131-f61d-5a47552ce69e/status)](https://codeship.io/projects/28762)
 [![Travis Build Status](https://travis-ci.org/tutorgen/hpit_services.svg?branch=master)](https://travis-ci.org/tutorgen/hpit_services)
 
-## Overview
+## API Framework Documentation v2.0
 
 The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
@@ -273,7 +273,7 @@ Depending on the event name(eg kt_set_initial, or kt_trace) the payload the plug
 Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.
 
-## Plugins in depth
+## Plugin Component Specification
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, recieves
 transcation payloads, perfoms some arbitrary function based on the event and message
