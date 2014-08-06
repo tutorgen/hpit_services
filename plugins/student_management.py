@@ -23,8 +23,9 @@ class StudentManagementPlugin(Plugin):
 
     #Student Management Plugin
     def add_student_callback(self, message):
-        self.logger.debug("ADD_STUDENT")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("ADD_STUDENT")
+            self.logger.debug(message)
         
         try:
             attributes = message["attributes"]
@@ -35,8 +36,9 @@ class StudentManagementPlugin(Plugin):
         self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes})
         
     def get_student_callback(self, message):
-        self.logger.debug("GET_STUDENT")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("GET_STUDENT")
+            self.logger.debug(message)
         
         try:
             student_id = message["student_id"]
@@ -51,8 +53,9 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"student_id":str(return_student["_id"]),"attributes":return_student["attributes"]})
             
     def set_attribute_callback(self, message):
-        self.logger.debug("SET_ATTRIBUTE")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("SET_ATTRIBUTE")
+            self.logger.debug(message)
         
         try:
             student_id = message["student_id"]
@@ -70,8 +73,9 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"student_id":str(record["_id"]),"attributes":record["attributes"]})
                
     def get_attribute_callback(self, message):
-        self.logger.debug("GET_ATTRIBUTE")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("GET_ATTRIBUTE")
+            self.logger.debug(message)
         
         try:
             student_id = message["student_id"]
