@@ -28,14 +28,10 @@ class KnowledgeTracingPlugin(Plugin):
         try:
             sender_entity_id = message["sender_entity_id"]
             skill = message["skill"]
-            prob_known = message["probability_known"]
-            prob_learned=  message["probability_learned"]
-            prob_guess = message["probability_guess"]
-            prob_mistake = message["probability_mistake"]
             student_id = message["student_id"]
             correct = message["correct"]
         except KeyError:
-            self.send_response(message['message_id'],{"error":"kt_trace requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', 'student_id' and 'correct'"})
+            self.send_response(message['message_id'],{"error":"kt_trace requires 'sender_entity_id', 'skill', 'student_id' and 'correct'"})
             return 
 
         kt_config = self.db.find_one({
