@@ -13,14 +13,14 @@ class TestStudentManagementPlugin(unittest.TestCase):
         class.  setup_method is invoked for every test method of a class.
         """
         self.test_subject = StudentManagementPlugin(123,456,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit_students.students
+        self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_students
         
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
         client = MongoClient()
-        client.drop_database("test_hpit_students")
+        client.drop_database("test_hpit")
         
         self.test_subject = None
 
@@ -30,12 +30,12 @@ class TestStudentManagementPlugin(unittest.TestCase):
             -ensure name, logger set as parameters
             -ensure that mongo is an instance of MongoClient
             -ensure that db is an instance of Collection
-            -ensure that the full name is hpit_students.students
+            -ensure that the full name is test_hpit.hpit_students
         """
         smp = StudentManagementPlugin(123,456,None)
         isinstance(smp.mongo,MongoClient).should.equal(True)
         isinstance(smp.db,Collection).should.equal(True)
-        smp.db.full_name.should.equal("hpit_students.students")
+        smp.db.full_name.should.equal("hpit.hpit_students")
         
     def test_add_student_callback(self):
         """
@@ -55,7 +55,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.logger.debug.assert_has_calls(calls)
         
         client = MongoClient()
-        result = client.test_hpit_students.students.find({})
+        result = client.test_hpit.hpit_students.find({})
         result.count().should.equal(1)
         result[0]["attributes"].should.equal({})  
         self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{}})
@@ -63,7 +63,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         
         test_message = {"message_id":"2","attributes":{"attr":"value"}}
         self.test_subject.add_student_callback(test_message)
-        result = client.test_hpit_students.students.find({})
+        result = client.test_hpit.hpit_students.find({})
         result.count().should.equal(2)
         result[1]["attributes"].should.equal({"attr":"value"})
         self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[1]["_id"]),"attributes":{"attr":"value"}})

@@ -90,7 +90,7 @@ class WindowsManager(BaseManager):
         else:
             print("Starting the HPIT Hub Server for Windows...")
             with open("tmp/output_server.txt","w") as f:
-                subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", self.settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+                subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
             with open(self.settings.HPIT_PID_FILE,"w") as pfile:
                 pfile.write(str(subp.pid))
 

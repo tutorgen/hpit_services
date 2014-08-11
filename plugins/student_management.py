@@ -9,7 +9,7 @@ class StudentManagementPlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
-        self.db = self.mongo.hpit_students.students
+        self.db = self.mongo.hpit.hpit_students
         
 
     def post_connect(self):
