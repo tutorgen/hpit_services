@@ -299,14 +299,12 @@ messages while altering the event name of the message so that other dependent
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.
 
-## Packaged Plugins
-
-### Example Plugin
+## Example Plugin
 
 The example plugin listens to the `test` and `example` event names and logs
 whatever data it's sent in the payload to a file.
 
-### Knowledge Tracing Plugin
+## Knowledge Tracing Plugin
 #### kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
 
@@ -355,11 +353,19 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
-### Student Management Plugin
+## Hint Factory Plugin
 
-### Skill Management Plugin
+### TODO
 
-### Problem Management Plugin
+## Student Management Plugin
+
+### TODO
+
+## Skill Management Plugin
+
+### TODO
+
+## Problem Management Plugin
 
 #### add_problem
 Adds a problem to the problem manager.
@@ -412,7 +418,7 @@ Returns:
     * problem_text : string - The text of the problem.
 * success : True - Always returns True
 
-### Problem Step Management Plugin
+## Problem Step Management Plugin
 
 #### add_problem_step
 Adds a problem step to the problem step manager.
@@ -475,7 +481,9 @@ Returns:
     * problem_step_text : string - The text of the problem step.
 * success : True - Always returns True
 
-### Data Storage Plugin
+## Data Storage Plugin
+
+### TODO
 
 ## Tech Stack
 
