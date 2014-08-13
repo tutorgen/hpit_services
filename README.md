@@ -355,7 +355,58 @@ Returns:
 
 ## Hint Factory Plugin
 
-### TODO
+#### hf_init_problem
+Initializes a new problem for the hint factory.
+
+Recieves:
+* start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")
+* goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")
+
+Returns:
+* status: string - OK or NOT_OK on success and failure respectively
+
+#### hf_push_state
+Pushes a new state on the problem.
+
+Recieves:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK
+
+#### hf_hint_exists
+Given a particular state structure. Does a hint exist for this problem?
+
+Recieves:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK
+* exists: string - YES if a hint is available, NO if it isn't
+
+#### hf_get_hint
+Given a particular state structure for a problem, retrieve the next most probable state that leads
+the student towards a solution.
+
+Recieves:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK
+* exists: string - YES if a hint is available, NO if it isn't
+* hint_text: string - The text describing the hint.
 
 ## Student Management Plugin
 
