@@ -179,8 +179,19 @@ class HintFactoryPlugin(Plugin):
              hf_get_hint=self.get_hint_callback)
 
     def init_problem_callback(self, message):
-        self.logger.debug("INIT PROBLEM")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("INIT PROBLEM")
+            self.logger.debug(message)
+            
+        try:
+            start_state = message["start_state"]
+            goal_problem = message["goal_problem"]
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error": "hf_init_problem requires a 'start_state' and 'goal_problem'",
+                "success":False
+            })
+            return
         
         if self.hf.create_or_get_problem_node(message["start_state"],message["goal_problem"]):
             self.send_response(message["message_id"],{"status":"OK"})
@@ -188,16 +199,35 @@ class HintFactoryPlugin(Plugin):
             self.send_response(message["message_id"],{"status":"NOT_OK"})
         
     def push_state_callback(self, message):
-        self.logger.debug("PUSH PROBLEM STATE")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("PUSH PROBLEM STATE")
+            self.logger.debug(message)
             
-        incoming_state = HintFactoryStateDecoder().decode(message["state"])
-        self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
-        self.send_response(message["message_id"],{"status":"OK"})
-
+        try:
+            state=  message["state"]
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error": "hf_push_state requires a 'state'",
+                "success":False
+            })
+            return
+        try:
+        
+            incoming_state = HintFactoryStateDecoder().decode(message["state"])
+            try:
+                self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
+                self.send_response(message["message_id"],{"status":"OK"})
+            except IndexError:
+                self.send_response(message["message_id"],{"status":"NOT_OK"})
+                
+            
+        except BadHintFactoryStateException:
+            self.send_response(message["message_id"],{"status":"NOT_OK"})
+            
     def hint_exists_callback(self, message):
-        self.logger.debug("HINT EXISTS")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("HINT EXISTS")
+            self.logger.debug(message)
         
         incoming_state = HintFactoryStateDecoder().decode(message["state"])
         if self.hf.hint_exists(incoming_state.problem,incoming_state.problem_state):
@@ -206,8 +236,9 @@ class HintFactoryPlugin(Plugin):
             self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
         
     def get_hint_callback(self, message):
-        self.logger.debug("GET HINT")
-        self.logger.debug(message)
+        if self.logger:
+            self.logger.debug("GET HINT")
+            self.logger.debug(message)
 
         incoming_state = HintFactoryStateDecoder().decode(message["state"])
         hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)

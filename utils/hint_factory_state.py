@@ -1,13 +1,21 @@
 import json
 from json import JSONEncoder, JSONDecoder
 
+class BadHintFactoryStateException(Exception):
+    """
+    Raised on failure to encode/decode a state.
+    """
+
 class HintFactoryStateEncoder(JSONEncoder):
     def default(self,o):
         return {"steps": o.steps, "problem_state": o.problem_state, "last_problem_state": o.last_problem_state,"problem":o.problem}
         
 class HintFactoryStateDecoder():
     def decode(self, json):
-        state_object = JSONDecoder(object_hook = self.decode_hook).decode(json)
+        try:
+            state_object = JSONDecoder(object_hook = self.decode_hook).decode(json)
+        except TypeError:
+            raise BadHintFactoryStateException("The state could not be properly decoded")
         return state_object
         
     def decode_hook(self,json):
