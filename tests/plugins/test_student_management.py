@@ -30,7 +30,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
             -ensure name, logger set as parameters
             -ensure that mongo is an instance of MongoClient
             -ensure that db is an instance of Collection
-            -ensure that the full name is test_hpit.hpit_students
+            -ensure that the full name is hpit.hpit_students
         """
         smp = StudentManagementPlugin(123,456,None)
         isinstance(smp.mongo,MongoClient).should.equal(True)
