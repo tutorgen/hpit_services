@@ -229,7 +229,12 @@ class HintFactoryPlugin(Plugin):
             self.logger.debug("HINT EXISTS")
             self.logger.debug(message)
         
-        incoming_state = HintFactoryStateDecoder().decode(message["state"])
+        try:
+            incoming_state = HintFactoryStateDecoder().decode(message["state"])
+        except (BadHintFactoryStateException, KeyError):
+            self.send_response(message["message_id"],{"status":"NOT_OK"})    
+            return
+            
         if self.hf.hint_exists(incoming_state.problem,incoming_state.problem_state):
             self.send_response(message["message_id"],{"status":"OK","exists":"YES"})
         else:
@@ -239,10 +244,14 @@ class HintFactoryPlugin(Plugin):
         if self.logger:
             self.logger.debug("GET HINT")
             self.logger.debug(message)
+            
+        try:
+            incoming_state = HintFactoryStateDecoder().decode(message["state"])
+        except(BadHintFactoryStateException, KeyError):
+            self.send_response(message["message_id"],{"status":"NOT_OK"})    
+            return
 
-        incoming_state = HintFactoryStateDecoder().decode(message["state"])
         hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
-        sys.stdout.flush()
         if hint:
             self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint})
         else:

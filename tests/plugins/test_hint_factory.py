@@ -6,8 +6,63 @@ from plugins import SimpleHintFactory
 from utils.hint_factory_state import *
 
 class TestSimpleHintFactory(unittest.TestCase):
-    def test(self):
+    
+    def test_constructor(self):
+        """
+        SimpleHintFactory.__init__() Test plan:
+            -
+        """
         pass
+    
+    def test_push_node(self):
+        """
+        SimpleHintFactory.push_node() Test plan:
+            -
+        """
+        pass
+    
+    def test_hash_string(self):
+        """
+        SimpleHintFactory.hash_string() Test plan:
+            -
+        """
+        pass
+    
+    def test_do_bellman(self):
+        """
+        SimpleHintFactory._do_bellman() Test plan:
+            -
+        """
+        pass
+    
+    def test_bellman_update(self):
+        """
+        SimpleHintFactory.bellman_update() Test plan:
+            -
+        """
+        pass
+    
+    def test_create_or_get_problem_node(self):
+        """
+        SimpleHintFactory.create_or_get_problem_node() Test plan:
+            -
+        """
+        pass
+    
+    def test_hint_exists(self):
+        """
+        SimpleHintFactory.hint_exists() Test plan:
+            -
+        """
+        pass
+    
+    def test_get_hint(self):
+        """
+        SimpleHintFactory.get_gint() Test plan:
+            -
+        """
+        psas
+        
     
     
 class TestHintFactoryPlugin(unittest.TestCase):
@@ -118,11 +173,83 @@ class TestHintFactoryPlugin(unittest.TestCase):
     def test_hint_exists_callback(self):
         """
         HintFactoryPlugin.hint_exists_callback() Test plan:
+            - mock hint_exists, mock send_response
+            - pass a bogus state, should respond with error
+            - if hint exists, should return exists, if not, should return no
         """
+        self.test_subject.send_response = MagicMock()
+        self.test_subject.hf.hint_exists = MagicMock(return_value = False)
+        
+        msg = {"message_id":"1"}
+        self.test_subject.hint_exists_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"NOT_OK"      
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = 4
+        self.test_subject.hint_exists_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"NOT_OK"      
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = HintFactoryStateEncoder().encode(HintFactoryState("2 + 2 = 4"))
+        self.test_subject.hint_exists_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",
+            "exists":"NO"
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        self.test_subject.hf.hint_exists = MagicMock(return_value = True)
+        msg["state"] = HintFactoryStateEncoder().encode(HintFactoryState("2 + 2 = 4"))
+        self.test_subject.hint_exists_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",
+            "exists":"YES"
+        })
+        self.test_subject.send_response.reset_mock()
     
     def test_get_hint_callbackl(self):
         """
         HintFactoryPlugin.get_hint_callback() Test plan:
+            - mock get_hint, send_response
+            - pass a bogus state, no state, shoudl respond with error
+            - if hint false, should return not exists, otherwise fine
         """
+        self.test_subject.send_response = MagicMock()
+        self.test_subject.hf.get_hint = MagicMock(return_value = False)
         
+        msg = {"message_id":"1"}
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"NOT_OK"      
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = 4
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"NOT_OK"      
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = HintFactoryStateEncoder().encode(HintFactoryState("2 + 2 = 4"))
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",
+            "exists":"NO"
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        self.test_subject.hf.get_hint = MagicMock(return_value = "hint text")
+        msg["state"] = HintFactoryStateEncoder().encode(HintFactoryState("2 + 2 = 4"))
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",
+            "exists":"YES",
+            "hint_text": "hint text"
+        })
+        self.test_subject.send_response.reset_mock()
     
