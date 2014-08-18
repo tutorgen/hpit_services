@@ -14,6 +14,9 @@ class Command:
 
         db.create_all()
 
-        os.mkdir(os.path.join(os.getcwd(), 'server/db/mongo'))
+        try:
+            os.mkdir(os.path.join(os.getcwd(), 'server/db/mongo'))
+        except FileExistsError:
+            pass
 
         print("DONE! - Sync'd the database with the data model")
