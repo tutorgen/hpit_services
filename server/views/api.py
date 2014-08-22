@@ -533,6 +533,15 @@ def plugin_message_list():
 
     entity_id = session['entity_id']
 
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    plugin.time_last_polled = datetime.now()
+    db.session.add(plugin)
+    db.session.commit()
+
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
         'receiver_entity_id': entity_id,
@@ -578,6 +587,15 @@ def plugin_transaction_list():
         return auth_failed_response()
 
     entity_id = session['entity_id']
+
+    plugin = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not plugin:
+        return not_found_response()
+
+    plugin.time_last_polled = datetime.now()
+    db.session.add(plugin)
+    db.session.commit()
 
     my_messages = mongo.db.plugin_messages.find({
         'sent_to_plugin': False,
@@ -734,6 +752,18 @@ def responses():
         return auth_failed_response()
 
     entity_id = session['entity_id']
+
+    entity = Plugin.query.filter_by(entity_id=entity_id).first()
+
+    if not entity:
+        entity = Tutor.query.filter_by(entity_id=entity_id).first()
+
+    if not entity:
+        return not_found_response()
+
+    entity.time_last_polled = datetime.now()
+    db.session.add(entity)
+    db.session.commit()
 
     my_responses = mongo.db.responses.find({
         'receiver_entity_id': entity_id,

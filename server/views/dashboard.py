@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 from flask import request, render_template, redirect, url_for
@@ -19,11 +20,41 @@ def index():
     SUPPORTS: GET
     Shows the main page for HPIT.
     """
+    active_poll_time = datetime.now() - timedelta(minutes=5)
+
+    plugins = list(Plugin.query.filter(Plugin.time_last_polled >= active_poll_time))
+    tutors = list(Tutor.query.filter(Tutor.time_last_polled >= active_poll_time))
+
+    end = datetime.now()
+    start = end - timedelta(days=7)
+
+    messages = mongo.db.messages.find({
+        'message_name': {
+            '$ne': 'transaction'},
+        'time_created': {
+            '$gte': start,
+            '$lt': end }
+        }).count()
+
+    transactions = mongo.db.messages.find({
+        'message_name': 'transaction',
+        'time_created': {
+            '$gte': start,
+            '$lt': end }
+        }).count()
+
+    responses = mongo.db.responses.find({
+        'time_response_received': {
+            '$gte': start,
+            '$lt': end }
+        }).count()
+
     return render_template('index.html', 
-        tutor_count=0,
-        plugin_count=0,
-        tutors=[],
-        plugins=[]
+        tutor_count=len(tutors),
+        plugin_count=len(plugins),
+        tutors=tutors,
+        plugins=plugins,
+        events=[('Messages', messages), ('Transactions', transactions), ('Responses', responses)]
     )
 
 

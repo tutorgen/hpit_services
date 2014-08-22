@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from Crypto.Hash import HMAC, SHA512
 
 from server.app import ServerApp
@@ -15,7 +16,8 @@ class Tutor(db.Model):
     api_key_result = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(1400), nullable=False)
-    connected = db.Column(db.Boolean, nullable=False, default=False)
+
+    time_last_polled = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     def generate_key(self):
         #Generate a cryptographically secure key with HMAC
