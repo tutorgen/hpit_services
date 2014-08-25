@@ -7,17 +7,36 @@
 
     Number of Tutors Connected: {{tutor_count}}<br/>
     Number of Plugins Connected: {{plugin_count}}<br/>
-    Number of Events Published Every Second: Unknown<br/>
+
+    <h4>Event Throughput (previous week)</h4>
+    <table>
+        <tr>
+            <td><b>Event Type</b></td>
+            <td><b>Every Second</b></td>
+            <td><b>Every Minute</b></td>
+            <td><b>Every Hour</b></td>
+        </tr>
+        {% for ev in events %}
+            <tr>
+                <td><b>{{ev.0}}</b></td>
+                <td>{{(ev.1 / 604800)|round(2)}}</td>
+                <td>{{(ev.1 / 10080)|round(2)}}</td>
+                <td>{{(ev.1 / 168)|round(2)}}</td>
+            </tr>
+        {% endfor %}
+    </table>
 
     <h4>Connected Tutors</h4>
     <table>
         <tr>
+            <td><b>User Name</b></td>
             <td><b>Tutor Name</b></td>
             <td><b>Tutor ID</b></td>
         </tr>
         {% for tutor in tutors %}
             <tr>
-                <td>{{tutor.entity_name}}</td>
+                <td>{{tutor.user.username}}</td>
+                <td>{{tutor.name}}</td>
                 <td>{{tutor.entity_id}}</td>
             </tr> 
         {% endfor %}
@@ -26,12 +45,14 @@
     <h4>Connected Plugins</h4>
     <table>
         <tr>
+            <td><b>User Name</b></td>
             <td><b>Plugin Name</b></td>
             <td><b>Plugin ID</b></td>
         </tr>
         {% for plugin in plugins %}
             <tr>
-                <td>{{plugin.entity_name}}</td>
+                <td>{{plugin.user.username}}</td>
+                <td>{{plugin.name}}</td>
                 <td>{{plugin.entity_id}}</td>
             </tr> 
         {% endfor %}

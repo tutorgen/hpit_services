@@ -9,8 +9,6 @@ import sys
 
 from base_manager import BaseManager
 
-DETACHED_PROCESS = 8 #code for windows subprocess
-
 class WindowsManager(BaseManager):
 
     def spin_up_all(self, entity_type, configuration):
@@ -46,7 +44,7 @@ class WindowsManager(BaseManager):
                     raise Exception("Error: unknown entity type in spin_up_all")
                 
                 with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                    subp = subprocess.Popen(subp_args, creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+                    subp = subprocess.Popen(subp_args, stdout = f, stderr = f)
                 with open(pidfile,"w") as pfile:
                     pfile.write(str(subp.pid))
                     
@@ -92,7 +90,7 @@ class WindowsManager(BaseManager):
         else:
             print("Starting the HPIT Hub Server for Windows...")
             with open("tmp/output_server.txt","w") as f:
-                subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", self.settings.HPIT_PID_FILE], creationflags=DETACHED_PROCESS, stdout = f, stderr = f)
+                subp = subprocess.Popen([sys.executable, "server_wrapper.py", "--pid", self.settings.HPIT_PID_FILE], stdout = f, stderr = f)
             with open(self.settings.HPIT_PID_FILE,"w") as pfile:
                 pfile.write(str(subp.pid))
 
