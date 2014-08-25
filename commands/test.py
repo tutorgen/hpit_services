@@ -10,5 +10,5 @@ class Command:
     def run(self, args, configuration):
         self.args = args
         self.configuration = configuration
-        
-        nose.main(argv=['-w', os.path.join(os.getcwd(), 'tests'), '--verbose'])
+
+        nose.main(argv=['-w', os.path.join(os.getcwd(), 'tests'), '--verbose' , '--nologcapture'])

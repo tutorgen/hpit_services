@@ -7,6 +7,16 @@ from utils.hint_factory_state import *
 
 from py2neo import neo4j
 
+class StateDoesNotExistException(Exception):
+    """
+    Raised when a state cannot be found.
+    """
+    
+class HintDoesNotExistException(Exception):
+    """
+    Raised when a state does not have any edges to analyze
+    """
+    
 
 class SimpleHintFactory(object):
     
@@ -22,7 +32,7 @@ class SimpleHintFactory(object):
         problem_node = self.db.get_indexed_node("problems_index","start_string",problem_string)
         
         if not problem_node:
-            raise Exception("Problem node with start_string " + problem_string + " does not exist")
+            raise StateDoesNotExistException("Problem with string " + str(problem_string) + " does not exist.")
         
         from_state_hash = self.hash_string(from_state_string)
         action_hash = self.hash_string(action_string)
@@ -34,7 +44,7 @@ class SimpleHintFactory(object):
         if not from_node:
             from_node = self.db.get_indexed_node("problem_states_index","state_hash",from_state_hash)
             if not from_node:
-                raise Exception("From node does not exist.")
+                raise StateDoesNotExistException("Cannot find 'from_state' with string " + str(from_state_string) + ".")
         
         existing_node = self.db.get_indexed_node("problem_states_index","state_hash",to_state_hash)
         if not existing_node:
@@ -72,7 +82,7 @@ class SimpleHintFactory(object):
     
     def hash_string(self, string):
         #hashing used for problem states and action strings
-        return hashlib.sha256(bytes(string.encode('utf-8'))).hexdigest()
+        return hashlib.sha256(bytes(str(string).encode('utf-8'))).hexdigest()
     
     def update_action_probabilities(self,relationship):
         #take a relationship, get parent, and update probabilities based on neighbors store_count
@@ -127,7 +137,7 @@ class SimpleHintFactory(object):
         if not node:
             node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
             if not node:
-                raise Exception("Hint exist failed; state does not exist")
+                raise StateDoesNotExistException("Problem with string " + str(problem_string) + " or state with string " + str(state_string) + " does not exist.")
 
         child_edges = node.match_outgoing("action")
         try:
@@ -139,28 +149,26 @@ class SimpleHintFactory(object):
     def get_hint(self,problem_string,state_string):
         state_hash = self.hash_string(state_string)
         if not self.hint_exists(problem_string,state_string):
-            return None
+            raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
         else:
             node = self.db.get_indexed_node("problems_index","start_string",state_string)
             if not node:
                 node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
-                if not node:
-                    raise Exception("Get hint failed; state does not exist")
             
             child_edges = node.match_outgoing("action")
-            max_reward = 0
-            count = 0
+            max_reward = -999999
             hint = ""
+            count = 0
             for edge in child_edges:
                 if edge.end_node["bellman_value"] > max_reward:
                     max_reward = edge.end_node["bellman_value"]
                     hint = edge["action_string"]
                 count +=1
+            
+            if count == 0:
+                raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
                 
-            if count <=0:
-                return None
-            else:
-                return hint
+            return hint
 
 
 class HintFactoryPlugin(Plugin):
@@ -189,14 +197,19 @@ class HintFactoryPlugin(Plugin):
         except KeyError:
             self.send_response(message["message_id"], {
                 "error": "hf_init_problem requires a 'start_state' and 'goal_problem'",
-                "success":False
+                "status":"NOT_OK"
             })
             return
         
         if self.hf.create_or_get_problem_node(message["start_state"],message["goal_problem"]):
             self.send_response(message["message_id"],{"status":"OK"})
         else:
-            self.send_response(message["message_id"],{"status":"NOT_OK"})
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"Unknown error when attempting to create or get problem state",
+            })
+            
+    
         
     def push_state_callback(self, message):
         if self.logger:
@@ -208,56 +221,111 @@ class HintFactoryPlugin(Plugin):
         except KeyError:
             self.send_response(message["message_id"], {
                 "error": "hf_push_state requires a 'state'",
-                "success":False
+                "status":"NOT_OK"
             })
             return
+
+        incoming_state = self.get_incoming_state(message["state"])
+        if not incoming_state:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"message's 'state' parameter should be a dict",
+            })
+            return
+            
         try:
-        
-            incoming_state = HintFactoryStateDecoder().decode(message["state"])
-            try:
-                self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
+            success = self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
+            if success:
                 self.send_response(message["message_id"],{"status":"OK"})
-            except IndexError:
-                self.send_response(message["message_id"],{"status":"NOT_OK"})
-                
-            
-        except BadHintFactoryStateException:
-            self.send_response(message["message_id"],{"status":"NOT_OK"})
-            
+            else:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"Unknown error when pushing state"
+                })
+        except IndexError:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"State must have at least one step"
+            })
+        except StateDoesNotExistException as e:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error": str(e)
+            })
+
     def hint_exists_callback(self, message):
         if self.logger:
             self.logger.debug("HINT EXISTS")
             self.logger.debug(message)
-        
-        try:
-            incoming_state = HintFactoryStateDecoder().decode(message["state"])
-        except (BadHintFactoryStateException, KeyError):
-            self.send_response(message["message_id"],{"status":"NOT_OK"})    
-            return
             
-        if self.hf.hint_exists(incoming_state.problem,incoming_state.problem_state):
-            self.send_response(message["message_id"],{"status":"OK","exists":"YES"})
-        else:
-            self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
+        try:
+            state=  message["state"]
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error": "hf_push_state requires a 'state'",
+                "status":"NOT_OK"
+            })
+            return
+        
+        incoming_state = self.get_incoming_state(message["state"])
+        if not incoming_state:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"message's 'state' parameter should be a dict",
+            })
+            return
+        try:
+            if self.hf.hint_exists(incoming_state.problem,incoming_state.problem_state):
+                self.send_response(message["message_id"],{"status":"OK","exists":"YES"})
+            else:
+                self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
+        except StateDoesNotExistException as e:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error": str(e)
+            })
         
     def get_hint_callback(self, message):
         if self.logger:
             self.logger.debug("GET HINT")
             self.logger.debug(message)
+        
+        try:
+            state=  message["state"]
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error": "hf_push_state requires a 'state'",
+                "status":"NOT_OK"
+            })
+            return
+        
+        incoming_state = self.get_incoming_state(message["state"])
+        if not incoming_state:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"message's 'state' parameter should be a dict",
+            })
+            return
             
         try:
-            incoming_state = HintFactoryStateDecoder().decode(message["state"])
-        except(BadHintFactoryStateException, KeyError):
-            self.send_response(message["message_id"],{"status":"NOT_OK"})    
-            return
-
-        hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
-        if hint:
-            self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint})
-        else:
-            self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
+            hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
+            if hint:
+                self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint})
+            else:
+                self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
+        except HintDoesNotExistException as e:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error": str(e)
+            })
            
-
+    def get_incoming_state(self, state):
+        if isinstance(state,dict):
+            return HintFactoryState(**state)
+        else:
+            return False
+            
+            
 if __name__ == '__main__':
     hf = SimpleHintFactory()
     hf.db.clear()

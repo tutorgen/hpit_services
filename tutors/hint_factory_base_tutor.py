@@ -1,6 +1,5 @@
 import logging
 import json
-from json import JSONEncoder, JSONDecoder
 import time
 
 from hpitclient import Tutor
@@ -23,16 +22,15 @@ class HintFactoryBaseTutor(Tutor):
         else:
             self.args = None
             
-        self.hint_factory_state_encoder = HintFactoryStateEncoder()
             
     def post_state(self,hint_factory_state):
-        self.send("hf_push_state",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.post_state_callback)
+        self.send("hf_push_state",{"state":dict(self.hint_factory_state)},self.post_state_callback)
         
     def hint_exists(self,hint_factory_state):
-        self.send("hf_hint_exists",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.hint_exists_callback)
+        self.send("hf_hint_exists",{"state":dict(self.hint_factory_state)},self.hint_exists_callback)
 
     def get_hint(self,hint_factory_state):
-        self.send("hf_get_hint",{"state":self.hint_factory_state_encoder.encode(hint_factory_state)},self.get_hint_callback)
+        self.send("hf_get_hint",{"state":dict(self.hint_factory_state)},self.get_hint_callback)
     
     def init_problem(self,start_problem_string, goal_problem_string):
         self.send("hf_init_problem",{"start_state":start_problem_string,"goal_problem":goal_problem_string},self.init_problem_callback)
