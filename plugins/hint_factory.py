@@ -48,6 +48,9 @@ class SimpleHintFactory(object):
         
         existing_node = self.db.get_indexed_node("problem_states_index","state_hash",to_state_hash)
         if not existing_node:
+            existing_node = self.db.get_indexed_node("problems_index","start_string",to_state_string)
+            
+        if not existing_node:
             #make a new state
             new_node, new_rel = self.db.create({"state_string":to_state_string,"state_hash":to_state_hash,"bellman_value":0,"discount_factor":self.DISCOUNT_FACTOR},(from_node,"action",0))
             new_node.add_labels("ProblemState")

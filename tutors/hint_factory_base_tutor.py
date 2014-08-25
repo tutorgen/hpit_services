@@ -24,13 +24,13 @@ class HintFactoryBaseTutor(Tutor):
             
             
     def post_state(self,hint_factory_state):
-        self.send("hf_push_state",{"state":dict(self.hint_factory_state)},self.post_state_callback)
+        self.send("hf_push_state",{"state":dict(self.hf_state)},self.post_state_callback)
         
     def hint_exists(self,hint_factory_state):
-        self.send("hf_hint_exists",{"state":dict(self.hint_factory_state)},self.hint_exists_callback)
+        self.send("hf_hint_exists",{"state":dict(self.hf_state)},self.hint_exists_callback)
 
     def get_hint(self,hint_factory_state):
-        self.send("hf_get_hint",{"state":dict(self.hint_factory_state)},self.get_hint_callback)
+        self.send("hf_get_hint",{"state":dict(self.hf_state)},self.get_hint_callback)
     
     def init_problem(self,start_problem_string, goal_problem_string):
         self.send("hf_init_problem",{"start_state":start_problem_string,"goal_problem":goal_problem_string},self.init_problem_callback)
@@ -85,7 +85,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
         
         self.cur_state = self.game_states["2x + 4 = 12"]
         
-        self.hf_state = HintFactoryState("2x + 4 = 12")
+        self.hf_state = HintFactoryState(problem = "2x + 4 = 12", problem_state = "2x + 4 = 12")
         
         self.goal = "x = 4"
         self.hint = None
@@ -105,7 +105,7 @@ class HintFactoryTutor(HintFactoryBaseTutor):
     def post_state_callback(self,response):
         try:
             if response['status'] != "OK":
-                raise ConnectionError("Failure to post state to HPIT server.")
+                raise ConnectionError("Failure to post state to HPIT server. " + str(response["error"]) )
         except KeyError as e:
             print("The response does not contain a status code. "+ str(type(e))+str(e.args))
             
