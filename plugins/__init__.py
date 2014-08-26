@@ -8,6 +8,7 @@ from .student_management import StudentManagementPlugin
 from .data_connector import DataShopConnectorPlugin
 from .hint_factory import HintFactoryPlugin
 from .hint_factory import SimpleHintFactory
+from .student_management import StudentManagementPlugin
 
 __all__ = [
     'ExamplePlugin', 
@@ -19,5 +20,7 @@ __all__ = [
     'StudentManagementPlugin',
     'DataShopConnectorPlugin',
     'HintFactoryPlugin',
-    'SimpleHintFactory'
+    'SimpleHintFactory',
+    'StudentManagmentPlugin'
+
 ]

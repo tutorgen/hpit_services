@@ -57,7 +57,7 @@ class ServerApp:
 
         try:
             self.mongo = PyMongo(self.app)
-            self.app.session_interface = MongoSessionInterface(self.app, self.mongo)
+            #self.app.session_interface = MongoSessionInterface(self.app, self.mongo)
         except ConnectionFailure:
             self.mongo = None
 
