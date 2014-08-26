@@ -7,7 +7,9 @@ from .skill_management import SkillManagementPlugin
 from .student_management import StudentManagementPlugin
 from .data_connector import DataShopConnectorPlugin
 from .hint_factory import HintFactoryPlugin
-from .student_management import StudentManagementPlugin
+from .hint_factory import SimpleHintFactory
+from .hint_factory import StateDoesNotExistException
+from .hint_factory import HintDoesNotExistException
 
 __all__ = [
     'ExamplePlugin', 
@@ -19,5 +21,7 @@ __all__ = [
     'StudentManagementPlugin',
     'DataShopConnectorPlugin',
     'HintFactoryPlugin',
-    'StudentManagmentPlugin'
+    'SimpleHintFactory',
+    'StateDoesNotExistException',
+    'HintDoesNotExistException'
 ]
