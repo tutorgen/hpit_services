@@ -61,7 +61,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         SimpleHintFactory.get_gint() Test plan:
             -
         """
-        psas
+        pass
         
     
     
