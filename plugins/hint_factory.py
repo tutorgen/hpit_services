@@ -122,6 +122,8 @@ class SimpleHintFactory(object):
             return problem_node
             
     def hint_exists(self,problem_string,state_string):
+        import pdb; pdb.set_trace()
+        
         state_hash = self.hash_string(state_string)
         node = self.db.get_indexed_node("problems_index","start_string",state_string)
         if not node:

@@ -1,6 +1,7 @@
-[ ![Codeship Status for tutorgen/hpit_services](https://codeship.io/projects/d0ff7820-f8ca-0131-f61d-5a47552ce69e/status)](https://codeship.io/projects/28762)
+[ ![Codeship Build Status](https://codeship.io/projects/d0ff7820-f8ca-0131-f61d-5a47552ce69e/status)](https://codeship.io/projects/28762)
+[![Travis Build Status](https://travis-ci.org/tutorgen/hpit_services.svg?branch=master)](https://travis-ci.org/tutorgen/hpit_services)
 
-## Overview
+## API Framework Documentation v2.0
 
 The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
@@ -272,7 +273,7 @@ Depending on the event name(eg kt_set_initial, or kt_trace) the payload the plug
 Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.
 
-## Plugins in depth
+## Plugin Component Specification
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, recieves
 transcation payloads, perfoms some arbitrary function based on the event and message
@@ -298,14 +299,12 @@ messages while altering the event name of the message so that other dependent
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.
 
-## Packaged Plugins
-
-### Example Plugin
+## Example Plugin
 
 The example plugin listens to the `test` and `example` event names and logs
 whatever data it's sent in the payload to a file.
 
-### Knowledge Tracing Plugin
+## Knowledge Tracing Plugin
 #### kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
 
@@ -354,11 +353,70 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
-### Student Management Plugin
+## Hint Factory Plugin
 
-### Skill Management Plugin
+#### hf_init_problem
+Initializes a new problem for the hint factory.
 
-### Problem Management Plugin
+Recieves:
+* start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")
+* goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")
+
+Returns:
+* status: string - OK or NOT_OK on success and failure respectively
+
+#### hf_push_state
+Pushes a new state on the problem.
+
+Recieves:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK
+
+#### hf_hint_exists
+Given a particular state structure. Does a hint exist for this problem?
+
+Recieves:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK
+* exists: string - YES if a hint is available, NO if it isn't
+
+#### hf_get_hint
+Given a particular state structure for a problem, retrieve the next most probable state that leads
+the student towards a solution.
+
+Recieves:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK
+* exists: string - YES if a hint is available, NO if it isn't
+* hint_text: string - The text describing the hint.
+
+## Student Management Plugin
+
+### TODO
+
+## Skill Management Plugin
+
+### TODO
+
+## Problem Management Plugin
 
 #### add_problem
 Adds a problem to the problem manager.
@@ -411,7 +469,7 @@ Returns:
     * problem_text : string - The text of the problem.
 * success : True - Always returns True
 
-### Problem Step Management Plugin
+## Problem Step Management Plugin
 
 #### add_problem_step
 Adds a problem step to the problem step manager.
@@ -474,7 +532,9 @@ Returns:
     * problem_step_text : string - The text of the problem step.
 * success : True - Always returns True
 
-### Data Storage Plugin
+## Data Storage Plugin
+
+### TODO
 
 ## Tech Stack
 

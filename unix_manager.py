@@ -24,8 +24,12 @@ class UnixManager(BaseManager):
                 entity_subtype = item['type']
                 entity_id = item['entity_id']
                 api_key = item['api_key']
+
+                name = 'Unknown'
+                if 'name' in item:
+                    name = item['name']
                 
-                print("Starting entity: " + entity_id)
+                print("Starting entity: " + name + " ID#: " + entity_id)
                 pidfile = self.get_entity_pid_file(entity_type, entity_id)
                 
                 subp_args = [sys.executable, "entity_daemon.py", "--daemon", "--pid", pidfile]
@@ -43,7 +47,7 @@ class UnixManager(BaseManager):
                 if entity_type != 'tutor' and entity_type !='plugin':
                     raise Exception("Error: unknown entity type in spin_up_all")
                 
-                with open("tmp/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
+                with open("log/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
                     subprocess.call(subp_args, stdout = f, stderr = f)
 
     def wind_down_collection(self, entity_type, entity_collection):
@@ -98,10 +102,16 @@ class UnixManager(BaseManager):
                 time.sleep(1)
             print("")
 
-            print("Starting tutors...")
-            self.spin_up_all('tutor', configuration)
             print("Starting plugins...")
             self.spin_up_all('plugin', configuration)
+
+            for i in range(0, 10):
+                print("Waiting " + str(10 - i) + " seconds for the plugins to boot.\r", end='')
+                time.sleep(1)
+            print("")
+            
+            print("Starting tutors...")
+            self.spin_up_all('tutor', configuration)
         print("DONE!")
 
 
