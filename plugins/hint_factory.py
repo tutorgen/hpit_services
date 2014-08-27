@@ -1,4 +1,5 @@
 import hashlib
+from collections import deque
 from itertools import groupby
 import sys
 
@@ -26,6 +27,7 @@ class SimpleHintFactory(object):
         self.DISCOUNT_FACTOR = .5
         self.GOAL_REWARD = 100
         self.STD_REWARD = 0
+        self.LOOP_PENALTY = -10
        
     def push_node(self,problem_string,from_state_string,action_string,to_state_string):
         #problem used, from_string, action_string, to_string
@@ -100,26 +102,65 @@ class SimpleHintFactory(object):
         for edge in edges:
             edge["probability"] = edge["taken_count"] / total_count
                  
-    def _do_bellman(self,node,goal_hash):
-        #do a bellman update on the graph stemming from problem node
-        if node["state_hash"] == goal_hash:
-            node["bellman_value"] = self.GOAL_REWARD
-        else:
-            child_edges = node.match_outgoing("action")
+    def _trim_nodes(self, cur_node, end_nodes):
+        """
+        Checks if this node has any children that loops back to this node.
+        """
+        bad_nodes = set()
+        for node in end_nodes:
+            end_edges = node.match_outgoing("action")
+            for end in end_edges:
+                if end.end_node == cur_node:
+                    bad_nodes.add(node)
 
-            action_values = [0]
-            for edge in child_edges:
-                #bellman_sum = sum([e.probability * self.discount_factor * self._do_bellman(e.inV(), goal_hash) for e in edges])
-                bellman_sum = edge["probability"] * node["discount_factor"] * self._do_bellman(edge.end_node,goal_hash)
-                action_values.append(self.STD_REWARD + bellman_sum)
-            node["bellman_value"] = max(action_values)
-        
-        return node["bellman_value"]
+        return end_nodes - bad_nodes
     
     def bellman_update(self,start_string,goal_string):
         problem_node = self.create_or_get_problem_node(start_string,goal_string)
         goal_hash = self.hash_string(goal_string)
-        self._do_bellman(problem_node,goal_hash)
+        goal_node = self.db.get_indexed_node("problem_states_index","state_hash",goal_hash)
+
+        node_queue = deque([problem_node])
+        node_dict = {
+            problem_node._id: (False, 0),
+            goal_node._id: (True, 100)
+        }
+
+        while node_queue:
+            cur_node = node_queue.popleft()
+
+            child_edges = list(cur_node.match_outgoing("action")) #match_outgoing is a generator (we need this twice)
+            end_nodes = {edge.end_node for edge in child_edges}
+
+            #Have these entered the node dictionary?
+            for node in end_nodes:
+                if node._id not in node_dict.keys():
+                    node_dict[node._id] = (False, 0)
+
+            #Check these end nodes to see if they loop back to me
+            end_nodes = self._trim_nodes(cur_node, end_nodes)
+
+            #Have all my children been calculated
+            if not all([node_dict[node._id][0] for node in end_nodes]): #No they haven't. Add them to the queue.
+                for node in end_nodes:
+                    if not node_dict[node._id][0]:
+                        if node not in node_queue:
+                            node_queue.append(node)
+                if cur_node not in node_queue:
+                    node_queue.append(cur_node)
+            else: #Yes they have. Then calclulate my value.
+                action_values = [0]
+                for edge in child_edges:
+                    if edge.end_node._id == cur_node._id:
+                        action_values.append(self.LOOP_PENALTY)
+                    else:
+                        end_node_bellman_value = node_dict[edge.end_node._id][1]
+                        action_values.append(self.STD_REWARD + (edge["probability"] * self.DISCOUNT_FACTOR * end_node_bellman_value))
+                node_dict[cur_node._id] = (True, max(action_values))
+
+        for node_id, v in node_dict.items():
+            self.db.node(node_id)['bellman_value'] = v[1]
+
     
     def create_or_get_problem_node(self, start_string, goal_string):
         #create a new problem node in the graph, or, if exists, return problem node 
