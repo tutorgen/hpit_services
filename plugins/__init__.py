@@ -9,6 +9,8 @@ from .data_connector import DataShopConnectorPlugin
 from .hint_factory import HintFactoryPlugin
 from .hint_factory import SimpleHintFactory
 from .student_management import StudentManagementPlugin
+from .hint_factory import StateDoesNotExistException
+from .hint_factory import HintDoesNotExistException
 
 __all__ = [
     'ExamplePlugin', 
@@ -21,6 +23,7 @@ __all__ = [
     'DataShopConnectorPlugin',
     'HintFactoryPlugin',
     'SimpleHintFactory',
-    'StudentManagmentPlugin'
-
+    'StudentManagmentPlugin',
+    'StateDoesNotExistException',
+    'HintDoesNotExistException'
 ]
