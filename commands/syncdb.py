@@ -2,6 +2,9 @@ import os
 from server.app import ServerApp
 db = ServerApp.get_instance().db
 
+from .settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
+
 class Command:
     description = "Creates all the tables in the database."
     
@@ -15,7 +18,7 @@ class Command:
         db.create_all()
 
         try:
-            os.mkdir(os.path.join(os.getcwd(), 'server/db/mongo'))
+            os.mkdir(os.path.join(settings.PROJECT_DIR, 'server/db/mongo'))
         except FileExistsError:
             pass
 

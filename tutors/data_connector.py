@@ -88,7 +88,7 @@ if __name__ == "__main__":
     settings = HpitClientSettings.settings()
     settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
     
-    logger_path = os.path.join(os.getcwd(), 'log/tutor_71f476d0-55c0-4173-84c2-811edb350d02.log')
+    logger_path = os.path.join(settings.PROJECT_DIR, 'log/tutor_71f476d0-55c0-4173-84c2-811edb350d02.log')
     logging.basicConfig(
             filename=logger_path,
             level=logging.DEBUG,

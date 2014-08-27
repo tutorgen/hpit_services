@@ -90,7 +90,7 @@ class UnixManager(BaseManager):
             with open("tmp/output_server.txt","w") as f:
                 subprocess.call(['uwsgi', 
                     '--http-socket', self.settings.HPIT_BIND_ADDRESS, 
-                    '--venv', os.path.join(os.getcwd(), self.settings.VENV_DIRNAME),
+                    '--venv', os.path.join(self.settings.PROJECT_DIR, self.settings.VENV_DIRNAME),
                     '--wsgi-file', 'start_server.py',
                     '--callable', 'app',
                     '--pidfile', self.settings.HPIT_PID_FILE,

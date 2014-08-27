@@ -13,6 +13,9 @@ from gears_coffeescript import CoffeeScriptCompiler
 
 from server.app import ServerApp
 app = ServerApp.get_instance().app
+    
+from .settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
 
 class Command:
     description = "Build Gears assets for production deployments."
@@ -29,13 +32,13 @@ class Command:
 
         parser.add_argument('src', metavar='src', type=str, 
                             help='The source directory of the assets to compile.',
-                            default=os.path.join(os.getcwd(), 'server/assets'))
+                            default=os.path.join(settings.PROJECT_DIR, 'server/assets'))
         parser.add_argument('dest', type=str, 
                             help="The destination directory of where to put these assets.")
 
     
     def get_absolute_path(self, path):
-        return os.path.normpath(os.path.abspath(os.path.join(os.getcwd(), path)))
+        return os.path.normpath(os.path.abspath(os.path.join(settings.PROJECT_DIR, path)))
 
 
     def run(self, arguments, configuration):
