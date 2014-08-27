@@ -2,7 +2,7 @@ import os
 from server.app import ServerApp
 db = ServerApp.get_instance().db
 
-from .settings import ServerSettingsManager
+from server.settings import ServerSettingsManager
 settings = ServerSettingsManager.get_instance().settings
 
 class Command:

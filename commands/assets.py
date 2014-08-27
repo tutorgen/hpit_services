@@ -14,7 +14,7 @@ from gears_coffeescript import CoffeeScriptCompiler
 from server.app import ServerApp
 app = ServerApp.get_instance().app
     
-from .settings import ServerSettingsManager
+from server.settings import ServerSettingsManager
 settings = ServerSettingsManager.get_instance().settings
 
 class Command:

@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from .settings import ServerSettingsManager
+from server.settings import ServerSettingsManager
 settings = ServerSettingsManager.get_instance().settings
 
 class Command:
