@@ -1,0 +1,85 @@
+---
+- hosts: beta
+  remote_user: ansible
+  vars:
+    app_path: /home/ansible/hpit_services
+    venv_path: "{{app_path}}/env"
+    py_path: "{{venv_path}}/bin/python3"
+    manager_path: "{{app_path}}/manager.py"
+    twilio_account_sid: AC69b661cfe4d72b19a3b3f632a7238c37
+    twilio_auth_token: 53ac12b162e9921d8591a447d5c093f8
+  tasks:
+  - name: "Clearing repository"
+    command: "/bin/rm -rf {{app_path}}"
+    ignore_errors: yes
+  - name: "Clone HPIT services repository"
+    git: "repo=git@github.com:tutorgen/hpit_services.git dest={{app_path}}"
+  - name: "Creating New Virtual Environment"
+    command: "/usr/bin/virtualenv {{venv_path}} -p /usr/bin/python3"
+  - name: "Installing PIP dependencies"
+    pip: "requirements={{app_path}}/requirements.txt virtualenv={{venv_path}}"
+  - name: "Running Tests"
+    shell: ". {{venv_path}}/bin/activate && python3 {{manager_path}} test --test-path {{app_path}}/tests"
+    register: cmd_result
+  - local_action: "twilio msg='[FAILED] Nightly HPIT Tests on master.'
+      account_sid={{ twilio_account_sid }}
+      auth_token={{ twilio_auth_token }}
+      from_number=+13214183955 to_number=+14075901416"
+    when:
+      - "'FAILED' in cmd_result.stdout"
+      - "'ERROR' in cmd_result.stdout"
+  - local_action: "twilio msg='[FAILED] Nightly HPIT Tests on master.'
+      account_sid={{ twilio_account_sid }}
+      auth_token={{ twilio_auth_token }}
+      from_number=+13214183955 to_number=+15132350257"
+    when:
+      - "'FAILED' in cmd_result.stdout"
+      - "'ERROR' in cmd_result.stdout"
+  - name: "Pass or Fail"
+    assert:
+      that:
+        - "'FAILED' not in cmd_result.stdout"
+        - "'ERROR' not in cmd_result.stdout"
+
+
+- hosts: beta
+  remote_user: hpitserver
+  vars:
+    app_path: /home/ansible/hpit_services
+    server_path: /home/hpitserver/server
+    backup_path: /home/hpitserver
+    venv_path: "{{server_path}}/env"
+    manager_path: "{{server_path}}/manager.py"
+    twilio_account_sid: AC69b661cfe4d72b19a3b3f632a7238c37
+    twilio_auth_token: 53ac12b162e9921d8591a447d5c093f8
+  tasks:
+  - name: "Stopping HPIT on BETA"
+    shell: "cd {{server_path}} && . {{venv_path}}/bin/activate && python3 {{manager_path}} stop"
+  - name: "Backing up the BETA server database"
+    command: "cp -r {{server_path}}/server/db {{backup_path}}"
+  - name: "Syncing HPIT with BETA server"
+    shell: "rsync -a {{app_path}}/ {{server_path}}"
+  - name: "Creating New Virtual Environment"
+    shell: "/usr/bin/virtualenv {{venv_path}} -p /usr/bin/python3"
+  - name: "Installing PIP dependencies"
+    pip: "requirements={{app_path}}/requirements.txt virtualenv={{venv_path}}"
+  - name: "Creating new local Database directory"
+    shell: "cd {{server_path}} && . env/bin/activate && python3 {{manager_path}} syncdb"
+  - name: "Copying documentation to website."
+    shell: "cd {{server_path}} && . env/bin/activate && python3 {{manager_path}} docs"
+  - name: "Copying Server Configuration"
+    command: "cp {{backup_path}}/configuration.json {{server_path}}/configuration.json"
+  - name: "Restoring DB Backup"
+    command: "cp -r {{backup_path}}/db {{server_path}}/server"
+  - name: "Restoring Server Settings"
+    command: "cp {{backup_path}}/server_settings.py {{server_path}}/server/settings.py"
+  - name: "Starting HPIT on BETA"
+    shell: "cd {{server_path}} && . {{venv_path}}/bin/activate && python3 {{manager_path}} start"
+  - local_action: "twilio msg='Nightly: Deployed HPIT to BETA server.'
+       account_sid={{ twilio_account_sid }}
+       auth_token={{ twilio_auth_token }}
+       from_number=+13214183955 to_number=+14075901416"
+  - local_action: "twilio msg='Nightly: Deployed HPIT to BETA server.'
+       account_sid={{ twilio_account_sid }}
+       auth_token={{ twilio_auth_token }}
+       from_number=+13214183955 to_number=+15132350257"

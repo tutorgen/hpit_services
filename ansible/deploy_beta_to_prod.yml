@@ -1,0 +1,50 @@
+---
+- hosts: production
+  remote_user: hpitserver
+  vars:
+    server_path: /home/hpitserver/server
+    backup_path: /home/hpitserver
+    venv_path: "{{server_path}}/env"
+    manager_path: "{{server_path}}/manager.py"
+    twilio_account_sid: AC69b661cfe4d72b19a3b3f632a7238c37
+    twilio_auth_token: 53ac12b162e9921d8591a447d5c093f8
+  tasks:
+  - name: "Stopping HPIT on PROD"
+    shell: "cd {{server_path}} && . {{venv_path}}/bin/activate && python3 {{manager_path}} stop"
+    ignore_errors: yes
+  - name: "Backing up the PROD server database"
+    command: "cp -r {{server_path}}/server/db {{backup_path}}"
+  - name: "Backing up log files"
+    command: "tar cvfz {{backup_path}}/{{ansible_date_time.date}}.log.tar.gz {{server_path}}/log"
+  - name: "Deleting the old server."
+    command: "rm -rf {{server_path}}"
+  - name: "Syncing PROD with BETA server"
+    shell: "rsync -a --exclude 'log tmp' hpitserver@50.116.60.175:{{server_path}}/ {{server_path}}"
+  - name: "Removing Old Virtual Environment"
+    shell: "rm -rf {{venv_path}}"
+  - name: "Creating New Virtual Environment"
+    shell: "/usr/bin/virtualenv {{venv_path}} -p /usr/bin/python3"
+  - name: "Installing PIP dependencies"
+    pip: "requirements={{server_path}}/requirements.txt virtualenv={{venv_path}}"
+  - name: "Copying PROD settings to application."
+    shell: "cp {{backup_path}}/server_settings.py {{server_path}}/server/settings.py"
+  - name: "Creating new local Database directory"
+    shell: "cd {{server_path}} && . env/bin/activate && python3 {{manager_path}} syncdb"
+  - name: "Copying documentation to website."
+    shell: "cd {{server_path}} && . env/bin/activate && python3 {{manager_path}} docs"
+  - name: "Copying Server Configuration"
+    shell: "cp {{backup_path}}/configuration.json {{server_path}}/configuration.json"
+  - name: "Restoring DB Backup"
+    shell: "cp -r {{backup_path}}/db {{server_path}}/server"
+  - name: "Deleting tmp and log folders"
+    shell: "rm -rf {{server_path}}/tmp && rm -rf {{server_path}}/log"
+  - name: "Starting HPIT on PROD"
+    shell: "cd {{server_path}} && . {{venv_path}}/bin/activate && python3 {{manager_path}} start"
+  - local_action: "twilio msg='Weekly: Deployed BETA to PROD server.'
+       account_sid={{ twilio_account_sid }}
+       auth_token={{ twilio_auth_token }}
+       from_number=+13214183955 to_number=+14075901416"
+  - local_action: "twilio msg='Weekly: Deployed BETA to PROD server.'
+       account_sid={{ twilio_account_sid }}
+       auth_token={{ twilio_auth_token }}
+       from_number=+13214183955 to_number=+15132350257"
