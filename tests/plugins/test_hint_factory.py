@@ -117,7 +117,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         
         root_node.delete_related()
     
-    def test_do_bellman(self):
+    def test_bellman_update(self):
         """
         SimpleHintFactory._do_bellman() Test plan:
             - add some states
@@ -151,7 +151,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         goal_rel1["probability"] = 1
         goal_rel2["probability"] = 1
         
-        self.test_subject._do_bellman(problem_node,state_hash)
+        self.test_subject.bellman_update("state","state_4")
         goal_node["bellman_value"].should.equal(100)
         another_rel["bellman_value"] = 50
         new_rel["bellman_value"] = 50
@@ -159,26 +159,6 @@ class TestSimpleHintFactory(unittest.TestCase):
         
         problem_node.delete_related()
         
-    
-    def test_bellman_update(self):
-        """
-        SimpleHintFactory.bellman_update() Test plan:
-            - create a start node
-            - mock _do_bellman, create_or_get_problem_node, assert called right
-        """
-
-        self.test_subject._do_bellman = MagicMock()
-        
-        root_node = self.test_subject.db.create({"name":"start"})[0]
-        root_node.add_labels("_unit_test_only")
-        self.test_subject.create_or_get_problem_node = MagicMock(return_value = root_node)
-       
-        self.test_subject.bellman_update("start_string","goal_string")
-        
-        self.test_subject.create_or_get_problem_node.assert_called_with("start_string","goal_string")
-        self.test_subject._do_bellman.assert_called_with(root_node,hashlib.sha256(bytes("goal_string".encode('utf-8'))).hexdigest())
-    
-        root_node.delete_related()
     
     def test_create_or_get_problem_node(self):
         """
