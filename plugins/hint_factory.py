@@ -1,6 +1,7 @@
 import hashlib
 from collections import deque
 from itertools import groupby
+from functools import reduce
 import sys
 
 from hpitclient import Plugin
@@ -114,54 +115,81 @@ class SimpleHintFactory(object):
                     bad_nodes.add(node)
 
         return end_nodes - bad_nodes
-    
+
+
     def bellman_update(self,start_string,goal_string):
         problem_node = self.create_or_get_problem_node(start_string,goal_string)
         goal_hash = self.hash_string(goal_string)
         goal_node = self.db.get_indexed_node("problem_states_index","state_hash",goal_hash)
 
         node_queue = deque([problem_node])
-        node_dict = {
-            problem_node._id: (False, 0),
-            goal_node._id: (True, 100)
-        }
+        node_dict = {goal_node._id: 100}
 
+        #Run with partial information
         while node_queue:
             cur_node = node_queue.popleft()
 
-            child_edges = list(cur_node.match_outgoing("action")) #match_outgoing is a generator (we need this twice)
-            end_nodes = {edge.end_node for edge in child_edges}
+            child_edges = list(cur_node.match_outgoing("action"))
 
-            #Have these entered the node dictionary?
-            for node in end_nodes:
-                if node._id not in node_dict.keys():
-                    node_dict[node._id] = (False, 0)
+            if not child_edges:
+                node_dict[cur_node._id] = self.LOOP_PENALTY
+                continue;
 
-            #Check these end nodes to see if they loop back to me
-            end_nodes = self._trim_nodes(cur_node, end_nodes)
+            #Which of my children have not been calculated?
+            calculated_children = []
+            for edge in child_edges:
+                if edge.end_node._id in node_dict:
+                    calculated_children.append((edge['probability'], node_dict[edge.end_node._id]))
+                else:
+                    if edge.end_node not in node_queue:
+                        node_queue.append(edge.end_node)
 
-            #Have all my children been calculated
-            if not all([node_dict[node._id][0] for node in end_nodes]): #No they haven't. Add them to the queue.
-                for node in end_nodes:
-                    if not node_dict[node._id][0]:
-                        if node not in node_queue:
-                            node_queue.append(node)
+            #Of my calculated children, which one has the max
+            if calculated_children:
+                best_val = reduce(lambda x, y: x if x[1] > y[1] else y, calculated_children)
+                node_dict[cur_node._id] = round(self.STD_REWARD + (best_val[0] * best_val[1] * self.DISCOUNT_FACTOR), 6)
+            else:
                 if cur_node not in node_queue:
                     node_queue.append(cur_node)
-            else: #Yes they have. Then calclulate my value.
-                action_values = [0]
+
+        #Run with full but possibly incorrect information until the values in the calculations converge
+        run_convergence = True
+        while run_convergence:
+            run_convergence = False
+
+            node_queue = deque([problem_node])
+            convergence_dict = {goal_node._id: 100}
+
+            while node_queue:
+                cur_node = node_queue.popleft()
+
+                child_edges = cur_node.match_outgoing("action")
+
+                calculated_children = []
                 for edge in child_edges:
-                    if edge.end_node._id == cur_node._id:
-                        action_values.append(self.LOOP_PENALTY)
-                    else:
-                        end_node_bellman_value = node_dict[edge.end_node._id][1]
-                        action_values.append(self.STD_REWARD + (edge["probability"] * self.DISCOUNT_FACTOR * end_node_bellman_value))
-                node_dict[cur_node._id] = (True, max(action_values))
+                    if edge.end_node._id not in convergence_dict:
+                        if edge.end_node not in node_queue:
+                            node_queue.append(edge.end_node)
 
+                    calculated_children.append((edge['probability'], node_dict[edge.end_node._id]))
+
+                if calculated_children:
+                    best_val = reduce(lambda x, y: x if x[1] > y[1] else y, calculated_children)
+                    convergence_dict[cur_node._id] = round(self.STD_REWARD + (best_val[0] * best_val[1] * self.DISCOUNT_FACTOR), 6)
+                else:
+                    convergence_dict[cur_node._id] = self.LOOP_PENALTY
+
+            #Have the values converged?
+            if convergence_dict != node_dict:
+                run_convergence = True
+
+            node_dict = convergence_dict
+
+        #Finally update the bellman values to those calculated
         for node_id, v in node_dict.items():
-            self.db.node(node_id)['bellman_value'] = v[1]
+            self.db.node(node_id)['bellman_value'] = v
 
-    
+
     def create_or_get_problem_node(self, start_string, goal_string):
         #create a new problem node in the graph, or, if exists, return problem node 
 
