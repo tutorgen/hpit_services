@@ -1,6 +1,9 @@
 import os
 import nose
 
+from server.settings import ServerSettingsManager
+settings = ServerSettingsManager.get_instance().settings
+
 class Command:
     description = "Unit Test the code."
     arguments = ['--test-path']
@@ -11,7 +14,7 @@ class Command:
     def run(self, arguments, configuration):
         self.configuration = configuration
 
-        test_path = os.path.join(os.getcwd(), 'tests')
+        test_path = os.path.join(settings.PROJECT_DIR, 'tests')
 
         if arguments.test_path:
             test_path = arguments.test_path

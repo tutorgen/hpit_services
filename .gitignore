@@ -1,7 +1,7 @@
 env
 *.pyc
 configuration.json
-server/db/mongo/
-server/db/hpit_development.sqlite
+server/settings.py
+server/db
 tmp
 log
