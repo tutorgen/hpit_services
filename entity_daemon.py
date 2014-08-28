@@ -167,14 +167,14 @@ if __name__ == '__main__':
 
     arguments = main_parser.parse_args()
 
-    logger_path = os.path.join(os.getcwd(), 'log/'+arguments.entity+'_' + arguments.entity_id + '.log')
+    logger_path = os.path.join(settings.PROJECT_DIR, 'log/'+arguments.entity+'_' + arguments.entity_id + '.log')
     pid = ''.join(["tmp/"+arguments.entity+"_", str(uuid.uuid4()), ".pid"])
     
     if arguments.pid:
         pid = arguments.pid
 
         if not os.path.isabs(pid):
-            pid = os.path.join(os.getcwd(), pid)
+            pid = os.path.join(settings.PROJECT_DIR, pid)
 
     entity_subtype = arguments.type
     
