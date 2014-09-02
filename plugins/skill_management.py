@@ -4,6 +4,9 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 from couchbase import Couchbase
+import couchbase
+
+import requests
 
 class SkillManagementPlugin(Plugin):
     def __init__(self, entity_id, api_key, logger, args = None):
@@ -11,9 +14,22 @@ class SkillManagementPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient('mongodb://localhost:27017/')
         self.db = self.mongo.hpit.hpit_skills
-        
-        self.cache = Couchbase.connect(bucket = "default", host = "127.0.0.1")
 
+        try:
+            self.cache = Couchbase.connect(bucket = "skill_cache", host = "127.0.0.1")
+        except couchbase.exceptions.BucketNotFoundError:
+            options = {
+                "authType":"sasl",
+                "saslPassword":"",
+                "bucketType":"memcached",
+                "flushEnabled":1,
+                "name":"skill_cache",
+                "ramQuotaMB":100,
+            }
+            req = requests.post("http://127.0.0.1:8091/pools/default/buckets",auth=("Administrator","administrator"), data = options)
+            
+            self.cache = Couchbase.connect(bucket = "skill_cache", host = "127.0.0.1")
+     
     def post_connect(self):
         super().post_connect()
         
@@ -61,17 +77,32 @@ class SkillManagementPlugin(Plugin):
             })
             return
             
+        try:
+            cached_skill = self.cache.get(skill_name)
+            skill_id = cached_skill.value
+            self.send_response(message["message_id"],{
+                "skill_name": skill_name,
+                "skill_id": str(skill_id),
+                "cached":True
+            })
+            return
+        except couchbase.exceptions.NotFoundError:
+            cached_skill = None
+            
         skill = self.db.find_one({"skill_name":skill_name})
         if not skill:
             skill_id = self.db.insert({"skill_name":skill_name})
             self.send_response(message["message_id"],{
                 "skill_name": skill_name,
                 "skill_id": str(skill_id),
+                "cached":False
             })
+            self.cache.set(str(skill_name),str(skill_id))
         else:
             self.send_response(message["message_id"],{
                 "skill_name": skill_name,
                 "skill_id": str(skill["_id"]),
+                "cached":False
             })
             
             

@@ -10,6 +10,8 @@ from bson.objectid import ObjectId
 from couchbase import Couchbase
 import couchbase
 
+import requests
+
 from plugins import SkillManagementPlugin
 
 class TestSkillManagementPlugin(unittest.TestCase):
@@ -17,14 +19,31 @@ class TestSkillManagementPlugin(unittest.TestCase):
     def setUp(self):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
-        """
+        """      
+        
+        options = {
+                "authType":"sasl",
+                "saslPassword":"",
+                "bucketType":"memcached",
+                "flushEnabled":1,
+                "name":"test_skill_cache",
+                "ramQuotaMB":100,
+            }
+        req = requests.post("http://127.0.0.1:8091/pools/default/buckets",auth=("Administrator","administrator"), data = options)
+        
         self.test_subject = SkillManagementPlugin(123,456,None)
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_skills
+        self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = "127.0.0.1")
        
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
+        
+        r = requests.delete("http://127.0.0.1:8091/pools/default/buckets/test_skill_cache",auth=("Administrator","administrator"))
+        if r.status_code != 200 and r.status_code != 404:
+            raise Exception("Failure to delete bucket")
+            
         client = MongoClient()
         client.drop_database("test_hpit")
         
@@ -38,6 +57,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
             -ensure that mongo is an instance of mongo client
             -ensure that a cache db is set up
         """
+        
         test_subject = SkillManagementPlugin(123,456,None)
         test_subject.logger.should.equal(None)
         
@@ -45,7 +65,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         isinstance(test_subject.db,Collection).should.equal(True)
         
         isinstance(test_subject.cache,couchbase.connection.Connection).should.equal(True)
-
+        
 
     def test_get_skill_name_callback(self):
         """
@@ -54,6 +74,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
             - pass in message with bogus id, should respond with error
             - pass in message with good id, should respond with name
         """
+        
         self.test_subject.send_response = MagicMock()
 
         msg = {"message_id":"1"}
@@ -97,15 +118,23 @@ class TestSkillManagementPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
+        
+        
         msg["skill_name"] = "addition"
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.db.find({"skill_name":"addition"}).count().should.equal(1)
         added_id = self.test_subject.db.find_one({"skill_name":"addition"})["_id"]
+        self.test_subject.send_response.assert_called_with("1",{
+                "skill_name":"addition",
+                "skill_id":str(added_id),
+                "cached":False
+        })
         
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
                 "skill_id":str(added_id),
+                "cached":True
         })
         
         
