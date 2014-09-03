@@ -3,19 +3,47 @@
 
 ## Table of Contents
 
-* [APIToc](API Framework Documentation v2.1)
-* [TermToc](Understanding Terminology)
-* [GetStartedToc](Getting Started)
-* [AdminToc](The Adminstration Panel)
-* [ManagerToc](The HPIT Manager)
+* [API Framework Documentation v2.1](#APIToc)
+* [Understanding Terminology](#TermToc)
+* [Getting Started](#GetStartedToc)
+* [The Adminstration Panel](#AdminToc)
+* [The HPIT Manager](#ManagerToc)
+* [The Tutor and Plugin Configuration](#ConfigToc)
+* [Settings for Clients and Servers](#SettingsToc)
+* [Database Structure](#DatabaseToc)
+* [The HPIT Server in depth](#ServerToc)
+* [Tutors in depth](#TutorToc)
+* [Plugin Component Specification](#PluginToc)
+* [License](#LicenseToc)
 
-## API Framework Documentation v2.1 [APIToc]
+## <a name="APIToc"></a>API Framework Documentation v2.1
 
 The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
 and specialized, machine learning algorithims, which we call plugins.
 
 HPIT is a next generation system built on the backbone of open source web technologies.
+
+Currently our tech stack consists of the following:
+
+- Python 3.4
+- MongoDB
+- PostgreSQL
+- Neo4j
+- Flask
+- Jinja2
+- WTForms
+- PyMongo
+- SQLAlchemy
+- Daemonize
+- PyCrypto
+- Requests
+- Gunicorn
+- Gears
+- Twitter Bootstrap
+- BackboneJS
+- UnderscoreJS
+- JQuery
 
 At the most fundemental layer HPIT is a collection of RESTful webservices that assist in
 the routing of messages between tutors and plugins. On top of this web services layer 
@@ -40,7 +68,7 @@ to intelligent tutoring systems. These are:
 - [SMPlugin][Student Management]
 - [SKMPlugin][Skill Management]
 
-## Understanding Terminology [TermToc]
+## <a name="TermToc"></a> Understanding Terminology
 
 HPIT - HPIT consists of several modules and is sort of an all encompassing term for the entire 
 system of modules.
@@ -64,7 +92,7 @@ their plugin.
 
 HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.
 
-## Getting started [GetStartedToc]
+##<a name="GetStartedToc"></a> Getting started
 
 ### Python Requirements
 
@@ -133,7 +161,7 @@ If you are wanting to use the hint factory plugin you will need to install neo4j
     - On Windows, binaries are available.
 2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
 
-## The Adminstration Panel [AdminToc]
+## <a name="AdminToc"></a> The Adminstration Panel
 
 After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
 page after registering. The system will just direct you back to the signin/register page. After logging in
@@ -149,7 +177,7 @@ to others, but NEVER share your API Key with anyone.
 The Docs page on the adminsitration panel, shows these docs. The routes page on the administration panel shows
 the web service endpoints that HPIT exposes to tutors and plugins.
 
-## The HPIT Manager [ManagerToc]
+##<a name="ManagerToc"></a> The HPIT Manager
 
 The HPIT Manager can be used to quickly launch an HPIT server, configure plugins and tutors,
 and monitor how data is being passed between entities within the HPIT system.
@@ -178,7 +206,7 @@ Currently the HPIT Manager has the following commands:
     * `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
     * `python3 manager.py test` runs the suite of tests for components within HPIT.
 
-## The tutor and plugin configuration
+##<a name="ConfigToc"></a> The Tutor and Plugin Configuration
 
 The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
 amount of entities for testing and evaluation of the software. Creating a new hpit 
@@ -193,7 +221,7 @@ removes it from the 'configuration.json' file. All entities within the configura
     5. entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.
     6. api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.
 
-## Settings for Clients and Servers
+## <a name="SettingsToc"></a> Settings for Clients and Servers
 
 Both clients (tutors and plugins) and the server may need configuration.  The settings files
 are clients/settings.py and server/settings.py, for clients and servers, respectively.  
@@ -216,7 +244,7 @@ server/settings.py currently contains the following options:
 
 - USER_PASSWORD_HASH : How passwords for users should be generated. (Leave this alone unless you know what you're doing.)
 
-## Database Structure
+## <a name="DatabaseToc"></a> Database Structure
 
 The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
@@ -254,7 +282,7 @@ By default this database is configured as sqlite and stored on the filesystem in
 server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
 directory or by running sqlite and using the command '.tables'.
 
-## The HPIT Server in depth
+## <a name="ServerToc"></a> The HPIT Server in depth
 
 The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
 specifically to assist plugins and tutors to communicate via RESTful webserver. It is 
@@ -271,7 +299,7 @@ data between HPIT entities. To get a list of these routes run the HPIT server wi
 administration page at http://localhost:8000/routes. Alternativately you can list the routes
 available with `python3 manager.py routes`
 
-## Tutors in depth
+## <a name="TutorToc"></a> Tutors in depth
 
 A Tutor is an HPIT entity that can send messages to HPIT. A message consists of
 an event name and a payload. The event name is an arbitrary string that defines what is in
@@ -291,7 +319,7 @@ Depending on the event name(eg kt_set_initial, or kt_trace) the payload the plug
 Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.
 
-## Plugin Component Specification
+## <a name="PluginToc"></a> Plugin Component Specification
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, recieves
 transcation payloads, perfoms some arbitrary function based on the event and message
@@ -561,32 +589,7 @@ Returns:
 
 ### TODO
 
-## Tech Stack
-
-HPIT exclusively uses Open Source Technologies. Currently our tech stack consists 
-of the following:
-
-- Python 3.4
-- MongoDB
-- PostgreSQL
-- Flask
-- Jinja2
-- WTForms
-- PyMongo
-- SQLAlchemy
-- Daemonize
-- PyCrypto
-- Requests
-- Gunicorn
-- Gears
-- Twitter Bootstrap
-- BackboneJS
-- UnderscoreJS
-- JQuery
-
-Information about specific versions can be found inside of requirements.txt
-
-## License
+## <a name="LicenseToc"></a> License
 
 This software is dual licensed under the MIT License and the BSD 3-clause license.
 

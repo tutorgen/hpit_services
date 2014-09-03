@@ -124,14 +124,12 @@ class SimpleHintFactory(object):
 
     def bellman_update(self,start_string,goal_string):
         problem_node = self.create_or_get_problem_node(start_string,goal_string)
+
         goal_hash = self.hash_string(goal_string)
         goal_node = self.db.get_indexed_node("problem_states_index","state_hash",goal_hash)
 
-        if not problem_node:
-            raise StateDoesNotExistException("Problem with Bellman Update: Specified values start_string: " + str(start_string) + " or goal_string: " + str(goal_string) + " does not exist or is invalid.")
-
         if not goal_node:
-            raise GoalDoesNotExistException("Problem with Bellman Update: Goal String doesn't exist or cannot be hashed. With goal_string (specified): " + str(goal_string) + " and goal_hash (calculated): " + str(goal_hash))
+            return
 
         node_queue = deque([problem_node])
         node_dict = {goal_node._id: 100}
