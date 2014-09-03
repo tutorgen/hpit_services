@@ -9,9 +9,13 @@ services:
 before_install:
   - "sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10"
   - "echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list"
+  - "sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key | apt-key add -"
+  - "sudo 'deb http://debian.neo4j.org/repo stable/' > /etc/apt/sources.list.d/neo4j.list"
   - "sudo apt-get update"
   - "sudo apt-get install mongodb-org-server mongodb-org-shell"
   - "sudo apt-get install python2.7-dev python3-dev"
+  - "sudo apt-get install neo4j"
+  - "sudo neo4j start"
   - "cp travis_settings.py server/settings.py"
 install: 
   - pip install -r requirements.txt

@@ -26,24 +26,48 @@
 <li><a href="#ServerToc">The HPIT Server in depth</a></li>
 <li><a href="#TutorToc">Tutors in depth</a></li>
 <li><a href="#PluginToc">Plugin Component Specification</a><ul>
-<li><a href="#ExPlugin">Echo Example</a> <a name="ExPlugin"></a></li>
-<li><a href="#DCPlugin">Data Connection to PSLC Datashop</a> <a name="DCPlugin"></a></li>
-<li><a href="#DSPlugin">Data Storage</a> <a name="DSPlugin"></a></li>
-<li><a href="#KTPlugin">Knowledge Tracing</a> <a name="KTPlugin"></a></li>
-<li><a href="#HFPlugin">Hint Factory (model tracing)</a> <a name="HFPlugin"></a></li>
-<li><a href="#PMPlugin">Problem Management</a> <a name="PMPlugin"></a></li>
-<li><a href="#PSMPlugin">Problem Step Management</a> <a name="PSMPlugin"></a></li>
-<li><a href="#SMPlugin">Student Management</a> <a name="SMPlugin"></a></li>
-<li><a href="#SKMPlugin">Skill Management</a> <a name="SKMPlugin"></a></li>
+<li><a href="#ExPlugin">Echo Example</a></li>
+<li><a href="#DCPlugin">Data Connection to PSLC Datashop</a></li>
+<li><a href="#DSPlugin">Data Storage</a></li>
+<li><a href="#KTPlugin">Knowledge Tracing</a><ul>
+<li><a href="#kt_set_initial">kt_set_initial</a></li>
+<li><a href="#kt_reset">kt_reset</a></li>
+<li><a href="#kt_trace">kt_trace</a></li>
 </ul>
 </li>
+<li><a href="#HFPlugin">Hint Factory (model tracing)</a><ul>
+<li><a href="#hf_init_problem">hf_init_problem</a></li>
+<li><a href="#hf_push_state">hf_push_state</a></li>
+<li><a href="#hf_hint_exists">hf_hint_exists</a></li>
+<li><a href="#hf_get_hint">hf_get_hint</a></li>
+</ul>
+</li>
+<li><a href="#PMPlugin">Problem Management</a><ul>
+<li><a href="#add_problem">add_problem</a></li>
+<li><a href="#remove_problem">remove_problem</a></li>
+<li><a href="#get_problem">get_problem</a></li>
+<li><a href="#list_problems">list_problems</a></li>
+</ul>
+</li>
+<li><a href="#PSMPlugin">Problem Step Management</a><ul>
+<li><a href="#add_problem_step">add_problem_step</a></li>
+<li><a href="#remove_problem_step">remove_problem_step</a></li>
+<li><a href="#get_problem_step">get_problem_step</a></li>
+<li><a href="#list_problem_steps">list_problem_steps</a></li>
+</ul>
+</li>
+<li><a href="#SMPlugin">Student Management</a></li>
+<li><a href="#SKMPlugin">Skill Management</a></li>
+</ul>
+</li>
+<li><a href="https://github.com/tutorgen/HPIT-python-client/blob/master/README.md">Developing New Plugins and Tutors</a></li>
 <li><a href="#LicenseToc">License</a></li>
 </ul>
 <h2><a name="APIToc"></a>API Framework Documentation v2.1</h2>
 <p>The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
-and specialized, machine learning algorithims, which we call plugins.</p>
-<p>HPIT is a next generation system built on the backbone of open source web technologies.</p>
+and specialized, machine learning algorithims, which we call plugins. HPIT is a next 
+generation system built on the backbone of open source web technologies.</p>
 <p>Currently our tech stack consists of the following:</p>
 <ul>
 <li>Python 3.4</li>
@@ -81,7 +105,7 @@ system of modules.</p>
 <p>Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
 and analyze intelligent information about student perforamance. A tutor could be a game, or a web application,
 a Flash game, or some other system that interacts with students in an effort to educate or train.</p>
-<p>HPIT Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
+<p>Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
 A plugin may exist inside of HPIT itself(at TutorGen) or on a network or system outside of HPIT. Regardless of
 where the plugin sits it must communicate with the central HPIT router/server.</p>
 <p>HPIT Manager - The manager is used to load the HPIT router, and a set of plugins and tutors. It
@@ -100,15 +124,19 @@ You may need to install Python3.4 manually to get started depending on your oper
 <p>Once you have the right version of Python installed you should also have <code>virtualenv</code> 
 and <code>pip</code> installed as well. If you are unfamiliar with either of these libraries I highly 
 encourage you research them, as they will make working with HPIT much simpler.</p>
-<p>Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.
-    * On Ubuntu: <code>sudo apt-get install mongodb sqlite</code> 
-    * On Mac OSX with HomeBrew: <code>brew install mongodb sqlite</code>. 
-    * On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html</p>
+<p>Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.</p>
+<ul>
+<li>On Ubuntu: <code>sudo apt-get install mongodb sqlite</code> </li>
+<li>On Mac OSX with HomeBrew: <code>brew install mongodb sqlite</code>. </li>
+<li>On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html</li>
+</ul>
 <h3><a name="GSProdToc"></a> Production Considerations</h3>
-<p>If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
-    * On Ubuntutype: <code>sudo apt-get install postgresql-server</code>
-    * On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/
-    * On Windows: Installation binaries are available from http://www.postgresql.com</p>
+<p>If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.</p>
+<ul>
+<li>On Ubuntu: <code>sudo apt-get install postgresql-server</code></li>
+<li>On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/</li>
+<li>On Windows: Installation binaries are available from http://www.postgresql.com</li>
+</ul>
 <p>It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
 then please read the tutorial here: http://www.postgresql.org/docs/9.3/static/tutorial.html In general you will need to 
 configure some security settings in postgres, create a database, then create login roles for that database. PostgreSQL by 
@@ -171,33 +199,35 @@ will give you a list of commands that manager understands. Then typing
 <code>python3 manager.py your_command</code> will show you the arguments that that command can take and a
 brief overview of what that command does.</p>
 <p>Currently the HPIT Manager has the following commands:</p>
-<pre><code>* `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
-* `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
-* `python3 manager.py status` will show you whether or not the HPIT server is currently running.
-* `python3 manager.py add plugin &lt;name&gt; &lt;subtype&gt;` will help you create plugins with the specified name and subtype.
-* `python3 manager.py remove plugin &lt;name&gt;` will help you remove plugins with the specified name.
-* `python3 manager.py add tutor &lt;name&gt; &lt;subtype&gt;` will help you create tutors with the specified name and subtype.
-* `python3 manager.py remove tutor &lt;name&gt;` will help you remove tutors with the specified name.
-* `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
-* `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
-* `python3 manager.py docs` copies this documentation file to the server assets directory.
-* `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
-* `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
-* `python3 manager.py test` runs the suite of tests for components within HPIT.
-</code></pre>
+<ul>
+<li><code>python3 manager.py start</code> will start the HPIT server, all locally configured tutors, and all locally configured plugins.</li>
+<li><code>python3 manager.py stop</code> will stop the HPIT server, all locally configured tutors, and all locally configured plugins.</li>
+<li><code>python3 manager.py status</code> will show you whether or not the HPIT server is currently running.</li>
+<li><code>python3 manager.py add plugin &lt;name&gt; &lt;subtype&gt;</code> will help you create plugins with the specified name and subtype.</li>
+<li><code>python3 manager.py remove plugin &lt;name&gt;</code> will help you remove plugins with the specified name.</li>
+<li><code>python3 manager.py add tutor &lt;name&gt; &lt;subtype&gt;</code> will help you create tutors with the specified name and subtype.</li>
+<li><code>python3 manager.py remove tutor &lt;name&gt;</code> will help you remove tutors with the specified name.</li>
+<li><code>python3 manager.py assets</code> will compile frontend assets together into a single file to ready for production deployments.</li>
+<li><code>python3 manager.py debug</code> will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.</li>
+<li><code>python3 manager.py docs</code> copies this documentation file to the server assets directory.</li>
+<li><code>python3 manager.py routes</code> lists all the routes that the HPIT Server/Router exposes to the web.</li>
+<li><code>python3 manager.py syncdb</code> syncs the data model with the administration database.(PostgreSQL or Sqlite3)</li>
+<li><code>python3 manager.py test</code> runs the suite of tests for components within HPIT.</li>
+</ul>
 <h2><a name="ConfigToc"></a> The Tutor and Plugin Configuration</h2>
 <p>The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
 amount of entities for testing and evaluation of the software. Creating a new hpit 
 entity (tutor/plugin) adds it to the 'configuration.json'. Removing an hpit entity 
 removes it from the 'configuration.json' file. All entities within the configuration specify
 6 things: </p>
-<pre><code>1. Whether it is a tutor or plugin (by virtue of being in the tutor or plugin list)
-2. active - Whether the plugin is currently running. (True if it is)
-3. name - The name of the entity. This is how the entity will register itself with HPIT.
-4. type - The subtype of the entity. e.g. 'example' or 'knowledge_tracer'
-5. entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.
-6. api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.
-</code></pre>
+<ol>
+<li>Whether it is a tutor or plugin (by virtue of being in the tutor or plugin list)</li>
+<li>active - Whether the plugin is currently running. (True if it is)</li>
+<li>name - The name of the entity. This is how the entity will register itself with HPIT.</li>
+<li>type - The subtype of the entity. e.g. 'example' or 'knowledge_tracer'</li>
+<li>entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.</li>
+<li>api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.</li>
+</ol>
 <h2><a name="SettingsToc"></a> Settings for Clients and Servers</h2>
 <p>Both clients (tutors and plugins) and the server may need configuration.  The settings files
 are clients/settings.py and server/settings.py, for clients and servers, respectively.  </p>
@@ -229,25 +259,28 @@ are clients/settings.py and server/settings.py, for clients and servers, respect
 lazy creation policy, so the database and its collections are created only after elements are inserted,
 and can be created with no prior configuration. The database contains five core collections:</p>
 <h3><a name="DBmessagesToc"></a> messages</h3>
-<p>A list of messages sent to the system before being duplicated to plugin_messages
-It contains the following fields:
-entity_id: "The session ID of the sender"
-payload: "The data being sent."</p>
+<p>A list of messages sent to the system before being duplicated to plugin_messages. Each message contains the following fields:</p>
+<ul>
+<li>entity_id: "The session ID of the sender"</li>
+<li>payload: "The data being sent."</li>
+</ul>
 <h3><a name="DBpluginmesToc"></a> plugin_messages</h3>
-<p>Contains messages sent to plugins, as copied from the messages collection.
-It contains the following fields:
-- plugin_name: "name of destination plugin"
-- event_name: "name of event"
-- message_id: "the ID of this message"
-- message_payload: "The data contained in this message."
-- sent_to_plugin: "Boolean if it has been processed or not"</p>
+<p>Contains messages sent to plugins, as copied from the messages collection. It contains the following fields:</p>
+<ul>
+<li>plugin_name: "name of destination plugin"</li>
+<li>event_name: "name of event"</li>
+<li>message_id: "the ID of this message"</li>
+<li>message_payload: "The data contained in this message."</li>
+<li>sent_to_plugin: "Boolean if it has been processed or not"</li>
+</ul>
 <h3><a name="DBresponsesToc"></a> responses</h3>
-<p>Stores responses for tutors or other plugins to poll.
-It contains the following fields:
-- response_received: "Boolean if it has been processed or not"
-- response: "data for this response"
-- message_id: "the id of the original sent message"
-- message: "the original message"</p>
+<p>Stores responses for tutors or other plugins to poll. It contains the following fields:</p>
+<ul>
+<li>response_received: "Boolean if it has been processed or not"</li>
+<li>response: "data for this response"</li>
+<li>message_id: "the id of the original sent message"</li>
+<li>message: "the original message"</li>
+</ul>
 <h3><a name="DBsessionsToc"></a> sessions</h3>
 <p>Stores session data for plugins and tutors. </p>
 <p>HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
@@ -276,10 +309,12 @@ message payload is an arbitrary JSON like document with data formatted based on 
 requirements. The kinds of messages a tutor can send is definied by the plugins 
 currently registered with HPIT. The HPIT server itself does not define what these 
 messages look like, however HPIT does package some plugins as part of it's architecture.</p>
-<p>For example the HPIT basic knowledge tracing plugin supports the following three events:
-<em> kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.
-</em> kt_trace - Performs a knowledge tracing operation on the KT Skill.
-* kt_reset - Resets the inital values for the knowledge tracer on the KT Skill.</p>
+<p>For example the HPIT basic knowledge tracing plugin supports the following three events:</p>
+<ul>
+<li>kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.</li>
+<li>kt_trace - Performs a knowledge tracing operation on the KT Skill.</li>
+<li>kt_reset - Resets the inital values for the knowledge tracer on the KT Skill.</li>
+</ul>
 <p>Depending on the event name(eg kt_set_initial, or kt_trace) the payload the plugin expects will be different.</p>
 <p>Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.</p>
@@ -307,7 +342,7 @@ effect where plugins fire in series to process a complex series of messages.</p>
 <p>The example plugin listens to the <code>test</code> and <code>example</code> event names and logs
 whatever data it's sent in the payload to a file.</p>
 <h2><a name="KTPlugin"></a> Knowledge Tracing Plugin</h2>
-<h4>kt_set_initial</h4>
+<h4><a name="kt_set_initial"></a> kt_set_initial</h4>
 <p>Sets the initial probabilistic values for the knowledge tracer.</p>
 <p>Recieves:</p>
 <ul>
@@ -318,171 +353,233 @@ whatever data it's sent in the payload to a file.</p>
 <li>probability_guess : float (0.0-1.0) - Probability the answer is a guess</li>
 <li>probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</li>
 </ul>
-<p>Returns:
-<em> skill : string - String identifier for the skill.
-</em> probability_known : float (0.0-1.0) - Probability the skill is already known
-<em> probability_learned : float (0.0-1.0) - Probability the skill will be learned
-</em> probability_guess : float (0.0-1.0) - Probability the answer is a guess
-* probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</p>
-<h4>kt_reset</h4>
+<p>Returns:</p>
+<ul>
+<li>skill : string - String identifier for the skill.</li>
+<li>probability_known : float (0.0-1.0) - Probability the skill is already known</li>
+<li>probability_learned : float (0.0-1.0) - Probability the skill will be learned</li>
+<li>probability_guess : float (0.0-1.0) - Probability the answer is a guess</li>
+<li>probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</li>
+</ul>
+<h4><a name="kt_reset"></a> kt_reset</h4>
 <p>Resets the probabilistic values for the knowledge tracer.</p>
-<p>Recieves:
-<em> entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
-</em> skill : string - String identifier for the skill.</p>
-<p>Returns:
-<em> skill : string - String identifier for the skill.
-</em> probability_known : 0.0 - Probability the skill is already known
-<em> probability_learned : 0.0 - Probability the skill will be learned
-</em> probability_guess : 0.0 - Probability the answer is a guess
-* probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)</p>
-<h4>kt_trace</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id: string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>skill : string - String identifier for the skill.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>skill : string - String identifier for the skill.</li>
+<li>probability_known : 0.0 - Probability the skill is already known</li>
+<li>probability_learned : 0.0 - Probability the skill will be learned</li>
+<li>probability_guess : 0.0 - Probability the answer is a guess</li>
+<li>probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)</li>
+</ul>
+<h4><a name="kt_trace"></a> kt_trace</h4>
 <p>Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result.</p>
-<p>Recieves:
-<em> entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
-</em> skill : string - String identifier for the skill.
-* correct: boolean - True if correct. False if not.</p>
-<p>Returns:
-<em> skill : string - String identifier for the skill.
-</em> probability_known : float (0.0-1.0) - Probability the skill is already known
-<em> probability_learned : float (0.0-1.0) - Probability the skill will be learned
-</em> probability_guess : float (0.0-1.0) - Probability the answer is a guess
-* probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</p>
+<p>Recieves:</p>
+<ul>
+<li>entity_id: string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>skill : string - String identifier for the skill.</li>
+<li>correct: boolean - True if correct. False if not.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>skill : string - String identifier for the skill.</li>
+<li>probability_known : float (0.0-1.0) - Probability the skill is already known</li>
+<li>probability_learned : float (0.0-1.0) - Probability the skill will be learned</li>
+<li>probability_guess : float (0.0-1.0) - Probability the answer is a guess</li>
+<li>probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</li>
+</ul>
 <h2><a name="HFPlugin"></a> Hint Factory Plugin</h2>
-<h4>hf_init_problem</h4>
+<h4><a name="hf_init_problem"></a> hf_init_problem</h4>
 <p>Initializes a new problem for the hint factory.</p>
-<p>Recieves:
-    * start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")
-    * goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")</p>
-<p>Returns:
-    * status: string - OK or NOT_OK on success and failure respectively</p>
-<h4>hf_push_state</h4>
+<p>Recieves:</p>
+<ul>
+<li>start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")</li>
+<li>goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status: string - OK or NOT_OK on success and failure respectively</li>
+</ul>
+<h4><a name="hf_push_state"></a> hf_push_state</h4>
 <p>Pushes a new state on the problem.</p>
-<p>Recieves:
-    * state : json - A json object representing the state to push.
-    * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
-    * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
-    * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-    * state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
-<p>Returns:
-    * status: string - OK</p>
-<h4>hf_hint_exists</h4>
+<p>Recieves:</p>
+<ul>
+<li>state : json - A json object representing the state to push.</li>
+<li>state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"</li>
+<li>state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]</li>
+<li>state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"</li>
+<li>state.problem: string - A string represting the problem i.e "2x + 4 = 12"</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status: string - OK</li>
+</ul>
+<h4><a name="hf_hint_exists"></a> hf_hint_exists</h4>
 <p>Given a particular state structure. Does a hint exist for this problem?</p>
-<p>Recieves:
-    * state : json - A json object representing the state to push.
-    * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
-    * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
-    * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-    * state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
-<p>Returns:
-    * status: string - OK
-    * exists: string - YES if a hint is available, NO if it isn't</p>
-<h4>hf_get_hint</h4>
+<p>Recieves:</p>
+<ul>
+<li>state : json - A json object representing the state to push.</li>
+<li>state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"</li>
+<li>state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]</li>
+<li>state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"</li>
+<li>state.problem: string - A string represting the problem i.e "2x + 4 = 12"</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status: string - OK</li>
+<li>exists: string - YES if a hint is available, NO if it isn't</li>
+</ul>
+<h4><a name="hf_get_hint"></a> hf_get_hint</h4>
 <p>Given a particular state structure for a problem, retrieve the next most probable state that leads
 the student towards a solution.</p>
-<p>Recieves:
-    * state : json - A json object representing the state to push.
-    * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
-    * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
-    * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-    * state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
-<p>Returns:
-    * status: string - OK
-    * exists: string - YES if a hint is available, NO if it isn't
-    * hint_text: string - The text describing the hint.</p>
+<p>Recieves:</p>
+<ul>
+<li>state : json - A json object representing the state to push.</li>
+<li>state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"</li>
+<li>state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]</li>
+<li>state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"</li>
+<li>state.problem: string - A string represting the problem i.e "2x + 4 = 12"</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status: string - OK</li>
+<li>exists: string - YES if a hint is available, NO if it isn't</li>
+<li>hint_text: string - The text describing the hint.</li>
+</ul>
 <h2><a name="SMPlugin"></a> Student Management Plugin</h2>
 <h3>TODO</h3>
 <h2><a name="SKMPlugin"></a> Skill Management Plugin</h2>
 <h3>TODO</h3>
 <h2><a name="PMPlugin"></a> Problem Management Plugin</h2>
-<h4>add_problem</h4>
+<h4><a name="add_problem"></a> add_problem</h4>
 <p>Adds a problem to the problem manager.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> problem_name : string - The name of the problem.
-* problem_text : string - Text for the problem.</p>
-<p>Returns:
-<em> problem_name : string - The problem name.
-</em> problem_text : string - The problem's text.
-<em> success : boolean - True if the data was saved to the database.
-</em> updated : boolean - True if the data was updated (the record already existed)</p>
-<h4>remove_problem</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_text : string - Text for the problem.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_name : string - The problem name.</li>
+<li>problem_text : string - The problem's text.</li>
+<li>success : boolean - True if the data was saved to the database.</li>
+<li>updated : boolean - True if the data was updated (the record already existed)</li>
+</ul>
+<h4><a name="remove_problem"></a> remove_problem</h4>
 <p>Remove a problem from the problem manager.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> problem_name : string - The name of the problem.</p>
-<p>Returns:
-<em> problem_name : string - The name of the problem that was removed.
-</em> exists : boolean - True if the problem existed.
-* success : boolean - True if the problem existed and was deleted.</p>
-<h4>get_problem</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_name : string - The name of the problem.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_name : string - The name of the problem that was removed.</li>
+<li>exists : boolean - True if the problem existed.</li>
+<li>success : boolean - True if the problem existed and was deleted.</li>
+</ul>
+<h4><a name="get_problem"></a> get_problem</h4>
 <p>Gets a previously stored problem from the problem manager.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> problem_name : string - The name of the problem to retrieve.</p>
-<p>Returns:
-<em> problem_name : string - The name of the problem.
-</em> problem_text : string - The text of the problem.
-<em> exists : boolean - True if the problem existed.
-</em> success : boolean - True if the problem existed.</p>
-<h4>list_problems</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_name : string - The name of the problem to retrieve.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_text : string - The text of the problem.</li>
+<li>exists : boolean - True if the problem existed.</li>
+<li>success : boolean - True if the problem existed.</li>
+</ul>
+<h4><a name="list_problems"></a> list_problems</h4>
 <p>Get all the problems for a given entity.</p>
-<p>Recieves:
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</p>
-<p>Returns:
-<em> problems : list - A list of problems with
-    * problem_name : string - The name of the problem.
-    * problem_text : string - The text of the problem.
-</em> success : True - Always returns True</p>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problems : list - A list of problems with<ul>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_text : string - The text of the problem.</li>
+</ul>
+</li>
+<li>success : True - Always returns True</li>
+</ul>
 <h2><a name="PSMPlugin"></a> Problem Step Management Plugin</h2>
-<h4>add_problem_step</h4>
+<h4><a name="add_problem_step"></a> add_problem_step</h4>
 <p>Adds a problem step to the problem step manager.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> problem_name : string - The name of the problem.
-<em> problem_step_name : string - The name of the problem step.
-</em> problem_step_text : string - The text of the problem step.</p>
-<p>Returns:
-<em> problem_name : string - The problem name.
-</em> problem_step_name : string - The name of the problem step.
-<em> problem_step_text : string - The text of the problem step.
-</em> success : boolean - True if the data was saved to the database.
-* updated : boolean - True if the data was updated (the record already existed)</p>
-<h4>remove_problem_step</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_step_name : string - The name of the problem step.</li>
+<li>problem_step_text : string - The text of the problem step.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_name : string - The problem name.</li>
+<li>problem_step_name : string - The name of the problem step.</li>
+<li>problem_step_text : string - The text of the problem step.</li>
+<li>success : boolean - True if the data was saved to the database.</li>
+<li>updated : boolean - True if the data was updated (the record already existed)</li>
+</ul>
+<h4><a name="remove_problem_step"></a> remove_problem_step</h4>
 <p>Remove a problem step from the problem step manager.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> problem_name : string - The name of the problem.
-* problem_step_name : string - The name of the problem step.</p>
-<p>Returns:
-<em> problem_name : string - The name of the problem.
-</em> problem_step_name : string - The name of the problem that was removed.
-<em> exists : boolean - True if the problem existed.
-</em> success : boolean - True if the problem existed and was deleted.</p>
-<h4>get_problem_step</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_step_name : string - The name of the problem step.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_step_name : string - The name of the problem that was removed.</li>
+<li>exists : boolean - True if the problem existed.</li>
+<li>success : boolean - True if the problem existed and was deleted.</li>
+</ul>
+<h4><a name="get_problem_step"></a> get_problem_step</h4>
 <p>Gets a previously stored problem step from the problem step manager.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> problem_step_name : string - The name of the problem step.
-* problem_name : string - The name of the problem to retrieve.</p>
-<p>Returns:
-<em> problem_name : string - The name of the problem.
-</em> problem_step_name : string - The name of the problem step.
-<em> problem_step_text : string - The text of the problem step.
-</em> exists : boolean - True if the problem existed.
-* success : boolean - True if the problem existed.</p>
-<h4>list_problem_steps</h4>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_step_name : string - The name of the problem step.</li>
+<li>problem_name : string - The name of the problem to retrieve.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_step_name : string - The name of the problem step.</li>
+<li>problem_step_text : string - The text of the problem step.</li>
+<li>exists : boolean - True if the problem existed.</li>
+<li>success : boolean - True if the problem existed.</li>
+</ul>
+<h4><a name="list_problem_steps"></a> list_problem_steps</h4>
 <p>Get all the problems for a given problem and entity. If the problem name is specified
 returns all problem steps for the given problem_name. If the problem_name is NOT 
 specified, returns all the problem steps for the given entity.</p>
-<p>Recieves:
-<em> entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-</em> (optional) problem_name : string - The name of the problem.</p>
-<p>Returns:
-<em> problem_steps : list - A list of problems with
-    * problem_step : string - The name of the problem.
-    * problem_step_name : string - The name of the problem step.
-    * problem_step_text : string - The text of the problem step.
-</em> success : True - Always returns True</p>
+<p>Recieves:</p>
+<ul>
+<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>(optional) problem_name : string - The name of the problem.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problem_steps : list - A list of problems with<ul>
+<li>problem_step : string - The name of the problem.</li>
+<li>problem_step_name : string - The name of the problem step.</li>
+<li>problem_step_text : string - The text of the problem step.</li>
+</ul>
+</li>
+<li>success : True - Always returns True</li>
+</ul>
 <h2><a name="DSPlugin"></a> Data Storage Plugin</h2>
 <h3>TODO</h3>
 <h2><a name="DCPlugin"></a> PSLC DataShop Connection Plugin</h2>
