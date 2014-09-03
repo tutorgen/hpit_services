@@ -12,6 +12,7 @@ before_install:
   - "sudo apt-get update"
   - "sudo apt-get install mongodb-org-server mongodb-org-shell"
   - "sudo apt-get install python2.7-dev python3-dev"
+  - "sudo apt-get install neo4j"
   - "cp travis_settings.py server/settings.py"
 install: 
   - pip install -r requirements.txt
