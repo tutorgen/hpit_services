@@ -1,6 +1,14 @@
 <p><a href="https://codeship.io/projects/28762"> <img alt="Codeship Build Status" src="https://codeship.io/projects/d0ff7820-f8ca-0131-f61d-5a47552ce69e/status" /></a>
 <a href="https://travis-ci.org/tutorgen/hpit_services"><img alt="Travis Build Status" src="https://travis-ci.org/tutorgen/hpit_services.svg?branch=master" /></a></p>
-<h2>API Framework Documentation v2.0</h2>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="API Framework Documentation v2.1">APIToc</a></li>
+<li><a href="Understanding Terminology">TermToc</a></li>
+<li><a href="Getting Started">GetStartedToc</a></li>
+<li><a href="The Adminstration Panel">AdminToc</a></li>
+<li><a href="The HPIT Manager">ManagerToc</a></li>
+</ul>
+<h2>API Framework Documentation v2.1 [APIToc]</h2>
 <p>The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
 and specialized, machine learning algorithims, which we call plugins.</p>
@@ -14,8 +22,19 @@ with the system by sending messages which consist of a named event and a data pa
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.</p>
 <p>In addition, HPIT provides several baseline plugins which peform basic functions related
-to intelligent tutoring systems.</p>
-<h2>Understanding Terminology</h2>
+to intelligent tutoring systems. These are:</p>
+<ul>
+<li>[EchoPlugin][Echo Example]</li>
+<li>[DCPlugin][Data Connection to PSLC Datashop]</li>
+<li>[DSPlugin][Data Storage]</li>
+<li>[KTPlugin][Knowledge Tracing]</li>
+<li>[HFPlugin][Hint Factory (model tracing)]</li>
+<li>[PMPlugin][Problem Management]</li>
+<li>[PSMPlugin][Problem Step Management]</li>
+<li>[SMPlugin][Student Management]</li>
+<li>[SKMPlugin][Skill Management]</li>
+</ul>
+<h2>Understanding Terminology [TermToc]</h2>
 <p>HPIT - HPIT consists of several modules and is sort of an all encompassing term for the entire 
 system of modules.</p>
 <p>Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
@@ -31,7 +50,7 @@ and plugins.</p>
 <p>HPIT Message - This is a event_name and payload pair, both of which are defined by the developer for
 their plugin.</p>
 <p>HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.</p>
-<h2>Getting started</h2>
+<h2>Getting started [GetStartedToc]</h2>
 <h3>Python Requirements</h3>
 <p>HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
@@ -88,7 +107,7 @@ to http://127.0.0.1:8000. </p>
 </li>
 <li>Start NEO4J. <code>neo4j start</code>.  This may vary depending on your system configuration.</li>
 </ol>
-<h2>The HPIT Adminstration Panel</h2>
+<h2>The Adminstration Panel [AdminToc]</h2>
 <p>After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
 page after registering. The system will just direct you back to the signin/register page. After logging in
 two new options are available for you. 'My Plugins' and 'My Tutors'. On each of these pages you can register
@@ -101,7 +120,7 @@ your tutor or plugin to HPIT. Keep these two pieces of information secure. The E
 to others, but NEVER share your API Key with anyone.</p>
 <p>The Docs page on the adminsitration panel, shows these docs. The routes page on the administration panel shows
 the web service endpoints that HPIT exposes to tutors and plugins.</p>
-<h2>The HPIT Manager</h2>
+<h2>The HPIT Manager [ManagerToc]</h2>
 <p>The HPIT Manager can be used to quickly launch an HPIT server, configure plugins and tutors,
 and monitor how data is being passed between entities within the HPIT system.</p>
 <p>The HPIT manager can be run by typing: <code>python3 manager.py &lt;command&gt; &lt;command_args&gt;</code></p>
@@ -243,10 +262,10 @@ like tutors. In this way, it is possible for plugins to listen to, and refire ev
 messages while altering the event name of the message so that other dependent 
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.</p>
-<h2>Example Plugin</h2>
+<h2>Example Plugin [EchoPlugin]</h2>
 <p>The example plugin listens to the <code>test</code> and <code>example</code> event names and logs
 whatever data it's sent in the payload to a file.</p>
-<h2>Knowledge Tracing Plugin</h2>
+<h2>Knowledge Tracing Plugin [KTPlugin]</h2>
 <h4>kt_set_initial</h4>
 <p>Sets the initial probabilistic values for the knowledge tracer.</p>
 <p>Recieves:</p>
@@ -287,53 +306,53 @@ whatever data it's sent in the payload to a file.</p>
 <em> probability_learned : float (0.0-1.0) - Probability the skill will be learned
 </em> probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</p>
-<h2>Hint Factory Plugin</h2>
+<h2>Hint Factory Plugin [HFPlugin]</h2>
 <h4>hf_init_problem</h4>
 <p>Initializes a new problem for the hint factory.</p>
 <p>Recieves:
-<em> start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")
-</em> goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")</p>
+    * start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")
+    * goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")</p>
 <p>Returns:
-* status: string - OK or NOT_OK on success and failure respectively</p>
+    * status: string - OK or NOT_OK on success and failure respectively</p>
 <h4>hf_push_state</h4>
 <p>Pushes a new state on the problem.</p>
 <p>Recieves:
-<em> state : json - A json object representing the state to push.
-</em> state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
-<em> state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
-</em> state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-* state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
+    * state : json - A json object representing the state to push.
+    * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+    * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+    * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+    * state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
 <p>Returns:
-* status: string - OK</p>
+    * status: string - OK</p>
 <h4>hf_hint_exists</h4>
 <p>Given a particular state structure. Does a hint exist for this problem?</p>
 <p>Recieves:
-<em> state : json - A json object representing the state to push.
-</em> state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
-<em> state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
-</em> state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-* state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
+    * state : json - A json object representing the state to push.
+    * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+    * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+    * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+    * state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
 <p>Returns:
-<em> status: string - OK
-</em> exists: string - YES if a hint is available, NO if it isn't</p>
+    * status: string - OK
+    * exists: string - YES if a hint is available, NO if it isn't</p>
 <h4>hf_get_hint</h4>
 <p>Given a particular state structure for a problem, retrieve the next most probable state that leads
 the student towards a solution.</p>
 <p>Recieves:
-<em> state : json - A json object representing the state to push.
-</em> state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
-<em> state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
-</em> state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-* state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
+    * state : json - A json object representing the state to push.
+    * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+    * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+    * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+    * state.problem: string - A string represting the problem i.e "2x + 4 = 12"</p>
 <p>Returns:
-<em> status: string - OK
-</em> exists: string - YES if a hint is available, NO if it isn't
-* hint_text: string - The text describing the hint.</p>
-<h2>Student Management Plugin</h2>
+    * status: string - OK
+    * exists: string - YES if a hint is available, NO if it isn't
+    * hint_text: string - The text describing the hint.</p>
+<h2>Student Management Plugin [SMPlugin]</h2>
 <h3>TODO</h3>
-<h2>Skill Management Plugin</h2>
+<h2>Skill Management Plugin [SKMPlugin]</h2>
 <h3>TODO</h3>
-<h2>Problem Management Plugin</h2>
+<h2>Problem Management Plugin [PMPlugin]</h2>
 <h4>add_problem</h4>
 <p>Adds a problem to the problem manager.</p>
 <p>Recieves:
@@ -373,7 +392,7 @@ the student towards a solution.</p>
     * problem_name : string - The name of the problem.
     * problem_text : string - The text of the problem.
 </em> success : True - Always returns True</p>
-<h2>Problem Step Management Plugin</h2>
+<h2>Problem Step Management Plugin [PSMPlugin]</h2>
 <h4>add_problem_step</h4>
 <p>Adds a problem step to the problem step manager.</p>
 <p>Recieves:
@@ -424,6 +443,8 @@ specified, returns all the problem steps for the given entity.</p>
     * problem_step_text : string - The text of the problem step.
 </em> success : True - Always returns True</p>
 <h2>Data Storage Plugin</h2>
+<h3>TODO</h3>
+<h2>PSLC DataShop Connection Plugin [DCPlugin]</h2>
 <h3>TODO</h3>
 <h2>Tech Stack</h2>
 <p>HPIT exclusively uses Open Source Technologies. Currently our tech stack consists 
