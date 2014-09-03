@@ -4,15 +4,39 @@
 <ul>
 <li><a href="#APIToc">API Framework Documentation v2.1</a></li>
 <li><a href="#TermToc">Understanding Terminology</a></li>
-<li><a href="#GetStartedToc">Getting Started</a></li>
+<li><a href="#GetStartedToc">Getting Started</a><ul>
+<li><a href="#GSReqToc">Python Requirements</a></li>
+<li><a href="#GSProdToc">Production Considerations</a></li>
+<li><a href="#GSFrontendToc">Frontend Requirements</a></li>
+<li><a href="#GSInstallToc">Installing HPIT</a></li>
+<li><a href="#GSInstallOptToc">Optional Installation for Hint Factory Plugin</a></li>
+</ul>
+</li>
 <li><a href="#AdminToc">The Adminstration Panel</a></li>
 <li><a href="#ManagerToc">The HPIT Manager</a></li>
 <li><a href="#ConfigToc">The Tutor and Plugin Configuration</a></li>
 <li><a href="#SettingsToc">Settings for Clients and Servers</a></li>
-<li><a href="#DatabaseToc">Database Structure</a></li>
+<li><a href="#DatabaseToc">Database Structure</a><ul>
+<li><a href="#DBmessagesToc">messages</a></li>
+<li><a href="#DBpluginmesToc">plugin_messages</a></li>
+<li><a href="#DBresponsesToc">responses</a></li>
+<li><a href="#DBsessionsToc">sessions</a></li>
+</ul>
+</li>
 <li><a href="#ServerToc">The HPIT Server in depth</a></li>
 <li><a href="#TutorToc">Tutors in depth</a></li>
-<li><a href="#PluginToc">Plugin Component Specification</a></li>
+<li><a href="#PluginToc">Plugin Component Specification</a><ul>
+<li><a href="#ExPlugin">Echo Example</a> <a name="ExPlugin"></a></li>
+<li><a href="#DCPlugin">Data Connection to PSLC Datashop</a> <a name="DCPlugin"></a></li>
+<li><a href="#DSPlugin">Data Storage</a> <a name="DSPlugin"></a></li>
+<li><a href="#KTPlugin">Knowledge Tracing</a> <a name="KTPlugin"></a></li>
+<li><a href="#HFPlugin">Hint Factory (model tracing)</a> <a name="HFPlugin"></a></li>
+<li><a href="#PMPlugin">Problem Management</a> <a name="PMPlugin"></a></li>
+<li><a href="#PSMPlugin">Problem Step Management</a> <a name="PSMPlugin"></a></li>
+<li><a href="#SMPlugin">Student Management</a> <a name="SMPlugin"></a></li>
+<li><a href="#SKMPlugin">Skill Management</a> <a name="SKMPlugin"></a></li>
+</ul>
+</li>
 <li><a href="#LicenseToc">License</a></li>
 </ul>
 <h2><a name="APIToc"></a>API Framework Documentation v2.1</h2>
@@ -50,18 +74,7 @@ with the system by sending messages which consist of a named event and a data pa
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.</p>
 <p>In addition, HPIT provides several baseline plugins which peform basic functions related
-to intelligent tutoring systems. These are:</p>
-<ul>
-<li>[EchoPlugin][Echo Example]</li>
-<li>[DCPlugin][Data Connection to PSLC Datashop]</li>
-<li>[DSPlugin][Data Storage]</li>
-<li>[KTPlugin][Knowledge Tracing]</li>
-<li>[HFPlugin][Hint Factory (model tracing)]</li>
-<li>[PMPlugin][Problem Management]</li>
-<li>[PSMPlugin][Problem Step Management]</li>
-<li>[SMPlugin][Student Management]</li>
-<li>[SKMPlugin][Skill Management]</li>
-</ul>
+to intelligent tutoring systems.</p>
 <h2><a name="TermToc"></a> Understanding Terminology</h2>
 <p>HPIT - HPIT consists of several modules and is sort of an all encompassing term for the entire 
 system of modules.</p>
@@ -79,7 +92,7 @@ and plugins.</p>
 their plugin.</p>
 <p>HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.</p>
 <h2><a name="GetStartedToc"></a> Getting started</h2>
-<h3>Python Requirements</h3>
+<h3><a name="GSReqToc"></a> Python Requirements</h3>
 <p>HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
 You may need to install Python3.4 manually to get started depending on your operating system.</p>
@@ -91,7 +104,7 @@ encourage you research them, as they will make working with HPIT much simpler.</
     * On Ubuntu: <code>sudo apt-get install mongodb sqlite</code> 
     * On Mac OSX with HomeBrew: <code>brew install mongodb sqlite</code>. 
     * On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html</p>
-<h3>Production Considerations</h3>
+<h3><a name="GSProdToc"></a> Production Considerations</h3>
 <p>If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
     * On Ubuntutype: <code>sudo apt-get install postgresql-server</code>
     * On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/
@@ -102,14 +115,14 @@ configure some security settings in postgres, create a database, then create log
 default does not make itself discoverable, or connectible from outside the local machine. If it is installed in a location
 other than where you are installing HPIT you'll need to configure iptables, postgresql.conf and hba.conf in your postgreSQL
 installation directory.</p>
-<h3>Frontend Requirements</h3>
+<h3><a name="GSFrontendToc"></a> Frontend Requirements</h3>
 <p>HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
 you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
 for downloading and installing node and npm to your system. IMPORTANT! If you are using an older version of ubuntu (13.10 or earlier)
 you MUST download node and recompile from scratch. The version of node packaged with older versions of ubuntu is far out of date
 and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
 the binaries to either /usr/bin or /usr/local/bin</p>
-<h3>Installing HPIT</h3>
+<h3><a name="GSInstallToc"></a> Installing HPIT</h3>
 <p>Then you can begin installalling HPIT by:</p>
 <ol>
 <li>Change to the directory where you have downloaded hpit with: <code>cd /path/to/project</code></li>
@@ -124,7 +137,7 @@ the binaries to either /usr/bin or /usr/local/bin</p>
 </ol>
 <p>To start the HPIT server type: <code>python3 manager.py start</code> and open your browser 
 to http://127.0.0.1:8000. </p>
-<h4>Optional Installation for Hint Factory Plugin</h4>
+<h3><a name="GSInstallOptToc"></a> Optional Installation for Hint Factory Plugin</h3>
 <p>If you are wanting to use the hint factory plugin you will need to install neo4j graph database.</p>
 <ol>
 <li>Install Neo4j<ul>
@@ -215,12 +228,12 @@ are clients/settings.py and server/settings.py, for clients and servers, respect
 <p>The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
 and can be created with no prior configuration. The database contains five core collections:</p>
-<h3>messages</h3>
+<h3><a name="DBmessagesToc"></a> messages</h3>
 <p>A list of messages sent to the system before being duplicated to plugin_messages
 It contains the following fields:
 entity_id: "The session ID of the sender"
 payload: "The data being sent."</p>
-<h3>plugin_messages</h3>
+<h3><a name="DBpluginmesToc"></a> plugin_messages</h3>
 <p>Contains messages sent to plugins, as copied from the messages collection.
 It contains the following fields:
 - plugin_name: "name of destination plugin"
@@ -228,14 +241,14 @@ It contains the following fields:
 - message_id: "the ID of this message"
 - message_payload: "The data contained in this message."
 - sent_to_plugin: "Boolean if it has been processed or not"</p>
-<h3>responses</h3>
+<h3><a name="DBresponsesToc"></a> responses</h3>
 <p>Stores responses for tutors or other plugins to poll.
 It contains the following fields:
 - response_received: "Boolean if it has been processed or not"
 - response: "data for this response"
 - message_id: "the id of the original sent message"
 - message: "the original message"</p>
-<h3>sessions</h3>
+<h3><a name="DBsessionsToc"></a> sessions</h3>
 <p>Stores session data for plugins and tutors. </p>
 <p>HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
 database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
@@ -290,10 +303,10 @@ like tutors. In this way, it is possible for plugins to listen to, and refire ev
 messages while altering the event name of the message so that other dependent 
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.</p>
-<h2>Example Plugin [EchoPlugin]</h2>
+<h2><a name="ExPlugin"></a> Example Plugin</h2>
 <p>The example plugin listens to the <code>test</code> and <code>example</code> event names and logs
 whatever data it's sent in the payload to a file.</p>
-<h2>Knowledge Tracing Plugin [KTPlugin]</h2>
+<h2><a name="KTPlugin"></a> Knowledge Tracing Plugin</h2>
 <h4>kt_set_initial</h4>
 <p>Sets the initial probabilistic values for the knowledge tracer.</p>
 <p>Recieves:</p>
@@ -334,7 +347,7 @@ whatever data it's sent in the payload to a file.</p>
 <em> probability_learned : float (0.0-1.0) - Probability the skill will be learned
 </em> probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</p>
-<h2>Hint Factory Plugin [HFPlugin]</h2>
+<h2><a name="HFPlugin"></a> Hint Factory Plugin</h2>
 <h4>hf_init_problem</h4>
 <p>Initializes a new problem for the hint factory.</p>
 <p>Recieves:
@@ -376,11 +389,11 @@ the student towards a solution.</p>
     * status: string - OK
     * exists: string - YES if a hint is available, NO if it isn't
     * hint_text: string - The text describing the hint.</p>
-<h2>Student Management Plugin [SMPlugin]</h2>
+<h2><a name="SMPlugin"></a> Student Management Plugin</h2>
 <h3>TODO</h3>
-<h2>Skill Management Plugin [SKMPlugin]</h2>
+<h2><a name="SKMPlugin"></a> Skill Management Plugin</h2>
 <h3>TODO</h3>
-<h2>Problem Management Plugin [PMPlugin]</h2>
+<h2><a name="PMPlugin"></a> Problem Management Plugin</h2>
 <h4>add_problem</h4>
 <p>Adds a problem to the problem manager.</p>
 <p>Recieves:
@@ -420,7 +433,7 @@ the student towards a solution.</p>
     * problem_name : string - The name of the problem.
     * problem_text : string - The text of the problem.
 </em> success : True - Always returns True</p>
-<h2>Problem Step Management Plugin [PSMPlugin]</h2>
+<h2><a name="PSMPlugin"></a> Problem Step Management Plugin</h2>
 <h4>add_problem_step</h4>
 <p>Adds a problem step to the problem step manager.</p>
 <p>Recieves:
@@ -470,9 +483,9 @@ specified, returns all the problem steps for the given entity.</p>
     * problem_step_name : string - The name of the problem step.
     * problem_step_text : string - The text of the problem step.
 </em> success : True - Always returns True</p>
-<h2>Data Storage Plugin</h2>
+<h2><a name="DSPlugin"></a> Data Storage Plugin</h2>
 <h3>TODO</h3>
-<h2>PSLC DataShop Connection Plugin [DCPlugin]</h2>
+<h2><a name="DCPlugin"></a> PSLC DataShop Connection Plugin</h2>
 <h3>TODO</h3>
 <h2><a name="LicenseToc"></a> License</h2>
 <p>This software is dual licensed under the MIT License and the BSD 3-clause license.</p>

@@ -6,14 +6,32 @@
 * [API Framework Documentation v2.1](#APIToc)
 * [Understanding Terminology](#TermToc)
 * [Getting Started](#GetStartedToc)
+    * [Python Requirements](#GSReqToc)
+    * [Production Considerations](#GSProdToc)
+    * [Frontend Requirements](#GSFrontendToc)
+    * [Installing HPIT](#GSInstallToc)
+    * [Optional Installation for Hint Factory Plugin](#GSInstallOptToc)
 * [The Adminstration Panel](#AdminToc)
 * [The HPIT Manager](#ManagerToc)
 * [The Tutor and Plugin Configuration](#ConfigToc)
 * [Settings for Clients and Servers](#SettingsToc)
 * [Database Structure](#DatabaseToc)
+    * [messages](#DBmessagesToc)
+    * [plugin_messages](#DBpluginmesToc)
+    * [responses](#DBresponsesToc)
+    * [sessions](#DBsessionsToc)
 * [The HPIT Server in depth](#ServerToc)
 * [Tutors in depth](#TutorToc)
 * [Plugin Component Specification](#PluginToc)
+    * [Echo Example](#ExPlugin) <a name="ExPlugin"></a>
+    * [Data Connection to PSLC Datashop](#DCPlugin) <a name="DCPlugin"></a>
+    * [Data Storage](#DSPlugin) <a name="DSPlugin"></a>
+    * [Knowledge Tracing](#KTPlugin) <a name="KTPlugin"></a>
+    * [Hint Factory (model tracing)](#HFPlugin) <a name="HFPlugin"></a>
+    * [Problem Management](#PMPlugin) <a name="PMPlugin"></a>
+    * [Problem Step Management](#PSMPlugin) <a name="PSMPlugin"></a>
+    * [Student Management](#SMPlugin) <a name="SMPlugin"></a>
+    * [Skill Management](#SKMPlugin) <a name="SKMPlugin"></a>
 * [License](#LicenseToc)
 
 ## <a name="APIToc"></a>API Framework Documentation v2.1
@@ -56,17 +74,7 @@ Plugins can listen to these events, perform an action, then submit a response ba
 which will ultimately be routed to the tutor that made the original request.
 
 In addition, HPIT provides several baseline plugins which peform basic functions related
-to intelligent tutoring systems. These are:
-
-- [EchoPlugin][Echo Example]
-- [DCPlugin][Data Connection to PSLC Datashop]
-- [DSPlugin][Data Storage]
-- [KTPlugin][Knowledge Tracing]
-- [HFPlugin][Hint Factory (model tracing)]
-- [PMPlugin][Problem Management]
-- [PSMPlugin][Problem Step Management]
-- [SMPlugin][Student Management]
-- [SKMPlugin][Skill Management]
+to intelligent tutoring systems.
 
 ## <a name="TermToc"></a> Understanding Terminology
 
@@ -94,7 +102,7 @@ HPIT Transaction - A transaction is a message specifically for PSLC DataShop tra
 
 ##<a name="GetStartedToc"></a> Getting started
 
-### Python Requirements
+###<a name="GSReqToc"></a> Python Requirements
 
 HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
@@ -111,7 +119,7 @@ Once you have pip and virtualenv installed you will need to install mongodb and 
     * On Mac OSX with HomeBrew: `brew install mongodb sqlite`. 
     * On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html
 
-### Production Considerations
+###<a name="GSProdToc"></a> Production Considerations
 
 If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
     * On Ubuntutype: `sudo apt-get install postgresql-server`
@@ -125,7 +133,7 @@ default does not make itself discoverable, or connectible from outside the local
 other than where you are installing HPIT you'll need to configure iptables, postgresql.conf and hba.conf in your postgreSQL
 installation directory.
 
-### Frontend Requirements
+###<a name="GSFrontendToc"></a> Frontend Requirements
 
 HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
 you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
@@ -134,7 +142,7 @@ you MUST download node and recompile from scratch. The version of node packaged 
 and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
 the binaries to either /usr/bin or /usr/local/bin
 
-### Installing HPIT
+###<a name="GSInstallToc"></a> Installing HPIT
 
 Then you can begin installalling HPIT by:
 
@@ -151,7 +159,7 @@ Then you can begin installalling HPIT by:
 To start the HPIT server type: `python3 manager.py start` and open your browser 
 to http://127.0.0.1:8000. 
 
-#### Optional Installation for Hint Factory Plugin
+###<a name="GSInstallOptToc"></a> Optional Installation for Hint Factory Plugin
 
 If you are wanting to use the hint factory plugin you will need to install neo4j graph database.
 
@@ -250,13 +258,13 @@ The HPIT server uses a NoSQL MongoDB database to manage its messages and transac
 lazy creation policy, so the database and its collections are created only after elements are inserted,
 and can be created with no prior configuration. The database contains five core collections:
 
-### messages
+### <a name="DBmessagesToc"></a> messages
 A list of messages sent to the system before being duplicated to plugin_messages
 It contains the following fields:
 entity_id: "The session ID of the sender"
 payload: "The data being sent."
 
-### plugin_messages
+### <a name="DBpluginmesToc"></a> plugin_messages
 Contains messages sent to plugins, as copied from the messages collection.
 It contains the following fields:
 - plugin_name: "name of destination plugin"
@@ -265,7 +273,7 @@ It contains the following fields:
 - message_payload: "The data contained in this message."
 - sent_to_plugin: "Boolean if it has been processed or not"
 
-### responses
+### <a name="DBresponsesToc"></a> responses
 Stores responses for tutors or other plugins to poll.
 It contains the following fields:
 - response_received: "Boolean if it has been processed or not"
@@ -273,7 +281,7 @@ It contains the following fields:
 - message_id: "the id of the original sent message"
 - message: "the original message"
 
-### sessions
+### <a name="DBsessionsToc"></a> sessions
 Stores session data for plugins and tutors. 
 
 HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
@@ -345,12 +353,12 @@ messages while altering the event name of the message so that other dependent
 plugins can also respond to the original trasaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.
 
-## Example Plugin [EchoPlugin]
+##<a name="ExPlugin"></a> Example Plugin
 
 The example plugin listens to the `test` and `example` event names and logs
 whatever data it's sent in the payload to a file.
 
-## Knowledge Tracing Plugin [KTPlugin]
+##<a name="KTPlugin"></a> Knowledge Tracing Plugin
 #### kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
 
@@ -399,7 +407,7 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
-## Hint Factory Plugin [HFPlugin]
+##<a name="HFPlugin"></a> Hint Factory Plugin
 
 
 #### hf_init_problem
@@ -455,16 +463,17 @@ Returns:
     * exists: string - YES if a hint is available, NO if it isn't
     * hint_text: string - The text describing the hint.
 
-## Student Management Plugin [SMPlugin]
+##<a name="SMPlugin"></a> Student Management Plugin
+
 
 ### TODO
 
 
-## Skill Management Plugin [SKMPlugin]
+##<a name="SKMPlugin"></a> Skill Management Plugin
 
 ### TODO
 
-## Problem Management Plugin [PMPlugin]
+##<a name="PMPlugin"></a> Problem Management Plugin
 
 
 #### add_problem
@@ -518,7 +527,7 @@ Returns:
     * problem_text : string - The text of the problem.
 * success : True - Always returns True
 
-## Problem Step Management Plugin [PSMPlugin]
+##<a name="PSMPlugin"></a> Problem Step Management Plugin
 
 #### add_problem_step
 Adds a problem step to the problem step manager.
@@ -581,11 +590,11 @@ Returns:
     * problem_step_text : string - The text of the problem step.
 * success : True - Always returns True
 
-## Data Storage Plugin
+##<a name="DSPlugin"></a> Data Storage Plugin
 
 ### TODO
 
-## PSLC DataShop Connection Plugin [DCPlugin]
+##<a name="DCPlugin"></a> PSLC DataShop Connection Plugin
 
 ### TODO
 
