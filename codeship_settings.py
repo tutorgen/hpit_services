@@ -2,6 +2,7 @@ class DebugServerSettings:
     HPIT_VERSION = '(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut'
     DEBUG = False
 
+
     HPIT_PID_FILE = 'tmp/hpit_server.pid'
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
