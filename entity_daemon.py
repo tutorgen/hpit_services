@@ -32,7 +32,7 @@ tutor_types = ['example', 'knowledge_tracing','replay','data_connector']
 plugin_types = [
     'example', 
     'knowledge_tracing', 
-    'skill', 
+    'skill_management', 
     'student', 
     'problem',
     'problem_step',
@@ -75,7 +75,7 @@ class BaseDaemon:
             'example': ExamplePlugin,
             'knowledge_tracing': KnowledgeTracingPlugin,
             'student': StudentManagementPlugin,
-            'skill': SkillManagementPlugin,
+            'skill_management': SkillManagementPlugin,
             'problem': ProblemManagementPlugin,
             'problem_step': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
