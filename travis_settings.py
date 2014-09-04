@@ -6,6 +6,7 @@ class DebugServerSettings:
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
     HPIT_BIND_ADDRESS = HPIT_BIND_IP+":"+HPIT_BIND_PORT
+    PROJECT_DIR = '/home/travis/build/tutorgen/hpit_services'
     VENV_DIRNAME = 'env'
     
     MONGO_DBNAME = 'hpit_development'
@@ -44,6 +45,7 @@ class TestServerSettings:
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
     HPIT_BIND_ADDRESS = HPIT_BIND_IP+":"+HPIT_BIND_PORT
+    PROJECT_DIR = '/home/travis/build/tutorgen/hpit_services'
     VENV_DIRNAME = 'env'
     
     MONGO_DBNAME = 'hpit_unit_test_db'
@@ -79,6 +81,7 @@ class ProductionServerSettings:
     HPIT_BIND_IP = "0.0.0.0"
     HPIT_BIND_PORT = "8000"
     HPIT_BIND_ADDRESS = HPIT_BIND_IP+":"+HPIT_BIND_PORT
+    PROJECT_DIR = '/home/travis/build/tutorgen/hpit_services'
     VENV_DIRNAME = 'env'
     
     MONGO_DBNAME = 'hpit_development'
