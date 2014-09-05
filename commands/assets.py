@@ -66,7 +66,6 @@ class Command:
             except TypeError:
                 continue
 
-            import pdb; pdb.set_trace()
             dest_filename = os.path.split(path)[1]
             asset_source = bytes(str(asset), 'utf-8')
             environment.save_file(dest_filename, asset_source)
