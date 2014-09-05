@@ -18,7 +18,7 @@ class Command:
         with open(os.path.join(settings.PROJECT_DIR, 'README.md'), 'r') as f:
             doc_md = f.read()
 
-        doc_html = markdown.markdown(doc_md)
+        doc_html = markdown.markdown(doc_md, extensions=['tables'])
 
         with open(os.path.join(settings.PROJECT_DIR, 'server/templates/_docs_md.html'), 'w') as f:
             f.write(doc_html)

@@ -18,7 +18,7 @@
 * [The Adminstration Panel](#AdminToc)
 * [The HPIT Manager](#ManagerToc)
 * [The Tutor and Plugin Configuration](#ConfigToc)
-* [Settings for Clients and Servers](#SettingsToc)
+* [Server Settings](#SettingsToc)
 * [Database Structure](#DatabaseToc)
     * [messages](#DBmessagesToc)
     * [plugin_messages](#DBpluginmesToc)
@@ -258,28 +258,41 @@ removes it from the 'configuration.json' file. All entities within the configura
 5. entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.
 6. api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.
 
-## <a name="SettingsToc"></a> Settings for Clients and Servers
+## <a name="SettingsToc"></a> Server Settings
 
-Both clients (tutors and plugins) and the server may need configuration.  The settings files
-are clients/settings.py and server/settings.py, for clients and servers, respectively.  
+There are various settings available for modification in the `server/settings.py` file.
 
-clients/settings.py currently contains the following options:
-- HPIT_URL_ROOT : the URL root where the HPIT server lives
-
-server/settings.py currently contains the following options:
-- HPIT_VERSION : the version of this server
-- DEBUG : If the server should be ran in debug mode (DEPRECATED)
-
-- HPIT_PID_FILE : the location where the PID file of the server is stored, for tracking the server process
-- HPIT_BIND_IP : the IP address the server is listening on
-- HPIT_BIND_PORT : the port that the HPIT server listens on
-
-- MONGO_DBNAME : The name of the HPTI database in MongoDB.
-- SECRET_KEY : A cryptographic secret for generating other secrets. (Keep this secret)
-- SQLALCHEMY_DATABASE_URI : A database URL for SQLAlchemy to store administrative data. (Defaults to SQLite)
-- CSRF_ENABLED : True to enable protections against cross-site request forgery attacks.
-
-- USER_PASSWORD_HASH : How passwords for users should be generated. (Leave this alone unless you know what you're doing.)
+name                        | default                                     | description                                                 | notes                        
+--------------------------- | ------------------------------------------- | ----------------------------------------------------------- | -----------------------------
+HPIT_VERSION                | string (really long)                        | A string representation of the current version of HPIT      |                              
+DEBUG                       | False                                       | Whether to run the server in debug mode or not              | Deprecated                   
+HPIT_PID_FILE               | 'tmp/hpit_server.pid'                       | Where to put the PID file for the hpit server (daemon)      |                              
+HPIT_BIND_IP                | "0.0.0.0"                                   | The IP Address to listen for connections on.                |                              
+HPIT_BIND_PORT              | "8000"                                      | The Port Address to listen for connections on.              |                              
+HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A comination of the IP and Port addresses                   | Don't change this.           
+PROJECT_DIR                 | '/Users/raymond/Projects/TutorGen/hpit'     | The root working directory for HPIT.                        | Change this.                 
+VENV_DIRNAME                | 'env'                                       | The directory where the virtual enviornment is located.     |                              
+MONGO_DBNAME                | 'hpit_development'                          | The name of the mongo database to store information in.     |                              
+SECRET_KEY                  | random character string length 60 or longer | A secret key used for cryptography. Keep secure.            | YOU MUST CHANGE THIS IN PROD!
+SQLALCHEMY_DATABASE_URI     | 'sqlite:///db/hpit_development.sqlite'      | A database URI for relational storage.                      | Several databases supported. 
+CSRF_ENABLED                | True                                        | Enable Cross-Site Request Forgery Protection?               | Don't change this.           
+MAIL_DEBUG                  | True                                        | Don't actually send emails. Print to console instead.       | Change in production.        
+MAIL_SERVER                 | 'smtp.gmail.com'                            | The SMTP server to send mail through.                       |                              
+MAIL_PORT                   | 465                                         | The REMOTE Port to send mail on.                            |                              
+MAIL_USE_SSL                | True                                        | Use SSL when sending mail?                                  |                              
+MAIL_USERNAME               | 'hpit@tutorgen.com'                         | The mail account username on the SMTP server.               |                              
+MAIL_PASSWORD               | 'abcd1234'                                  | The mail account password on the SMTP server.               |                              
+MAIL_DEFAULT_SENDER         | 'hpit-project.org'                          | Who to send mail as.                                        |                               
+USER_PASSWORD_HASH          | 'bcrypt_sha256'                             | The hashing method for creating user passwords.             |                               
+USER_ENABLE_EMAIL           | False                                       | User's use email as their usernames? (mutually exclusive)   |                               
+USER_ENABLE_USERNAME        | True                                        | User use a standard username? (mutually exclusive)          |                               
+USER_ENABLE_CONFIRM_EMAIL   | False                                       | Enable email confirmation for user registration.            |                               
+USER_ENABLE_CHANGE_USERNAME | False                                       | Allow a user to change their username?                      |                               
+USER_ENABLE_CHANGE_PASSWORD | True                                        | Allow a user to change their password?                      |                               
+USER_ENABLE_FORGOT_PASSWORD | False                                       | Allow a user to recover their password through email?       |                               
+USER_ENABLE_RETYPE_PASSWORD | True                                        | Make a user retype their password when creating an account? |                               
+USER_LOGIN_TEMPLATE         | 'flask_user/login_or_register.html'         | Login template rendered to HTML                             |                               
+USER_REGISTER_TEMPLATE      | 'flask_user/register.html'                  | Register template rendered to HTML                          |                               
 
 ## <a name="DatabaseToc"></a> Database Structure
 

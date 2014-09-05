@@ -19,7 +19,7 @@
 <li><a href="#AdminToc">The Adminstration Panel</a></li>
 <li><a href="#ManagerToc">The HPIT Manager</a></li>
 <li><a href="#ConfigToc">The Tutor and Plugin Configuration</a></li>
-<li><a href="#SettingsToc">Settings for Clients and Servers</a></li>
+<li><a href="#SettingsToc">Server Settings</a></li>
 <li><a href="#DatabaseToc">Database Structure</a><ul>
 <li><a href="#DBmessagesToc">messages</a></li>
 <li><a href="#DBpluginmesToc">plugin_messages</a></li>
@@ -236,32 +236,194 @@ removes it from the 'configuration.json' file. All entities within the configura
 <li>entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.</li>
 <li>api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.</li>
 </ol>
-<h2><a name="SettingsToc"></a> Settings for Clients and Servers</h2>
-<p>Both clients (tutors and plugins) and the server may need configuration.  The settings files
-are clients/settings.py and server/settings.py, for clients and servers, respectively.  </p>
-<p>clients/settings.py currently contains the following options:
-- HPIT_URL_ROOT : the URL root where the HPIT server lives</p>
-<p>server/settings.py currently contains the following options:
-- HPIT_VERSION : the version of this server
-- DEBUG : If the server should be ran in debug mode (DEPRECATED)</p>
-<ul>
-<li>HPIT_PID_FILE : the location where the PID file of the server is stored, for tracking the server process</li>
-<li>HPIT_BIND_IP : the IP address the server is listening on</li>
-<li>
-<p>HPIT_BIND_PORT : the port that the HPIT server listens on</p>
-</li>
-<li>
-<p>MONGO_DBNAME : The name of the HPTI database in MongoDB.</p>
-</li>
-<li>SECRET_KEY : A cryptographic secret for generating other secrets. (Keep this secret)</li>
-<li>SQLALCHEMY_DATABASE_URI : A database URL for SQLAlchemy to store administrative data. (Defaults to SQLite)</li>
-<li>
-<p>CSRF_ENABLED : True to enable protections against cross-site request forgery attacks.</p>
-</li>
-<li>
-<p>USER_PASSWORD_HASH : How passwords for users should be generated. (Leave this alone unless you know what you're doing.)</p>
-</li>
-</ul>
+<h2><a name="SettingsToc"></a> Server Settings</h2>
+<p>There are various settings available for modification in the <code>server/settings.py</code> file.</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>default</th>
+<th>description</th>
+<th>notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HPIT_VERSION</td>
+<td>string (really long)</td>
+<td>A string representation of the current version of HPIT</td>
+<td></td>
+</tr>
+<tr>
+<td>DEBUG</td>
+<td>False</td>
+<td>Whether to run the server in debug mode or not</td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td>HPIT_PID_FILE</td>
+<td>'tmp/hpit_server.pid'</td>
+<td>Where to put the PID file for the hpit server (daemon)</td>
+<td></td>
+</tr>
+<tr>
+<td>HPIT_BIND_IP</td>
+<td>"0.0.0.0"</td>
+<td>The IP Address to listen for connections on.</td>
+<td></td>
+</tr>
+<tr>
+<td>HPIT_BIND_PORT</td>
+<td>"8000"</td>
+<td>The Port Address to listen for connections on.</td>
+<td></td>
+</tr>
+<tr>
+<td>HPIT_BIND_ADDRESS</td>
+<td>HPIT_BIND_IP+":"+HPIT_BIND_PORT</td>
+<td>A comination of the IP and Port addresses</td>
+<td>Don't change this.</td>
+</tr>
+<tr>
+<td>PROJECT_DIR</td>
+<td>'/Users/raymond/Projects/TutorGen/hpit'</td>
+<td>The root working directory for HPIT.</td>
+<td>Change this.</td>
+</tr>
+<tr>
+<td>VENV_DIRNAME</td>
+<td>'env'</td>
+<td>The directory where the virtual enviornment is located.</td>
+<td></td>
+</tr>
+<tr>
+<td>MONGO_DBNAME</td>
+<td>'hpit_development'</td>
+<td>The name of the mongo database to store information in.</td>
+<td></td>
+</tr>
+<tr>
+<td>SECRET_KEY</td>
+<td>random character string length 60 or longer</td>
+<td>A secret key used for cryptography. Keep secure.</td>
+<td>YOU MUST CHANGE THIS IN PROD!</td>
+</tr>
+<tr>
+<td>SQLALCHEMY_DATABASE_URI</td>
+<td>'sqlite:///db/hpit_development.sqlite'</td>
+<td>A database URI for relational storage.</td>
+<td>Several databases supported.</td>
+</tr>
+<tr>
+<td>CSRF_ENABLED</td>
+<td>True</td>
+<td>Enable Cross-Site Request Forgery Protection?</td>
+<td>Don't change this.</td>
+</tr>
+<tr>
+<td>MAIL_DEBUG</td>
+<td>True</td>
+<td>Don't actually send emails. Print to console instead.</td>
+<td>Change in production.</td>
+</tr>
+<tr>
+<td>MAIL_SERVER</td>
+<td>'smtp.gmail.com'</td>
+<td>The SMTP server to send mail through.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_PORT</td>
+<td>465</td>
+<td>The REMOTE Port to send mail on.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_USE_SSL</td>
+<td>True</td>
+<td>Use SSL when sending mail?</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_USERNAME</td>
+<td>'hpit@tutorgen.com'</td>
+<td>The mail account username on the SMTP server.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_PASSWORD</td>
+<td>'abcd1234'</td>
+<td>The mail account password on the SMTP server.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_DEFAULT_SENDER</td>
+<td>'hpit-project.org'</td>
+<td>Who to send mail as.</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_PASSWORD_HASH</td>
+<td>'bcrypt_sha256'</td>
+<td>The hashing method for creating user passwords.</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_EMAIL</td>
+<td>False</td>
+<td>User's use email as their usernames? (mutually exclusive)</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_USERNAME</td>
+<td>True</td>
+<td>User use a standard username? (mutually exclusive)</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_CONFIRM_EMAIL</td>
+<td>False</td>
+<td>Enable email confirmation for user registration.</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_CHANGE_USERNAME</td>
+<td>False</td>
+<td>Allow a user to change their username?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_CHANGE_PASSWORD</td>
+<td>True</td>
+<td>Allow a user to change their password?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_FORGOT_PASSWORD</td>
+<td>False</td>
+<td>Allow a user to recover their password through email?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_RETYPE_PASSWORD</td>
+<td>True</td>
+<td>Make a user retype their password when creating an account?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_LOGIN_TEMPLATE</td>
+<td>'flask_user/login_or_register.html'</td>
+<td>Login template rendered to HTML</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_REGISTER_TEMPLATE</td>
+<td>'flask_user/register.html'</td>
+<td>Register template rendered to HTML</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2><a name="DatabaseToc"></a> Database Structure</h2>
 <p>The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
