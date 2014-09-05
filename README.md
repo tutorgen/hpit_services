@@ -10,6 +10,10 @@
     * [Production Considerations](#GSProdToc)
     * [Frontend Requirements](#GSFrontendToc)
     * [Installing HPIT](#GSInstallToc)
+    * [Installing HPIT on Windows](#GSInstallWindowsToc)
+    * [Installing HPIT on Mac OSX](#GSInstallMacOSXToc)
+    * [Installing HPIT on Ubuntu 12.04](#GSInstallUbuntu12Toc)
+    * [Installing HPIT on Ubuntu 14.04](#GSInstallUbuntu14Toc)
     * [Optional Installation for Hint Factory Plugin](#GSInstallOptToc)
 * [The Adminstration Panel](#AdminToc)
 * [The HPIT Manager](#ManagerToc)
@@ -115,7 +119,15 @@ their plugin.
 
 HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.
 
-##<a name="GetStartedToc"></a> Getting started
+##<a name="GetStartedToc"></a> Installing HPIT
+
+###<a name="GSInstallWindowsToc"></a> Installing HPIT on Windows
+
+###<a name="GSInstallMacOSXToc"></a> Installing HPIT on Mac OSX
+
+###<a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04
+
+###<a name="GSInstallUbuntu14Toc"></a> Installing HPIT on Ubuntu 14.04
 
 ###<a name="GSReqToc"></a> Python Requirements
 
