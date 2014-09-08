@@ -2,6 +2,7 @@ from hpitclient import Plugin
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import bson
 
 from couchbase import Couchbase
 import couchbase
@@ -48,6 +49,11 @@ class SkillManagementPlugin(Plugin):
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"Message must contain a 'skill_id'",       
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                "error":"'skill_id' is not a valid ObjectId",       
             })
             return
         

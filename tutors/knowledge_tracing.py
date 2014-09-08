@@ -36,7 +36,7 @@ class KnowledgeTracingTutor(Tutor):
     def pre_disconnect(self):
         for sk in self.skills:
             self.send('kt_reset', {
-                'skill': self.skill_ids[sk],
+                'skill_id': self.skill_ids[sk],
                 'student_id':self.student_id,
                 })
 
@@ -51,7 +51,7 @@ class KnowledgeTracingTutor(Tutor):
             if 90 < random.randint(0, 100):
                 correct = random.randint(0, 100)
                 self.send('kt_trace', {
-                    'skill': self.skill_ids[sk],
+                    'skill_id': self.skill_ids[sk],
                     'student_id':self.student_id,
                     'correct': True if 50 < random.randint(0, 100) else False
                     }, self.trace_response_callback)
@@ -76,7 +76,7 @@ class KnowledgeTracingTutor(Tutor):
     def get_skills_callback(self,response):
         self.skill_ids[response["skill_name"]] = response["skill_id"]
         self.send('kt_set_initial', {
-                'skill': response["skill_id"],
+                'skill_id': response["skill_id"],
                 'probability_known': random.randint(0, 1000) / 1000.0,
                 'probability_learned': random.randint(0, 1000) / 1000.0,
                 'probability_guess': random.randint(0, 1000) / 1000.0,

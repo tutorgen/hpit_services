@@ -84,6 +84,13 @@ class TestSkillManagementPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
+        msg["skill_id"] = "foo"
+        self.test_subject.get_skill_name_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error":"'skill_id' is not a valid ObjectId"      
+        })
+        self.test_subject.send_response.reset_mock()
+        
         bogus_id = ObjectId()
         msg["skill_id"] = bogus_id 
         self.test_subject.get_skill_name_callback(msg)

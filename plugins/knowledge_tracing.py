@@ -30,19 +30,19 @@ class KnowledgeTracingPlugin(Plugin):
 
         try:
             sender_entity_id = message["sender_entity_id"]
-            skill = ObjectId(message["skill"])
+            skill = ObjectId(message["skill_id"])
             student_id = message["student_id"]
             correct = message["correct"]
         except KeyError:
-            self.send_response(message['message_id'],{"error":"kt_trace requires 'sender_entity_id', 'skill', 'student_id' and 'correct'"})
+            self.send_response(message['message_id'],{"error":"kt_trace requires 'sender_entity_id', 'skill_id', 'student_id' and 'correct'"})
             return
         except bson.errors.InvalidId:
-            self.send_response(message["message_id"],{"error":"kt_trace 'skill' is not a valid skill id"})
+            self.send_response(message["message_id"],{"error":"kt_trace 'skill_id' is not a valid skill id"})
             return
 
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
-            'skill': str(message['skill']),
+            'skill_id': str(message['skill_id']),
             'student_id':message['student_id']
         })
         
@@ -60,7 +60,7 @@ class KnowledgeTracingPlugin(Plugin):
                     'probability_guess': 'float(0.0-1.0)',
                     'probability_mistake': 'float(0.0-1.0)',
                     'student_id:':'str(ObjectId)',
-                    'skill':'str(ObjectId)',
+                    'skill_id':'str(ObjectId)',
                 }
             })
 
@@ -95,7 +95,7 @@ class KnowledgeTracingPlugin(Plugin):
             self.logger.debug("SUCCESS: kt_trace with new data: " + str(kt_config))
 
         self.send_response(message['message_id'], {
-            'skill': kt_config['skill'],
+            'skill_id': kt_config['skill_id'],
             'probability_known': p_known,
             'probability_learned': p_learned,
             'probability_guess': p_guess,
@@ -109,35 +109,56 @@ class KnowledgeTracingPlugin(Plugin):
             self.logger.debug("RECV: kt_set_initial with message: " + str(message))
         try:
             sender_entity_id = message["sender_entity_id"]
-            skill = ObjectId(message["skill"])
+            skill = ObjectId(message["skill_id"])
             prob_known = message["probability_known"]
             prob_learned=  message["probability_learned"]
             prob_guess = message["probability_guess"]
             prob_mistake = message["probability_mistake"]
             student_id = message["student_id"]
         except KeyError:
-            self.send_response(message['message_id'],{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+            self.send_response(message['message_id'],{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
             return 
         except bson.errors.InvalidId:
-            self.send_response(message["message_id"],{"error":"kt_trace 'skill' is not a valid skill id"})
+            self.send_response(message["message_id"],{"error":"kt_trace 'skill_id' is not a valid skill id"})
             return
             
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
-            'skill': str(message['skill']),
+            'skill_id': str(message['skill_id']),
             'student_id': message['student_id']
         })
         
         if not kt_config:
-            self.db.insert({
-                'sender_entity_id': message['sender_entity_id'],
-                'skill': str(message['skill']),
-                'probability_known': message['probability_known'],
-                'probability_learned': message['probability_learned'],
-                'probability_guess': message['probability_guess'],
-                'probability_mistake': message['probability_mistake'],
-                'student_id': message['student_id'],
-                })
+            def check_skill_manager(response):
+                if not "error" in response:
+                    self.db.insert({
+                        'sender_entity_id': message['sender_entity_id'],
+                        'skill_id': str(message['skill_id']),
+                        'probability_known': message['probability_known'],
+                        'probability_learned': message['probability_learned'],
+                        'probability_guess': message['probability_guess'],
+                        'probability_mistake': message['probability_mistake'],
+                        'student_id': message['student_id'],
+                    })
+                    self.send_response(message["message_id"],{
+                        'skill_id': str(message['skill_id']),
+                        'probability_known': message['probability_known'],
+                        'probability_learned': message['probability_learned'],
+                        'probability_guess': message['probability_guess'],
+                        'probability_mistake': message['probability_mistake'],
+                        'student_id':message['student_id']
+                    })
+                else:
+                    self.send_response(message["message_id"],{
+                        "error":"skill_id " + str(message["skill_id"]) + " is invalid."   
+                    })
+            
+            self.send("get_skill_name",{
+                  "skill_id":str(message["skill_id"])    
+                },
+                check_skill_manager,
+            )
+            
         else:
             self.db.update({'_id': kt_config['_id']},
                 {'$set': {
@@ -147,14 +168,14 @@ class KnowledgeTracingPlugin(Plugin):
                     'probability_mistake' : message['probability_mistake']
                 }})
 
-        self.send_response(message['message_id'], {
-            'skill': str(message['skill']),
-            'probability_known': message['probability_known'],
-            'probability_learned': message['probability_learned'],
-            'probability_guess': message['probability_guess'],
-            'probability_mistake': message['probability_mistake'],
-            'student_id':message['student_id']
-            })
+            self.send_response(message['message_id'], {
+                'skill_id': str(message['skill_id']),
+                'probability_known': message['probability_known'],
+                'probability_learned': message['probability_learned'],
+                'probability_guess': message['probability_guess'],
+                'probability_mistake': message['probability_mistake'],
+                'student_id':message['student_id']
+                })
 
     def kt_reset(self, message):
         if self.logger:    
@@ -163,18 +184,18 @@ class KnowledgeTracingPlugin(Plugin):
         
         try:
             sender_entity_id = message["sender_entity_id"]
-            skill = ObjectId(message["skill"])
+            skill = ObjectId(message["skill_id"])
             student_id = message["student_id"]
         except KeyError:
-            self.send_response(message['message_id'],{"error":"kt_reset requires 'sender_entity_id', 'skill', and 'student_id'"})
+            self.send_response(message['message_id'],{"error":"kt_reset requires 'sender_entity_id', 'skill_id', and 'student_id'"})
             return
         except bson.errors.InvalidId:
-            self.send_response(message["message_id"],{"error":"kt_trace 'skill' is not a valid skill id"})
+            self.send_response(message["message_id"],{"error":"kt_trace 'skill_id' is not a valid skill id"})
             return
            
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
-            'skill': str(message['skill']),
+            'skill_id': str(message['skill_id']),
             'student_id': message['student_id']
         })
 
@@ -187,10 +208,14 @@ class KnowledgeTracingPlugin(Plugin):
             }})
 
         self.send_response(message['message_id'], {
-            'skill': str(message['skill']),
+            'skill_id': str(message['skill_id']),
             'probability_known': 0.0,
             'probability_learned': 0.0,
             'probability_guess': 0.0,
             'probability_mistake': 0.0,
             'student_id':message["student_id"]
         })
+            
+            
+            
+            

@@ -54,24 +54,24 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         
         msg = {"message_id":"2"}
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill', 'student_id' and 'correct'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill_id', 'student_id' and 'correct'"})
         self.test_subject.send_response.reset_mock()
         msg["sender_entity_id"] = "3"
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill', 'student_id' and 'correct'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill_id', 'student_id' and 'correct'"})
         self.test_subject.send_response.reset_mock()
-        msg["skill"] = "add"
+        msg["skill_id"] = "add"
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace 'skill' is not a valid skill id"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace 'skill_id' is not a valid skill id"})
         self.test_subject.send_response.reset_mock()
         skill_id = str(ObjectId())
-        msg["skill"] = skill_id
+        msg["skill_id"] = skill_id
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill', 'student_id' and 'correct'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill_id', 'student_id' and 'correct'"})
         self.test_subject.send_response.reset_mock()
         msg["correct"] = True
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill', 'student_id' and 'correct'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace requires 'sender_entity_id', 'skill_id', 'student_id' and 'correct'"})
         self.test_subject.send_response.reset_mock()
         
         msg["student_id"] = "4"
@@ -91,7 +91,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
                     'probability_guess': 'float(0.0-1.0)',
                     'probability_mistake': 'float(0.0-1.0)',
                     'student_id:':'str(ObjectId)',
-                    'skill':'str(ObjectId)',
+                    'skill_id':'str(ObjectId)',
                 }
             })
         self.test_subject.send_response.reset_mock()
@@ -102,7 +102,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         #with correct  = true and these variables, p_known should be 
         expected_value = (.42 / .51) + ( (1 - (.42 / .51)) * .2)
         self.test_subject.send_response.called.should.equal(True) #can't check params because of float precision
-        thing  = client.test_hpit.hpit_knowledge_tracing.find_one({'sender_entity_id':"3",'student_id':"4","skill":str(skill_id)})
+        thing  = client.test_hpit.hpit_knowledge_tracing.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
         nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
         self.test_subject.send_response.reset_mock()
         
@@ -114,7 +114,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         #with correct  = false and these variables, p_known should be 
         expected_value = (.28 / .49) + ( (1 - (.28 / .49)) * .2)
         self.test_subject.send_response.called.should.equal(True)
-        thing  = client.test_hpit.hpit_knowledge_tracing.find_one({'sender_entity_id':"3",'student_id':"4","skill":str(skill_id)})
+        thing  = client.test_hpit.hpit_knowledge_tracing.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
         nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
         
     def test_kt_set_initial_callback(self):
@@ -127,45 +127,78 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             - response should always echo parameters sent in
         """
         self.test_subject.send_response = MagicMock()
+        self.test_subject.send = MagicMock()
         
         msg = {"message_id":"2"}
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg["sender_entity_id"] = "3"
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
-        msg["skill"] = "add"
+        msg["skill_id"] = "add"
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace 'skill' is not a valid skill id"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace 'skill_id' is not a valid skill id"})
         self.test_subject.send_response.reset_mock()
         skill_id = ObjectId()
-        msg["skill"] = skill_id
+        msg["skill_id"] = skill_id
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg["probability_known"] = "1.1"
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg["probability_learned"] = "1.2"
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg["probability_guess"] = "1.3"
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg["probability_mistake"] = "1.4"
         self.test_subject.kt_set_initial_callback(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_set_initial requires 'sender_entity_id', 'skill_id', 'probability_known', 'probability_learned', 'probability_guess', 'probability_mistake', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         
         msg["student_id"] = "4"
+        
+        #invalid skill_id
+        def send_mock_error(message_name,payload,callback):
+            callback({"error":"there was an error"})
+        def send_mock_clean(message_name,payload,callback):
+            callback({})
+        
+        self.test_subject.send = MagicMock(side_effect=send_mock_error)
+        self.test_subject.kt_set_initial_callback(msg)
+        self.test_subject.send.call_count.should.equal(1)
+        self.test_subject.send_response.assert_called_once_with("2",{
+            "error":"skill_id " + str(skill_id) + " is invalid." 
+            })
+        self.test_subject.send.reset_mock()
+        self.test_subject.send_response.reset_mock()
+        
+        self.test_subject.send = MagicMock(side_effect=send_mock_clean)
+        self.test_subject.kt_set_initial_callback(msg)
+        self.test_subject.send.call_count.should.equal(1)
+        self.test_subject.send_response.assert_called_once_with("2",{
+            'skill_id': str(skill_id),
+            'probability_known': "1.1",
+            'probability_learned': "1.2",
+            'probability_guess': "1.3",
+            'probability_mistake':"1.4",
+            'student_id':"4"
+            })
+        self.test_subject.db.find().count().should.equal(1)
+        self.test_subject.send.reset_mock()
+        self.test_subject.send_response.reset_mock()
+        
+        #valid skill_id...
         self.test_subject.kt_set_initial_callback(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
-            'skill': str(skill_id),
+            'skill_id': str(skill_id),
             'probability_known': "1.1",
             'probability_learned': "1.2",
             'probability_guess': "1.3",
@@ -175,7 +208,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send_response.reset_mock()
         
         client = MongoClient()
-        thing = client.test_hpit.hpit_knowledge_tracing.find_one({"sender_entity_id":"3","skill":str(skill_id),"student_id":"4"})
+        thing = client.test_hpit.hpit_knowledge_tracing.find_one({"sender_entity_id":"3","skill_id":str(skill_id),"student_id":"4"})
         thing.should_not.equal(None)
         
         msg["probability_known"] = "2.1"
@@ -184,7 +217,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["probability_mistake"] = "2.4"
         self.test_subject.kt_set_initial_callback(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
-            'skill': str(skill_id),
+            'skill_id': str(skill_id),
             'probability_known': "2.1",
             'probability_learned': "2.2",
             'probability_guess': "2.3",
@@ -194,7 +227,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send_response.reset_mock()
         
         client.test_hpit.hpit_knowledge_tracing.find({}).count().should.equal(1)
-        thing = client.test_hpit.hpit_knowledge_tracing.find_one({"sender_entity_id":"3","skill":str(skill_id),"student_id":"4"})
+        thing = client.test_hpit.hpit_knowledge_tracing.find_one({"sender_entity_id":"3","skill_id":str(skill_id),"student_id":"4"})
         thing["probability_known"].should.equal("2.1")
         thing["probability_learned"].should.equal("2.2")
         thing["probability_guess"].should.equal("2.3")
@@ -214,26 +247,26 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         
         msg = {"message_id":"2"}
         self.test_subject.kt_reset(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_reset requires 'sender_entity_id', 'skill', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_reset requires 'sender_entity_id', 'skill_id', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg['sender_entity_id'] = "3"
         self.test_subject.kt_reset(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_reset requires 'sender_entity_id', 'skill', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_reset requires 'sender_entity_id', 'skill_id', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
-        msg['skill'] = "add"
+        msg['skill_id'] = "add"
         self.test_subject.kt_reset(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace 'skill' is not a valid skill id"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_trace 'skill_id' is not a valid skill id"})
         self.test_subject.send_response.reset_mock()
         skill_id = ObjectId()
-        msg['skill'] = skill_id
+        msg['skill_id'] = skill_id
         self.test_subject.kt_reset(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_reset requires 'sender_entity_id', 'skill', and 'student_id'"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"kt_reset requires 'sender_entity_id', 'skill_id', and 'student_id'"})
         self.test_subject.send_response.reset_mock()
         msg['student_id'] = "4"
         
         self.test_subject.kt_reset(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
-            'skill': str(skill_id),
+            'skill_id': str(skill_id),
             'probability_known': 0.0,
             'probability_learned': 0.0,
             'probability_guess': 0.0,
@@ -242,10 +275,10 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
-        oid = self.test_subject.db.insert({"sender_entity_id":"3","skill":str(skill_id),"student_id":"4"})
+        oid = self.test_subject.db.insert({"sender_entity_id":"3","skill_id":str(skill_id),"student_id":"4"})
         self.test_subject.kt_reset(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
-            'skill': str(skill_id),
+            'skill_id': str(skill_id),
             'probability_known': 0.0,
             'probability_learned': 0.0,
             'probability_guess': 0.0,

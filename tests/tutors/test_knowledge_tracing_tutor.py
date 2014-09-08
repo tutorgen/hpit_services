@@ -56,10 +56,10 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         self.test_subject.skill_ids["multiplication"] = "*"
         self.test_subject.skill_ids["division"] = "/"
         calls = [
-            call('kt_reset',{'skill':"+","student_id":"2"}),
-            call('kt_reset',{'skill':"-","student_id":"2"}),
-            call('kt_reset',{'skill':"*","student_id":"2"}),
-            call('kt_reset',{'skill':"/","student_id":"2"}),
+            call('kt_reset',{'skill_id':"+","student_id":"2"}),
+            call('kt_reset',{'skill_id':"-","student_id":"2"}),
+            call('kt_reset',{'skill_id':"*","student_id":"2"}),
+            call('kt_reset',{'skill_id':"/","student_id":"2"}),
         ]
         self.test_subject.pre_disconnect()
         self.test_subject.send.assert_has_calls(calls)
@@ -95,7 +95,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
                 call('kt_trace', {
-                    'skill': self.test_subject.skill_ids[sk],
+                    'skill_id': self.test_subject.skill_ids[sk],
                     'student_id':"2",
                     'correct': True
                     }, self.test_subject.trace_response_callback
@@ -169,7 +169,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         self.test_subject.get_skills_callback({"skill_id":"+","skill_name":"addition"})
   
         self.test_subject.send.assert_called_with('kt_set_initial', {
-            'skill': "+",
+            'skill_id': "+",
             'probability_known': 1.0,
             'probability_learned': 1.0,
             'probability_guess': 1.0,
