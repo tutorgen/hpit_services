@@ -45,7 +45,7 @@ class SkillManagementPlugin(Plugin):
             self.logger.debug(message)
             
         try:
-            skill_id = message["skill_id"]
+            skill_id = ObjectId(message["skill_id"])
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"Message must contain a 'skill_id'",       
