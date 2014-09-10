@@ -19,10 +19,10 @@ before_install:
   - "tar xvfz neo4j-community-2.1.2-unix.tar.gz"
   - "neo4j-community-2.1.2/bin/neo4j start"
   - "sleep 5"
-  - "cp travis_settings.py server/settings.py"
 install: 
   - pip install -r requirements.txt
 # # command to run tests, e.g. python setup.py test
 script:
+  - "export HPIT_ENV=travis"
   - python manager.py syncdb
   - python manager.py test

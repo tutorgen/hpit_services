@@ -1,13 +1,11 @@
 import platform
-import sys
+import os
 
 from environment.settings_manager import SettingsManager
 
-if 'test' in sys.argv:
-    settings = SettingsManager.init_instance('test')
-elif 'production' in sys.argv:
-    settings = SettingsManager.init_instance('production')
-else:
+try:
+    settings = SettingsManager.init_instance(os.environ['HPIT_ENV'])
+except KeyError:
     settings = SettingsManager.init_instance('debug')
 
 manager = None
