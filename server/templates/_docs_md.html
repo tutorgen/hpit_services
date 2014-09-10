@@ -5,6 +5,13 @@
 <li><a href="#APIToc">API Framework Documentation v2.1</a></li>
 <li><a href="#TermToc">Understanding Terminology</a></li>
 <li><a href="#GetStartedToc">Getting Started</a><ul>
+<li><a href="#GSInstallWindowsToc">Installing HPIT on Windows</a></li>
+<li><a href="#GSInstallMacOSXToc">Installing HPIT on Mac OSX</a></li>
+<li><a href="#GSInstallUbuntu12Toc">Installing HPIT on Ubuntu 12.04</a></li>
+<li><a href="#GSInstallUbuntu14Toc">Installing HPIT on Ubuntu 14.04</a></li>
+</ul>
+</li>
+<li><a href="#GSOldInstallGuideToc">Old Install Guide (deprecated)</a><ul>
 <li><a href="#GSReqToc">Python Requirements</a></li>
 <li><a href="#GSProdToc">Production Considerations</a></li>
 <li><a href="#GSFrontendToc">Frontend Requirements</a></li>
@@ -15,7 +22,7 @@
 <li><a href="#AdminToc">The Adminstration Panel</a></li>
 <li><a href="#ManagerToc">The HPIT Manager</a></li>
 <li><a href="#ConfigToc">The Tutor and Plugin Configuration</a></li>
-<li><a href="#SettingsToc">Settings for Clients and Servers</a></li>
+<li><a href="#SettingsToc">Server Settings</a></li>
 <li><a href="#DatabaseToc">Database Structure</a><ul>
 <li><a href="#DBmessagesToc">messages</a></li>
 <li><a href="#DBpluginmesToc">plugin_messages</a></li>
@@ -29,6 +36,19 @@
 <li><a href="#ExPlugin">Echo Example</a></li>
 <li><a href="#DCPlugin">Data Connection to PSLC Datashop</a></li>
 <li><a href="#DSPlugin">Data Storage</a></li>
+<li><a href="#SMPlugin">Student Management</a><ul>
+<li><a href="#add_student">add_student</a></li>
+<li><a href="#get_student">get_student</a></li>
+<li><a href="#set_attribute">set_attribute</a></li>
+<li><a href="#get_attribute">get_attribute</a></li>
+</ul>
+</li>
+<li><a href="#SKMPlugin">Skill Management</a><ul>
+<li><a href="#add_skill">add_skill</a></li>
+<li><a href="#remove_skill">remove_skill</a></li>
+<li><a href="#get_skill">get_skill</a></li>
+</ul>
+</li>
 <li><a href="#KTPlugin">Knowledge Tracing</a><ul>
 <li><a href="#kt_set_initial">kt_set_initial</a></li>
 <li><a href="#kt_reset">kt_reset</a></li>
@@ -56,8 +76,6 @@
 <li><a href="#list_problem_steps">list_problem_steps</a></li>
 </ul>
 </li>
-<li><a href="#SMPlugin">Student Management</a></li>
-<li><a href="#SKMPlugin">Skill Management</a></li>
 </ul>
 </li>
 <li><a href="https://github.com/tutorgen/HPIT-python-client/blob/master/README.md">Developing New Plugins and Tutors</a></li>
@@ -115,7 +133,65 @@ and plugins.</p>
 <p>HPIT Message - This is a event_name and payload pair, both of which are defined by the developer for
 their plugin.</p>
 <p>HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.</p>
-<h2><a name="GetStartedToc"></a> Getting started</h2>
+<h2><a name="GetStartedToc"></a> Getting Started</h2>
+<h3><a name="GSInstallWindowsToc"></a> Installing HPIT on Windows</h3>
+<h4>TODO</h4>
+<h3><a name="GSInstallMacOSXToc"></a> Installing HPIT on Mac OSX</h3>
+<h4>Installing X-Code, Command Line Tools, and Homebrew</h4>
+<ol>
+<li>Go to the Apple Developer page. Here: https://developer.apple.com/downloads/index.action</li>
+<li>If you don't have an apple developer account, create one.</li>
+<li>Download Xcode and the Command Line Tools for your version os OSX.</li>
+<li>Install Homebrew by running the following command: <code>ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"</code></li>
+<li>Install git with <code>brew install git</code></li>
+</ol>
+<h4>Installing Python 3.4</h4>
+<ol>
+<li>Check to see if you have this version installed by default open up your terminal and enter <code>python3 --version</code>. </li>
+<li>To install Python 3.4 or higher we recommend you install it through homebrew with <code>brew install python3</code></li>
+</ol>
+<h4>Installing the Databases</h4>
+<p>HPIT uses sqlite3 locally by default and for running it's test suite. If you are installing in production we recommend
+that you confiqure HPIT to use postgreSQL over sqlite3.</p>
+<ol>
+<li><code>brew install mongodb sqlite</code></li>
+<li>(optional) Install postgresql with Postgres.app found here: http://postgresapp.com/</li>
+</ol>
+<h4>Installing NodeJS and NPM</h4>
+<p>HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
+you will need to download and install node to be able to run the HPIT server. Luckily on Max OSX this is a relatively trivial task.</p>
+<ul>
+<li><code>brew install node</code></li>
+<li><code>npm install coffeescript-compiler less</code></li>
+</ul>
+<h4>Installing Neo4J for the Hint Factory</h4>
+<p>If you plan on using the Hint Factory you will also need to have installed the Neo4J graph database. The best way to do so
+is again, through Homebrew.</p>
+<ul>
+<li><code>brew install neo4j</code></li>
+<li>Start neo4j with <code>neo4j start</code></li>
+</ul>
+<h4>Installing HPIT Itself</h4>
+<ol>
+<li>Clone the HPIT project from github: <code>git clone https://github.com/tutorgen/hpit_services hpit</code></li>
+<li>Change to the directory of the HPIT project: <code>cd hpit</code></li>
+<li>Create a reference to your python3 installation binary for virtualenv. <code>``export PY3_PATH=</code>which python3````</li>
+<li>Create a new virtual environment with: <code>virtualenv -p $PY3_PATH env</code></li>
+<li>Activate that environment with: <code>source env/bin/activate</code></li>
+<li>Install HPIT's dependencies with: <code>pip3 install -r requirements.txt</code>.</li>
+<li>Sync the configuration database with sqlite. <code>python3 manager.py syncdb</code></li>
+<li>Seed the Mongo Database with <code>python3 manager.py mongo server/db/mongo</code></li>
+<li>Start the MongoDB instance with <code>mongod --dbpath server/db/mongo</code></li>
+<li>Run the test suite by typing <code>python3 manager.py test</code></li>
+</ol>
+<p>To start the HPIT server type: <code>python3 manager.py start</code> and open your browser 
+to http://127.0.0.1:8000. </p>
+<h3><a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04</h3>
+<h4>TODO</h4>
+<h3><a name="GSInstallUbuntu14Toc"></a> Installing HPIT on Ubuntu 14.04</h3>
+<h4>TODO</h4>
+<h2><a name="GSOldInstallGuideToc"></a> Old Install Guide</h2>
+<p>Ignore this section if you used the guides above.</p>
 <h3><a name="GSReqToc"></a> Python Requirements</h3>
 <p>HPIT requires Python 3.4. Make sure that you have this version of Python installed and
 linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
@@ -134,7 +210,7 @@ encourage you research them, as they will make working with HPIT much simpler.</
 <p>If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.</p>
 <ul>
 <li>On Ubuntu: <code>sudo apt-get install postgresql-server</code></li>
-<li>On Mac OSX: We recommend you install postgres using Postgres.app found here: http://postgresapp.com/</li>
+<li>On Mac OSX: We recommend you install postgres using </li>
 <li>On Windows: Installation binaries are available from http://www.postgresql.com</li>
 </ul>
 <p>It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
@@ -212,6 +288,7 @@ brief overview of what that command does.</p>
 <li><code>python3 manager.py docs</code> copies this documentation file to the server assets directory.</li>
 <li><code>python3 manager.py routes</code> lists all the routes that the HPIT Server/Router exposes to the web.</li>
 <li><code>python3 manager.py syncdb</code> syncs the data model with the administration database.(PostgreSQL or Sqlite3)</li>
+<li><code>python3 manager.py mongo &lt;dbpath&gt;</code> Initializes MongoDB database.</li>
 <li><code>python3 manager.py test</code> runs the suite of tests for components within HPIT.</li>
 </ul>
 <h2><a name="ConfigToc"></a> The Tutor and Plugin Configuration</h2>
@@ -228,32 +305,194 @@ removes it from the 'configuration.json' file. All entities within the configura
 <li>entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.</li>
 <li>api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.</li>
 </ol>
-<h2><a name="SettingsToc"></a> Settings for Clients and Servers</h2>
-<p>Both clients (tutors and plugins) and the server may need configuration.  The settings files
-are clients/settings.py and server/settings.py, for clients and servers, respectively.  </p>
-<p>clients/settings.py currently contains the following options:
-- HPIT_URL_ROOT : the URL root where the HPIT server lives</p>
-<p>server/settings.py currently contains the following options:
-- HPIT_VERSION : the version of this server
-- DEBUG : If the server should be ran in debug mode (DEPRECATED)</p>
-<ul>
-<li>HPIT_PID_FILE : the location where the PID file of the server is stored, for tracking the server process</li>
-<li>HPIT_BIND_IP : the IP address the server is listening on</li>
-<li>
-<p>HPIT_BIND_PORT : the port that the HPIT server listens on</p>
-</li>
-<li>
-<p>MONGO_DBNAME : The name of the HPTI database in MongoDB.</p>
-</li>
-<li>SECRET_KEY : A cryptographic secret for generating other secrets. (Keep this secret)</li>
-<li>SQLALCHEMY_DATABASE_URI : A database URL for SQLAlchemy to store administrative data. (Defaults to SQLite)</li>
-<li>
-<p>CSRF_ENABLED : True to enable protections against cross-site request forgery attacks.</p>
-</li>
-<li>
-<p>USER_PASSWORD_HASH : How passwords for users should be generated. (Leave this alone unless you know what you're doing.)</p>
-</li>
-</ul>
+<h2><a name="SettingsToc"></a> Server Settings</h2>
+<p>There are various settings available for modification in the <code>server/settings.py</code> file.</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>default</th>
+<th>description</th>
+<th>notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HPIT_VERSION</td>
+<td>string (really long)</td>
+<td>A string representation of the current version of HPIT</td>
+<td></td>
+</tr>
+<tr>
+<td>DEBUG</td>
+<td>False</td>
+<td>Whether to run the server in debug mode or not</td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td>HPIT_PID_FILE</td>
+<td>'tmp/hpit_server.pid'</td>
+<td>Where to put the PID file for the hpit server (daemon)</td>
+<td></td>
+</tr>
+<tr>
+<td>HPIT_BIND_IP</td>
+<td>"0.0.0.0"</td>
+<td>The IP Address to listen for connections on.</td>
+<td></td>
+</tr>
+<tr>
+<td>HPIT_BIND_PORT</td>
+<td>"8000"</td>
+<td>The Port Address to listen for connections on.</td>
+<td></td>
+</tr>
+<tr>
+<td>HPIT_BIND_ADDRESS</td>
+<td>HPIT_BIND_IP+":"+HPIT_BIND_PORT</td>
+<td>A comination of the IP and Port addresses</td>
+<td>Don't change this.</td>
+</tr>
+<tr>
+<td>PROJECT_DIR</td>
+<td>'/Users/raymond/Projects/TutorGen/hpit'</td>
+<td>The root working directory for HPIT.</td>
+<td>Change this.</td>
+</tr>
+<tr>
+<td>VENV_DIRNAME</td>
+<td>'env'</td>
+<td>The directory where the virtual enviornment is located.</td>
+<td></td>
+</tr>
+<tr>
+<td>MONGO_DBNAME</td>
+<td>'hpit_development'</td>
+<td>The name of the mongo database to store information in.</td>
+<td></td>
+</tr>
+<tr>
+<td>SECRET_KEY</td>
+<td>random character string length 60 or longer</td>
+<td>A secret key used for cryptography. Keep secure.</td>
+<td>YOU MUST CHANGE THIS IN PROD!</td>
+</tr>
+<tr>
+<td>SQLALCHEMY_DATABASE_URI</td>
+<td>'sqlite:///db/hpit_development.sqlite'</td>
+<td>A database URI for relational storage.</td>
+<td>Several databases supported.</td>
+</tr>
+<tr>
+<td>CSRF_ENABLED</td>
+<td>True</td>
+<td>Enable Cross-Site Request Forgery Protection?</td>
+<td>Don't change this.</td>
+</tr>
+<tr>
+<td>MAIL_DEBUG</td>
+<td>True</td>
+<td>Don't actually send emails. Print to console instead.</td>
+<td>Change in production.</td>
+</tr>
+<tr>
+<td>MAIL_SERVER</td>
+<td>'smtp.gmail.com'</td>
+<td>The SMTP server to send mail through.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_PORT</td>
+<td>465</td>
+<td>The REMOTE Port to send mail on.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_USE_SSL</td>
+<td>True</td>
+<td>Use SSL when sending mail?</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_USERNAME</td>
+<td>'hpit@tutorgen.com'</td>
+<td>The mail account username on the SMTP server.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_PASSWORD</td>
+<td>'abcd1234'</td>
+<td>The mail account password on the SMTP server.</td>
+<td></td>
+</tr>
+<tr>
+<td>MAIL_DEFAULT_SENDER</td>
+<td>'hpit-project.org'</td>
+<td>Who to send mail as.</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_PASSWORD_HASH</td>
+<td>'bcrypt_sha256'</td>
+<td>The hashing method for creating user passwords.</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_EMAIL</td>
+<td>False</td>
+<td>User's use email as their usernames? (mutually exclusive)</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_USERNAME</td>
+<td>True</td>
+<td>User use a standard username? (mutually exclusive)</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_CONFIRM_EMAIL</td>
+<td>False</td>
+<td>Enable email confirmation for user registration.</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_CHANGE_USERNAME</td>
+<td>False</td>
+<td>Allow a user to change their username?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_CHANGE_PASSWORD</td>
+<td>True</td>
+<td>Allow a user to change their password?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_FORGOT_PASSWORD</td>
+<td>False</td>
+<td>Allow a user to recover their password through email?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_ENABLE_RETYPE_PASSWORD</td>
+<td>True</td>
+<td>Make a user retype their password when creating an account?</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_LOGIN_TEMPLATE</td>
+<td>'flask_user/login_or_register.html'</td>
+<td>Login template rendered to HTML</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_REGISTER_TEMPLATE</td>
+<td>'flask_user/register.html'</td>
+<td>Register template rendered to HTML</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2><a name="DatabaseToc"></a> Database Structure</h2>
 <p>The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
@@ -341,6 +580,24 @@ effect where plugins fire in series to process a complex series of messages.</p>
 <h2><a name="ExPlugin"></a> Example Plugin</h2>
 <p>The example plugin listens to the <code>test</code> and <code>example</code> event names and logs
 whatever data it's sent in the payload to a file.</p>
+<h2><a name="SMPlugin"></a> Student Management Plugin</h2>
+<p>The student management plugin allows you to track student across your 
+applications and integrates into skill management and knowledge tracing. In addition
+you can assign any number of attributes to your students and retreive them later. These
+attributes can cover anything from how much they like sports, to their age, and brand
+preferences.</p>
+<h4><a name="add_student"></a> add_student</h4>
+<h4><a name="get_student"></a> get_student</h4>
+<h4><a name='set_attribute'></a> set_attribute</h4>
+<h4><a name="get_attribute"></a> get_attribute</h4>
+<h2><a name="SKMPlugin"></a> Skill Management Plugin</h2>
+<p>The skill management plugin allows you to track skills across your applications
+and integrates into knowledge tracing, problem selection, problem management, and
+the hint factory. The skill manager idenitfies skills by either an assigned identifier
+or by name.</p>
+<h4><a name="add_skill"></a> add_skill</h4>
+<h4><a name="remove_skill"></a> remove_skill</h4>
+<h4><a name="get_skill"></a> get_skill</h4>
 <h2><a name="KTPlugin"></a> Knowledge Tracing Plugin</h2>
 <h4><a name="kt_set_initial"></a> kt_set_initial</h4>
 <p>Sets the initial probabilistic values for the knowledge tracer.</p>
@@ -450,10 +707,6 @@ the student towards a solution.</p>
 <li>exists: string - YES if a hint is available, NO if it isn't</li>
 <li>hint_text: string - The text describing the hint.</li>
 </ul>
-<h2><a name="SMPlugin"></a> Student Management Plugin</h2>
-<h3>TODO</h3>
-<h2><a name="SKMPlugin"></a> Skill Management Plugin</h2>
-<h3>TODO</h3>
 <h2><a name="PMPlugin"></a> Problem Management Plugin</h2>
 <h4><a name="add_problem"></a> add_problem</h4>
 <p>Adds a problem to the problem manager.</p>
