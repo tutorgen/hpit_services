@@ -5,12 +5,15 @@ from pymongo import MongoClient
 from bson import ObjectId
 import bson
 
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class KnowledgeTracingPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
-        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_knowledge_tracing
 
 

@@ -9,13 +9,16 @@ import binascii
 
 from hpitclient import Plugin
 
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class DataShopConnectorPlugin(Plugin):
     
     def __init__(self,entity_id,api_key,logger,args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
         
-        self.datashop_services_root = "https://pslcdatashop.web.cmu.edu/services"
+        self.datashop_services_root = settings.DATASHOP_ROOT_URL
         
     def post_connect(self):
         super().post_connect()
@@ -146,7 +149,7 @@ class DataShopConnectorPlugin(Plugin):
         
         #req = Request(method,"https://pslcdatashop.web.cmu.edu/services"+path,headers=headers,data =data)
         
-        req = Request(method,"http://pslc-qa.andrew.cmu.edu/datashop/services"+path,headers=headers,data =data)
+        req = Request(method,settings.DATASHOP_SERVICES_URL+path,headers=headers,data =data)
         
         prepared_req = s.prepare_request(req)
         

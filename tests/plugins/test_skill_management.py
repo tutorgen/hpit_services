@@ -14,6 +14,9 @@ import requests
 
 from plugins import SkillManagementPlugin
 
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class TestSkillManagementPlugin(unittest.TestCase):
 
     def setUp(self):
@@ -29,11 +32,11 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 "name":"test_skill_cache",
                 "ramQuotaMB":100,
             }
-        req = requests.post("http://127.0.0.1:8091/pools/default/buckets",auth=("Administrator","administrator"), data = options)
+        req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=("Administrator","administrator"), data = options)
         
         self.test_subject = SkillManagementPlugin(123,456,None)
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_skills
-        self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = "127.0.0.1")
+        self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = settings.COUCHBASE_HOSTNAME)
        
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method

@@ -9,15 +9,18 @@ import couchbase
 
 import requests
 
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class SkillManagementPlugin(Plugin):
     def __init__(self, entity_id, api_key, logger, args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
-        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_skills
 
         try:
-            self.cache = Couchbase.connect(bucket = "skill_cache", host = "127.0.0.1")
+            self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
         except couchbase.exceptions.BucketNotFoundError:
             options = {
                 "authType":"sasl",
@@ -27,9 +30,9 @@ class SkillManagementPlugin(Plugin):
                 "name":"skill_cache",
                 "ramQuotaMB":100,
             }
-            req = requests.post("http://127.0.0.1:8091/pools/default/buckets",auth=("Administrator","administrator"), data = options)
+            req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=("Administrator","administrator"), data = options)
             
-            self.cache = Couchbase.connect(bucket = "skill_cache", host = "127.0.0.1")
+            self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
      
     def post_connect(self):
         super().post_connect()
