@@ -25,8 +25,8 @@ from .sessions import MongoSessionInterface
 #from sessions import MongoSessionInterface
 #from settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
 
-from .settings import ServerSettingsManager
-settings_manager = ServerSettingsManager.get_instance()
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_server_settings()
 
 class ServerApp:
     instance = None
@@ -53,7 +53,7 @@ class ServerApp:
         self.app = Flask(__name__)
         self.gears.init_app(self.app)
 
-        self.app.config.from_object(settings_manager.settings)
+        self.app.config.from_object(settings)
 
         try:
             self.mongo = PyMongo(self.app)

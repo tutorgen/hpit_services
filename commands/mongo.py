@@ -1,8 +1,8 @@
 import os
 import subprocess
 
-from server.settings import ServerSettingsManager
-settings = ServerSettingsManager.get_instance().settings
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_server_settings()
 
 class Command:
     description = "Start the mongodb server."

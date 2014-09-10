@@ -5,12 +5,12 @@ import commands
 import pkgutil
 
 from server.app import ServerApp
-from server.settings import ServerSettingsManager
+from environment.settings_manager import SettingsManager
 
 class BaseManager:
 
     def __init__(self):
-        self.settings = ServerSettingsManager.get_instance().settings
+        self.settings = SettingsManager.get_server_settings()
         self.app_instance = ServerApp.get_instance()
         self.app_instance.bootstrap_user()
 

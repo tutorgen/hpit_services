@@ -1,14 +1,14 @@
 import platform
 import sys
 
-from server.settings import ServerSettingsManager
+from environment.settings_manager import SettingsManager
 
 if 'test' in sys.argv:
-    settings = ServerSettingsManager.init_instance('test')
+    settings = SettingsManager.init_instance('test')
 elif 'production' in sys.argv:
-    settings = ServerSettingsManager.init_instance('production')
+    settings = SettingsManager.init_instance('production')
 else:
-    settings = ServerSettingsManager.init_instance('debug')
+    settings = SettingsManager.init_instance('debug')
 
 manager = None
 if platform.system() == "Windows":
