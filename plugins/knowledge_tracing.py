@@ -59,7 +59,7 @@ class KnowledgeTracingPlugin(Plugin):
                     'probability_learned': 'float(0.0-1.0)',
                     'probability_guess': 'float(0.0-1.0)',
                     'probability_mistake': 'float(0.0-1.0)',
-                    'student_id:':'str(ObjectId)',
+                    'student_id':'str(ObjectId)',
                     'skill_id':'str(ObjectId)',
                 }
             })
