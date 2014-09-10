@@ -15,8 +15,6 @@ before_install:
   - "sudo apt-get install mongodb-org-server mongodb-org-shell"
   - "sudo apt-get install python2.7-dev python3-dev"
   - "sudo apt-get install libcouchbase2-core libcouchbase2-libevent libcouchbase-dev"
-  - "wget http://packages.couchbase.com/releases/2.2.0/couchbase-server-community_2.2.0_x86_64.deb"
-  - "sudo dpkg -i couchbase-server-community_2.2.0_x86_64.deb"
   - "wget http://dist.neo4j.org/neo4j-community-2.1.2-unix.tar.gz"
   - "tar xvfz neo4j-community-2.1.2-unix.tar.gz"
   - "neo4j-community-2.1.2/bin/neo4j start"
