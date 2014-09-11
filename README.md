@@ -189,7 +189,103 @@ to http://127.0.0.1:8000.
 
 ###<a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04
 
-#### TODO
+#### Getting Started
+The first thing you'll need to do is update and upgrade your apt repositories:
+
+`sudo apt-get update`
+
+`sudo apt-get upgrade`
+
+
+Next, install the C compiler and other build utilities:
+
+`sudo apt-get install build-essential`
+
+HPIT requires Python 3.4 or higher.  Ubuntu 12.04 does not include Python 3.4 in its
+repositories by default, so you must install it from the fkrull/deadsnakes PPA:
+
+`sudo add-apt-repository ppa:fkrull/deadsnakes`
+
+`sudo apt-get update`
+
+`sudo apt-get install python3.4`
+
+You can verify you have the correct version of Python by typing:
+
+`python3.4 --version`
+
+Next, to install the numerous Python packages HPIT requires, you'll need Pip, which
+needs to be compatible with Python 3.4.  The easiest way to do this is to use the 
+command:
+
+`python3.4 -m ensurepip --upgrade`
+
+
+We highly recommend using virtualenv when running HPIT.  If you are unfamiliar with
+virtualenv, you can read about it at http://virtualenv.readthedocs.org/en/latest/. 
+Install virtualenv from pip, with the command:
+
+`pip3 install virtualenv`
+
+#### Databases
+HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
+
+#####SQLite and MongoDB
+Installing SQLite and MongoDB are easy to install, simply use apt-get:
+
+`sudo apt-get install sqlite mongodb`
+
+#####PostgreSQL
+To install PostgreSQL, use the commands:
+
+`sudo apt-get install postgresql postgresql-contrib`
+
+In order for Python to interact with PostgreSQL, we'll need the dependencies for the psycopg2 library.  Install
+instructions are found at http://initd.org/psycopg/docs/install.html#install-from-source , 
+and summarized here:
+
+Install the Python 3.4 headers, using: `sudo apt-get install libpython3.4-dev`.  This comes from
+this fkrull/deadsnakes repository.
+
+Install the libpq headers, using: `sudo apt-get install libpq-dev`.  Try running `pg_config --version`
+to ensure it installed correctly.
+
+psycopg2 will be installed later with Pip.
+
+#####Neo4j
+Next, we need to install Neo4j.  Neo4j requires Oracle JDK 7 or OpenJDK 7.  You can verify this is installed
+by using: `java -version`.
+
+To install Neo4j, follow the steps located at http://debian.neo4j.org/ , summarized below:
+
+`sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key| apt-key add - # Import Neo4j signing key`
+
+`sudo echo 'deb http://debian.neo4j.org/repo stable/' > /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file`
+
+`sudo apt-get update # Find out about the files in our repository`
+
+`sudo apt-get install neo4j # Install Neo4j, community edition`
+
+#####Couchbase
+HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
+install instructions, summarized below:
+* Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
+* Use dpkg with sudo, for example, `sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ###<a name="GSInstallUbuntu14Toc"></a> Installing HPIT on Ubuntu 14.04
 
