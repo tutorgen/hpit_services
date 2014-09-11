@@ -272,6 +272,60 @@ install instructions, summarized below:
 * Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
 * Use dpkg with sudo, for example, `sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb`.
 
+####Installing HPIT
+#####Downloading HPIT and More Dependencies
+Now that the dependencies are installed, we can install HPIT.  To do this, you will need git:
+
+`sudo apt-get install git`
+
+Next, clone the HPIT repository using:
+
+`git clone https://github.com/tutorgen/hpit_services`
+
+Next, move into the hpit_services directory using `cd hpit_services`
+
+Now it is time to create your virtual environment.  It is important that you are using the 
+correct Python binary when creating the virtual environment.  In our case, we used the command
+
+`virtualenv -p python3.4 env`
+
+Where virtualenv is the binary for the compatible version of virtualenv, python3.4 is your 
+python3.4 binary, and env is the directory that the virtual environment will live in.
+
+Next, activate the environment with the command `source env/bin/activate`.  Your command prompt
+should now be prefixed with (env).
+
+Now, install the Python dependencies using pip3.  The command will be:
+
+`pip3 install -r requirements.txt`
+
+#####Configuring HPIT
+First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
+controlled by these commands:
+
+MongoDB:  `sudo service mongodb start`, `sudo service mongodb stop`
+
+Neo4J: `sudo service neo4j-service start`, `sudo service neo4j-service stop`
+
+Couchbase: `sudo /etc/init.d/couchbase-server start`, `sudo /etc/init.d/couchbase-server stop`
+
+Next, set up the server settings.  The settings are located in /path/to/hpit_services/
+
+Now, seed the database with this command:
+
+`python manager.py syncdb`
+
+And run the tests:
+
+`python manager.py test`
+
+Assuming everything passed, you should then run:
+
+`python manager.py start`
+
+And browse to http://127.0.0.1:800 , where you should see a welcome page.
+
 
 
 
@@ -363,6 +417,21 @@ If you are wanting to use the hint factory plugin you will need to install neo4j
     - On Ubuntu: `sudo apt-get install neo4j`.
     - On Windows, binaries are available.
 2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## <a name="AdminToc"></a> The Adminstration Panel
 
