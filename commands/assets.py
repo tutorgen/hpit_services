@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from clint.textui import puts, colored
 
@@ -27,14 +28,14 @@ class Command:
             '.less': LESSCompiler.as_handler(),
             '.coffee': CoffeeScriptCompiler.as_handler(),
             #    '.hbs': 'gears_handlebars.HandlebarsCompiler'
-            }
+            },
+            public_assets=(
+                os.path.join(settings.PROJECT_DIR, 'server/assets/css/style.css'), 
+                os.path.join(settings.PROJECT_DIR, 'server/assets/js/script.js')
+            )
         )
 
-        parser.add_argument('src', metavar='src', type=str, 
-                            help='The source directory of the assets to compile.',
-                            default=os.path.join(settings.PROJECT_DIR, 'server/assets'))
-        parser.add_argument('dest', type=str, 
-                            help="The destination directory of where to put these assets.")
+        parser.add_argument('dest', type=str, help="The destination directory of where to put these assets.")
 
     
     def get_absolute_path(self, path):
@@ -45,8 +46,17 @@ class Command:
         self.arguments = arguments
         self.configuration = configuration
 
+        dest_path = self.arguments.dest
+
+        if not os.path.isabs(dest_path):
+            dest_path = os.path.join(os.getcwd(), dest_path)
+
+        if not os.path.exists(dest_path):
+            os.makedirs(dest_path)
+
         assets = self.gears.get_public_assets(app)
         environment = self.gears.get_environment(app)
+        environment.root = dest_path
 
         for path in assets:
             try:
@@ -56,7 +66,9 @@ class Command:
             except TypeError:
                 continue
 
-            environment.save_file(path, str(asset))
+            dest_filename = os.path.split(path)[1]
+            asset_source = bytes(str(asset), 'utf-8')
+            environment.save_file(dest_filename, asset_source)
             src_path = os.path.relpath(asset.absolute_path)
-            dest_path = os.path.relpath(os.path.join(self.environment.root, path))
+            dest_path = os.path.relpath(os.path.join(environment.root, path))
             puts(colored.green('- compiled %s to %s' % (src_path, dest_path)))
