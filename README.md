@@ -10,6 +10,8 @@
     * [Installing HPIT on Mac OSX](#GSInstallMacOSXToc)
     * [Installing HPIT on Ubuntu 12.04](#GSInstallUbuntu12Toc)
     * [Installing HPIT on Ubuntu 14.04](#GSInstallUbuntu14Toc)
+    * [Common Hangups](#GSCommonHangupsToc)
+    * [Server Settings](#GSServerSettingsToc)
 * [Old Install Guide (deprecated)](#GSOldInstallGuideToc)
     * [Python Requirements](#GSReqToc)
     * [Production Considerations](#GSProdToc)
@@ -130,8 +132,119 @@ HPIT Transaction - A transaction is a message specifically for PSLC DataShop tra
 ##<a name="GetStartedToc"></a> Getting Started
 
 ###<a name="GSInstallWindowsToc"></a> Installing HPIT on Windows
+HPIT was designed to run on a Unix-like system, and Windows support is solely for development purposes.
+Windows should not be used as an HPIT production server. 
 
-#### TODO
+#### Install Python 3.4, Pip and virtualenv
+To install Python 3.4, download the binary from https://www.python.org/downloads/ and run.
+
+Pip ships with Python 3.4.  Test to make sure you have the correct versions by running:
+
+`python --version`
+
+`pip --version`
+
+Next, install virtualenv using:
+
+`pip install virtualenv`
+
+#### Databases
+HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
+
+#####MongoDB
+Binaries available at http://www.mongodb.org/downloads.  Download and run.
+
+#####SQLite
+Go to http://www.sqlite.org/download.html and download sqlite-shell-win32-*.zip and sqlite-dll-win32-*.zip.
+
+Create the directory C:\sqlite
+
+Extract the contents of the .zip files to C:\sqlite, there should be three files:
+* sqlite3.def
+* sqlite3.dll
+* sqlite3.exe
+
+Add C:\sqlite to your PATH environment variable.
+
+#####Neo4j
+Go to http://neo4j.com/download/ and download the Community edition binary and install.
+
+##### Couchbase
+Go to http://www.couchbase.com/download and download the Community edition binary and install.
+After installing, go to http://localhost:8091/index.html to configure Couchbase.
+
+##### PostgreSQL
+Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
+as a production environment, this step is optional.  However, if you want to install PostgreSQL anyway,
+there are binaries available at http://www.postgresql.org/download/windows/.
+
+To install the psycopg2 library on Windows, there are instructions located at http://www.stickpeople.com/projects/python/win-psycopg/ and
+are summarized here:
+
+Download the 3.4 release for either 32-bit or 64-bit, depending on your system.
+
+Activate your virtual environment (covered later) and run 'easy_install psycopg2-2.5.4.win-amd64-py3.4-pg9.3.5-release.exe', replacing
+the exe in the command with the one you downloaded.
+
+####NodeJS
+HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.
+
+Binaries are available at http://nodejs.org/download/.
+
+####Installing HPIT
+#####Downloading HPIT and More Dependencies
+Now we can install HPIT.  First, you will need the git command line tools.  They can be downloaded
+from http://git-scm.com/download/win.
+
+After git is installed, run:
+
+`git clone https://github.com/tutorgen/hpit_services`
+
+Now it is time to create your virtual environment.  It is important that you are using the 
+correct Python binary when creating the virtual environment.  In our case, we used the command
+
+`virtualenv -p python env`
+
+Where virtualenv is the binary for the compatible version of virtualenv, python is your 
+Python 3.4 binary, and env is the directory that the virtual environment will live in.
+
+Next, activate the environment with the command `env\Scripts\activate.bat`.  Your command prompt
+should now be prefixed with (env).
+
+Now, install the Python dependencies using pip.  The command will be:
+
+`pip install -r requirements-win.txt`
+
+#####Configuring HPIT
+First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
+controlled by these commands:
+
+MongoDB:  `mongod`.  This will run in a terminal window until it is killed.
+
+Neo4J: Run C:\Program Files\Newo4j Community\bin\neo4j-community.exe.  You can start and stop it
+by clicking a button.
+
+Couchbase: Couchbase will already be running after it is installed.
+
+Next, set up the server settings.  Instructions are located in the section [Server Settings](#GSServerSettingsToc)
+
+Now, seed the database with this command:
+
+`python manager.py syncdb`
+
+And run the tests:
+
+`python manager.py test`
+
+Assuming everything passed, you should then run:
+
+`python manager.py start`
+
+And browse to http://127.0.0.1:800 , where you should see a welcome page.
+
+If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
+
 
 ###<a name="GSInstallMacOSXToc"></a> Installing HPIT on Mac OSX
 
@@ -155,10 +268,15 @@ that you confiqure HPIT to use postgreSQL over sqlite3.
 1. `brew install mongodb sqlite`
 2. (optional) Install postgresql with Postgres.app found here: http://postgresapp.com/
 
+Install the libpq headers, using: `sudo apt-get install libpq-dev`.  Try running `pg_config --version`
+to ensure it installed correctly.
+
+psycopg2 will be installed later with Pip.
+
 #### Installing NodeJS and NPM
 
 HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
-you will need to download and install node to be able to run the HPIT server. Luckily on Max OSX this is a relatively trivial task.
+you will need to download and install node version 0.10.3 to be able to run the HPIT server. Luckily on Max OSX this is a relatively trivial task.
 
 * `brew install node`
 * `npm install coffeescript-compiler less`
@@ -175,7 +293,7 @@ is again, through Homebrew.
 
 1. Clone the HPIT project from github: `git clone https://github.com/tutorgen/hpit_services hpit`
 1. Change to the directory of the HPIT project: `cd hpit`
-2. Create a reference to your python3 installation binary for virtualenv. ```export PY3_PATH=`which python3````
+2. Create a reference to your python3 installation binary for virtualenv. `export PY3_PATH=$(which python3)`
 3. Create a new virtual environment with: `virtualenv -p $PY3_PATH env`
 3. Activate that environment with: `source env/bin/activate`
 4. Install HPIT's dependencies with: `pip3 install -r requirements.txt`.
@@ -188,6 +306,8 @@ To start the HPIT server type: `python3 manager.py start` and open your browser
 to http://127.0.0.1:8000. 
 
 ###<a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04
+HPIT supports the Ubuntu 12.04 LTS release.  Howevern, if possible, it is highly recommended to
+upgrade to the 14.04 LTS release.
 
 #### Getting Started
 The first thing you'll need to do is update and upgrade your apt repositories:
@@ -271,6 +391,28 @@ HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.
 install instructions, summarized below:
 * Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
 * Use dpkg with sudo, for example, `sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb`.
+* After installing, go to http://localhost:8091/index.html to configure Couchbase.
+
+####NodeJS
+HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
+NodeJS from source to ensure you get the latest version.  At least 0.10.3 is required. 
+
+First, download the cource code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
+You can use wget, like this:
+
+`wget http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz`
+
+Next, extract the archive.
+
+`tar xvfz node-v0.10.31.tar.gz`
+
+Now, cd into the node-v0.10.31.tar.gz directory, and run:
+
+`./configure`
+
+`make`
+
+`sudo make install`
 
 ####Installing HPIT
 #####Downloading HPIT and More Dependencies
@@ -290,7 +432,7 @@ correct Python binary when creating the virtual environment.  In our case, we us
 `virtualenv -p python3.4 env`
 
 Where virtualenv is the binary for the compatible version of virtualenv, python3.4 is your 
-python3.4 binary, and env is the directory that the virtual environment will live in.
+Python 3.4 binary, and env is the directory that the virtual environment will live in.
 
 Next, activate the environment with the command `source env/bin/activate`.  Your command prompt
 should now be prefixed with (env).
@@ -310,7 +452,7 @@ Neo4J: `sudo service neo4j-service start`, `sudo service neo4j-service stop`
 
 Couchbase: `sudo /etc/init.d/couchbase-server start`, `sudo /etc/init.d/couchbase-server stop`
 
-Next, set up the server settings.  The settings are located in /path/to/hpit_services/
+Next, set up the server settings.  Instructions are located in the section [Server Settings](#GSServerSettingsToc)
 
 Now, seed the database with this command:
 
@@ -326,24 +468,224 @@ Assuming everything passed, you should then run:
 
 And browse to http://127.0.0.1:800 , where you should see a welcome page.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
 
 ###<a name="GSInstallUbuntu14Toc"></a> Installing HPIT on Ubuntu 14.04
+Ubuntu 14.04 LTS release is the preferred platform for HPIT.
 
-#### TODO
+#### Getting Started
+The first thing you'll need to do is update and upgrade your apt repositories:
+
+`sudo apt-get update`
+
+`sudo apt-get upgrade`
+
+
+Next, install the C compiler and other build utilities:
+
+`sudo apt-get install build-essential`
+
+HPIT requires Python 3.4 or higher.  Ubuntu 14.04 comes pre-packaged with Python 3.4, with a 
+binary named python3.
+
+You can verify you have the correct version of Python by typing:
+
+`python3 --version`
+
+Next, to install the numerous Python packages HPIT requires, you'll need Pip, which
+needs to be compatible with Python 3.4.  The easiest way to do this is to use the 
+command:
+
+`sudo apt-get install python3-pip`
+
+
+We highly recommend using virtualenv when running HPIT.  If you are unfamiliar with
+virtualenv, you can read about it at http://virtualenv.readthedocs.org/en/latest/. 
+Install virtualenv from pip, with the command:
+
+`pip3 install virtualenv`
+
+#### Databases
+HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
+
+#####SQLite and MongoDB
+Installing SQLite and MongoDB are easy to install, simply use apt-get:
+
+`sudo apt-get install sqlite mongodb`
+
+#####PostgreSQL
+To install PostgreSQL, use the commands:
+
+`sudo apt-get install postgresql postgresql-contrib`
+
+In order for Python to interact with PostgreSQL, we'll need the dependencies for the psycopg2 library.  Install
+instructions are found at http://initd.org/psycopg/docs/install.html#install-from-source , 
+and summarized here:
+
+Install the Python 3.4 headers, using: `sudo apt-get install libpython3-dev`.
+
+Install the libpq headers, using: `sudo apt-get install libpq-dev`.  Try running `pg_config --version`
+to ensure it installed correctly.
+
+psycopg2 will be installed later with Pip.
+
+#####Neo4j
+Next, we need to install Neo4j.  Neo4j requires Oracle JDK 7 or OpenJDK 7.  You can verify this is installed
+by using: `java -version`.
+
+To install Neo4j, follow the steps located at http://debian.neo4j.org/ , summarized below:
+
+`sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key| apt-key add - # Import Neo4j signing key`
+
+`sudo echo 'deb http://debian.neo4j.org/repo stable/' > /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file`
+
+`sudo apt-get update # Find out about the files in our repository`
+
+`sudo apt-get install neo4j # Install Neo4j, community edition`
+
+#####Couchbase
+HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
+install instructions, summarized below:
+* Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
+* Use dpkg with sudo, for example, `sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb`.
+* After installing, go to http://localhost:8091/index.html to configure Couchbase.
+
+####NodeJS
+HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
+NodeJS from source to ensure you get the latest version. At least 0.10.3 is required. 
+
+First, download the cource code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
+You can use wget, like this:
+
+`wget http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz`
+
+Next, extract the archive.
+
+`tar xvfz node-v0.10.31.tar.gz`
+
+Now, cd into the node-v0.10.31.tar.gz directory, and run:
+
+`./configure`
+
+`make`
+
+`sudo make install`
+
+####Installing HPIT
+#####Downloading HPIT and More Dependencies
+Now that the dependencies are installed, we can install HPIT.  To do this, you will need git:
+
+`sudo apt-get install git`
+
+Next, clone the HPIT repository using:
+
+`git clone https://github.com/tutorgen/hpit_services`
+
+Next, move into the hpit_services directory using `cd hpit_services`
+
+Now it is time to create your virtual environment.  It is important that you are using the 
+correct Python binary when creating the virtual environment.  In our case, we used the command
+
+`virtualenv -p python3 env`
+
+Where virtualenv is the binary for the compatible version of virtualenv, python3 is your 
+Python 3.4 binary, and env is the directory that the virtual environment will live in.
+
+Next, activate the environment with the command `source env/bin/activate`.  Your command prompt
+should now be prefixed with (env).
+
+Now, install the Python dependencies using pip3.  The command will be:
+
+`pip3 install -r requirements.txt`
+
+#####Configuring HPIT
+First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
+controlled by these commands:
+
+MongoDB:  `sudo service mongodb start`, `sudo service mongodb stop`
+
+Neo4J: `sudo service neo4j-service start`, `sudo service neo4j-service stop`
+
+Couchbase: `sudo /etc/init.d/couchbase-server start`, `sudo /etc/init.d/couchbase-server stop`
+
+Next, set up the server settings.  Instructions are located in the section [Server Settings](#GSServerSettingsToc)
+
+Now, seed the database with this command:
+
+`python manager.py syncdb`
+
+And run the tests:
+
+`python manager.py test`
+
+Assuming everything passed, you should then run:
+
+`python manager.py start`
+
+And browse to http://127.0.0.1:800 , where you should see a welcome page.
+
+If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
+
+###<a name="GSServerSettingsToc"></a> Server Settings
+The settings are located in the environment directory of HPIT.  Inside the environment directory,
+there are sub directories, each for a mode of the system; production, test, debug, and travis.  Inside
+each of these are two files, server_settings.py and plugin_settings.py.  These are where you will change
+your system settings.
+
+Most of these settings can be left as defaults, but the important ones to change are:
+* PROJECT_DIR - should be set to the directory this README is in
+* VENV_DIRNAME - shoule be a relative link from PROJECT_DIR to wherever the virtual environment is.
+
+####server_settings.py
+* HPIT_VERSION - the version of HPIT
+* DEBUG - debug flag
+* HPIT_PID_FILE - the PID file written when deamonized.
+* HPIT_BIND_IP - the IP address to access HPIT
+* HPIT_BIND_PORT - the port HPIT is running on
+* HPIT_BIND_ADDRESS - a combination of IP and port
+* PROJECT_DIR - the location of HPIT
+* VENV_DIRNAME - the location of the virtual environment in relation to PROJECT DIR
+
+* MONGO_DBNAME - name of the database HPIT accesses
+* SECRET_KEY - the server secret key; should be generated for security
+* SQLALCHEMY_DATABASE_URI - the url of the administration database
+* CSRF_ENABLED - defaults to true
+
+* MAIL_DEBUG - debug mode for mail
+* MAIL_SERVER - the email server
+* MAIL_PORT - mail port
+* MAIL_USE_SSL - use ssl boolean
+* MAIL_USERNAME - mail username
+* MAIL_PASSWORD - mail password
+* MAIL_DEFAULT_SENDER - sender
+
+* USER_PASSWORD_HASH - hash algorithm
+
+* USER_ENABLE_EMAIL - email enabled for user
+* USER_ENABLE_USERNAME - enable username
+* USER_ENABLE_CONFIRM_EMAIL - enable confimation of address
+* USER_ENABLE_CHANGE_USERNAME - enable changing username
+* USER_ENABLE_CHANGE_PASSWORD - enable changing password
+* USER_ENABLE_FORGOT_PASSWORD - enable forgot password
+* USER_ENABLE_RETYPE_PASSWORD - enable retype password
+* USER_LOGIN_TEMPLATE -template for login page
+* USER_REGISTER_TEMPLATE - template for registering user
+
+####plugin_settings.py
+* DATASHOP_ROOT_URL - root datashop url
+* DATASHOP_SERVICES_URL - datashop url for services
+* MONGODB_URI - the location of the Mongo database server
+* COUCHBASE_HOSTNAME - Couchbase host
+* COUCHBASE_BUCKET_URI - couchbase buckets REST endpoint
+
+###<a name="GSCommonHangupsToc"></a> Common Hangups
+Here's a list of common problems when trying to install HPIT:
+* Permissions problems - if you're having troubles with permissions, make sure you are installing everything
+in your user account, not root.
+* Settings problems - make sure the settings are edited correctly for your system.  Verify that the paths to the
+project directory and virtual environment are correct.
+* Python problems - Make sure that Python, Pip, and virtualenv are all compatible with each other.
 
 ##<a name="GSOldInstallGuideToc"></a> Old Install Guide 
 
@@ -417,21 +759,6 @@ If you are wanting to use the hint factory plugin you will need to install neo4j
     - On Ubuntu: `sudo apt-get install neo4j`.
     - On Windows, binaries are available.
 2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ## <a name="AdminToc"></a> The Adminstration Panel
 
@@ -608,18 +935,18 @@ send a response depending on the plugin.
 
 ## <a name="PluginToc"></a> Plugin Component Specification
 
-A Plugin is an HPIT entity that subscribes to (listens to) certain event names, recieves
+A Plugin is an HPIT entity that subscribes to (listens to) certain event names, receives
 transcation payloads, perfoms some arbitrary function based on the event and message
 payload, and may or may not return a response to the original sender of the message.
 
 A plugin may listen to and define any events it wishes. When a tutor sends a transcation
 to HPIT, if a plugin has registered itself with HPIT, and if that plugin and subscribed
-to the event name submitted with the tutor's transcation it will recieve a queued list
+to the event name submitted with the tutor's transcation it will receive a queued list
 of messages when it polls the HPIT server for data. It is expected that plugins will
 do this type of polling periodically to see if any messages have been queued for 
 processing by HPIT.
 
-When a plugin processes an event from HPIT, it will recieve all the information in the 
+When a plugin processes an event from HPIT, it will receive all the information in the 
 original message, including the information identifying the tutor that sent the
 message. This identifying information is called the entity_id of the tutor.
 
@@ -666,7 +993,7 @@ or by name.
 ####<a name="kt_set_initial"></a> kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
 
-Recieves:
+Receives:
 
 * entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
 * skill : string - String identifier for the skill.
@@ -686,7 +1013,7 @@ Returns:
 ####<a name="kt_reset"></a> kt_reset
 Resets the probabilistic values for the knowledge tracer.
 
-Recieves:
+Receives:
 
 * entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
 * skill : string - String identifier for the skill.
@@ -702,7 +1029,7 @@ Returns:
 ####<a name="kt_trace"></a> kt_trace
 Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result.
 
-Recieves:
+Receives:
 
 * entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
 * skill : string - String identifier for the skill.
@@ -721,7 +1048,7 @@ Returns:
 ####<a name="hf_init_problem"></a> hf_init_problem
 Initializes a new problem for the hint factory.
 
-Recieves:
+Receives:
 
 * start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")
 * goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")
@@ -733,7 +1060,7 @@ Returns:
 ####<a name="hf_push_state"></a> hf_push_state
 Pushes a new state on the problem.
 
-Recieves:
+Receives:
 
 * state : json - A json object representing the state to push.
 * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
@@ -748,7 +1075,7 @@ Returns:
 ####<a name="hf_hint_exists"></a> hf_hint_exists
 Given a particular state structure. Does a hint exist for this problem?
 
-Recieves:
+Receives:
 
 * state : json - A json object representing the state to push.
 * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
@@ -765,7 +1092,7 @@ Returns:
 Given a particular state structure for a problem, retrieve the next most probable state that leads
 the student towards a solution.
 
-Recieves:
+Receives:
 
 * state : json - A json object representing the state to push.
 * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
@@ -784,7 +1111,7 @@ Returns:
 ####<a name="add_problem"></a> add_problem
 Adds a problem to the problem manager.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_name : string - The name of the problem.
@@ -800,7 +1127,7 @@ Returns:
 ####<a name="remove_problem"></a> remove_problem
 Remove a problem from the problem manager.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_name : string - The name of the problem.
@@ -814,7 +1141,7 @@ Returns:
 ####<a name="get_problem"></a> get_problem
 Gets a previously stored problem from the problem manager.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_name : string - The name of the problem to retrieve.
@@ -829,7 +1156,7 @@ Returns:
 ####<a name="list_problems"></a> list_problems
 Get all the problems for a given entity.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 
@@ -845,7 +1172,7 @@ Returns:
 ####<a name="add_problem_step"></a> add_problem_step
 Adds a problem step to the problem step manager.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_name : string - The name of the problem.
@@ -863,7 +1190,7 @@ Returns:
 ####<a name="remove_problem_step"></a> remove_problem_step
 Remove a problem step from the problem step manager.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_name : string - The name of the problem.
@@ -879,7 +1206,7 @@ Returns:
 ####<a name="get_problem_step"></a> get_problem_step
 Gets a previously stored problem step from the problem step manager.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_step_name : string - The name of the problem step.
@@ -898,7 +1225,7 @@ Get all the problems for a given problem and entity. If the problem name is spec
 returns all problem steps for the given problem_name. If the problem_name is NOT 
 specified, returns all the problem steps for the given entity.
 
-Recieves:
+Receives:
 
 * entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * (optional) problem_name : string - The name of the problem.
