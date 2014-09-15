@@ -8,3 +8,4 @@ class PluginSettings:
     COUCHBASE_BUCKET_URI = "http://beta.hpit-project.org:8091/pools/default/buckets"
     COUCHBASE_USERNAME = "Administrator"
     COUCHBASE_PASSWORD = "Administrator"
+    COUCHBASE_AUTH = (COUCHBASE_USERNAME, COUCHBASE_PASSWORD)

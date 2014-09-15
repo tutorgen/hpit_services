@@ -30,7 +30,7 @@ class SkillManagementPlugin(Plugin):
                 "name":"skill_cache",
                 "ramQuotaMB":100,
             }
-            req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=("Administrator","administrator"), data = options)
+            req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
             
             self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
      

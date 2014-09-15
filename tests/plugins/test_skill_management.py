@@ -32,7 +32,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 "name":"test_skill_cache",
                 "ramQuotaMB":100,
             }
-        req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=("Administrator","administrator"), data = options)
+        req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
         
         self.test_subject = SkillManagementPlugin(123,456,None)
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_skills
@@ -43,7 +43,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         call.
         """
         
-        r = requests.delete("http://127.0.0.1:8091/pools/default/buckets/test_skill_cache",auth=("Administrator","administrator"))
+        r = requests.delete("http://127.0.0.1:8091/pools/default/buckets/test_skill_cache",auth=settings.COUCHBASE_AUTH)
         if r.status_code != 200 and r.status_code != 404:
             raise Exception("Failure to delete bucket")
             
