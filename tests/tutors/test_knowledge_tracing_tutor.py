@@ -31,6 +31,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         tmp_subject.logger.should.equal(None)
         tmp_subject.run_once.should.equal(None)
         tmp_subject.skills.should.equal(['addition', 'subtraction', 'multiplication', 'division'])
+        tmp_subject.skill_ids.should.equal({'addition':None, 'subtraction':None, 'multiplication':None, 'division':None})
         tmp_subject.student_id.should.equal(None)
         
         
@@ -50,11 +51,15 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         """
         self.test_subject.send = MagicMock()
         self.test_subject.student_id = "2"
+        self.test_subject.skill_ids["addition"] = "+"
+        self.test_subject.skill_ids["subtraction"] = "-"
+        self.test_subject.skill_ids["multiplication"] = "*"
+        self.test_subject.skill_ids["division"] = "/"
         calls = [
-            call('kt_reset',{'skill':'addition',"student_id":"2"}),
-            call('kt_reset',{'skill':'subtraction',"student_id":"2"}),
-            call('kt_reset',{'skill':'multiplication',"student_id":"2"}),
-            call('kt_reset',{'skill':'division',"student_id":"2"}),
+            call('kt_reset',{'skill_id':"+","student_id":"2"}),
+            call('kt_reset',{'skill_id':"-","student_id":"2"}),
+            call('kt_reset',{'skill_id':"*","student_id":"2"}),
+            call('kt_reset',{'skill_id':"/","student_id":"2"}),
         ]
         self.test_subject.pre_disconnect()
         self.test_subject.send.assert_has_calls(calls)
@@ -76,12 +81,21 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         self.test_subject.send.call_count.should.equal(0)
         
         self.test_subject.student_id = "2"
+        
+        self.test_subject.main_callback().should.equal(True)
+        self.test_subject.send.call_count.should.equal(0)
+        
+        self.test_subject.skill_ids["addition"] = "+"
+        self.test_subject.skill_ids["subtraction"] = "-"
+        self.test_subject.skill_ids["multiplication"] = "*"
+        self.test_subject.skill_ids["division"] = "/"
+        
         random.randint = MagicMock(return_value = 91)
         calls = []
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
                 call('kt_trace', {
-                    'skill': sk,
+                    'skill_id': self.test_subject.skill_ids[sk],
                     'student_id':"2",
                     'correct': True
                     }, self.test_subject.trace_response_callback
@@ -126,24 +140,43 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         """
         KnowledgeTracingTutor.new_student_callback() Test plan:
             - student id should be set to response student id
-            - mock send, should be called for each skill with kt_set_initial
+            - mock send, should be called for each skill with get_skill_id
         """
         self.test_subject.send = MagicMock()
         self.test_subject.student_id = "2"
-        random.randint = MagicMock(return_value = 1000.0)
+        
         calls = []
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
-                    call('kt_set_initial', {
-                        'skill': sk,
-                        'probability_known': 1.0,
-                        'probability_learned': 1.0,
-                        'probability_guess': 1.0,
-                        'probability_mistake':1.0,
-                        'student_id':"2"
-                        }, self.test_subject.initial_response_callback 
-                    )
-              )
+                call("get_skill_id",{"skill_name":sk},self.test_subject.get_skills_callback)
+            )
+            
         self.test_subject.new_student_callback({"student_id":"2"})
         self.test_subject.send.assert_has_calls(calls)
+    
+    def test_get_skills_callback(self):
+        """
+        KnowledgeTracingTutor.get_skills_callback() Test plan:
+            - make sure skill_ids set for incoming skill
+            - make sure kt_set_initial is called for that skill
+        """
+        
+        self.test_subject.send = MagicMock()
+        self.test_subject.student_id = "2"
+        
+        random.randint = MagicMock(return_value = 1000.0)
+        
+        self.test_subject.get_skills_callback({"skill_id":"+","skill_name":"addition"})
+  
+        self.test_subject.send.assert_called_with('kt_set_initial', {
+            'skill_id': "+",
+            'probability_known': 1.0,
+            'probability_learned': 1.0,
+            'probability_guess': 1.0,
+            'probability_mistake':1.0,
+            'student_id':"2"
+            }, self.test_subject.initial_response_callback 
+        )
+        self.test_subject.skill_ids["addition"].should.equal("+")
+              
         

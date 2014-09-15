@@ -23,7 +23,6 @@ from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
 from plugins import DataShopConnectorPlugin
 from plugins import HintFactoryPlugin
-from plugins import StudentManagementPlugin
 
 random.seed(datetime.now())
 
@@ -32,7 +31,7 @@ tutor_types = ['example', 'knowledge_tracing','replay','data_connector']
 plugin_types = [
     'example', 
     'knowledge_tracing', 
-    'skill', 
+    'skill_management', 
     'student', 
     'problem',
     'problem_step',
@@ -74,10 +73,9 @@ class BaseDaemon:
         plugin_classes = {
             'example': ExamplePlugin,
             'knowledge_tracing': KnowledgeTracingPlugin,
-            'student': StudentManagementPlugin,
-            'skill': SkillManagementPlugin,
-            'problem': ProblemManagementPlugin,
-            'problem_step': ProblemStepManagementPlugin,
+            'skill_management': SkillManagementPlugin,
+            'problem_management': ProblemManagementPlugin,
+            'problem_step_management': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
             'data_connector' : DataShopConnectorPlugin,
             'hint_factory' : HintFactoryPlugin,

@@ -1,14 +1,12 @@
 import platform
-import sys
+import os
 
-from server.settings import ServerSettingsManager
+from environment.settings_manager import SettingsManager
 
-if 'test' in sys.argv:
-    settings = ServerSettingsManager.init_instance('test')
-elif 'production' in sys.argv:
-    settings = ServerSettingsManager.init_instance('production')
-else:
-    settings = ServerSettingsManager.init_instance('debug')
+try:
+    settings = SettingsManager.init_instance(os.environ['HPIT_ENV'])
+except KeyError:
+    settings = SettingsManager.init_instance('debug')
 
 manager = None
 if platform.system() == "Windows":

@@ -1,5 +1,5 @@
-from server.settings import ServerSettingsManager
-settings_manager = ServerSettingsManager.init_instance('production')
+from environment.settings_manager import SettingsManager
+settings_manager = SettingsManager.init_instance('production')
 
 from server.views.api import *
 from server.views.dashboard import *

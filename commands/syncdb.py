@@ -2,8 +2,8 @@ import os
 from server.app import ServerApp
 db = ServerApp.get_instance().db
 
-from server.settings import ServerSettingsManager
-settings = ServerSettingsManager.get_instance().settings
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_server_settings()
 
 class Command:
     description = "Creates all the tables in the database."
