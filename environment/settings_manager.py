@@ -1,12 +1,8 @@
-from .debug.server_settings import ServerSettings as DebugServerSettings
-from .test.server_settings import ServerSettings as TestServerSettings
-from .travis.server_settings import ServerSettings as TravisServerSettings
+import os
+import json
 
-from .debug.plugin_settings import PluginSettings as DebugPluginSettings
-from .test.plugin_settings import PluginSettings as TestPluginSettings
-from .travis.plugin_settings import PluginSettings as TravisPluginSettings
-
-
+def lists_to_tuples(the_dict):
+    return {k : tuple(v) if type(v) is list else v for k, v in the_dict.items()}
 
 class SettingsManager:
     server_settings_instance = None
@@ -33,16 +29,21 @@ class SettingsManager:
     def init_instance(cls, environment):
         cls.environment = environment
 
+        json_data = None
+        with open(os.path.join(os.getcwd(), 'settings.json')) as f:
+            json_data = json.loads(f.read())
+
+        cls.settings = {}
+        for env, settings in json_data.items():
+            cls.settings[env] = {
+                'plugin': type('PluginSettings', (object, ), lists_to_tuples(settings['plugin'])),
+                'server': type('ServerSettings', (object, ), lists_to_tuples(settings['server']))
+            }
+
         if not cls.server_settings_instance:
-            if environment == 'test':
-                cls.server_settings_instance = TestServerSettings
-                cls.plugin_settings_instance = TestPluginSettings
-            elif environment == 'debug':
-                cls.server_settings_instance = DebugServerSettings
-                cls.plugin_settings_instance = DebugPluginSettings
-            elif environment == 'travis':
-                cls.server_settings_instance = TravisServerSettings
-                cls.plugin_settings_instance = TravisPluginSettings
+            if environment in cls.settings:
+                cls.server_settings_instance = cls.settings[environment]['server']
+                cls.plugin_settings_instance = cls.settings[environment]['plugin']
             else:
                 raise Exception("No settings found for environment: " + environment)
 
