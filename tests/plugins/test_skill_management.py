@@ -43,7 +43,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         call.
         """
         
-        r = requests.delete("http://127.0.0.1:8091/pools/default/buckets/test_skill_cache",auth=settings.COUCHBASE_AUTH)
+        r = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_skill_cache",auth=settings.COUCHBASE_AUTH)
         if r.status_code != 200 and r.status_code != 404:
             raise Exception("Failure to delete bucket")
             
