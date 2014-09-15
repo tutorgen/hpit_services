@@ -4,3 +4,5 @@ class PluginSettings:
     MONGODB_URI = 'mongodb://localhost:27017/'
     COUCHBASE_HOSTNAME = "beta.hpit-project.org"
     COUCHBASE_BUCKET_URI = "http://beta.hpit-project.org:8091/pools/default/buckets"
+    COUCHBASE_USERNAME = "Administrator"
+    COUCHBASE_PASSWORD = "77#mbp"

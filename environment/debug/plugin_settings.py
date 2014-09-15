@@ -4,3 +4,5 @@ class PluginSettings:
     MONGODB_URI = 'mongodb://localhost:27017/'
     COUCHBASE_HOSTNAME = "127.0.0.1"
     COUCHBASE_BUCKET_URI = "http://127.0.0.1:8091/pools/default/buckets"
+    COUCHBASE_USERNAME = "Administrator"
+    COUCHBASE_PASSWORD = "Administrator"
