@@ -12,21 +12,15 @@
     * [Installing HPIT on Ubuntu 14.04](#GSInstallUbuntu14Toc)
     * [Common Hangups](#GSCommonHangupsToc)
     * [Server Settings](#GSServerSettingsToc)
-* [Old Install Guide (deprecated)](#GSOldInstallGuideToc)
-    * [Python Requirements](#GSReqToc)
-    * [Production Considerations](#GSProdToc)
-    * [Frontend Requirements](#GSFrontendToc)
-    * [Installing HPIT](#GSInstallToc)
-    * [Optional Installation for Hint Factory Plugin](#GSInstallOptToc)
 * [The Adminstration Panel](#AdminToc)
 * [The HPIT Manager](#ManagerToc)
 * [The Tutor and Plugin Configuration](#ConfigToc)
-* [Server Settings](#SettingsToc)
 * [Database Structure](#DatabaseToc)
     * [messages](#DBmessagesToc)
     * [plugin_messages](#DBpluginmesToc)
     * [responses](#DBresponsesToc)
     * [sessions](#DBsessionsToc)
+    * [entity_log](#DBlogToc)
 * [The HPIT Server in depth](#ServerToc)
 * [Tutors in depth](#TutorToc)
 * [Plugin Component Specification](#PluginToc)
@@ -39,9 +33,8 @@
         * [set_attribute](#set_attribute)
         * [get_attribute](#get_attribute)
     * [Skill Management](#SKMPlugin)
-        * [add_skill](#add_skill)
-        * [remove_skill](#remove_skill)
-        * [get_skill](#get_skill)
+        * [get_skill_name](#get_skill_name)
+        * [get_skill_id](#get_skill_id)
     * [Knowledge Tracing](#KTPlugin)
         * [kt_set_initial](#kt_set_initial)
         * [kt_reset](#kt_reset)
@@ -61,6 +54,17 @@
         * [remove_problem_step](#remove_problem_step)
         * [get_problem_step](#get_problem_step)
         * [list_problem_steps](#list_problem_steps)
+    * [Data Storage Plugin](#DSPlugin)
+        * [store_data](#store_data)
+        * [retrieve_data](#retrieve_data)
+        * [remove_data](#remove_data)
+    * [PSLC DataShop Connection Plugin](#DCPlugin)
+        * [get_dataset_metadata](#get_dataset_metadata)
+        * [get_sample_metadata](#get_sample_metadata)
+        * [get_transactions](#get_transactions)
+        * [get_student_steps](#get_student_steps)
+        * [add_custom_field](#add_custom_field)
+        
 * [Developing New Plugins and Tutors](https://github.com/tutorgen/HPIT-python-client/blob/master/README.md)
 * [License](#LicenseToc)
 
@@ -135,10 +139,13 @@ HPIT Transaction - A transaction is a message specifically for PSLC DataShop tra
 HPIT was designed to run on a Unix-like system, and Windows support is solely for development purposes.
 Windows should not be used as an HPIT production server. 
 
-#### Install Python 3.4, Pip and virtualenv
-To install Python 3.4, download the binary from https://www.python.org/downloads/ and run.
+#### Install Python 3.3.5, Pip and virtualenv
+To install Python 3.3.5, download the binary from https://www.python.org/downloads/ and run.
 
-Pip ships with Python 3.4.  Test to make sure you have the correct versions by running:
+To install Pip, go to http://pip.readthedocs.org/en/latest/installing.html , download the get-pip.py script, and run with
+'python get-pip.py'.
+
+Verify you have the proper versions of Python and Pip:
 
 `python --version`
 
@@ -153,6 +160,7 @@ HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, 
 
 #####MongoDB
 Binaries available at http://www.mongodb.org/downloads.  Download and run.
+You will need to create the directory C:\data\db to fun MongoDB.
 
 #####SQLite
 Go to http://www.sqlite.org/download.html and download sqlite-shell-win32-*.zip and sqlite-dll-win32-*.zip.
@@ -172,6 +180,13 @@ Go to http://neo4j.com/download/ and download the Community edition binary and i
 ##### Couchbase
 Go to http://www.couchbase.com/download and download the Community edition binary and install.
 After installing, go to http://localhost:8091/index.html to configure Couchbase.
+
+To install the python client, go to http://packages.couchbase.com/clients/python/snapshots and download 
+couchbase-1.2.0-0-gf9be317.win-amd64-py3.3.exe for 64-bit architectures. 
+
+Activate your virtual environment (covered later) and run:
+
+'easy_install couchbase-1.2.0-0-gf9be317.win-amd64-py3.3.exe'.
 
 ##### PostgreSQL
 Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
@@ -196,16 +211,16 @@ Binaries are available at http://nodejs.org/download/.
 Now we can install HPIT.  First, you will need the git command line tools.  They can be downloaded
 from http://git-scm.com/download/win.
 
-After git is installed, run:
+After git is installed, open up the Git Bash program, cd to your working directory (I used ~/Documents/HPIT) and run:
 
 `git clone https://github.com/tutorgen/hpit_services`
 
-Now it is time to create your virtual environment.  It is important that you are using the 
+Now it is time to create your virtual environment.  Switch back your your Windows Command Prompt.  It is important that you are using the 
 correct Python binary when creating the virtual environment.  In our case, we used the command
 
-`virtualenv -p python env`
+`virtualenv -p C:\Python34\python.exe env`
 
-Where virtualenv is the binary for the compatible version of virtualenv, python is your 
+Where virtualenv is the binary for the compatible version of virtualenv, C:\Python32\python.exe is your 
 Python 3.4 binary, and env is the directory that the virtual environment will live in.
 
 Next, activate the environment with the command `env\Scripts\activate.bat`.  Your command prompt
@@ -638,39 +653,38 @@ Most of these settings can be left as defaults, but the important ones to change
 * VENV_DIRNAME - shoule be a relative link from PROJECT_DIR to wherever the virtual environment is.
 
 ####server_settings.py
-* HPIT_VERSION - the version of HPIT
-* DEBUG - debug flag
-* HPIT_PID_FILE - the PID file written when deamonized.
-* HPIT_BIND_IP - the IP address to access HPIT
-* HPIT_BIND_PORT - the port HPIT is running on
-* HPIT_BIND_ADDRESS - a combination of IP and port
-* PROJECT_DIR - the location of HPIT
-* VENV_DIRNAME - the location of the virtual environment in relation to PROJECT DIR
+name                        | default                                     | description                                                 | notes                        
+--------------------------- | ------------------------------------------- | ----------------------------------------------------------- | -----------------------------
+HPIT_VERSION                | string (really long)                        | A string representation of the current version of HPIT      |                              
+DEBUG                       | False                                       | Whether to run the server in debug mode or not              | Deprecated                   
+HPIT_PID_FILE               | 'tmp/hpit_server.pid'                       | Where to put the PID file for the hpit server (daemon)      |                              
+HPIT_BIND_IP                | "0.0.0.0"                                   | The IP Address to listen for connections on.                |                              
+HPIT_BIND_PORT              | "8000"                                      | The Port Address to listen for connections on.              |                              
+HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A comination of the IP and Port addresses                   | Don't change this.           
+PROJECT_DIR                 | '/Users/raymond/Projects/TutorGen/hpit'     | The root working directory for HPIT.                        | Change this.                 
+VENV_DIRNAME                | 'env'                                       | The directory where the virtual enviornment is located.     | Change this.                             
+MONGO_DBNAME                | 'hpit_development'                          | The name of the mongo database to store information in.     |                              
+SECRET_KEY                  | random character string length 60 or longer | A secret key used for cryptography. Keep secure.            | YOU MUST CHANGE THIS IN PROD!
+SQLALCHEMY_DATABASE_URI     | 'sqlite:///db/hpit_development.sqlite'      | A database URI for relational storage.                      | Several databases supported. 
+CSRF_ENABLED                | True                                        | Enable Cross-Site Request Forgery Protection?               | Don't change this.           
+MAIL_DEBUG                  | True                                        | Don't actually send emails. Print to console instead.       | Change in production.        
+MAIL_SERVER                 | 'smtp.gmail.com'                            | The SMTP server to send mail through.                       |                              
+MAIL_PORT                   | 465                                         | The REMOTE Port to send mail on.                            |                              
+MAIL_USE_SSL                | True                                        | Use SSL when sending mail?                                  |                              
+MAIL_USERNAME               | 'hpit@tutorgen.com'                         | The mail account username on the SMTP server.               |                              
+MAIL_PASSWORD               | 'abcd1234'                                  | The mail account password on the SMTP server.               |                              
+MAIL_DEFAULT_SENDER         | 'hpit-project.org'                          | Who to send mail as.                                        |                               
+USER_PASSWORD_HASH          | 'bcrypt_sha256'                             | The hashing method for creating user passwords.             |                               
+USER_ENABLE_EMAIL           | False                                       | User's use email as their usernames? (mutually exclusive)   |                               
+USER_ENABLE_USERNAME        | True                                        | User use a standard username? (mutually exclusive)          |                               
+USER_ENABLE_CONFIRM_EMAIL   | False                                       | Enable email confirmation for user registration.            |                               
+USER_ENABLE_CHANGE_USERNAME | False                                       | Allow a user to change their username?                      |                               
+USER_ENABLE_CHANGE_PASSWORD | True                                        | Allow a user to change their password?                      |                               
+USER_ENABLE_FORGOT_PASSWORD | False                                       | Allow a user to recover their password through email?       |                               
+USER_ENABLE_RETYPE_PASSWORD | True                                        | Make a user retype their password when creating an account? |                               
+USER_LOGIN_TEMPLATE         | 'flask_user/login_or_register.html'         | Login template rendered to HTML                             |                               
+USER_REGISTER_TEMPLATE      | 'flask_user/register.html'                  | Register template rendered to HTML                          |                               
 
-* MONGO_DBNAME - name of the database HPIT accesses
-* SECRET_KEY - the server secret key; should be generated for security
-* SQLALCHEMY_DATABASE_URI - the url of the administration database
-* CSRF_ENABLED - defaults to true
-
-* MAIL_DEBUG - debug mode for mail
-* MAIL_SERVER - the email server
-* MAIL_PORT - mail port
-* MAIL_USE_SSL - use ssl boolean
-* MAIL_USERNAME - mail username
-* MAIL_PASSWORD - mail password
-* MAIL_DEFAULT_SENDER - sender
-
-* USER_PASSWORD_HASH - hash algorithm
-
-* USER_ENABLE_EMAIL - email enabled for user
-* USER_ENABLE_USERNAME - enable username
-* USER_ENABLE_CONFIRM_EMAIL - enable confimation of address
-* USER_ENABLE_CHANGE_USERNAME - enable changing username
-* USER_ENABLE_CHANGE_PASSWORD - enable changing password
-* USER_ENABLE_FORGOT_PASSWORD - enable forgot password
-* USER_ENABLE_RETYPE_PASSWORD - enable retype password
-* USER_LOGIN_TEMPLATE -template for login page
-* USER_REGISTER_TEMPLATE - template for registering user
 
 ####plugin_settings.py
 * DATASHOP_ROOT_URL - root datashop url
@@ -686,79 +700,6 @@ in your user account, not root.
 * Settings problems - make sure the settings are edited correctly for your system.  Verify that the paths to the
 project directory and virtual environment are correct.
 * Python problems - Make sure that Python, Pip, and virtualenv are all compatible with each other.
-
-##<a name="GSOldInstallGuideToc"></a> Old Install Guide 
-
-Ignore this section if you used the guides above.
-
-###<a name="GSReqToc"></a> Python Requirements
-
-HPIT requires Python 3.4. Make sure that you have this version of Python installed and
-linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
-You may need to install Python3.4 manually to get started depending on your operating system.
-
-You can check your version of Python by typing: `python --version` or `python3 --version`
-
-Once you have the right version of Python installed you should also have `virtualenv` 
-and `pip` installed as well. If you are unfamiliar with either of these libraries I highly 
-encourage you research them, as they will make working with HPIT much simpler.
-
-Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.
-
-* On Ubuntu: `sudo apt-get install mongodb sqlite` 
-* On Mac OSX with HomeBrew: `brew install mongodb sqlite`. 
-* On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html
-
-###<a name="GSProdToc"></a> Production Considerations
-
-If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.
-
-* On Ubuntu: `sudo apt-get install postgresql-server`
-* On Mac OSX: We recommend you install postgres using 
-* On Windows: Installation binaries are available from http://www.postgresql.com
-
-It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
-then please read the tutorial here: http://www.postgresql.org/docs/9.3/static/tutorial.html In general you will need to 
-configure some security settings in postgres, create a database, then create login roles for that database. PostgreSQL by 
-default does not make itself discoverable, or connectible from outside the local machine. If it is installed in a location
-other than where you are installing HPIT you'll need to configure iptables, postgresql.conf and hba.conf in your postgreSQL
-installation directory.
-
-###<a name="GSFrontendToc"></a> Frontend Requirements
-
-HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
-you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
-for downloading and installing node and npm to your system. IMPORTANT! If you are using an older version of ubuntu (13.10 or earlier)
-you MUST download node and recompile from scratch. The version of node packaged with older versions of ubuntu is far out of date
-and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
-the binaries to either /usr/bin or /usr/local/bin
-
-###<a name="GSInstallToc"></a> Installing HPIT
-
-Then you can begin installalling HPIT by:
-
-1. Change to the directory where you have downloaded hpit with: `cd /path/to/project`
-2. Create a reference to your python3 installation binary for virtualenv. ```export PY3_PATH=`which python3````
-3. Create a new virtual environment with: `virtualenv -p $PY3_PATH my_environment`
-3. Activate that environment with: `source my_environment/bin/activate`
-4. On Mac or Linux, install HPIT's dependencies with: `pip3 install -r requirements.txt`.  On Windows, run: 'pip install -r requirements-win.txt'.
-5. If on Windows, install PyCrypto via a binary. 
-6. Start the MongoDB instance with `mongod`
-7. Sync the configuration database with sqlite. `python3 manager.py syncdb`
-8. Run the test suite by typing `python3 manager.py test`
-
-To start the HPIT server type: `python3 manager.py start` and open your browser 
-to http://127.0.0.1:8000. 
-
-###<a name="GSInstallOptToc"></a> Optional Installation for Hint Factory Plugin
-
-If you are wanting to use the hint factory plugin you will need to install neo4j graph database.
-
-1. Install Neo4j
-    - On Mac OSX: `brew install neo4j`.
-    - On Ubuntu: `sudo apt-get install neo4j`.
-    - On Windows, binaries are available.
-2. Start NEO4J. `neo4j start`.  This may vary depending on your system configuration.
 
 ## <a name="AdminToc"></a> The Adminstration Panel
 
@@ -794,10 +735,6 @@ Currently the HPIT Manager has the following commands:
 * `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
 * `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
 * `python3 manager.py status` will show you whether or not the HPIT server is currently running.
-* `python3 manager.py add plugin <name> <subtype>` will help you create plugins with the specified name and subtype.
-* `python3 manager.py remove plugin <name>` will help you remove plugins with the specified name.
-* `python3 manager.py add tutor <name> <subtype>` will help you create tutors with the specified name and subtype.
-* `python3 manager.py remove tutor <name>` will help you remove tutors with the specified name.
 * `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
 * `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
 * `python3 manager.py docs` copies this documentation file to the server assets directory.
@@ -821,43 +758,41 @@ removes it from the 'configuration.json' file. All entities within the configura
 5. entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.
 6. api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.
 
-## <a name="SettingsToc"></a> Server Settings
+Optionally, you can specify two optional parameters:
 
-There are various settings available for modification in the `server/settings.py` file.
+1. args - a json object for arguments that will be passed to the tutor or plugin
+2. once - a boolean that tells the tutor or plugin to run only one time.
 
-name                        | default                                     | description                                                 | notes                        
---------------------------- | ------------------------------------------- | ----------------------------------------------------------- | -----------------------------
-HPIT_VERSION                | string (really long)                        | A string representation of the current version of HPIT      |                              
-DEBUG                       | False                                       | Whether to run the server in debug mode or not              | Deprecated                   
-HPIT_PID_FILE               | 'tmp/hpit_server.pid'                       | Where to put the PID file for the hpit server (daemon)      |                              
-HPIT_BIND_IP                | "0.0.0.0"                                   | The IP Address to listen for connections on.                |                              
-HPIT_BIND_PORT              | "8000"                                      | The Port Address to listen for connections on.              |                              
-HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A comination of the IP and Port addresses                   | Don't change this.           
-PROJECT_DIR                 | '/Users/raymond/Projects/TutorGen/hpit'     | The root working directory for HPIT.                        | Change this.                 
-VENV_DIRNAME                | 'env'                                       | The directory where the virtual enviornment is located.     |                              
-MONGO_DBNAME                | 'hpit_development'                          | The name of the mongo database to store information in.     |                              
-SECRET_KEY                  | random character string length 60 or longer | A secret key used for cryptography. Keep secure.            | YOU MUST CHANGE THIS IN PROD!
-SQLALCHEMY_DATABASE_URI     | 'sqlite:///db/hpit_development.sqlite'      | A database URI for relational storage.                      | Several databases supported. 
-CSRF_ENABLED                | True                                        | Enable Cross-Site Request Forgery Protection?               | Don't change this.           
-MAIL_DEBUG                  | True                                        | Don't actually send emails. Print to console instead.       | Change in production.        
-MAIL_SERVER                 | 'smtp.gmail.com'                            | The SMTP server to send mail through.                       |                              
-MAIL_PORT                   | 465                                         | The REMOTE Port to send mail on.                            |                              
-MAIL_USE_SSL                | True                                        | Use SSL when sending mail?                                  |                              
-MAIL_USERNAME               | 'hpit@tutorgen.com'                         | The mail account username on the SMTP server.               |                              
-MAIL_PASSWORD               | 'abcd1234'                                  | The mail account password on the SMTP server.               |                              
-MAIL_DEFAULT_SENDER         | 'hpit-project.org'                          | Who to send mail as.                                        |                               
-USER_PASSWORD_HASH          | 'bcrypt_sha256'                             | The hashing method for creating user passwords.             |                               
-USER_ENABLE_EMAIL           | False                                       | User's use email as their usernames? (mutually exclusive)   |                               
-USER_ENABLE_USERNAME        | True                                        | User use a standard username? (mutually exclusive)          |                               
-USER_ENABLE_CONFIRM_EMAIL   | False                                       | Enable email confirmation for user registration.            |                               
-USER_ENABLE_CHANGE_USERNAME | False                                       | Allow a user to change their username?                      |                               
-USER_ENABLE_CHANGE_PASSWORD | True                                        | Allow a user to change their password?                      |                               
-USER_ENABLE_FORGOT_PASSWORD | False                                       | Allow a user to recover their password through email?       |                               
-USER_ENABLE_RETYPE_PASSWORD | True                                        | Make a user retype their password when creating an account? |                               
-USER_LOGIN_TEMPLATE         | 'flask_user/login_or_register.html'         | Login template rendered to HTML                             |                               
-USER_REGISTER_TEMPLATE      | 'flask_user/register.html'                  | Register template rendered to HTML                          |                               
+An example configuration would look like this:
+
+    {
+        "tutors" : [
+            {
+                "name": "replay_tutor", 
+                "args": {
+                    "beforeTime": "02-11-2020 14:03:09", 
+                    "filter": {
+                        "event": "kt_trace"
+                    }
+                }, 
+                "type": "replay", 
+                "once": true, 
+                "active": false, 
+                "entity_id": "1234", 
+                "api_key": "1234"
+            }
+        ],
+        "plugins": [],
+    }
+
 
 ## <a name="DatabaseToc"></a> Database Structure
+
+HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
+database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
+By default this database is configured as sqlite and stored on the filesystem in the 
+server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
+directory or by running sqlite and using the command '.tables'.
 
 The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
@@ -866,36 +801,48 @@ and can be created with no prior configuration. The database contains five core 
 ### <a name="DBmessagesToc"></a> messages
 A list of messages sent to the system before being duplicated to plugin_messages. Each message contains the following fields:
 
-- entity_id: "The session ID of the sender"
+- sender_entity_id: "The session ID of the sender"
 - payload: "The data being sent."
+- time_created: "Date of message creation"
+- message_name: "The type of the message"
 
 ### <a name="DBpluginmesToc"></a> plugin_messages
 Contains messages sent to plugins, as copied from the messages collection. It contains the following fields:
 
-- plugin_name: "name of destination plugin"
-- event_name: "name of event"
-- message_id: "the ID of this message"
-- message_payload: "The data contained in this message."
-- sent_to_plugin: "Boolean if it has been processed or not"
+- time_response_received: "The time the response was received (if any)"
+- sent_to_plugin: "Boolean if was processed by plugin"
+- message_name: "The type of the message"
+- payload: "The data contained in this message."
+- time_responded: "The time the response was created"
+- sender_entity_id: "The id of the entity that sent the message"
+- time_created: "The time the message was created"
+- receiver_entity_id: "The plugin that received this message"
+- time_received: "The time the message was processed by plugin"
+- message_id: "The id of the message in the messages collection"
 
 ### <a name="DBresponsesToc"></a> responses
 Stores responses for tutors or other plugins to poll. It contains the following fields:
 
 - response_received: "Boolean if it has been processed or not"
 - response: "data for this response"
-- message_id: "the id of the original sent message"
 - message: "the original message"
+- message_id: "The ID of the message in the messages collection"
+- receiver_entity_id: "the ID of the reciever"
+- sender_entity_id: "The ID of the sender"
+- time_response_received: "The time the response was processed"
 
 ### <a name="DBsessionsToc"></a> sessions
 Stores session data for plugins and tutors. 
 
-HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
-database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
-By default this database is configured as sqlite and stored on the filesystem in the 
-server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
-directory or by running sqlite and using the command '.tables'.
+### <a name="DBlogToc"></a> entity_log
+Stores entity log information.  It contains the following fields:
 
-## <a name="ServerToc"></a> The HPIT Server in depth
+- deleted: "Was this log deleted?
+- log_entry: "The text of the log"
+- created_on: "The date the log was created"
+- entity_id: "The entity that created this log.
+
+## <a name="ServerToc"></a> The HPIT Server in-depth
 
 The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
 specifically to assist plugins and tutors to communicate via RESTful webserver. It is 
@@ -912,11 +859,11 @@ data between HPIT entities. To get a list of these routes run the HPIT server wi
 administration page at http://localhost:8000/routes. Alternativately you can list the routes
 available with `python3 manager.py routes`
 
-## <a name="TutorToc"></a> Tutors in depth
+## <a name="TutorToc"></a> Tutors in-depth
 
 A Tutor is an HPIT entity that can send messages to HPIT. A message consists of
-an event name and a payload. The event name is an arbitrary string that defines what is in
-the payload. Plugins register to listen to messages based on the event name. The 
+an event name and a payload. The event name is an arbitrary string that defines what type
+of message it is. Plugins register to listen to messages based on the event name. The 
 message payload is an arbitrary JSON like document with data formatted based on plugin
 requirements. The kinds of messages a tutor can send is definied by the plugins 
 currently registered with HPIT. The HPIT server itself does not define what these 
@@ -973,9 +920,57 @@ attributes can cover anything from how much they like sports, to their age, and 
 preferences.
 
 ####<a name="add_student"></a> add_student
+Adds a student to the database, giving them a unique ID.
+
+Receives:
+
+* (optional) attributes: a JSON value of key/value pairs of attributes
+
+Returns:
+
+* student_id : string - the ID for the new student
+* attributes : JSON - the attributes for the new student 
+
 ####<a name="get_student"></a> get_student
+Gets an already created student from an ID.
+
+Receives:
+
+* student_id : string - the ID from a previously created student
+
+Returns:
+
+* student_id : string - the ID from a previously created student
+* attributes : JSON - the attributes for the new student 
+
 ####<a name='set_attribute'></a> set_attribute
+Sets an attribute value for a student.  Will overwrite any existing value.
+
+Receives:
+
+* student_id : string - the ID from a previously created student  
+* attribute_name : string - the name of the attribute 
+* attribute_value : string - the value of the new attribute
+
+Returns:
+
+* student_id : string - the ID for the student
+* attributes : JSON - the attributes for the student  
+
 ####<a name="get_attribute"></a> get_attribute
+Gets an attribute value for a student.  If the attribute does not exist, will respond
+with an empty string.
+
+Receives:
+
+* student_id : string - the ID from a previously created student  
+* attribute_name : string - the name of the attribute
+
+Returns:
+
+* student_id : string - the ID for the student
+* (attribute_name) : string - value of the requested attribute.
+
 
 ##<a name="SKMPlugin"></a> Skill Management Plugin
 
@@ -984,19 +979,41 @@ and integrates into knowledge tracing, problem selection, problem management, an
 the hint factory. The skill manager idenitfies skills by either an assigned identifier
 or by name.
 
-####<a name="add_skill"></a> add_skill
-####<a name="remove_skill"></a> remove_skill
-####<a name="get_skill"></a> get_skill
+####<a name="get_skill_name"></a> get_skill_name
+Gets the name of an existing skill from an ID.
+
+Receives:
+
+* skill_id : string - the ID of the skill
+
+Returns:
+
+* skill_name : string - the name of the skill
+* skill_id : string - the ID of a skill (should match sent ID)
+
+####<a name="get_skill_id"></a> get_skill_id
+Gets the ID of a skill from a skill name.  If the skill does not exist, it will be created.
+
+Receives:
+
+* skill_name : string - the name of the skill
+
+Returns:
+
+* skill_name : string - the name of the skill (should match what was sent)
+* skill_id : string - the ID of the skill, either newly created or retrieved.
+* cached : boolean - whether this came from the cache or database
 
 ##<a name="KTPlugin"></a> Knowledge Tracing Plugin
+The Knowledge Tracing Plugin performs knowledge tracing on a per-student and per-skill basis.
 
 ####<a name="kt_set_initial"></a> kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
 
 Receives:
 
-* entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
-* skill : string - String identifier for the skill.
+* student_id : string - String ID of the student
+* skill_id : string - String identifier for the skill.
 * probability_known : float (0.0-1.0) - Probability the skill is already known
 * probability_learned : float (0.0-1.0) - Probability the skill will be learned
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
@@ -1004,7 +1021,8 @@ Receives:
 
 Returns:
 
-* skill : string - String identifier for the skill.
+* student_id : string - String ID of the student
+* skill_id : string - String identifier for the skill.
 * probability_known : float (0.0-1.0) - Probability the skill is already known
 * probability_learned : float (0.0-1.0) - Probability the skill will be learned
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
@@ -1015,12 +1033,13 @@ Resets the probabilistic values for the knowledge tracer.
 
 Receives:
 
-* entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
-* skill : string - String identifier for the skill.
+* student_id: string - An identifier for the student.
+* skill_id : string - String identifier for the skill.
 
 Returns:
 
-* skill : string - String identifier for the skill.
+* student_id: string - An identifier for the student.
+* skill_id : string - String identifier for the skill.
 * probability_known : 0.0 - Probability the skill is already known
 * probability_learned : 0.0 - Probability the skill will be learned
 * probability_guess : 0.0 - Probability the answer is a guess
@@ -1031,19 +1050,21 @@ Runs a knowledge tracing algorithm on the skill/tutor combination and returns th
 
 Receives:
 
-* entity_id: string - An identifier for the sender. (Defined by the HPIT Server)
-* skill : string - String identifier for the skill.
+* student_id: string - A string ID for the student
+* skill_id : string - String identifier for the skill.
 * correct: boolean - True if correct. False if not.
 
 Returns:
 
-* skill : string - String identifier for the skill.
+* student_id: string - A string ID for the student
+* skill_id : string - String identifier for the skill.
 * probability_known : float (0.0-1.0) - Probability the skill is already known
 * probability_learned : float (0.0-1.0) - Probability the skill will be learned
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
 ##<a name="HFPlugin"></a> Hint Factory Plugin
+The Hint Factory Plugin is used to dynamically provide hints using a graph theoretic approach.
 
 ####<a name="hf_init_problem"></a> hf_init_problem
 Initializes a new problem for the hint factory.
@@ -1239,12 +1260,111 @@ Returns:
 * success : True - Always returns True
 
 ##<a name="DSPlugin"></a> Data Storage Plugin
+The Data Storage Plugin can be used to store any kind of key value information that a plugin
+or tutor may need.
+####<a name="store_data"></a>store_data
+Store a key value pair in the database.
 
-### TODO
+Receives:
+
+* key : string - the key for the data
+* value: string - the value for the data
+
+Returns:
+
+* insert_id : string - the ID of the data object
+
+####<a name="retrieve_data"></a>retrieve_data
+Get a value from the database via a key.
+
+Receives:
+
+* key : string - the key to query.
+
+Returns:
+
+* data : string - the data for the key
+
+####<a name="remove_data"></a>remove_data
+Removes data from the database.
+
+Receives:
+
+* key : string - the key to remove.
+
+Returns:
+
+* status : string - the response from MongoDB
 
 ##<a name="DCPlugin"></a> PSLC DataShop Connection Plugin
+The PSLC DataShop Connection Plugin gives basic connectivity to the PSLC DataShop.  Currently, it
+only provides for a subset of functionality that they provide via their web services.
 
-### TODO
+####<a name="get_dataset_metadata"></a>get_dataset_metadata
+Gets the dataset metadata.
+
+Receives:
+
+* dataset_id : string - the string representation of a datashop dataset ID
+
+Returns:
+
+* response_xml : string - the XMl from the datashop server
+* status_cude : string - the HTTP request status code.
+
+####<a name="get_sample_metadata"></a>get_sample_metadata
+Gets the metadata for a datashop sample.
+
+Receives:
+
+* dataset_id : string - the string representation of a datashop dataset ID
+* sample_id : string - the string representation of a datashop sample ID
+
+Returns:
+
+* response_xml : string - the XMl from the datashop server
+* status_cude : string - the HTTP request status code.
+
+####<a name="get_transactions"></a>get_transactions
+Gets transactions from a dataset or optionally a specific sample.
+
+Receives:
+
+* dataset_id : string - the string representation of a datashop dataset ID
+* (optional) sample_id : string - the string representation of a datashop sample ID
+
+Returns:
+
+* response_xml : string - the XMl from the datashop server
+* status_cude : string - the HTTP request status code.
+
+####<a name="get_student_steps"></a>get_student_steps
+Gets the student steps from a dataset or optionally a specific sample.
+
+Receives:
+
+* dataset_id : string - the string representation of a datashop dataset ID
+* (optional) sample_id : string - the string representation of a datashop sample ID
+
+Returns:
+
+* response_xml : string - the XMl from the datashop server
+* status_cude : string - the HTTP request status code.
+
+####<a name="add_custom_field"></a>add_custom_field
+Adds a custom field to a dataset.
+
+Receives:
+
+* dataset_id : string - the string representation of a datashop dataset ID
+* name : string - the name of the custom field
+* description : string - the description of the custom field
+* type : string - the data type.  Can be "number", "string", "date", or "big".
+
+Returns:
+
+* response_xml : string - the XMl from the datashop server
+* status_cude : string - the HTTP request status code.
 
 ## <a name="LicenseToc"></a> License
 
