@@ -5,12 +5,15 @@ from datetime import datetime
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class ProblemManagementPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger,args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
-        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_problems
         self.step_db = self.mongo.hpit.hpit_steps
         

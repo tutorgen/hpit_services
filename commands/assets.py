@@ -15,8 +15,8 @@ from gears_coffeescript import CoffeeScriptCompiler
 from server.app import ServerApp
 app = ServerApp.get_instance().app
     
-from server.settings import ServerSettingsManager
-settings = ServerSettingsManager.get_instance().settings
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_server_settings()
 
 class Command:
     description = "Build Gears assets for production deployments."

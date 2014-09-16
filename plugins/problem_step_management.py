@@ -2,12 +2,15 @@ from hpitclient import Plugin
 
 from pymongo import MongoClient
 
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class ProblemStepManagementPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
         super().__init__(entity_id, api_key)
         self.logger = logger
-        self.mongo = MongoClient('mongodb://localhost:27017/')
+        self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.problem_steps
 
 

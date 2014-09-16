@@ -7,8 +7,9 @@ workaround so the relative imports are preserved in Windows.
 #from server import app
 #from server.settings import settings
 
-from server.settings import ServerSettingsManager
-settings_manager = ServerSettingsManager.init_instance('production')
+from environment.settings_manager import SettingsManager
+settings_manager = SettingsManager.init_instance('production')
+settings = SettingsManager.get_server_settings()
 
 from server.views.api import *
 from server.views.dashboard import *
@@ -17,4 +18,4 @@ from server.app import ServerApp
 server_app = ServerApp.get_instance()
 server_app.bootstrap_user()
 
-server_app.app.run(port = int(settings_manager.get_instance().settings.HPIT_BIND_PORT))
+server_app.app.run(port = int(settings.HPIT_BIND_PORT))

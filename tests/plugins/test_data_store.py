@@ -133,13 +133,14 @@ class TestDataStoragePlugin(unittest.TestCase):
 
         msg = {"message_id":"1","key":"key1"}
         self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"status":{'ok': 1, 'n': 0}})
+        self.test_subject.send_response.call_count.should.equal(1)
         self.test_subject.send_response.reset_mock()
         
         self.test_subject.db.insert({"key":"key1","data":"data1"})
         
         self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"status":{'ok': 1, 'n': 1}})
+        self.test_subject.send_response.call_count.should.equal(1)
+        self.test_subject.db.find().count().should.equal(0)
         self.test_subject.send_response.reset_mock()
         
         
@@ -150,7 +151,8 @@ class TestDataStoragePlugin(unittest.TestCase):
         ])
 
         self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"status":{'ok': 1, 'n': 2}})
+        self.test_subject.send_response.call_count.should.equal(1)
+        self.test_subject.db.find().count().should.equal(0)
         self.test_subject.send_response.reset_mock()
         
     
