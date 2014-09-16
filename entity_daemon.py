@@ -10,6 +10,13 @@ import platform
 if platform.system() != "Windows":
     from daemonize import Daemonize
 
+from environment.settings_manager import SettingsManager
+
+try:
+    settings_manager = SettingsManager.init_instance(os.environ['HPIT_ENV'])
+except KeyError:
+    settings_manager = SettingsManager.init_instance('debug')
+
 from hpitclient.settings import HpitClientSettings
 settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
