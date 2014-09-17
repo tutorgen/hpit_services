@@ -183,14 +183,14 @@ HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, 
 
 #####MongoDB
 Binaries available at http://www.mongodb.org/downloads.  Download and run.
-You will need to create the directory C:\data\db to fun MongoDB.
+You will need to create the directory C:\data\db to run MongoDB.
 
 #####SQLite
-Go to http://www.sqlite.org/download.html and download sqlite-shell-win32-*.zip and sqlite-dll-win32-*.zip.
+Go to http://www.sqlite.org/download.html and download sqlite-shell-win32-\*.zip and sqlite-dll-win32-\*.zip.
 
-Create the directory C:\sqlite
+Create the directory C:\sqlite.
 
-Extract the contents of the .zip files to C:\sqlite, there should be three files:
+Extract the contents of the .zip files to C:\sqlite. There should be three files:
 * sqlite3.def
 * sqlite3.dll
 * sqlite3.exe
@@ -756,6 +756,7 @@ in your user account, not root.
 * Settings problems - make sure the settings are edited correctly for your system.  Verify that the paths to the
 project directory and virtual environment are correct.
 * Python problems - Make sure that Python, Pip, and virtualenv are all compatible with each other.
+* Virtualenv problems - remember to activate your virtualenv when installing any python modules.  
 
 ## <a name="AdminToc"></a> The Adminstration Panel
 
@@ -942,11 +943,11 @@ A Plugin is an HPIT entity that subscribes to (listens to) certain event names, 
 transaction payloads, performs some arbitrary function based on the event and message
 payload, and may or may not return a response to the original sender of the message.
 
-A plugin may listen to and define any events it wishes. When a tutor sends a transaction
+A plugin may listen to and define any events it wishes. When a tutor sends a message 
 to HPIT, if a plugin has registered itself with HPIT, and if that plugin and subscribed
-to the event name submitted with the tutor's transaction it will receive a queued list
+to the event name submitted with the tutor's message, it will receive a queued list
 of messages when it polls the HPIT server for data. It is expected that plugins will
-do this type of polling periodically to see if any messages have been queued for 
+do this type of polling periodically to see if any new messages have been queued for 
 processing by HPIT.
 
 When a plugin processes an event from HPIT, it will receive all the information in the 
@@ -969,11 +970,10 @@ whatever data it's sent in the payload to a file.
 
 ##<a name="SMPlugin"></a> Student Management Plugin
 
-The student management plugin allows you to track student across your 
-applications and integrates into skill management and knowledge tracing. In addition
+The student management plugin allows you to track students across your 
+applications and integrates into skill management and knowledge tracing. In addition,
 you can assign any number of attributes to your students and retrieve them later. These
-attributes can cover anything from how much they like sports, to their age, and brand
-preferences.
+attributes can cover anything; how much they like sports, their age, brand preferences, etc.
 
 ####<a name="add_student"></a> add_student
 Adds a student to the database, giving them a unique ID.
