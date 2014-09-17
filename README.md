@@ -139,6 +139,14 @@ HPIT Transaction - A transaction is a message specifically for PSLC DataShop tra
 HPIT was designed to run on a Unix-like system, and Windows support is solely for development purposes.
 Windows should not be used as an HPIT production server. 
 
+#### Getting Started, Compilers.
+First, to install HPIT, you'll need to install Microsoft Visual Studio.  The latest version should be fine; you can
+find it at http://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx.
+
+Next, you'll need the GCC, most easily installed with MinGW.  You can get it from here: http://mingw.org/.
+
+Make sure to add C:\MinGW\bin and C:\MinGW\msys\1.0\bin to your PATH environment variable.
+
 #### Install Python 3.3.5, Pip and virtualenv
 To install Python 3.3.5, download the binary from https://www.python.org/downloads/ and run.
 
@@ -154,6 +162,8 @@ Verify you have the proper versions of Python and Pip:
 Next, install virtualenv using:
 
 `pip install virtualenv`
+
+Add C:\Python33\Scripts to your PATH so that pip and virtualenv are available commands.
 
 #### Databases
 HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
@@ -181,12 +191,12 @@ Go to http://neo4j.com/download/ and download the Community edition binary and i
 Go to http://www.couchbase.com/download and download the Community edition binary and install.
 After installing, go to http://localhost:8091/index.html to configure Couchbase.
 
-To install the python client, go to http://packages.couchbase.com/clients/python/snapshots and download 
-couchbase-1.2.0-0-gf9be317.win-amd64-py3.3.exe for 64-bit architectures. 
+To install the python client, go to https://pypi.python.org/pypi/couchbase and download 
+couchbase-1.2.3.win32-py3.3.exe. 
 
 Activate your virtual environment (covered later) and run:
 
-'easy_install couchbase-1.2.0-0-gf9be317.win-amd64-py3.3.exe'.
+'easy_install couchbase-1.2.3.win32-py3.3.exe'.
 
 ##### PostgreSQL
 Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
@@ -200,6 +210,8 @@ Download the 3.4 release for either 32-bit or 64-bit, depending on your system.
 
 Activate your virtual environment (covered later) and run 'easy_install psycopg2-2.5.4.win-amd64-py3.4-pg9.3.5-release.exe', replacing
 the exe in the command with the one you downloaded.
+
+You'll need to add the bin directory of your PostgreSQL installation to PATH, so that pg_config is available to call.
 
 ####NodeJS
 HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.
