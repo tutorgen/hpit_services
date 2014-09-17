@@ -28,6 +28,7 @@ class SettingsManager:
     @classmethod
     def init_instance(cls, environment):
         cls.environment = environment
+        print("ENVIRONMENT IS: " + cls.environment)
 
         json_data = None
         with open(os.path.join(os.getcwd(), 'settings.json')) as f:
