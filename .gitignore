@@ -2,6 +2,7 @@ env
 *.pyc
 configuration.json
 server/settings.py
+settings.json
 server/db
 tmp
 log
