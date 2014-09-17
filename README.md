@@ -5,13 +5,14 @@
 * [API Framework Documentation v2.1](#APIToc)
 * [Understanding Terminology](#TermToc)
 * [Getting Started](#GetStartedToc)
+    * [System Requirements](#GSSystemRequirementsToc)
     * [Installing HPIT on Windows](#GSInstallWindowsToc)
     * [Installing HPIT on Mac OSX](#GSInstallMacOSXToc)
     * [Installing HPIT on Ubuntu 12.04](#GSInstallUbuntu12Toc)
     * [Installing HPIT on Ubuntu 14.04](#GSInstallUbuntu14Toc)
     * [Common Hangups](#GSCommonHangupsToc)
     * [Server Settings](#GSServerSettingsToc)
-* [The Adminstration Panel](#AdminToc)
+* [The Administration Panel](#AdminToc)
 * [The HPIT Manager](#ManagerToc)
 * [The Tutor and Plugin Configuration](#ConfigToc)
 * [Database Structure](#DatabaseToc)
@@ -20,11 +21,11 @@
     * [responses](#DBresponsesToc)
     * [sessions](#DBsessionsToc)
     * [entity_log](#DBlogToc)
-* [The HPIT Server in depth](#ServerToc)
-* [Tutors in depth](#TutorToc)
+* [The HPIT Server in-depth](#ServerToc)
+* [Tutors in-depth](#TutorToc)
 * [Plugin Component Specification](#PluginToc)
     * [Echo Example](#ExPlugin)
-    * [Data Connection to PSLC Datashop](#DCPlugin)
+    * [Data Connection to PSLC DataShop](#DCPlugin)
     * [Data Storage](#DSPlugin)
     * [Student Management](#SMPlugin)
         * [add_student](#add_student)
@@ -71,7 +72,7 @@
 
 The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
-and specialized, machine learning algorithims, which we call plugins. HPIT is a next 
+and specialized, machine learning algorithms, which we call plugins. HPIT is a next 
 generation system built on the backbone of open source web technologies.
 
 Currently our tech stack consists of the following:
@@ -95,17 +96,17 @@ Currently our tech stack consists of the following:
 - UnderscoreJS
 - JQuery
 
-At the most fundemental layer HPIT is a collection of RESTful webservices that assist in
+At the most fundamental layer HPIT is a collection of RESTful web services that assist in
 the routing of messages between tutors and plugins. On top of this web services layer 
 we have built a client side library in the Python programming language to assist in 
-the creation of tutors and plugins and their communcation with HPIT.
+the creation of tutors and plugins and their communication with HPIT.
 
 HPIT is a publish and subscribe framework using event-driven methodologies. Tutors interact 
 with the system by sending messages which consist of a named event and a data payload. 
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.
 
-In addition, HPIT provides several baseline plugins which peform basic functions related
+In addition, HPIT provides several baseline plugins which perform basic functions related
 to intelligent tutoring systems.
 
 ## <a name="TermToc"></a> Understanding Terminology
@@ -114,7 +115,7 @@ HPIT - HPIT consists of several modules and is sort of an all encompassing term 
 system of modules.
 
 Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
-and analyze intelligent information about student perforamance. A tutor could be a game, or a web application,
+and analyze intelligent information about student performance. A tutor could be a game, or a web application,
 a Flash game, or some other system that interacts with students in an effort to educate or train.
 
 Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
@@ -133,6 +134,19 @@ their plugin.
 HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.
 
 ##<a name="GetStartedToc"></a> Getting Started
+###<a name="GSSystemRequirementsToc"></a>System Requirements
+In order to install and run HPIT, you'll need the following system:
+* Operating systems
+    * Windows 7 or Windows 8.1
+    * Ubuntu 12.04 LTS or Ubuntu 14.04 LTS
+    * OSX Mountain Lion or above
+* Architecture
+    * 64-bit processor
+    * 32-bit processors will work in a limited fashion, but it is not recommended or supported
+* Memory and Storage
+    * Minimum 4 GB ram, 8 GB recommended
+    * Minimum 2 GB hard disk, can scale up very quickly depending on your data volume
+    * Solid state hard drives recommended
 
 ###<a name="GSInstallWindowsToc"></a> Installing HPIT on Windows
 HPIT was designed to run on a Unix-like system, and Windows support is solely for development purposes.
@@ -150,7 +164,7 @@ Make sure to add C:\MinGW\bin and C:\MinGW\msys\1.0\bin to your PATH environment
 To install Python 3.3.5, download the binary from https://www.python.org/downloads/ and run.
 
 To install Pip, go to http://pip.readthedocs.org/en/latest/installing.html , download the get-pip.py script, and run with
-'python get-pip.py'.
+`python get-pip.py`.
 
 Verify you have the proper versions of Python and Pip:
 
@@ -191,11 +205,11 @@ Go to http://www.couchbase.com/download and download the Community edition binar
 After installing, go to http://localhost:8091/index.html to configure Couchbase.
 
 To install the python client, go to https://pypi.python.org/pypi/couchbase and download 
-couchbase-1.2.3.win32-py3.3.exe. 
+couchbase-1.2.3.win-amd64-py3.3.exe. 
 
 Activate your virtual environment (covered later) and run:
 
-'easy_install couchbase-1.2.3.win32-py3.3.exe'.
+'easy_install ccouchbase-1.2.3.win-amd64-py3.3.exe'.
 
 ##### PostgreSQL
 Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
@@ -205,12 +219,12 @@ there are binaries available at http://www.postgresql.org/download/windows/.
 To install the psycopg2 library on Windows, there are instructions located at http://www.stickpeople.com/projects/python/win-psycopg/ and
 are summarized here:
 
-Download the 3.4 release for either 32-bit or 64-bit, depending on your system.
+Download the 3.4 release for 64-bit processors.
 
 Activate your virtual environment (covered later) and run 'easy_install psycopg2-2.5.4.win-amd64-py3.4-pg9.3.5-release.exe', replacing
-the exe in the command with the one you downloaded.
+the .exe in the command with the one you downloaded.
 
-You'll need to add the bin directory of your PostgreSQL installation to PATH, so that pg_config is available to call.
+You'll need to add the bin directory of your PostgreSQL installation to PATH, so that `pg_config` is available to call.
 
 ####NodeJS
 HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.
@@ -229,13 +243,20 @@ After git is installed, open up the Git Bash program, cd to your working directo
 Now it is time to create your virtual environment.  Switch back your your Windows Command Prompt.  It is important that you are using the 
 correct Python binary when creating the virtual environment.  In our case, we used the command
 
-`virtualenv -p C:\Python34\python.exe env`
+`virtualenv -p C:\Python33\python.exe env`
 
-Where virtualenv is the binary for the compatible version of virtualenv, C:\Python32\python.exe is your 
-Python 3.4 binary, and env is the directory that the virtual environment will live in.
+Where virtualenv is the binary for the compatible version of virtualenv, C:\Python33\python.exe is your 
+Python 3.3.5 binary, and env is the directory that the virtual environment will live in.
 
 Next, activate the environment with the command `env\Scripts\activate.bat`.  Your command prompt
 should now be prefixed with (env).
+
+Now, find the directory env\Lib\distutils.  Add a file `distutils.cfg` with the contents:
+    
+    [build]
+    compiler=mingw32
+    
+This tells Pip to use the MinGW compilers, which are required for some packages.
 
 Now, install the Python dependencies using pip.  The command will be:
 
@@ -332,7 +353,7 @@ To start the HPIT server type: `python3 manager.py start` and open your browser
 to http://127.0.0.1:8000. 
 
 ###<a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04
-HPIT supports the Ubuntu 12.04 LTS release.  Howevern, if possible, it is highly recommended to
+HPIT supports the Ubuntu 12.04 LTS release.  However, if possible, it is highly recommended to
 upgrade to the 14.04 LTS release.
 
 #### Getting Started
@@ -423,7 +444,7 @@ install instructions, summarized below:
 HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
 NodeJS from source to ensure you get the latest version.  At least 0.10.3 is required. 
 
-First, download the cource code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
+First, download the source code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
 You can use wget, like this:
 
 `wget http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz`
@@ -580,7 +601,7 @@ install instructions, summarized below:
 HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
 NodeJS from source to ensure you get the latest version. At least 0.10.3 is required. 
 
-First, download the cource code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
+First, download the source code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
 You can use wget, like this:
 
 `wget http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz`
@@ -654,26 +675,47 @@ And browse to http://127.0.0.1:800 , where you should see a welcome page.
 If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
 
 ###<a name="GSServerSettingsToc"></a> Server Settings
-The settings are located in the environment directory of HPIT.  Inside the environment directory,
-there are sub directories, each for a mode of the system; production, test, debug, and travis.  Inside
-each of these are two files, server_settings.py and plugin_settings.py.  These are where you will change
-your system settings.
+The settings for HPIT can be set in JSON format, in a file called settings.json in the hpit_services root.  
+This file allows for multiple environment settings, for example, "test", "debug", and "production".  The structure
+of the file looks like this:
 
+    {
+        "debug": {
+            "plugin": {
+                [plugin settings go here (see below)]
+            },
+            "server": {
+                [server settings go here (see below)]
+            }
+        },
+        "production": {
+            "plugin": {
+                [plugin settings go here (see below)]
+            },
+            "server": {
+                [server settings go here (see below)]
+            }
+        }
+    }
+
+HPIT will check for an environment variable called HPIT_ENV to determine which environment to use.  So, to use the
+test settings, set a HPIT_ENV environment variable to "test" (without quotes).
+    
 Most of these settings can be left as defaults, but the important ones to change are:
 * PROJECT_DIR - should be set to the directory this README is in
 * VENV_DIRNAME - shoule be a relative link from PROJECT_DIR to wherever the virtual environment is.
 
-####server_settings.py
+####server
 name                        | default                                     | description                                                 | notes                        
 --------------------------- | ------------------------------------------- | ----------------------------------------------------------- | -----------------------------
 HPIT_VERSION                | string (really long)                        | A string representation of the current version of HPIT      |                              
 DEBUG                       | False                                       | Whether to run the server in debug mode or not              | Deprecated                   
-HPIT_PID_FILE               | 'tmp/hpit_server.pid'                       | Where to put the PID file for the hpit server (daemon)      |                              
+HPIT_PID_FILE               | 'tmp/hpit_server.pid'                       | Where to put the PID file for the HPIT server (daemon)      |                              
 HPIT_BIND_IP                | "0.0.0.0"                                   | The IP Address to listen for connections on.                |                              
 HPIT_BIND_PORT              | "8000"                                      | The Port Address to listen for connections on.              |                              
-HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A comination of the IP and Port addresses                   | Don't change this.           
+HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A combination of the IP and Port addresses                   | Don't change this.           
 PROJECT_DIR                 | '/Users/raymond/Projects/TutorGen/hpit'     | The root working directory for HPIT.                        | Change this.                 
-VENV_DIRNAME                | 'env'                                       | The directory where the virtual enviornment is located.     | Change this.                             
+VENV_DIRNAME                | 'env'                                       | The directory where the virtual environment is located.     | Change this.                             
 MONGO_DBNAME                | 'hpit_development'                          | The name of the mongo database to store information in.     |                              
 SECRET_KEY                  | random character string length 60 or longer | A secret key used for cryptography. Keep secure.            | YOU MUST CHANGE THIS IN PROD!
 SQLALCHEMY_DATABASE_URI     | 'sqlite:///db/hpit_development.sqlite'      | A database URI for relational storage.                      | Several databases supported. 
@@ -697,12 +739,15 @@ USER_LOGIN_TEMPLATE         | 'flask_user/login_or_register.html'         | Logi
 USER_REGISTER_TEMPLATE      | 'flask_user/register.html'                  | Register template rendered to HTML                          |                               
 
 
-####plugin_settings.py
-* DATASHOP_ROOT_URL - root datashop url
-* DATASHOP_SERVICES_URL - datashop url for services
-* MONGODB_URI - the location of the Mongo database server
-* COUCHBASE_HOSTNAME - Couchbase host
-* COUCHBASE_BUCKET_URI - couchbase buckets REST endpoint
+####plugin
+name                        | default                                     | description                                                 | notes                        
+--------------------------- | ------------------------------------------- | ----------------------------------------------------------- | -----------------------------
+DataShop_ROOT_URL           | "https://pslcDataShop.web.cmu.edu/services"   | Root DataShop URL                                         |
+DataShop_SERVICES_URL       | "http://pslc-qa.andrew.cmu.edu/DataShop/services" | DataShop URL for services                             |
+MONGODB_URI                 | "mongodb://localhost:27017/"                  | The location of the Mongo database server                 |
+COUCHBASE_HOSTNAME          | "127.0.0.1"                                   | Couchbase host                                            |
+COUCHBASE_BUCKET_URI        | "http://127.0.0.1:8091/pools/default/buckets" | Couchbase buckets REST endpoint                           |
+COUCHBASE_AUTH              |  ["Administrator", "administrator"]           | Authentication for Couchbase server                       | Set to your server credentials
 
 ###<a name="GSCommonHangupsToc"></a> Common Hangups
 Here's a list of common problems when trying to install HPIT:
@@ -725,7 +770,7 @@ retrieve messages. You can think of the Entity ID and API Key as a sort of usern
 your tutor or plugin to HPIT. Keep these two pieces of information secure. The Entity ID can be told and released
 to others, but NEVER share your API Key with anyone.
 
-The Docs page on the adminsitration panel, shows these docs. The routes page on the administration panel shows
+The Docs page on the administration panel, shows these docs. The routes page on the administration panel shows
 the web service endpoints that HPIT exposes to tutors and plugins.
 
 ##<a name="ManagerToc"></a> The HPIT Manager
@@ -757,8 +802,8 @@ Currently the HPIT Manager has the following commands:
 ##<a name="ConfigToc"></a> The Tutor and Plugin Configuration
 
 The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
-amount of entities for testing and evaluation of the software. Creating a new hpit 
-entity (tutor/plugin) adds it to the 'configuration.json'. Removing an hpit entity 
+amount of entities for testing and evaluation of the software. Creating a new HPIT 
+entity (tutor/plugin) adds it to the 'configuration.json'. Removing an HPIT entity 
 removes it from the 'configuration.json' file. All entities within the configuration specify
 6 things: 
 
@@ -801,9 +846,9 @@ An example configuration would look like this:
 
 HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
 database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
-By default this database is configured as sqlite and stored on the filesystem in the 
-server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
-directory or by running sqlite and using the command '.tables'.
+By default this database is configured as SQLite and stored on the filesystem in the 
+server/db subdirectory under HPIT. The models (tables) stored can be found in the server/models
+directory or by running SQLite and using the command '.tables'.
 
 The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
@@ -838,7 +883,7 @@ Stores responses for tutors or other plugins to poll. It contains the following 
 - response: "data for this response"
 - message: "the original message"
 - message_id: "The ID of the message in the messages collection"
-- receiver_entity_id: "the ID of the reciever"
+- receiver_entity_id: "the ID of the receiver"
 - sender_entity_id: "The ID of the sender"
 - time_response_received: "The time the response was processed"
 
@@ -858,16 +903,16 @@ Stores entity log information.  It contains the following fields:
 The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
 specifically to assist plugins and tutors to communicate via RESTful webserver. It is 
 schemaless, has no pre-defined events, and is agnostic to the kinds of data it routes 
-between plugins and tutors. In additon HPIT provides fundemental support for sessions,
+between plugins and tutors. In additon HPIT provides fundamental support for sessions,
 authentication, message routing, and entity tracking.
 
-Anyone can wrap these RESTful webservices in a client side library and will be able to interact
+Anyone can wrap these RESTful web services in a client side library and will be able to interact
 with HPIT. We have delivered a client side library written in Python.
 
 The server supports a variety of routes to handle the connection, polling, and transfer of 
 data between HPIT entities. To get a list of these routes run the HPIT server with either 
 `python3 manager.py debug` or `python3 manager.py start` and open your browser to the HPIT
-administration page at http://localhost:8000/routes. Alternativately you can list the routes
+administration page at http://localhost:8000/routes. Alternatively you can list the routes
 available with `python3 manager.py routes`
 
 ## <a name="TutorToc"></a> Tutors in-depth
@@ -876,7 +921,7 @@ A Tutor is an HPIT entity that can send messages to HPIT. A message consists of
 an event name and a payload. The event name is an arbitrary string that defines what type
 of message it is. Plugins register to listen to messages based on the event name. The 
 message payload is an arbitrary JSON like document with data formatted based on plugin
-requirements. The kinds of messages a tutor can send is definied by the plugins 
+requirements. The kinds of messages a tutor can send is defined by the plugins 
 currently registered with HPIT. The HPIT server itself does not define what these 
 messages look like, however HPIT does package some plugins as part of it's architecture.
 
@@ -894,12 +939,12 @@ send a response depending on the plugin.
 ## <a name="PluginToc"></a> Plugin Component Specification
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, receives
-transcation payloads, perfoms some arbitrary function based on the event and message
+transaction payloads, performs some arbitrary function based on the event and message
 payload, and may or may not return a response to the original sender of the message.
 
-A plugin may listen to and define any events it wishes. When a tutor sends a transcation
+A plugin may listen to and define any events it wishes. When a tutor sends a transaction
 to HPIT, if a plugin has registered itself with HPIT, and if that plugin and subscribed
-to the event name submitted with the tutor's transcation it will receive a queued list
+to the event name submitted with the tutor's transaction it will receive a queued list
 of messages when it polls the HPIT server for data. It is expected that plugins will
 do this type of polling periodically to see if any messages have been queued for 
 processing by HPIT.
@@ -912,9 +957,9 @@ A plugin may send a response to HPIT by providing the original message id, along
 a response payload, which will be sent to the original sender of the message message.
 
 It is possible for plugins to send messages like tutors and respond to messages
-like tutors. In this way, it is possible for plugins to listen to, and refire event 
+like tutors. In this way, it is possible for plugins to listen to, and re-fire event 
 messages while altering the event name of the message so that other dependent 
-plugins can also respond to the original trasaction. This can create a daisy chaining
+plugins can also respond to the original transaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.
 
 ##<a name="ExPlugin"></a> Example Plugin
@@ -926,7 +971,7 @@ whatever data it's sent in the payload to a file.
 
 The student management plugin allows you to track student across your 
 applications and integrates into skill management and knowledge tracing. In addition
-you can assign any number of attributes to your students and retreive them later. These
+you can assign any number of attributes to your students and retrieve them later. These
 attributes can cover anything from how much they like sports, to their age, and brand
 preferences.
 
@@ -987,7 +1032,7 @@ Returns:
 
 The skill management plugin allows you to track skills across your applications
 and integrates into knowledge tracing, problem selection, problem management, and
-the hint factory. The skill manager idenitfies skills by either an assigned identifier
+the hint factory. The skill manager identifies skills by either an assigned identifier
 or by name.
 
 ####<a name="get_skill_name"></a> get_skill_name
@@ -1098,7 +1143,7 @@ Receives:
 * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
 * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
 * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+* state.problem: string - A string representing the problem i.e "2x + 4 = 12"
 
 Returns:
 
@@ -1113,7 +1158,7 @@ Receives:
 * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
 * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
 * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+* state.problem: string - A string representing the problem i.e "2x + 4 = 12"
 
 Returns:
 
@@ -1130,7 +1175,7 @@ Receives:
 * state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
 * state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
 * state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
-* state.problem: string - A string represting the problem i.e "2x + 4 = 12"
+* state.problem: string - A string representing the problem i.e "2x + 4 = 12"
 
 Returns:
 
@@ -1316,24 +1361,24 @@ Gets the dataset metadata.
 
 Receives:
 
-* dataset_id : string - the string representation of a datashop dataset ID
+* dataset_id : string - the string representation of a DataShop dataset ID
 
 Returns:
 
-* response_xml : string - the XMl from the datashop server
+* response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
 ####<a name="get_sample_metadata"></a>get_sample_metadata
-Gets the metadata for a datashop sample.
+Gets the metadata for a DataShop sample.
 
 Receives:
 
-* dataset_id : string - the string representation of a datashop dataset ID
-* sample_id : string - the string representation of a datashop sample ID
+* dataset_id : string - the string representation of a DataShop dataset ID
+* sample_id : string - the string representation of a DataShop sample ID
 
 Returns:
 
-* response_xml : string - the XMl from the datashop server
+* response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
 ####<a name="get_transactions"></a>get_transactions
@@ -1341,12 +1386,12 @@ Gets transactions from a dataset or optionally a specific sample.
 
 Receives:
 
-* dataset_id : string - the string representation of a datashop dataset ID
-* (optional) sample_id : string - the string representation of a datashop sample ID
+* dataset_id : string - the string representation of a DataShop dataset ID
+* (optional) sample_id : string - the string representation of a DataShop sample ID
 
 Returns:
 
-* response_xml : string - the XMl from the datashop server
+* response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
 ####<a name="get_student_steps"></a>get_student_steps
@@ -1354,12 +1399,12 @@ Gets the student steps from a dataset or optionally a specific sample.
 
 Receives:
 
-* dataset_id : string - the string representation of a datashop dataset ID
-* (optional) sample_id : string - the string representation of a datashop sample ID
+* dataset_id : string - the string representation of a DataShop dataset ID
+* (optional) sample_id : string - the string representation of a DataShop sample ID
 
 Returns:
 
-* response_xml : string - the XMl from the datashop server
+* response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
 ####<a name="add_custom_field"></a>add_custom_field
@@ -1367,14 +1412,14 @@ Adds a custom field to a dataset.
 
 Receives:
 
-* dataset_id : string - the string representation of a datashop dataset ID
+* dataset_id : string - the string representation of a DataShop dataset ID
 * name : string - the name of the custom field
 * description : string - the description of the custom field
 * type : string - the data type.  Can be "number", "string", "date", or "big".
 
 Returns:
 
-* response_xml : string - the XMl from the datashop server
+* response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
 ## <a name="LicenseToc"></a> License
