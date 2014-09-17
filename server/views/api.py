@@ -13,8 +13,8 @@ csrf = app_instance.csrf
 
 from server.models import Plugin, Tutor, Subscription
 
-from server.settings import ServerSettingsManager
-settings = ServerSettingsManager.get_instance().settings
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_server_settings()
 
 def _map_mongo_document(document):
     mapped_doc = {}

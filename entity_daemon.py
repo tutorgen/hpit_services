@@ -10,6 +10,13 @@ import platform
 if platform.system() != "Windows":
     from daemonize import Daemonize
 
+from environment.settings_manager import SettingsManager
+
+try:
+    settings_manager = SettingsManager.init_instance(os.environ['HPIT_ENV'])
+except KeyError:
+    settings_manager = SettingsManager.init_instance('debug')
+
 from hpitclient.settings import HpitClientSettings
 settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
@@ -23,7 +30,6 @@ from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
 from plugins import DataShopConnectorPlugin
 from plugins import HintFactoryPlugin
-from plugins import StudentManagementPlugin
 
 random.seed(datetime.now())
 
@@ -32,10 +38,10 @@ tutor_types = ['example', 'knowledge_tracing','replay','data_connector']
 plugin_types = [
     'example', 
     'knowledge_tracing', 
-    'skill', 
+    'skill_management', 
     'student', 
-    'problem',
-    'problem_step',
+    'problem_management',
+    'problem_step_management',
     'data',
     'data_connector',
     'hint_factory',
@@ -74,10 +80,9 @@ class BaseDaemon:
         plugin_classes = {
             'example': ExamplePlugin,
             'knowledge_tracing': KnowledgeTracingPlugin,
-            'student': StudentManagementPlugin,
-            'skill': SkillManagementPlugin,
-            'problem': ProblemManagementPlugin,
-            'problem_step': ProblemStepManagementPlugin,
+            'skill_management': SkillManagementPlugin,
+            'problem_management': ProblemManagementPlugin,
+            'problem_step_management': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
             'data_connector' : DataShopConnectorPlugin,
             'hint_factory' : HintFactoryPlugin,

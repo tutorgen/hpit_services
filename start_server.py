@@ -1,5 +1,10 @@
-from server.settings import ServerSettingsManager
-settings_manager = ServerSettingsManager.init_instance('production')
+import os
+from environment.settings_manager import SettingsManager
+
+try:
+    settings_manager = SettingsManager.init_instance(os.environ['HPIT_ENV'])
+except KeyError:
+    settings_manager = SettingsManager.init_instance('debug')
 
 from server.views.api import *
 from server.views.dashboard import *
