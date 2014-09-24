@@ -3,6 +3,10 @@ from hpitclient import Plugin
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
+from threading import Timer
+
+import time
+
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
@@ -14,6 +18,10 @@ class StudentManagementPlugin(Plugin):
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_students
         
+        self.TIMEOUT = 15
+        self.student_model_fragment_names = ["knowledge_tracing"]
+        self.student_models = {}
+        self.timeout_threads = {}
 
     def post_connect(self):
         super().post_connect()
@@ -22,7 +30,8 @@ class StudentManagementPlugin(Plugin):
             add_student=self.add_student_callback,
             get_student=self.get_student_callback,
             set_attribute=self.set_attribute_callback,
-            get_attribute=self.get_attribute_callback)
+            get_attribute=self.get_attribute_callback,
+            get_student_model = self.get_student_model_callback)
 
     #Student Management Plugin
     def add_student_callback(self, message):
@@ -97,5 +106,83 @@ class StudentManagementPlugin(Plugin):
             except KeyError:
                 attr = ""
             self.send_response(message["message_id"],{"student_id":str(student["_id"]),attribute_name:attr})
+
+    def get_student_model_callback(self,message):
+        if self.logger:
+            self.logger.debug("GET_STUDENT_MODEL")
+            self.logger.debug(message)
+            self.send_log_entry("GET_STUDENT_MODEL")
+            self.send_log_entry(message)
+            
+            
+        try:
+            student_id = message["student_id"]
+        except KeyError:
+            self.send_response(message["message_id"],{
+                "error":"get_student_model requires a 'student_id'",         
+            })
+            return
         
+        self.student_models[message["student_id"]] = {}
+        self.timeout_threads[message["student_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message])
+        self.timeout_threads[message["student_id"]].start()
+
+        self.send("get_student_model_fragment",{
+                "update":True,
+                "student_id" : message["student_id"],
+        },self.get_populate_student_model_callback_function(message))
+        
+    
+    def get_populate_student_model_callback_function(self,message):
+        def populate_student_model(response):
+            #fill student model
+            try:
+                self.student_models[message["student_id"]][response["name"]] = response["fragment"]
+                if self.logger:
+                    self.logger.debug("GOT FRAGMENT " + str(response["fragment"]))
+                    self.send_log_entry("GOT FRAGMENT " + str(response["fragment"]))
+                    
+            except KeyError:
+                return
+            
+            #check to see if student model complete
+            for name in self.student_model_fragment_names:
+                try:
+                    if self.student_models[message["student_id"]][name] == None:
+                        break
+                except KeyError:
+                    break
+            else:
+                #student model complete, send response (unless timed out)
+                if message["student_id"] in self.timeout_threads:
+                    self.send_response(message["message_id"],{
+                        "student_model" : self.student_models[message["student_id"]],       
+                    })
+                    self.timeout_threads[message["student_id"]].cancel()
+                    del self.timeout_threads[message["student_id"]]
+                    del self.student_models[message["student_id"]]
+                    return
+ 
+        return populate_student_model
+        
+    def kill_timeout(self,message):
+        if self.logger:
+            self.logger.debug("TIMEOUT " + str(message))
+            self.send_log_entry("TIMEOUT " + str(message))
+        try:
+            self.send_response(message["message_id"],{
+                "error":"Get student model timed out. Here is a partial student model.",
+                "student_model":self.student_models[message["student_id"]]
+            })
+        except KeyError:
+            self.send_response(message["message_id"],{
+                "error":"Get student model timed out. Here is a partial student model.",
+                "student_model":{},
+            })
+        
+        try:
+            del self.timeout_threads[message["student_id"]]
+            del self.student_models[message["student_id"]]
+        except KeyError:
+            pass
         
