@@ -1,6 +1,7 @@
 from .example import ExamplePlugin
 from .data_storage import DataStoragePlugin
 from .knowledge_tracing import KnowledgeTracingPlugin
+from .problem_generator.problem_generator import ProblemGeneratorPlugin
 from .problem_management import ProblemManagementPlugin
 from .problem_step_management import ProblemStepManagementPlugin
 from .skill_management import SkillManagementPlugin
@@ -16,6 +17,7 @@ __all__ = [
     'ExamplePlugin', 
     'DataStoragePlugin',
     'KnowledgeTracingPlugin',
+    'ProblemGeneratorPlugin',
     'ProblemManagementPlugin',
     'ProblemStepManagementPlugin',
     'SkillManagementPlugin',
