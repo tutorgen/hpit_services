@@ -42,9 +42,9 @@ class SimpleHintFactory(object):
         if not problem_node:
             raise StateDoesNotExistException("Problem with string " + str(problem_string) + " does not exist.")
         
-        from_state_hash = self.hash_string(from_state_string)
         action_hash = self.hash_string(action_string)
-        to_state_hash = self.hash_string(to_state_string)
+        from_state_hash = self.hash_string('-'.join([problem_string, from_state_string]))
+        to_state_hash = self.hash_string('-'.join([problem_string, to_state_string]))
     
         return_node = None
         
