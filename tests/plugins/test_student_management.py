@@ -203,8 +203,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send = MagicMock()
         self.test_subject.get_populate_student_model_callback_function = MagicMock(return_value="3")
         self.test_subject.get_student_model_callback(msg)
-        self.test_subject.student_models["123"].should.equal({})
-        self.test_subject.timeout_threads["123"].start.assert_called_with()
+        self.test_subject.student_models["1"].should.equal({})
+        self.test_subject.timeout_threads["1"].start.assert_called_with()
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
             "update":True,
             "student_id":"123",
@@ -223,7 +223,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         #init stuff
         self.test_subject.send_response = MagicMock()
         msg = {"message_id":"1"}        
-        self.test_subject.timeout_threads["123"] = Timer(15,self.test_subject.kill_timeout,[msg])
+        self.test_subject.timeout_threads["1"] = Timer(15,self.test_subject.kill_timeout,[msg])
+        self.test_subject.student_model_fragment_names = ["knowledge_tracing"]
         
         #missing student_id
         func = self.test_subject.get_populate_student_model_callback_function(msg)
@@ -248,7 +249,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         func({"name":"knowledge_tracing","fragment":"some_data"})
         self.test_subject.send_response.call_count.should.equal(0)
         
-        self.test_subject.student_models["123"] = {}
+        self.test_subject.student_models["1"] = {}
         
         #bogus name should break for loop
         msg = {"message_id":"1","student_id":"123"}
@@ -256,17 +257,18 @@ class TestStudentManagementPlugin(unittest.TestCase):
         func({"name":"bogus_name","fragment":"some_data"})
         self.test_subject.send_response.call_count.should.equal(0)
         
-        
         #this should work
         msg = {"message_id":"1","student_id":"123"}
         func = self.test_subject.get_populate_student_model_callback_function(msg)
         func({"name":"knowledge_tracing","fragment":"some_data"})
-        self.test_subject.send_response.call_count.should.equal(1)
-        self.test_subject.timeout_threads.should_not.contain("123")
-        self.test_subject.student_models.should_not.contain("123")
+        self.test_subject.send_response.assert_called_with("1",{
+            "student_model":{"knowledge_tracing":"some_data"}
+        })
+        self.test_subject.timeout_threads.should_not.contain("1")
+        self.test_subject.student_models.should_not.contain("1")
         self.test_subject.send_response.reset_mock()
         
-        #simulate timeout (timeout_thread[123] will be deleted in above test)
+        #simulate timeout (timeout_thread["1"] will be deleted in above test)
         msg = {"message_id":"1","student_id":"123"}
         func = self.test_subject.get_populate_student_model_callback_function(msg)
         func({"name":"knowledge_tracing","fragment":"some_data"})
@@ -292,8 +294,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.reset_mock()
         
         
-        self.test_subject.student_models = {"123":"value"}
-        self.test_subject.timeout_threads = {"123":"value"}
+        self.test_subject.student_models = {"1":"value"}
+        self.test_subject.timeout_threads = {"1":"value"}
         
         
         self.test_subject.kill_timeout(msg)
@@ -301,7 +303,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
             "error":"Get student model timed out. Here is a partial student model.",
             "student_model":"value",
             })
-        ("123" in self.test_subject.student_models).should.equal(False)
-        ("123" in self.test_subject.timeout_threads).should.equal(False)
+        ("1" in self.test_subject.student_models).should.equal(False)
+        ("1" in self.test_subject.timeout_threads).should.equal(False)
         
         self.test_subject.send_response.reset_mock()

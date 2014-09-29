@@ -15,6 +15,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         self.test_subject = ProblemManagementPlugin(123,456,None)
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_problems
         self.test_subject.step_db = self.test_subject.mongo.test_hpit.hpit_steps
+        self.test_subject.worked_db = self.test_subject.mongo.test_hpit.hpit_problems_worked
         
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
@@ -42,6 +43,8 @@ class TestProblemManagementPlugin(unittest.TestCase):
         pmp.db.full_name.should.equal("hpit.hpit_problems")
         isinstance(pmp.step_db,Collection).should.equal(True)
         pmp.step_db.full_name.should.equal("hpit.hpit_steps")
+        isinstance(pmp.worked_db,Collection).should.equal(True)
+        pmp.worked_db.full_name.should.equal("hpit.hpit_problems_worked")
         
     def test_add_problem_callback(self):
         """
@@ -387,6 +390,101 @@ class TestProblemManagementPlugin(unittest.TestCase):
                 "success": True
         })
  
+    def test_add_problem_worked_callback(self):
+        """
+        ProblemManagementPlugin.add_problem_worked_callback() Test plan:
+            - mock send response
+            - send message without problem_id and student_id, should respond with error
+            - with bogus problem ID, should return error that it isn't valid
+            - with an ID that doesn't exist ( but object ID) it should return an error
+            - otherwise, success should be sent, and a record mapping student_id and problem_id should exist
+        """
+        self.test_subject.send_response = MagicMock()
+        msg = {"message_id":"1"}
+        
+        self.test_subject.add_problem_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error" : "add_problem_worked requires a 'problem_id' and 'student_id'",
+                 "success":False
+             })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["student_id"] = "2"
+        self.test_subject.add_problem_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error" : "add_problem_worked requires a 'problem_id' and 'student_id'",
+                 "success":False
+             })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["problem_id"] = "3"
+        self.test_subject.add_problem_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
+            })
+        self.test_subject.send_response.reset_mock()
+        
+        bogus = ObjectId()
+        msg["problem_id"] = bogus
+        self.test_subject.add_problem_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error" : "Problem with ID "+str(bogus) + " does not exist.",
+                    "success":False  
+        })
+        self.test_subject.send_response.reset_mock()   
+        
+        problem_id = self.test_subject.db.insert({"problem_name": "hello"})
+        msg["problem_id"] = problem_id
+        self.test_subject.add_problem_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "success":True,
+        })
+        
+        self.test_subject.worked_db.find_one({"student_id":"2","problem_id":problem_id}).should_not.equal(None)
+    
+    def test_get_problems_worked_callback(self):
+        """
+        ProblemManagementPlugin.get_problems_worked_callback() Test plan:
+            -mock send response
+            - send message without student_id, should respnd with error
+            - if nothing in db, should return empty list
+            - otherwise, should return problems that map to the student ID
+        """
+
+        self.test_subject.send_response = MagicMock()
+        msg = {"message_id":"1"}
+        
+        self.test_subject.get_problems_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+              "error" : "add_problem_worked requires a 'student_id'",
+               "success":False  
+        })
+        
+        msg["student_id"] = "2"
+        self.test_subject.get_problems_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+              "success":True,
+              "problems_worked" : [],
+        })
+        
+        self.test_subject.worked_db.insert([      
+            {"student_id":"2","problem_id":"123"},
+            {"student_id":"2","problem_id":"456"},
+            {"student_id":"3","problem_id":"123"},
+        ])
+        
+        cur = self.test_subject.worked_db.find({
+            "student_id": "2",       
+        })
+        problems = [p for p in cur]
+        
+        self.test_subject.get_problems_worked_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+              "success":True,
+              "problems_worked" : problems
+        })
+        
     def test_add_step_callback(self):
         """
         ProblemManagementPlugin.add_step_callback() Test plan:
@@ -618,4 +716,45 @@ class TestProblemManagementPlugin(unittest.TestCase):
                 ],
                 "problem_id":str(good_id),
                 "success":True,
+        })
+        
+    def test_get_student_model_fragment_callback(self):
+        """
+        ProblemManagementPlugin.get_student_model_fragment_callback() Test plan:
+            - mock send response
+            - if not student_id, should respond with error
+            - if nothing in db, shoudl respond with list 
+            - otherwise, should have all the values that map student to problem
+        """
+        
+        self.test_subject.send_response = MagicMock()
+        msg = {"message_id":"1"}
+        
+        self.test_subject.get_student_model_fragment_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+              "error" : "problem_managment get_student_model_fragment requires 'student_id'" ,
+        })
+        
+        msg["student_id"] = "2"
+        self.test_subject.get_student_model_fragment_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+              "name":"problem_management",
+              "fragment": [],
+        })
+        
+        self.test_subject.worked_db.insert([      
+            {"student_id":"2","problem_id":"123"},
+            {"student_id":"2","problem_id":"456"},
+            {"student_id":"3","problem_id":"123"},
+        ])
+        
+        cur = self.test_subject.worked_db.find({
+            "student_id": "2",       
+        })
+        problems = [p for p in cur]
+        
+        self.test_subject.get_student_model_fragment_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+              "name" : "problem_management",
+              "fragment" : problems
         })

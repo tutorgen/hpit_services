@@ -226,6 +226,10 @@ class KnowledgeTracingPlugin(Plugin):
         })
 
     def get_student_model_fragment(self,message):
+        
+        if self.logger:
+            self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
+            self.logger.debug("GET STUDENT MODEL FRAGMENT" + str(message))
         try:
             student_id = message['student_id']
         except KeyError:

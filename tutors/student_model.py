@@ -25,6 +25,7 @@ class StudentModelTutor(Tutor):
         else:
             self.args = None
             
+        
         random.seed()
         
     def post_connect(self):
@@ -37,9 +38,8 @@ class StudentModelTutor(Tutor):
 
     def main_callback(self):
         if self.student_id:
-            sleep(5)
             self.send("get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
-        
+            self.student_id = None
 
         if self.run_once:
             return False

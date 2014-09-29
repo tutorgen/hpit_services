@@ -26,7 +26,7 @@ from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor,StudentModelT
 
 #import plugins
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
-from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
+from plugins import ProblemManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
 from plugins import DataShopConnectorPlugin
 from plugins import HintFactoryPlugin
@@ -41,7 +41,6 @@ plugin_types = [
     'skill_management', 
     'student', 
     'problem_management',
-    'problem_step_management',
     'data',
     'data_connector',
     'hint_factory',
@@ -82,7 +81,6 @@ class BaseDaemon:
             'knowledge_tracing': KnowledgeTracingPlugin,
             'skill_management': SkillManagementPlugin,
             'problem_management': ProblemManagementPlugin,
-            'problem_step_management': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
             'data_connector' : DataShopConnectorPlugin,
             'hint_factory' : HintFactoryPlugin,
