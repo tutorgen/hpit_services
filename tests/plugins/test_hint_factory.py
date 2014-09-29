@@ -61,7 +61,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         self.test_subject.update_action_probabilities.call_count.should_not.equal(0)
         self.test_subject.update_action_probabilities.reset_mock()
         
-        state_hash = hashlib.sha256(bytes("4+5".encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes("problem-4+5".encode('utf-8'))).hexdigest()
         new_node = self.test_subject.db.get_indexed_node("problem_states_index","state_hash",state_hash)
         new_node.should_not.equal(None)
         
