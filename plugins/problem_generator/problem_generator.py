@@ -51,6 +51,14 @@ class ProblemGeneratorPlugin(Plugin):
                 subject_dict = self.problem_library[subject_name]
                 subject_dict[category_name] = functions
 
+        self.update_problem_list()
+
+
+    def update_problem_list(self):
+        self.problem_list = {
+            subjects: {category: list(skills.keys()) for category, skills in categories.items()}
+        for subjects, categories in self.problem_library.items() }
+
 
     def generate_problem(self, subject=None, category=None, skill=None, **kwargs):
         if subject is None:
@@ -89,13 +97,70 @@ class ProblemGeneratorPlugin(Plugin):
         super().post_connect()
 
         self.subscribe(
-            pg_list_problems=self.list_problems,
-            pg_generate_problem=self.generate_problem)
+            pg_list_problems=self.list_problems_callback,
+            pg_generate_problem=self.generate_problem_callback)
 
 
-    def list_problems(self):
+    def list_problems_callback(self, message):
+        if 'subject' not in message:
+            self.send_response(message['message_id'], self.problem_list)
+            return False
+
+        subject = message['subject']
+        if subject not in self.problem_list:
+            self.send_response(message['message_id'], {
+                'error': "Subject <" + subject + "> does not exist.",
+                'send': {
+                    'subjects': list(self.problem_list.keys())
+                }
+            })
+            return False
+
+        categories = self.problem_list[subject]
+        if 'category' not in message:
+            self.send_response(message['message_id'], {
+                subject: categories
+            })
+            return True
+
+        category = message['category']
+        if category not in categories:
+            self.send_response(message['message_id'], {
+                'error': "Category <" + category + "> does not exist in subject <" + subject + ">",
+                'send': {
+                    'categories': list(categories.keys())
+                }
+            })
+            return False
+
+        skills = categories[category]
+        if 'skill' not in message:
+            self.send_response(message['message_id'], {
+                subject: { 
+                    category: skills 
+                }
+            })
+            return True
+
+        skill = message['skill']
+        if skill not in skills:
+            self.send_response(message['message_id'], {
+                'error': 'Skill <' + skill + "> does not exist in subject <" + subject + "> and category <" + category + ">",
+                'send': {
+                    'skills': skills
+                }
+            })
+            return False
+
+        self.send_response(message['message_id'], {
+            subject: { 
+                category: skills 
+            }
+        })
+
+        return True
+
+
+    def generate_problem_callback(self, message):
         pass
 
-
-    def generate_problem(self):
-        pass
