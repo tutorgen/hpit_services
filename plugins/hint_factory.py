@@ -125,7 +125,7 @@ class SimpleHintFactory(object):
     def bellman_update(self,start_string,goal_string):
         problem_node = self.create_or_get_problem_node(start_string,goal_string)
 
-        goal_hash = self.hash_string(goal_string)
+        goal_hash = self.hash_string('-'.join([start_string, goal_string]))
         goal_node = self.db.get_indexed_node("problem_states_index","state_hash",goal_hash)
 
         if not goal_node:
@@ -213,7 +213,7 @@ class SimpleHintFactory(object):
             return problem_node
             
     def hint_exists(self,problem_string,state_string):
-        state_hash = self.hash_string(state_string)
+        state_hash = self.hash_string('-'.join([problem_string, state_string]))
         node = self.db.get_indexed_node("problems_index","start_string",state_string)
         if not node:
             node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
@@ -228,13 +228,17 @@ class SimpleHintFactory(object):
             return False
                 
     def get_hint(self,problem_string,state_string):
-        state_hash = self.hash_string(state_string)
+        state_hash = self.hash_string('-'.join([problem_string, state_string]))
         if not self.hint_exists(problem_string,state_string):
             raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
         else:
             node = self.db.get_indexed_node("problems_index","start_string",state_string)
+
             if not node:
                 node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
+
+            if not node:
+                raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
             
             child_edges = node.match_outgoing("action")
             max_reward = -999999
