@@ -104,7 +104,7 @@ class ProblemGeneratorPlugin(Plugin):
     def list_problems_callback(self, message):
         if 'subject' not in message:
             self.send_response(message['message_id'], self.problem_list)
-            return False
+            return True
 
         subject = message['subject']
         if subject not in self.problem_list:
@@ -162,5 +162,24 @@ class ProblemGeneratorPlugin(Plugin):
 
 
     def generate_problem_callback(self, message):
-        pass
+        subject = message['subject'] if 'subject' in message else None
+        category = message['category'] if 'category' in message else None
+        skill = message['skill'] if 'skill' in message else None
+        count = message['count'] if 'count' in message else 1
+        options = message['options'] if 'options' in message else {}
+
+        problems = []
+        try:
+            for i in range(0, count):
+                problems.append(self.generate_problem(subject, category, skill, **options))
+        except Exception as e:
+            self.send_response(message_id['message_id'], {
+                'error': e.error
+            })
+            return False
+
+        self.send_response(message['message_id'], {
+            'problems': problems
+        })
+        return True
 
