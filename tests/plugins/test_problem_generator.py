@@ -16,7 +16,7 @@ class TestProblemGeneratorPlugin(unittest.TestCase):
         self.test_subject.problem_library = {
             'arithmetic': {
                 'addition': {
-                    'AddTwoTwoDigitNumbers': lambda: 0,
+                    'AddTwoTwoDigitNumbers': lambda: ('problem', 'answer'),
                 },
             }
         }
@@ -216,4 +216,84 @@ class TestProblemGeneratorPlugin(unittest.TestCase):
         })
 
         self.test_subject.generate_problem.assert_called_with('arithmetic', "addition", "AddTwoTwoDigitNumbers", thing=1)
+
+
+    def test_generate_problem_no_subject(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - No Subject
+        """
+        self.test_subject.generate_problem.when.called_with(
+            None, 'addition', 'AddTwoTwoDigitNumbers').should.return_value({
+            'subject': 'arithmetic',
+            'category': 'addition',
+            'skill': 'AddTwoTwoDigitNumbers',
+            'problem_text': 'problem',
+            'answer_text': 'answer'
+        })
+
+
+    def test_generate_problem_invalid_subject(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - Invalid Subject
+        """
+        self.test_subject.generate_problem.when.called_with(
+            'invalid', 'addition', 'AddTwoTwoDigitNumbers').should.throw(Exception)
+
+
+    def test_generate_problem_no_category(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - No Category
+        """
+        self.test_subject.generate_problem.when.called_with(
+            'arithmetic', None, 'AddTwoTwoDigitNumbers').should.return_value({
+            'subject': 'arithmetic',
+            'category': 'addition',
+            'skill': 'AddTwoTwoDigitNumbers',
+            'problem_text': 'problem',
+            'answer_text': 'answer'
+        })
+
+
+    def test_generate_problem_invalid_category(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - Invalid Category
+        """
+        self.test_subject.generate_problem.when.called_with(
+            'arithmetic', 'invalid', 'AddTwoTwoDigitNumbers').should.throw(Exception)
+
+
+    def test_generate_problem_no_skill(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - No Skill
+        """
+        self.test_subject.generate_problem.when.called_with(
+            'arithmetic', 'addition', None).should.return_value({
+            'subject': 'arithmetic',
+            'category': 'addition',
+            'skill': 'AddTwoTwoDigitNumbers',
+            'problem_text': 'problem',
+            'answer_text': 'answer'
+        })
+
+
+    def test_generate_problem_invalid_skill(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - Invalid Skill
+        """
+        self.test_subject.generate_problem.when.called_with(
+            'arithmetic', 'addition', 'invalid').should.throw(Exception)
+
+
+    def test_generate_problem_valid_subject_category_skill(self):
+        """
+        ProblemGeneratorPlugin.generate_problem() Test - Valid Subject, Category & Skill
+        """
+        self.test_subject.generate_problem.when.called_with(
+            'arithmetic', 'addition', 'AddTwoTwoDigitNumbers').should.return_value({
+            'subject': 'arithmetic',
+            'category': 'addition',
+            'skill': 'AddTwoTwoDigitNumbers',
+            'problem_text': 'problem',
+            'answer_text': 'answer'
+        })
 
