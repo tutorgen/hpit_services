@@ -61,7 +61,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         self.test_subject.update_action_probabilities.call_count.should_not.equal(0)
         self.test_subject.update_action_probabilities.reset_mock()
         
-        state_hash = hashlib.sha256(bytes("4+5".encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes("problem-4+5".encode('utf-8'))).hexdigest()
         new_node = self.test_subject.db.get_indexed_node("problem_states_index","state_hash",state_hash)
         new_node.should_not.equal(None)
         
@@ -124,27 +124,27 @@ class TestSimpleHintFactory(unittest.TestCase):
             - make sure bellman values are what is expected
         """
         
-        problem_node, = self.test_subject.db.create({"start_string":"state","goal_string":"goal","discount_factor":0.5})
+        problem_node, = self.test_subject.db.create({"start_string":"state","goal_string":"state_4","discount_factor":0.5})
         problem_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problems_index")
         problem_index.add("start_string","state",problem_node)
         problem_node.add_labels("_unit_test_only")
         
         state_string = "state_2"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes('-'.join(['state', state_string]).encode('utf-8'))).hexdigest()
         new_node, new_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":0.5},(problem_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,new_node)
         new_rel["probability"] = .75
         
         state_string = "state_3"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes('-'.join(['state', state_string]).encode('utf-8'))).hexdigest()
         another_node, another_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":0.5},(new_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,another_node)
         another_rel["probability"] = .25
         
         state_string = "state_4"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes('-'.join(['state', state_string]).encode('utf-8'))).hexdigest()
         goal_node, goal_rel1, goal_rel2 = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":0.5},(new_node,"action",0),(problem_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,goal_node)
@@ -200,7 +200,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         self.test_subject.hint_exists("problem","state").should.equal(False)
         
         state_string = "state_2"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes('-'.join(['problem', state_string]).encode('utf-8'))).hexdigest()
         new_node, new_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":"0.5"},(problem_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,new_node)
@@ -210,7 +210,7 @@ class TestSimpleHintFactory(unittest.TestCase):
         self.test_subject.hint_exists("problem","state_2").should.equal(False)
         
         state_string = "state_3"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes('-'.join(['problem', state_string]).encode('utf-8'))).hexdigest()
         another_node, another_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":"0.5"},(new_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,another_node)
