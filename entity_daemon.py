@@ -22,7 +22,7 @@ settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
 
 #import tutors
-from tutors import ExampleTutor, KnowledgeTracingTutor,ReplayTutor
+from tutors import ExampleTutor, KnowledgeTracingTutor, ReplayTutor, ProblemGeneratorTutor
 
 #import plugins
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
@@ -34,7 +34,13 @@ from plugins import HintFactoryPlugin
 
 random.seed(datetime.now())
 
-tutor_types = ['example', 'knowledge_tracing','replay','data_connector']
+tutor_types = [
+    'example', 
+    'knowledge_tracing',
+    'replay',
+    'data_connector',
+    'problem_generator'
+]
 
 plugin_types = [
     'example', 
@@ -94,6 +100,7 @@ class BaseDaemon:
         tutor_classes = {
             'example': ExampleTutor,
             'knowledge_tracing': KnowledgeTracingTutor,
+            'problem_generator': ProblemGeneratorTutor,
             'replay' : ReplayTutor,
         }
         

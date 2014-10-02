@@ -13,9 +13,9 @@ settings = SettingsManager.get_plugin_settings()
 
 class ProblemGeneratorPlugin(Plugin):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, entity_id, api_key, logger, args = None):
         self.load_problem_library()
-        super().__init__(*args, **kwargs)
+        super().__init__(entity_id, api_key)
 
 
     def load_problem_library(self):
@@ -38,18 +38,24 @@ class ProblemGeneratorPlugin(Plugin):
                 subject_name = import_path[-1]
                 import_path.append(category_name)
 
+                if not category_name:
+                    continue
+
                 imported = importlib.import_module('.'.join(import_path))
 
-                functions = {
-                    attr: getattr(imported, attr, None) 
-                        for attr in dir(imported) if attr.endswith('Problem')
-                }
+                functions = {}
+                for attr in dir(imported):
+                    if attr.endswith('Problem'):
+                        cls_inst = getattr(imported, attr, None)()
+                        if cls_inst.problem_enabled:
+                            functions[attr] = cls_inst
 
-                if subject_name not in self.problem_library:
-                    self.problem_library[subject_name] = {}
+                if functions:
+                    if subject_name not in self.problem_library:
+                        self.problem_library[subject_name] = {}
 
-                subject_dict = self.problem_library[subject_name]
-                subject_dict[category_name] = functions
+                    subject_dict = self.problem_library[subject_name]
+                    subject_dict[category_name] = functions
 
         self.update_problem_list()
 
@@ -173,8 +179,15 @@ class ProblemGeneratorPlugin(Plugin):
             for i in range(0, count):
                 problems.append(self.generate_problem(subject, category, skill, **options))
         except Exception as e:
-            self.send_response(message_id['message_id'], {
-                'error': e.error
+            self.send_response(message['message_id'], {
+                'error': str(e),
+                'you_sent': {
+                    'subject': subject,
+                    'category': category,
+                    'skill': skill,
+                    'count': count,
+                    'options': options
+                }
             })
             return False
 

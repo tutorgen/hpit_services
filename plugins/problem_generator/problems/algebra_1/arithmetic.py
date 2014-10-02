@@ -1,7 +1,7 @@
-from functools import reduce
-from utils import convert_kwarg, format_expression, random_expression
 import random
+from functools import reduce
 from sympy import *
+from plugins.problem_generator.utils import *
 
 class AdditionProblem:
     skill_name = "addition"
@@ -39,7 +39,7 @@ class AdditionWordProblem:
 class SubtractionProblem:
     skill_name = "subtraction_problem"
     short_description = "Subtraction Problem."
-    problem_enabled = False
+    problem_enabled = True
 
     def __call__(self, digits=2, values=2):
         digits = convert_kwarg(digits, int)

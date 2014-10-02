@@ -1,7 +1,7 @@
-from functools import reduce
-from utils import convert_kwarg
 import random
+from functools import reduce
 from sympy import *
+from plugins.problem_generator.utils import *
 
 
 class DividingPolynomialsIIIProblem:
@@ -63,7 +63,7 @@ class AddingAndSubtractingPolynomialsWithCommonDenominatorsProblem:
 
 
 
-class DistributingWithpolynomialsWordProblem
+class DistributingWithpolynomialsWordProblem:
     skill_name = "distributing_with_polynomials_word_problem"
     short_description = "Distribution with Polynomials Word Problem"
     problem_enabled = False
