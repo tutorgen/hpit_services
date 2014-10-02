@@ -22,7 +22,7 @@ before_install:
 install: 
   - pip install -r requirements.txt
   - git clone https://github.com/sympy/sympy.git sympy
-  - 'cd sympy && python3 setup.py install'
+  - 'cd sympy && python3 setup.py install && cd ..'
 script:
   - "export HPIT_ENV=travis-test"
   - python manager.py syncdb
