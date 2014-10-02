@@ -9,11 +9,11 @@ class TestDataStoragePlugin(unittest.TestCase):
     
     def setUp(self):
         self.test_subject = DataStoragePlugin(1234,5678,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit_data_storage.data
+        self.test_subject.db = self.test_subject.mongo.test_hpit.data_storage
     
     def tearDown(self):
         client = MongoClient()
-        client.drop_database("test_hpit_data_storage")
+        client.drop_database("test_hpit")
         
         self.test_subject = None
         
@@ -29,7 +29,7 @@ class TestDataStoragePlugin(unittest.TestCase):
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
-        ds.db.full_name.should.equal("hpit_data_storage.data")
+        ds.db.full_name.should.equal("hpit.data_storage")
         
         
     def test_store_data_callback(self):
@@ -38,121 +38,108 @@ class TestDataStoragePlugin(unittest.TestCase):
             - If logger exists, logger shouldn't be called.  If it does, it should
             - send message with nothing, just key, just data.  response should contain an error
             - ensure database is empty
-            -   call insert, ensure id is returned
-            -   call insert again, id should be different
+            -   call insert, ensure item is added to db
+            -   call insert again, document should be changed, only 1 document exists
         """
         self.test_subject.send_response = MagicMock()
        
-        msg = {"message_id":"1"}
+        msg = {"message_id":"1","sender_entity_id":"3"}
         self.test_subject.store_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"error":"Error: store_data message must contain a 'key' and 'data'"})
+        self.test_subject.send_response.assert_called_with("1",{"error":"Error: store_data message must contain a 'key' and 'data'","success":False})
         self.test_subject.send_response.reset_mock()
         
-        msg = {"message_id":"1","key":"key1"}
+        msg["key"]="key1"
         self.test_subject.store_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"error":"Error: store_data message must contain a 'key' and 'data'"})
+        self.test_subject.send_response.assert_called_with("1",{"error":"Error: store_data message must contain a 'key' and 'data'","success":False})
         self.test_subject.send_response.reset_mock()
         
-        msg = {"message_id":"1","data":"data1"}
+        del msg["key"]
+        msg["data"]="data1"
         self.test_subject.store_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"error":"Error: store_data message must contain a 'key' and 'data'"})
+        self.test_subject.send_response.assert_called_with("1",{"error":"Error: store_data message must contain a 'key' and 'data'","success":False})
         self.test_subject.send_response.reset_mock()
         
+        msg["key"]="key1"
         self.test_subject.db.remove() #clear database
         
-        msg = {"message_id":"1","data":"data1","key":"key1"}
         self.test_subject.store_data_callback(msg)
-        
-        self.test_subject.send_response.call_args[0][0].should.equal("1")
-        insert_id = self.test_subject.send_response.call_args[0][1]["insert_id"]
-        
+        result_id =self.test_subject.db.find({"key":"key1","data":"data1","entity_id":"3"}).count().should.equal(1)
+        self.test_subject.send_response.assert_called_with("1",{
+                "success":True,
+        })
+        self.test_subject.send_response.reset_mock()
+
+        msg["data"] = "data2"
         self.test_subject.store_data_callback(msg)
-        insert_id2 = self.test_subject.send_response.call_args[0][1]["insert_id"]
-        
-        insert_id2.should_not.equal(insert_id)
-        
-        client = MongoClient()
-        result= client.test_hpit_data_storage.data.find({"key":"key1","data":"data1"})
-        count =0
-        for r in result:
-            count+=1
-        count.should.equal(2)
+        self.test_subject.db.find({"key":"key1","data":"data2","entity_id":"3"}).count().should.equal(1)
+        self.test_subject.db.find({}).count().should.equal(1) 
+        self.test_subject.send_response.assert_called_with("1",{
+                "success":True,
+        })
 
     def test_retrieve_data_callback(self):
         """
         DataStoragePlugin.retrieve_data_callback() Test plan:
-            - If logger exists, logger shouldn't be called.  If it does, it should
             - send message with no key.  response should contain error
             - ensure database is empty
             -   should send response with data being none
-            - insert two records with same key
-            -   should send response with first added entry
+            - insert two records with same key, different entity ID's
+            -   should send response wth right key
         """
         self.test_subject.send_response = MagicMock()
         
-        msg = {"message_id":"1"}
+        msg = {"message_id":"1","sender_entity_id":"3"}
         self.test_subject.retrieve_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"error":"Error: retrieve_data message must contain a 'key'"})
+        self.test_subject.send_response.assert_called_with("1",{"error":"Error: retrieve_data message must contain a 'key'","success":False})
         self.test_subject.send_response.reset_mock()
         
         self.test_subject.db.remove() #clear database
         
-        msg = {"message_id":"1","key":"key1"}
+        msg["key"]="key1"
         self.test_subject.retrieve_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"data":None})
+        self.test_subject.send_response.assert_called_with("1",{"error":"Key key1 does not exist.","success":False})
         self.test_subject.send_response.reset_mock()
         
-        self.test_subject.db.insert({"key":"key1","data":"data1"})
-        self.test_subject.db.insert({"key":"key1","data":"data2"}) #insert documents with identical keys
+        self.test_subject.db.insert({"key":"key1","data":"data1","entity_id":"2"})
+        self.test_subject.db.insert({"key":"key1","data":"data2","entity_id":"3"}) #should get this one
         
         self.test_subject.retrieve_data_callback(msg)
-        self.test_subject.send_response.call_args[0][1]["data"]["data"].should.equal("data1")
+        self.test_subject.send_response.assert_called_with("1",{
+                "data":"data2",
+                "success":True
+        })
         
         
 
     def test_remove_data_callback(self):
         """
         DataStoragePlugin.remove_data_callback() Test plan:
-            - If logger exists, logger shouldn't be called.  If it does, it should
             - send message with no key.  response should contain error
-            - with no records matching filter
-            -   remove should send response with n:0 ok:1
+            - with no records matching filter (entity_id or not existing)
+            -   success should be false, error set
             - with 1 record matching filter
-            -   remove should send response with n:1 ok:1
-            - with 2 records matching filter
-            -   remove should send response with n:2 ok:1
+            -   remove should send response with success = true, not one of 
         """
         self.test_subject.send_response = MagicMock()
         
-        msg = {"message_id":"1"}
+        msg = {"message_id":"1","sender_entity_id":"3"}
         self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{"error":"Error: remove_data message must contain a 'key'"})
+        self.test_subject.send_response.assert_called_with("1",{"error":"Error: remove_data message must contain a 'key'","success":False})
         self.test_subject.send_response.reset_mock()
         
         self.test_subject.db.remove() #clear database
 
-        msg = {"message_id":"1","key":"key1"}
+        msg["key"]="key1"
         self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.call_count.should.equal(1)
+        self.test_subject.send_response.assert_called_with("1",{"error":"Key key1 does not exist.", "success":False})
         self.test_subject.send_response.reset_mock()
         
-        self.test_subject.db.insert({"key":"key1","data":"data1"})
+        self.test_subject.db.insert({"key":"key1","data":"data1","entity_id":"3"})
+        self.test_subject.db.insert({"key":"key1","data":"data2","entity_id":"2"})
         
         self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.call_count.should.equal(1)
-        self.test_subject.db.find().count().should.equal(0)
-        self.test_subject.send_response.reset_mock()
-        
-        
-        self.test_subject.db.remove() #clear database
-        self.test_subject.db.insert([
-            {"key":"key1","data":"data2"},      
-            {"key":"key1","data":"data1"},
-        ])
-
-        self.test_subject.remove_data_callback(msg)
-        self.test_subject.send_response.call_count.should.equal(1)
-        self.test_subject.db.find().count().should.equal(0)
+        self.test_subject.send_response.assert_called_with("1",{ "success":True})
+        self.test_subject.db.find().count().should.equal(1)
         self.test_subject.send_response.reset_mock()
         
     
