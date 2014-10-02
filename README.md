@@ -60,6 +60,9 @@
         * [get_step](#get_step)
         * [get_problem_steps](#get_problem_steps)
         * [get_student_model_fragment](#pm_get_student_model_fragment)
+    * [Problem Generator](#PGPlugin)
+        * [pg_list_problems](#list_problems)
+        * [pg_generate_problem](#generate_problem)
     * [Data Storage Plugin](#DSPlugin)
         * [store_data](#store_data)
         * [retrieve_data](#retrieve_data)
@@ -1416,6 +1419,59 @@ Returns:
     * problem_text : string - The text of the problem.
     * date_created : datetime - The time this problem was created.
     * edit_allowed_id : string - The ID of the tutor or plugin that can edit this problem.
+
+
+##<a name="PGPlugin"></a> Problem Generator Plugin
+The Problem Generator Plugin is useful for randomly generating mathematics 
+problems on demand. Right now, this generator is used mostly for integration 
+tests between tutors and plugins. TutorGen may extend the possible set of 
+problems in the future.
+
+####<a name="list_problems"></a>pg_list_problems
+Retrieve a list of potential problems organized by, subject, category and skill.
+
+Receives:
+
+* subject (optional): None or string - list categories and skills for this subject
+* category (optional): None or string - list the skills for this category
+* skill (optional): None or string - Does a generator for this particular skill exist?
+
+Returns:
+
+* json: a dict of dicts of lists organized by subjects, category and skills 
+
+####<a name="generate_problem"></a>pg_generate_problem
+
+Generates a random problem for a specific subject, category, and skill. If the subject, category
+or skill doesn't have a generator associated with it, the plugin will return an error. If the subject,
+category, or skill is not provided the problem generator will choose one randomly.
+
+Recieves:
+
+* subject (optional): string (or None) - Generate a random problem for this subject, (or random subject if None).
+* category (optional): string (or None) - Generate a random problem for this category, (or random category if None).
+* skill (optional): string (or None) - Generate a random problem for this skill, (or random skill if None).
+* count (optional): 0 < integer <= 100 - Generate this number of random problems of this type. (between 0 and 100)
+
+Returns:
+
+* json: list of problems ->
+    * 'subject': string - The subject this problem is mapped to.
+    * 'category': string - The category this problem is mapped to.
+    * 'skill': string - The skill this problem is mapped to.
+    * 'problem_text': string - An ASCII textual representation of the problem.
+    * 'answer_text': string or list - An ASCII textual representation of the solution or list of acceptable solutions.
+
+Errors on invalid subject, category, or skill provided in request. Errors return as the following:
+
+* error: string - A string representation of the error created.
+* you_sent: json - A dictionary containing this parameters sent in the original request.
+    * 'subject': subject,
+    * 'category': category,
+    * 'skill': skill,
+    * 'count': count,
+    * 'options': options
+
 
 ##<a name="DSPlugin"></a> Data Storage Plugin
 The Data Storage Plugin can be used to store any kind of key value information that a plugin
