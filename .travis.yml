@@ -21,7 +21,8 @@ before_install:
   - "sleep 5"
 install: 
   - pip install -r requirements.txt
-# # command to run tests, e.g. python setup.py test
+  - git clone https://github.com/sympy/sympy.git
+  - python3 sympy/setup.py install
 script:
   - "export HPIT_ENV=travis-test"
   - python manager.py syncdb
