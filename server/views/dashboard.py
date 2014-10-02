@@ -123,7 +123,7 @@ def plugin_new():
 
             return render_template('plugin_key.html', plugin=new_plugin, key=key)
 
-    return render_template('plugin_new.html', form=plugin_form)
+    return render_template('plugin_new.html', form=plugin_form, isadmin=current_user.administrator)
 
 
 @app.route('/plugin/<plugin_id>/detail', methods=["GET"])
@@ -184,6 +184,7 @@ def plugin_edit(plugin_id):
 
     if request.method == "POST":
         if plugin_form.validate():
+                
             plugin_form.populate_obj(plugin)
 
             db.session.add(plugin)
@@ -191,7 +192,7 @@ def plugin_edit(plugin_id):
 
             return redirect(url_for('plugins'))
 
-    return render_template('plugin_edit.html', form=plugin_form)
+    return render_template('plugin_edit.html', form=plugin_form, isadmin=current_user.administrator)
 
 
 @app.route('/plugin/<plugin_id>/genkey', methods=["GET"])

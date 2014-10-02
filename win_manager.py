@@ -68,7 +68,7 @@ class WindowsManager(BaseManager):
                         try:
                             os.kill(int(pid), signal.SIGTERM)
                         except OSError:
-                            print("Failed to kill plugin " + str(entity_id))
+                            print("Failed to kill entity " + str(entity_id))
                     os.remove(pidfile)
                 except FileNotFoundError:
                     print("Error: Could not find PIDfile for entity: " + entity_id)

@@ -22,12 +22,11 @@ settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
 
 #import tutors
-from tutors import ExampleTutor, KnowledgeTracingTutor, ReplayTutor, ProblemGeneratorTutor
+from tutors import ExampleTutor, KnowledgeTracingTutor, ReplayTutor, ProblemGeneratorTutor, StudentModelTutor
 
 #import plugins
 from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
-from plugins import ProblemGeneratorPlugin
-from plugins import ProblemManagementPlugin, ProblemStepManagementPlugin
+from plugins import ProblemGeneratorPlugin, ProblemManagementPlugin
 from plugins import SkillManagementPlugin, StudentManagementPlugin
 from plugins import DataShopConnectorPlugin
 from plugins import HintFactoryPlugin
@@ -39,7 +38,8 @@ tutor_types = [
     'knowledge_tracing',
     'replay',
     'data_connector',
-    'problem_generator'
+    'problem_generator',
+    'student_model'
 ]
 
 plugin_types = [
@@ -49,7 +49,6 @@ plugin_types = [
     'student', 
     'problem_generator',
     'problem_management',
-    'problem_step_management',
     'data',
     'data_connector',
     'hint_factory',
@@ -91,7 +90,6 @@ class BaseDaemon:
             'skill_management': SkillManagementPlugin,
             'problem_generator': ProblemGeneratorPlugin,
             'problem_management': ProblemManagementPlugin,
-            'problem_step_management': ProblemStepManagementPlugin,
             'data': DataStoragePlugin,
             'data_connector' : DataShopConnectorPlugin,
             'hint_factory' : HintFactoryPlugin,
@@ -102,6 +100,7 @@ class BaseDaemon:
             'knowledge_tracing': KnowledgeTracingTutor,
             'problem_generator': ProblemGeneratorTutor,
             'replay' : ReplayTutor,
+            'student_model': StudentModelTutor,
         }
         
         if self.entity_type == 'plugin':
