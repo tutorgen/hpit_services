@@ -48,7 +48,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
             -Should be two distinc messages now
             -mock response, should have a call with the message id and student id
         """
-        test_message = {"message_id":"2"}
+        test_message = {"message_id":"2","sender_entity_id":"3"}
         calls = [call("ADD_STUDENT"),call(test_message)]
         self.test_subject.logger = MagicMock()
         self.test_subject.send_response = MagicMock()
@@ -63,7 +63,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{}})
         self.test_subject.send_response.reset_mock()
         
-        test_message = {"message_id":"2","attributes":{"attr":"value"}}
+        test_message = {"message_id":"2","attributes":{"attr":"value"},"sender_entity_id":"3"}
         self.test_subject.add_student_callback(test_message)
         result = client.test_hpit.hpit_students.find({})
         result.count().should.equal(2)
