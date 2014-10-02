@@ -5,6 +5,8 @@ from pymongo import MongoClient
 from bson import ObjectId
 import bson
 
+import time
+
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
@@ -23,7 +25,8 @@ class KnowledgeTracingPlugin(Plugin):
         self.subscribe(
             kt_set_initial=self.kt_set_initial_callback,
             kt_reset=self.kt_reset,
-            kt_trace=self.kt_trace)
+            kt_trace=self.kt_trace,
+            get_student_model_fragment=self.get_student_model_fragment)
 
     #Knowledge Tracing Plugin
     def kt_trace(self, message):
@@ -152,6 +155,9 @@ class KnowledgeTracingPlugin(Plugin):
                         'student_id':message['student_id']
                     })
                 else:
+                    if self.logger:
+                        self.send_log_entry("ERROR: getting skill, " + str(response))
+                        self.logger.debug("ERROR: getting skill, " + str(response))
                     self.send_response(message["message_id"],{
                         "error":"skill_id " + str(message["skill_id"]) + " is invalid."   
                     })
@@ -218,7 +224,39 @@ class KnowledgeTracingPlugin(Plugin):
             'probability_mistake': 0.0,
             'student_id':message["student_id"]
         })
-            
+
+    def get_student_model_fragment(self,message):
+        
+        if self.logger:
+            self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
+            self.logger.debug("GET STUDENT MODEL FRAGMENT" + str(message))
+        try:
+            student_id = message['student_id']
+        except KeyError:
+            self.send_response(message['message_id'],{
+                "error":"knowledge tracing get_student_model_fragment requires 'student_id'",
+            })
+            return
+        
+        skill_list = []
+        skills = self.db.find({
+            'student_id': message['student_id']
+        })
+        
+        for skill in skills:
+            skill_list.append({
+                'skill_id': str(skill['skill_id']),
+                'probability_known': skill['probability_known'],
+                'probability_learned': skill['probability_learned'],
+                'probability_guess': skill['probability_guess'],
+                'probability_mistake': skill['probability_mistake'],
+                'student_id':skill['student_id']
+            })
+        
+        self.send_response(message['message_id'],{
+            "name":"knowledge_tracing",
+            "fragment":skill_list,
+        })
             
             
             

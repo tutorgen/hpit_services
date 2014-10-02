@@ -12,6 +12,12 @@ class Command:
         self.manager = manager
     
     def run(self, arguments, configuration):
+        
+        if "test" not in os.environ['HPIT_ENV']:
+            answer = input("WARNING: 'test' is not found in HPIT_ENV " + os.environ['HPIT_ENV'] + ". Continue anyway? [y/n] ")
+            if answer.lower() == "n":
+                return
+        
         self.configuration = configuration
 
         test_path = os.path.join(settings.PROJECT_DIR, 'tests')

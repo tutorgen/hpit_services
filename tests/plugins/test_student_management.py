@@ -4,6 +4,8 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from bson.objectid import ObjectId
 
+from threading import Timer
+
 from plugins import StudentManagementPlugin
 
 class TestStudentManagementPlugin(unittest.TestCase):
@@ -179,7 +181,129 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"bogus_key":""})
         
+    def test_get_student_model_callback(self):
+        """
+        StudentManagementPlugin.get_student_model_callback() Test plan:
+            - pass it something without a student id, should respond with error
+            - student_models, timeout_threads should be set
+            - mock out Timer.start, ensure called
+            - mock send, ensure sent with proper parameters
+        """
+        self.test_subject.send_response = MagicMock()
+        
+        msg = {"message_id":"1"}
+        self.test_subject.get_student_model_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"get_student_model requires a 'student_id'",     
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["student_id"] = "123"
+        setattr(Timer,"start",MagicMock())
+        self.test_subject.send = MagicMock()
+        self.test_subject.get_populate_student_model_callback_function = MagicMock(return_value="3")
+        self.test_subject.get_student_model_callback(msg)
+        self.test_subject.student_models["1"].should.equal({})
+        self.test_subject.timeout_threads["1"].start.assert_called_with()
+        self.test_subject.send.assert_called_with("get_student_model_fragment",{
+            "update":True,
+            "student_id":"123",
+        },"3")
+    
+    def test_get_populate_student_model_callback_function(self):
+        """
+        StudentManagementPlugin.get_populate_student_model_callback() Test plan:
+            - call the method, get the function
+            - call said function without response[name], message[student_id] and response[fragment], should exit cleanly, send_response not called
+            - set some student_model_fragments to None, should break out, send_response not called
+            - set some bogus fragments, raising key error, should break out, send_response not called
+            - with empty self.timeout_threads, should not call send response
+            - with self.timeout_threads[student_id], should call send response, cancel threads (mock out) and remove threads
+        """
+        #init stuff
+        self.test_subject.send_response = MagicMock()
+        msg = {"message_id":"1"}        
+        self.test_subject.timeout_threads["1"] = Timer(15,self.test_subject.kill_timeout,[msg])
+        self.test_subject.student_model_fragment_names = ["knowledge_tracing"]
+        
+        #missing student_id
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"name":"knowledge_tracing","fragment":"some data"})
+        self.test_subject.send_response.call_count.should.equal(0)
+        
+        #missing name
+        msg = {"message_id":"1","student_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"fragment":"some data"})
+        self.test_subject.send_response.call_count.should.equal(0)
+        
+        #missing fragment
+        msg = {"message_id":"1","student_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"name":"knowledge_tracing"})
+        self.test_subject.send_response.call_count.should.equal(0)
+               
+        #will still not be called, key error until 123 added to student models
+        msg = {"message_id":"1","student_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"name":"knowledge_tracing","fragment":"some_data"})
+        self.test_subject.send_response.call_count.should.equal(0)
+        
+        self.test_subject.student_models["1"] = {}
+        
+        #bogus name should break for loop
+        msg = {"message_id":"1","student_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"name":"bogus_name","fragment":"some_data"})
+        self.test_subject.send_response.call_count.should.equal(0)
+        
+        #this should work
+        msg = {"message_id":"1","student_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"name":"knowledge_tracing","fragment":"some_data"})
+        self.test_subject.send_response.assert_called_with("1",{
+            "student_model":{"knowledge_tracing":"some_data"}
+        })
+        self.test_subject.timeout_threads.should_not.contain("1")
+        self.test_subject.student_models.should_not.contain("1")
+        self.test_subject.send_response.reset_mock()
+        
+        #simulate timeout (timeout_thread["1"] will be deleted in above test)
+        msg = {"message_id":"1","student_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func({"name":"knowledge_tracing","fragment":"some_data"})
+        self.test_subject.send_response.call_count.should.equal(0)
         
         
+    def test_kill_timeout(self):
+        """
+        StudentManagementPlugin.kill_timeout() Test plan:
+            - with nothing in threads or student_models, should exit cleanly, calling response
+            - put something in student_models[student_id] and timeout_threads[student_id]
+            - mock out send_response, ensured called with proper parameters
+            - make sure keys get deleted in student_models and timeout_threads
+        """
+        self.test_subject.send_response = MagicMock()
+        
+        msg = {"message_id":"1","student_id":"123"}
+        self.test_subject.kill_timeout(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"Get student model timed out. Here is a partial student model.",
+            "student_model":{}
+            })
+        self.test_subject.send_response.reset_mock()
         
         
+        self.test_subject.student_models = {"1":"value"}
+        self.test_subject.timeout_threads = {"1":"value"}
+        
+        
+        self.test_subject.kill_timeout(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"Get student model timed out. Here is a partial student model.",
+            "student_model":"value",
+            })
+        ("1" in self.test_subject.student_models).should.equal(False)
+        ("1" in self.test_subject.timeout_threads).should.equal(False)
+        
+        self.test_subject.send_response.reset_mock()
