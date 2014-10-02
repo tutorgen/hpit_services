@@ -4,6 +4,7 @@ from datetime import datetime
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import bson
 
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
@@ -16,6 +17,7 @@ class ProblemManagementPlugin(Plugin):
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_problems
         self.step_db = self.mongo.hpit.hpit_steps
+        self.worked_db = self.mongo.hpit.hpit_problems_worked
         
         self.problem_fields = ["problem_name","problem_text"]
 
@@ -29,10 +31,13 @@ class ProblemManagementPlugin(Plugin):
             edit_problem=self.edit_problem_callback,
             list_problems=self.list_problems_callback,
             clone_problem=self.clone_problem_callback,
+            add_problem_worked=self.add_problem_worked_callback,
+            get_problems_worked=self.get_problems_worked_callback,
             add_step=self.add_step_callback,
             remove_step=self.remove_step_callback,
             get_step=self.get_step_callback,
-            get_problem_steps=self.get_problem_steps_callback)
+            get_problem_steps=self.get_problem_steps_callback,
+            get_student_model_fragment=self.get_student_model_fragment_callback)
 
     #Problem Management Plugin
     def add_problem_callback(self, message):
@@ -245,6 +250,60 @@ class ProblemManagementPlugin(Plugin):
             "success":True
         })
         
+    def add_problem_worked_callback(self,message):
+       
+        try:
+            problem_id = ObjectId(str(message["problem_id"]))
+            student_id = str(message["student_id"])
+        except KeyError:
+            self.send_response(message["message_id"],{
+                    "error" : "add_problem_worked requires a 'problem_id' and 'student_id'",
+                    "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
+            })
+            return
+        
+        problem = self.db.find_one({"_id":ObjectId(str(problem_id))})
+        if not problem:
+            self.send_response(message["message_id"],{
+                    "error" : "Problem with ID "+str(problem_id) + " does not exist.",
+                    "success":False
+            })
+            return
+            
+        self.worked_db.insert({"student_id":student_id,"problem_id":problem_id})
+        self.send_response(message["message_id"],{
+                    "success":True
+            })
+        
+    def get_problems_worked_callback(self,message):
+        try:
+            student_id = message["student_id"]
+        except KeyError:
+            self.send_response(message["message_id"],{
+                    "error" : "add_problem_worked requires a 'student_id'",
+                    "success":False
+            })
+            return
+            
+        
+        problems_worked = self.worked_db.find({"student_id":student_id})
+        problems = [p for p in problems_worked]
+        
+        self.send_response(message["message_id"],{
+               "success":True,
+               "problems_worked": problems,
+        })
+        
+            
+        
+            
+        
     def add_step_callback(self,message):
         entity_id = message["sender_entity_id"]
         
@@ -374,4 +433,27 @@ class ProblemManagementPlugin(Plugin):
                 "success":True,
             })
             
+    def get_student_model_fragment_callback(self,message):      
+        if self.logger:
+            self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
+            self.logger.debug("GET STUDENT MODEL FRAGMENT" + str(message))
+            
+        try:
+            student_id = message["student_id"]
+        except KeyError:
+            self.send_response(message["message_id"],{
+                "error":"problem_managment get_student_model_fragment requires 'student_id'"       
+            })
+            return
+        
+        problems_worked = self.worked_db.find({"student_id":student_id})
+        problems = [p for p in problems_worked]
+        
+        self.send_response(message["message_id"],{
+               "name":"problem_management",
+               "fragment": problems,
+        })
+        
+            
+             
                         

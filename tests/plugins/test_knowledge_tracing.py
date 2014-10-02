@@ -292,3 +292,86 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         ob["probability_guess"].should.equal(0.0)
         ob["probability_mistake"].should.equal(0.0)
         
+        
+    def test_get_student_model_fragment(self):
+        """
+        KnowledgeTracingPlugin.get_student_model_fragment() Test plan:
+            - if nothing in db, response should have empty list
+            - add some skills to db, make sure exist in list.
+        """
+        #init
+        self.test_subject.send_response = MagicMock()
+        msg = {"message_id":"1","sender_entity_id":"2"}
+        
+        #should get key error, no student_id
+        self.test_subject.get_student_model_fragment(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error":"knowledge tracing get_student_model_fragment requires 'student_id'",
+            })
+        self.test_subject.send_response.reset_mock()
+        
+        #should send empty list, empty databse
+        msg["student_id"] = "123"
+        self.test_subject.get_student_model_fragment(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "name":"knowledge_tracing",
+            "fragment":[],
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        self.test_subject.db.insert([
+            {
+                'sender_entity_id': "2",
+                'skill_id': "567",
+                'probability_known': 1,
+                'probability_learned': 1,
+                'probability_guess': 0,
+                'probability_mistake': 0,
+                'student_id': "123",
+            },
+            {
+                'sender_entity_id': "2",
+                'skill_id': "8910",
+                'probability_known': 0,
+                'probability_learned': 0,
+                'probability_guess': 1,
+                'probability_mistake': 1,
+                'student_id': "123",
+            },
+            {
+                'sender_entity_id': "2",
+                'skill_id': "8910",
+                'probability_known': 0,
+                'probability_learned': 0,
+                'probability_guess': 1,
+                'probability_mistake': 1,
+                'student_id': "333",
+            },
+        ])
+        
+        #should return values 1 and 2 from above
+        self.test_subject.get_student_model_fragment(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "name":"knowledge_tracing",
+            "fragment":[{
+                'skill_id': "567",
+                'probability_known': 1,
+                'probability_learned': 1,
+                'probability_guess': 0,
+                'probability_mistake': 0,
+                'student_id': "123",
+                },
+                {
+                'skill_id': "8910",
+                'probability_known': 0,
+                'probability_learned': 0,
+                'probability_guess': 1,
+                'probability_mistake': 1,
+                'student_id': "123",
+                }
+            ],
+        })
+        
+        
+       
+        

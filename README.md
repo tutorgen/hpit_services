@@ -32,6 +32,7 @@
         * [get_student](#get_student)
         * [set_attribute](#set_attribute)
         * [get_attribute](#get_attribute)
+        * [get_student_model](#get_student_model)
     * [Skill Management](#SKMPlugin)
         * [get_skill_name](#get_skill_name)
         * [get_skill_id](#get_skill_id)
@@ -44,16 +45,21 @@
         * [hf_push_state](#hf_push_state)
         * [hf_hint_exists](#hf_hint_exists)
         * [hf_get_hint](#hf_get_hint)
+        * [get_student_model_fragment](#kt_get_student_model_fragment)
     * [Problem Management](#PMPlugin)
         * [add_problem](#add_problem)
         * [remove_problem](#remove_problem)
         * [get_problem](#get_problem)
+        * [edit_problem](#edit_problem)
         * [list_problems](#list_problems)
-    * [Problem Step Management](#PSMPlugin)
-        * [add_problem_step](#add_problem_step)
-        * [remove_problem_step](#remove_problem_step)
-        * [get_problem_step](#get_problem_step)
-        * [list_problem_steps](#list_problem_steps)
+        * [clone_problem](#clone_problem)
+        * [add_problem_worked](#add_problem_worked)
+        * [get_problems_worked](#get_problems_worked)
+        * [add_step](#add_step)
+        * [remove_step](#remove_step)
+        * [get_step](#get_step)
+        * [get_problem_steps](#get_problem_steps)
+        * [get_student_model_fragment](#pm_get_student_model_fragment)
     * [Data Storage Plugin](#DSPlugin)
         * [store_data](#store_data)
         * [retrieve_data](#retrieve_data)
@@ -1027,6 +1033,19 @@ Returns:
 * student_id : string - the ID for the student
 * (attribute_name) : string - value of the requested attribute.
 
+####<a name = "get_student_model"></a>get_student_model
+Get the student model for a student.  The student model is an aggregation of information from
+all of the plugins that the student has interacted with.
+
+Receives:
+
+* student_id : string - the ID of the student
+
+Returns:
+
+* student_model : JSON - an object containing the student model.  This will contain lists and other objects from the various plugins.
+* (optional) error : An error message if something went wrong of the request timed out.
+
 
 ##<a name="SKMPlugin"></a> Skill Management Plugin
 
@@ -1119,6 +1138,26 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
+####<a name="kt_get_student_model_fragment"></a>get_student_model_fragment
+Returns a this plugin's contribution to the overall student model.  For the knowledge tracing plugin,
+this is all of the student's skills and knowledge tracing values.  This is usually sent via the StudentManagement model
+after it receives a get_student_model message.
+
+Receives:
+
+* student_id : string - the ID of the student
+
+Returns:
+
+* name : string - The name of the fragment, will always be "knowledge_tracing".
+* fragment : list - A list of skills, containing:
+    * student_id: string - An identifier for the student.
+    * skill_id : string - String identifier for the skill.
+    * probability_known : 0.0 - Probability the skill is already known
+    * probability_learned : 0.0 - Probability the skill will be learned
+    * probability_guess : 0.0 - Probability the answer is a guess
+    * probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)
+
 ##<a name="HFPlugin"></a> Hint Factory Plugin
 The Hint Factory Plugin is used to dynamically provide hints using a graph theoretic approach.
 
@@ -1190,7 +1229,6 @@ Adds a problem to the problem manager.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
 * problem_name : string - The name of the problem.
 * problem_text : string - Text for the problem.
 
@@ -1199,121 +1237,185 @@ Returns:
 * problem_name : string - The problem name.
 * problem_text : string - The problem's text.
 * success : boolean - True if the data was saved to the database.
-* updated : boolean - True if the data was updated (the record already existed)
+* problem_id : string - String identifier for the new problem, or the existing problem if it already exists.
+* (optional) error : string - The error message if something went wrong.
 
 ####<a name="remove_problem"></a> remove_problem
 Remove a problem from the problem manager.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-* problem_name : string - The name of the problem.
+* problem_id : string - A string identifier for the problem.
 
 Returns:
 
-* problem_name : string - The name of the problem that was removed.
 * exists : boolean - True if the problem existed.
 * success : boolean - True if the problem existed and was deleted.
+* (optional) error : string - the error message if something went wrong
 
 ####<a name="get_problem"></a> get_problem
 Gets a previously stored problem from the problem manager.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-* problem_name : string - The name of the problem to retrieve.
+* problem_id : string - The string identifier of the problem.
 
 Returns:
 
-* problem_name : string - The name of the problem.
-* problem_text : string - The text of the problem.
+* problem_id : string - The string identifier of the problem
 * exists : boolean - True if the problem existed.
 * success : boolean - True if the problem existed.
+* (optional) error: string - The error message if the problem does not exist.
 
-####<a name="list_problems"></a> list_problems
-Get all the problems for a given entity.
+####<a name="edit_problem"></a> edit_problem
+Edits a problem.  The tutor or plugin editing it must have the same ID as edit_allowed_id.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
+* problem_id :  string - a string representation of this problems ID
+* fields : JSON - a JSON object with the fields and values to be changed
+
+Returns: 
+* problem_name : string - The name of the problem.
+* problem_text : string - The text of the problem.
+* date_created : datetime - The time the problem was created.
+* edit_allowed_id : string - The ID of the entity that can edit this problem.
+* success : boolean - If the edit was successful.
+* (optional) error : string - The error message, if an error occured.
+
+####<a name="list_problems"></a> list_problems
+Get all the problems in the database.
+
+Receives:
+
+* Nothing
 
 Returns:
 
 * problems : list - A list of problems with
     * problem_name : string - The name of the problem.
     * problem_text : string - The text of the problem.
+    * date_created : datetime - When the problem was created.
+    * edit_allowed_id : string - The ID of the entity that can edit this.
 * success : True - Always returns True
 
-##<a name="PSMPlugin"></a> Problem Step Management Plugin
-
-####<a name="add_problem_step"></a> add_problem_step
-Adds a problem step to the problem step manager.
+####<a name="clone_problem"></a>clone_problem
+Clone an existing problem so that another entity can modify it.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-* problem_name : string - The name of the problem.
-* problem_step_name : string - The name of the problem step.
-* problem_step_text : string - The text of the problem step.
+* problem_id : string - The string identifier to the problem to be cloned.
 
 Returns:
 
-* problem_name : string - The problem name.
-* problem_step_name : string - The name of the problem step.
-* problem_step_text : string - The text of the problem step.
-* success : boolean - True if the data was saved to the database.
-* updated : boolean - True if the data was updated (the record already existed)
+* problem_id : string - The ID of the new cloned problem.
+* step_ids : list - A list of string identifiers for the newly cloned steps.
+* success: boolean - A boolean if everything went well.
+* (optional) error : string - An error message if an error accurs, caused by not passing the correct
+parameters or the requested problem doesn't exist.
 
-####<a name="remove_problem_step"></a> remove_problem_step
-Remove a problem step from the problem step manager.
+####<a name="add_problem_worked"></a>add_problem_worked
+This is used to show a student has worked on a problem.
+
+Receives: 
+
+* problem_id : string - The string identifier of the problem the student has worked.
+* student_id : string - The string identifier of the student that worked the problem.
+
+Returns:
+
+* success : boolean - Whether everything went ok.
+* (optional) error : string - If an error occurs, an error message.
+
+####<a name="get_problems_worked"></a>get_problems_worked
+Retrieves the problems a student has worked on.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-* problem_name : string - The name of the problem.
-* problem_step_name : string - The name of the problem step.
+* student_id : string - the string ID of the student
 
 Returns:
 
-* problem_name : string - The name of the problem.
-* problem_step_name : string - The name of the problem that was removed.
+* success : boolean - whether everything went ok
+* problems_worked : list - A list of problems, containing:
+    * student_id : string - The ID of the student.
+    * problem_id : string - The ID of the problem.
+
+####<a name="add_step"></a> add_step
+Adds a problem step to a problem.
+
+Receives:
+
+* problem_id : string - The ID of the problem
+* step_text : string - The text of the problem step.
+
+Returns:
+
+* step_id : string - The ID of the newly created step.
+* success : boolean - Whether everything went ok.
+* (optional) error : string - An error message if something went wrong.
+
+####<a name="remove_step"></a> remove_problem_step
+Remove a problem step from the problem manager.
+
+Receives:
+
+* step_id : string - The ID of the step.
+
+Returns:
+
 * exists : boolean - True if the problem existed.
 * success : boolean - True if the problem existed and was deleted.
+* (optional) error : string - an error emssage if something went wrong
 
-####<a name="get_problem_step"></a> get_problem_step
-Gets a previously stored problem step from the problem step manager.
-
-Receives:
-
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-* problem_step_name : string - The name of the problem step.
-* problem_name : string - The name of the problem to retrieve.
-
-Returns:
-
-* problem_name : string - The name of the problem.
-* problem_step_name : string - The name of the problem step.
-* problem_step_text : string - The text of the problem step.
-* exists : boolean - True if the problem existed.
-* success : boolean - True if the problem existed.
-
-####<a name="list_problem_steps"></a> list_problem_steps
-Get all the problems for a given problem and entity. If the problem name is specified
-returns all problem steps for the given problem_name. If the problem_name is NOT 
-specified, returns all the problem steps for the given entity.
+####<a name="get_step"></a> get_problem_step
+Gets a previously stored problem step from the problem manager.
 
 Receives:
 
-* entity_id : string - An identifier for the sender. (Defined by the HPIT Server)
-* (optional) problem_name : string - The name of the problem.
+* step_id : string - The ID of the step.
 
 Returns:
 
-* problem_steps : list - A list of problems with
-    * problem_step : string - The name of the problem.
-    * problem_step_name : string - The name of the problem step.
-    * problem_step_text : string - The text of the problem step.
-* success : True - Always returns True
+* step_id : string - The ID of the step.
+* step_text : string - The step's text.
+* date_created : datetime - The time the step was created.
+* allowed_edit_id : string - The ID of the entity that can edit this step.
+* siccess : boolean - Whether everything went OK.
+
+####<a name="get_problem_steps"></a> list_problem_steps
+Get all the problem steps for a given problem..
+
+Receives:
+
+* problem_id : string - The ID of the problem.
+
+Returns:
+
+* steps : list - A list of problems with
+    * step_id : string - The ID of the step.
+    * step_text : string - The step text.
+    * date_created : datetime - The time the step was created.
+* problem_id : string - The ID of the problem the steps belong to.
+* success : boolean - Whether everything went ok.
+
+####<a name="pm_get_student_model_fragment"></a>get_student_model_fragment
+Returns a this plugin's contribution to the overall student model.  For the problem management plugin,
+this is all of the problems the student has worked on.  This is usually sent via the StudentManagement model
+after it receives a get_student_model message.
+
+Receives:
+
+* student_id : string - the ID of the student
+
+Returns:
+
+* name : string - The name of the fragment, will always be "problem_management".
+* fragment : list - A list of problems, containing:
+    * problem_name : string - The name of the problem.
+    * problem_text : string - The text of the problem.
+    * date_created : datetime - The time this problem was created.
+    * edit_allowed_id : string - The ID of the tutor or plugin that can edit this problem.
 
 ##<a name="DSPlugin"></a> Data Storage Plugin
 The Data Storage Plugin can be used to store any kind of key value information that a plugin

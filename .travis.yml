@@ -26,3 +26,4 @@ script:
   - "export HPIT_ENV=travis"
   - python manager.py syncdb
   - python manager.py test
+  
