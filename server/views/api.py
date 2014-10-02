@@ -16,6 +16,8 @@ from server.models import Plugin, Tutor, Subscription
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
+from utils import StudentAuthentication
+
 def _map_mongo_document(document):
     mapped_doc = {}
 
@@ -35,9 +37,8 @@ def _map_mongo_document(document):
 def bad_parameter_response(parameter):
     return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))
 
-def auth_failed_response():
-    return ("Could not authenticate. Invalid entity_id/api_key combination.",
-        403, dict(mimetype="application/json"))
+def auth_failed_response(message="Could not authenticate. Invalid entity_id/api_key combination."):
+    return (message,403, dict(mimetype="application/json"))
 
 def not_found_response():
     return ("Could not find the requested resource.", 404, dict(mimetype="application/json"))
@@ -653,12 +654,17 @@ def message():
     message_name = request.json['name']
     payload = request.json['payload']
 
+    #student auth
+    if "student_id" in payload:
+        if not StudentAuthentication.student_auth(str(sender_entity_id), str(payload["student_id"])):
+            return auth_failed_response("Student ID " + str(payload["student_id"]) + " is not available to entity " + str(sender_entity_id))
+
     message = {
         'sender_entity_id': sender_entity_id,
         'time_created': datetime.now(),
         'message_name': message_name,
         'payload': payload,
-    }
+    }     
 
     message_id = mongo.db.messages.insert(message)
 

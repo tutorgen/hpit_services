@@ -10,6 +10,8 @@ import time
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
+from utils import StudentAuthentication
+
 class StudentManagementPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
@@ -22,6 +24,8 @@ class StudentManagementPlugin(Plugin):
         self.student_model_fragment_names = ["knowledge_tracing","problem_management"]
         self.student_models = {}
         self.timeout_threads = {}
+        
+        StudentAuthentication.init_auth()
 
     def post_connect(self):
         super().post_connect()
@@ -45,6 +49,8 @@ class StudentManagementPlugin(Plugin):
             attributes = {}
             
         student_id = self.db.insert({"attributes":attributes})
+        
+        StudentAuthentication.add_student_auth(str(message["sender_entity_id"]),str(student_id))
         self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes})
         
     def get_student_callback(self, message):

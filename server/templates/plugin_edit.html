@@ -8,10 +8,20 @@
 
     {% for field in form %}
         <div class="form-group">
-            <p>
-                {{ field.label }}
-                {{ field(class="form-control") }}
-            </p>
+            
+            {% if field.name == "internal" %}
+                {% if isadmin == 1 %}
+                    <p>
+                    {{ field.label }}
+                    {{ field(class="form-control") }}
+                    </p>
+                {% endif %}
+            {% else %}
+                <p>
+                    {{ field.label }}
+                    {{ field(class="form-control") }}
+                </p>
+            {% endif %}
         </div>
     {% endfor %}
 
