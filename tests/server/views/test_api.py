@@ -52,6 +52,7 @@ class TestServerAPI(unittest.TestCase):
         app.testing = True
         self.test_client = app.test_client()
         
+        db.drop_all()
         db.create_all()
         
         self.tutor = Tutor()
@@ -89,8 +90,7 @@ class TestServerAPI(unittest.TestCase):
         call.
         """
         self.test_client = None
-        db.drop_all()
-        db.session.commit()
+        
      
     def test_version(self):
         """
