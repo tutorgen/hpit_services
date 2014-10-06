@@ -45,7 +45,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         
         r = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_skill_cache",auth=settings.COUCHBASE_AUTH)
         if r.status_code != 200 and r.status_code != 404:
-            raise Exception("Failure to delete bucket")
+            raise Exception(' '.join(["Failure to delete bucket:", r.status_code, r.text]))
             
         client = MongoClient()
         client.drop_database("test_hpit")
