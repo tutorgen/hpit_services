@@ -37,6 +37,16 @@ class LoadTestingTutor(Tutor):
 
         self.problem_library = {}
 
+        self.actions = [
+            self.create_student, 
+            self.create_problem, 
+            self.create_skill,
+            self.student_solve,
+            self.student_failure,
+            self.student_information
+        ]
+
+
     def post_connect(self):
         self.send('pg_list_problems', {}, self.list_problems_callback)
 
@@ -53,6 +63,10 @@ class LoadTestingTutor(Tutor):
         """
         Emulate a student logging onto the tutor.
         """
+        if len(self.students) >= 1000:
+            del self.actions[self.create_student]
+            return
+
         student_info = {
             'last_name': random.choice(self.last_names),
             'address': ' '.join([
@@ -150,17 +164,8 @@ class LoadTestingTutor(Tutor):
 
 
     def main_callback(self):
-        actions = [
-            self.create_student, 
-            self.create_problem, 
-            self.create_skill,
-            self.student_solve,
-            self.student_failure,
-            self.student_information
-        ]
-
         if self.problem_library:
-            action = random.choice(actions)
+            action = random.choice(self.actions)
             action()
 
         return True
