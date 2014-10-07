@@ -24,17 +24,16 @@ class LoadTestingTutor(Tutor):
         super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
         self.run_once = run_once
         self.logger = logger
-        self.skills = ['addition', 'subtraction', 'multiplication', 'division']
-        self.skill_ids = {}
-        for sk in self.skills:
-            self.skill_ids[sk] = None
-        
-        self.student_id = None
-      
-        if args: 
-            self.args = json.loads(args[1:-1])
-        else:
-            self.args = None
+
+        self.students = []
+        self.female_first_names = ["Mary", "Junell", "Elizabeth", "Ashley", "Rebecca", "Catherine", "Eris", "Fatima"]
+        self.male_first_names = ["Raymond", "Robert", "Ted", "John", "Jeff", "Josh", "Joe", "Chris", "Matthew", "Mark", "Luke"]
+        self.last_names = ["Smith", "Barry", "Chandler", "Carmichael", "Nguyen", "Blink", "Sauer", "Slavins", "O'Reilly", "Ledermann"]
+        self.genders = ["Male", "Female", "Other"]
+        self.address_names = ["Hague", "Forest Green", "Carothers", "Deerpark", "Warren", "Ogden", "Pearl", "Park"]
+        self.address_suffix = ["Avenue", "Drive", "Street", "Boulevard", "Lane"]
+        self.cities = ["Columbus", "Covington", "Richmond", "Lexington", "Louisville", "Vaudeville", "Lewisburg", "Leesville"]
+        self.states = ["Alaska", "California", "Florida", "Ohio", "Indiana", "Nevada", "Virgina", "Pennsylvania"]
 
         
     def post_connect(self):
@@ -48,7 +47,91 @@ class LoadTestingTutor(Tutor):
                 'student_id':self.student_id,
                 })
 
+    def create_student(self):
+        """
+        Emulate a student logging onto the tutor.
+        """
+        student_info = {
+            'last_name': random.choice(self.last_names),
+            'address': ' '.join([
+                str(random.randint(100, 100000)), 
+                random.choice(self.address_names), 
+                random.choice(self.address_suffix)]),
+            'city': random.choice(self.cities),
+            'states': random.choice(self.states),
+            'zip': '-'.join([
+                str(random.randint(10000, 100000)),
+                str(random.randint(1000, 10000))])
+            'country': "United States",
+            'gender': random.choice(self.genders),
+        }
+
+        if student_info['gender'] == "Male":
+            student_info['first_name'] = random.choice(self.male_first_names)
+        elif student_info['gender'] == "Female":
+            student_info['first_name'] = random.choice(self.female_first_names)
+        else:
+            student_info['first_name'] = random.choice(self.male_first_names + self.female_first_names)
+
+        student_info['full_name'] = ' '.join([student_info['first_name'], student_info['last_name']])
+
+        self.send("add_student", student_info, self.create_student_callback)
+
+
+    def create_problem(self):
+        """
+        Emulate a student asking for a problem.
+        """
+        pass
+
+    def create_skill(self):
+        """
+        Emulate a tutor finding an existing problem for a student to solve.
+        """
+
+    def student_solve(self):
+        """
+        Emulate a student solving a problem.
+        """
+        pass
+
+    def student_failure(self):
+        """
+        Emulate a student failing to solve a problem.
+        """
+        pass
+
+    def student_information(self):
+        """
+        Emulate a student requesting information about his student model.
+        """
+        pass
+
+    def create_student_callback(self):
+        """
+        Callback for the create student event.
+        """
+        self.send_log_entry("RECV: add_student response recieved. " + str(response))
+        self.logger.debug("RECV: add_student response recieved. " + str(response))
+        self.students[response["student_id"]] = response["attributes"]
+
+
     def main_callback(self):
+        actions = [
+            self.create_student, 
+            self.create_problem, 
+            self.create_skill,
+            self.student_solve,
+            self.student_failure,
+            self.student_information
+        ]
+
+        action = random.choice(actions)
+
+        action()
+
+        return True
+
         if self.student_id == None:
             return True
         for k,v in self.skill_ids.items():

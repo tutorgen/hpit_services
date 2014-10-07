@@ -1,52 +1,48 @@
-<p><a href="https://codeship.io/projects/28762"> <img alt="Codeship Build Status" src="https://codeship.io/projects/d0ff7820-f8ca-0131-f61d-5a47552ce69e/status" /></a>
-<a href="https://travis-ci.org/tutorgen/hpit_services"><img alt="Travis Build Status" src="https://travis-ci.org/tutorgen/hpit_services.svg?branch=master" /></a></p>
+<p><a href="https://travis-ci.org/tutorgen/hpit_services"><img alt="Travis Build Status" src="https://travis-ci.org/tutorgen/hpit_services.svg?branch=master" /></a></p>
 <h2>Table of Contents</h2>
 <ul>
 <li><a href="#APIToc">API Framework Documentation v2.1</a></li>
 <li><a href="#TermToc">Understanding Terminology</a></li>
 <li><a href="#GetStartedToc">Getting Started</a><ul>
+<li><a href="#GSSystemRequirementsToc">System Requirements</a></li>
 <li><a href="#GSInstallWindowsToc">Installing HPIT on Windows</a></li>
 <li><a href="#GSInstallMacOSXToc">Installing HPIT on Mac OSX</a></li>
 <li><a href="#GSInstallUbuntu12Toc">Installing HPIT on Ubuntu 12.04</a></li>
 <li><a href="#GSInstallUbuntu14Toc">Installing HPIT on Ubuntu 14.04</a></li>
+<li><a href="#GSCommonHangupsToc">Common Hangups</a></li>
+<li><a href="#GSServerSettingsToc">Server Settings</a></li>
 </ul>
 </li>
-<li><a href="#GSOldInstallGuideToc">Old Install Guide (deprecated)</a><ul>
-<li><a href="#GSReqToc">Python Requirements</a></li>
-<li><a href="#GSProdToc">Production Considerations</a></li>
-<li><a href="#GSFrontendToc">Frontend Requirements</a></li>
-<li><a href="#GSInstallToc">Installing HPIT</a></li>
-<li><a href="#GSInstallOptToc">Optional Installation for Hint Factory Plugin</a></li>
-</ul>
-</li>
-<li><a href="#AdminToc">The Adminstration Panel</a></li>
+<li><a href="#AdminToc">The Administration Panel</a></li>
 <li><a href="#ManagerToc">The HPIT Manager</a></li>
 <li><a href="#ConfigToc">The Tutor and Plugin Configuration</a></li>
-<li><a href="#SettingsToc">Server Settings</a></li>
 <li><a href="#DatabaseToc">Database Structure</a><ul>
 <li><a href="#DBmessagesToc">messages</a></li>
 <li><a href="#DBpluginmesToc">plugin_messages</a></li>
 <li><a href="#DBresponsesToc">responses</a></li>
 <li><a href="#DBsessionsToc">sessions</a></li>
+<li><a href="#DBlogToc">entity_log</a></li>
 </ul>
 </li>
-<li><a href="#ServerToc">The HPIT Server in depth</a></li>
-<li><a href="#TutorToc">Tutors in depth</a></li>
-<li><a href="#PluginToc">Plugin Component Specification</a><ul>
+<li><a href="#ServerToc">The HPIT Server in-depth</a></li>
+<li><a href="#TutorToc">Tutors in-depth</a></li>
+<li>
+<p><a href="#PluginToc">Plugin Component Specification</a></p>
+<ul>
 <li><a href="#ExPlugin">Echo Example</a></li>
-<li><a href="#DCPlugin">Data Connection to PSLC Datashop</a></li>
+<li><a href="#DCPlugin">Data Connection to PSLC DataShop</a></li>
 <li><a href="#DSPlugin">Data Storage</a></li>
 <li><a href="#SMPlugin">Student Management</a><ul>
 <li><a href="#add_student">add_student</a></li>
 <li><a href="#get_student">get_student</a></li>
 <li><a href="#set_attribute">set_attribute</a></li>
 <li><a href="#get_attribute">get_attribute</a></li>
+<li><a href="#get_student_model">get_student_model</a></li>
 </ul>
 </li>
 <li><a href="#SKMPlugin">Skill Management</a><ul>
-<li><a href="#add_skill">add_skill</a></li>
-<li><a href="#remove_skill">remove_skill</a></li>
-<li><a href="#get_skill">get_skill</a></li>
+<li><a href="#get_skill_name">get_skill_name</a></li>
+<li><a href="#get_skill_id">get_skill_id</a></li>
 </ul>
 </li>
 <li><a href="#KTPlugin">Knowledge Tracing</a><ul>
@@ -60,31 +56,55 @@
 <li><a href="#hf_push_state">hf_push_state</a></li>
 <li><a href="#hf_hint_exists">hf_hint_exists</a></li>
 <li><a href="#hf_get_hint">hf_get_hint</a></li>
+<li><a href="#kt_get_student_model_fragment">get_student_model_fragment</a></li>
 </ul>
 </li>
 <li><a href="#PMPlugin">Problem Management</a><ul>
 <li><a href="#add_problem">add_problem</a></li>
 <li><a href="#remove_problem">remove_problem</a></li>
 <li><a href="#get_problem">get_problem</a></li>
+<li><a href="#edit_problem">edit_problem</a></li>
 <li><a href="#list_problems">list_problems</a></li>
+<li><a href="#clone_problem">clone_problem</a></li>
+<li><a href="#add_problem_worked">add_problem_worked</a></li>
+<li><a href="#get_problems_worked">get_problems_worked</a></li>
+<li><a href="#add_step">add_step</a></li>
+<li><a href="#remove_step">remove_step</a></li>
+<li><a href="#get_step">get_step</a></li>
+<li><a href="#get_problem_steps">get_problem_steps</a></li>
+<li><a href="#pm_get_student_model_fragment">get_student_model_fragment</a></li>
 </ul>
 </li>
-<li><a href="#PSMPlugin">Problem Step Management</a><ul>
-<li><a href="#add_problem_step">add_problem_step</a></li>
-<li><a href="#remove_problem_step">remove_problem_step</a></li>
-<li><a href="#get_problem_step">get_problem_step</a></li>
-<li><a href="#list_problem_steps">list_problem_steps</a></li>
+<li><a href="#PGPlugin">Problem Generator</a><ul>
+<li><a href="#list_problems">pg_list_problems</a></li>
+<li><a href="#generate_problem">pg_generate_problem</a></li>
+</ul>
+</li>
+<li><a href="#DSPlugin">Data Storage Plugin</a><ul>
+<li><a href="#store_data">store_data</a></li>
+<li><a href="#retrieve_data">retrieve_data</a></li>
+<li><a href="#remove_data">remove_data</a></li>
+</ul>
+</li>
+<li><a href="#DCPlugin">PSLC DataShop Connection Plugin</a><ul>
+<li><a href="#get_dataset_metadata">get_dataset_metadata</a></li>
+<li><a href="#get_sample_metadata">get_sample_metadata</a></li>
+<li><a href="#get_transactions">get_transactions</a></li>
+<li><a href="#get_student_steps">get_student_steps</a></li>
+<li><a href="#add_custom_field">add_custom_field</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="https://github.com/tutorgen/HPIT-python-client/blob/master/README.md">Developing New Plugins and Tutors</a></li>
+<li>
+<p><a href="https://github.com/tutorgen/HPIT-python-client/blob/master/README.md">Developing New Plugins and Tutors</a></p>
+</li>
 <li><a href="#LicenseToc">License</a></li>
 </ul>
 <h2><a name="APIToc"></a>API Framework Documentation v2.1</h2>
 <p>The HyperPersonalized Intelligent Tutor (HPIT) is a schemaless, event driven system
 which specializes in the communication between distributed intelligent tutoring systems 
-and specialized, machine learning algorithims, which we call plugins. HPIT is a next 
+and specialized, machine learning algorithms, which we call plugins. HPIT is a next 
 generation system built on the backbone of open source web technologies.</p>
 <p>Currently our tech stack consists of the following:</p>
 <ul>
@@ -107,21 +127,21 @@ generation system built on the backbone of open source web technologies.</p>
 <li>UnderscoreJS</li>
 <li>JQuery</li>
 </ul>
-<p>At the most fundemental layer HPIT is a collection of RESTful webservices that assist in
+<p>At the most fundamental layer HPIT is a collection of RESTful web services that assist in
 the routing of messages between tutors and plugins. On top of this web services layer 
 we have built a client side library in the Python programming language to assist in 
-the creation of tutors and plugins and their communcation with HPIT.</p>
+the creation of tutors and plugins and their communication with HPIT.</p>
 <p>HPIT is a publish and subscribe framework using event-driven methodologies. Tutors interact 
 with the system by sending messages which consist of a named event and a data payload. 
 Plugins can listen to these events, perform an action, then submit a response back to HPIT,
 which will ultimately be routed to the tutor that made the original request.</p>
-<p>In addition, HPIT provides several baseline plugins which peform basic functions related
+<p>In addition, HPIT provides several baseline plugins which perform basic functions related
 to intelligent tutoring systems.</p>
 <h2><a name="TermToc"></a> Understanding Terminology</h2>
 <p>HPIT - HPIT consists of several modules and is sort of an all encompassing term for the entire 
 system of modules.</p>
 <p>Tutor - A tutor is an entity that interacts with students and uses the HPIT system to gather 
-and analyze intelligent information about student perforamance. A tutor could be a game, or a web application,
+and analyze intelligent information about student performance. A tutor could be a game, or a web application,
 a Flash game, or some other system that interacts with students in an effort to educate or train.</p>
 <p>Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
 A plugin may exist inside of HPIT itself(at TutorGen) or on a network or system outside of HPIT. Regardless of
@@ -134,8 +154,109 @@ and plugins.</p>
 their plugin.</p>
 <p>HPIT Transaction - A transaction is a message specifically for PSLC DataShop transactions.</p>
 <h2><a name="GetStartedToc"></a> Getting Started</h2>
+<h3><a name="GSSystemRequirementsToc"></a>System Requirements</h3>
+<p>In order to install and run HPIT, you'll need the following system:
+<em> Operating systems
+    * Windows 7 or Windows 8.1
+    * Ubuntu 12.04 LTS or Ubuntu 14.04 LTS
+    * OSX Mountain Lion or above
+</em> Architecture
+    * 64-bit processor
+    * 32-bit processors will work in a limited fashion, but it is not recommended or supported
+* Memory and Storage
+    * Minimum 4 GB ram, 8 GB recommended
+    * Minimum 2 GB hard disk, can scale up very quickly depending on your data volume
+    * Solid state hard drives recommended</p>
 <h3><a name="GSInstallWindowsToc"></a> Installing HPIT on Windows</h3>
-<h4>TODO</h4>
+<p>HPIT was designed to run on a Unix-like system, and Windows support is solely for development purposes.
+Windows should not be used as an HPIT production server. </p>
+<h4>Getting Started, Compilers.</h4>
+<p>First, to install HPIT, you'll need to install Microsoft Visual Studio.  The latest version should be fine; you can
+find it at http://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx.</p>
+<p>Next, you'll need the GCC, most easily installed with MinGW.  You can get it from here: http://mingw.org/.</p>
+<p>Make sure to add C:\MinGW\bin and C:\MinGW\msys\1.0\bin to your PATH environment variable.</p>
+<h4>Install Python 3.3.5, Pip and virtualenv</h4>
+<p>To install Python 3.3.5, download the binary from https://www.python.org/downloads/ and run.</p>
+<p>To install Pip, go to http://pip.readthedocs.org/en/latest/installing.html , download the get-pip.py script, and run with
+<code>python get-pip.py</code>.</p>
+<p>Verify you have the proper versions of Python and Pip:</p>
+<p><code>python --version</code></p>
+<p><code>pip --version</code></p>
+<p>Next, install virtualenv using:</p>
+<p><code>pip install virtualenv</code></p>
+<p>Add C:\Python33\Scripts to your PATH so that pip and virtualenv are available commands.</p>
+<h4>Databases</h4>
+<p>HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.</p>
+<h5>MongoDB</h5>
+<p>Binaries available at http://www.mongodb.org/downloads.  Download and run.
+You will need to create the directory C:\data\db to run MongoDB.</p>
+<h5>SQLite</h5>
+<p>Go to http://www.sqlite.org/download.html and download sqlite-shell-win32-*.zip and sqlite-dll-win32-*.zip.</p>
+<p>Create the directory C:\sqlite.</p>
+<p>Extract the contents of the .zip files to C:\sqlite. There should be three files:
+<em> sqlite3.def
+</em> sqlite3.dll
+* sqlite3.exe</p>
+<p>Add C:\sqlite to your PATH environment variable.</p>
+<h5>Neo4j</h5>
+<p>Go to http://neo4j.com/download/ and download the Community edition binary and install.</p>
+<h5>Couchbase</h5>
+<p>Go to http://www.couchbase.com/download and download the Community edition binary and install.
+After installing, go to http://localhost:8091/index.html to configure Couchbase.</p>
+<p>To install the python client, go to https://pypi.python.org/pypi/couchbase and download 
+couchbase-1.2.3.win-amd64-py3.3.exe. </p>
+<p>Activate your virtual environment (covered later) and run:</p>
+<p>'easy_install ccouchbase-1.2.3.win-amd64-py3.3.exe'.</p>
+<h5>PostgreSQL</h5>
+<p>Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
+as a production environment, this step is optional.  However, if you want to install PostgreSQL anyway,
+there are binaries available at http://www.postgresql.org/download/windows/.</p>
+<p>To install the psycopg2 library on Windows, there are instructions located at http://www.stickpeople.com/projects/python/win-psycopg/ and
+are summarized here:</p>
+<p>Download the 3.4 release for 64-bit processors.</p>
+<p>Activate your virtual environment (covered later) and run 'easy_install psycopg2-2.5.4.win-amd64-py3.4-pg9.3.5-release.exe', replacing
+the .exe in the command with the one you downloaded.</p>
+<p>You'll need to add the bin directory of your PostgreSQL installation to PATH, so that <code>pg_config</code> is available to call.</p>
+<h4>NodeJS</h4>
+<p>HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.</p>
+<p>Binaries are available at http://nodejs.org/download/.</p>
+<h4>Installing HPIT</h4>
+<h5>Downloading HPIT and More Dependencies</h5>
+<p>Now we can install HPIT.  First, you will need the git command line tools.  They can be downloaded
+from http://git-scm.com/download/win.</p>
+<p>After git is installed, open up the Git Bash program, cd to your working directory (I used ~/Documents/HPIT) and run:</p>
+<p><code>git clone https://github.com/tutorgen/hpit_services</code></p>
+<p>Now it is time to create your virtual environment.  Switch back your your Windows Command Prompt.  It is important that you are using the 
+correct Python binary when creating the virtual environment.  In our case, we used the command</p>
+<p><code>virtualenv -p C:\Python33\python.exe env</code></p>
+<p>Where virtualenv is the binary for the compatible version of virtualenv, C:\Python33\python.exe is your 
+Python 3.3.5 binary, and env is the directory that the virtual environment will live in.</p>
+<p>Next, activate the environment with the command <code>env\Scripts\activate.bat</code>.  Your command prompt
+should now be prefixed with (env).</p>
+<p>Now, find the directory env\Lib\distutils.  Add a file <code>distutils.cfg</code> with the contents:</p>
+<pre><code>[build]
+compiler=mingw32
+</code></pre>
+<p>This tells Pip to use the MinGW compilers, which are required for some packages.</p>
+<p>Now, install the Python dependencies using pip.  The command will be:</p>
+<p><code>pip install -r requirements-win.txt</code></p>
+<h5>Configuring HPIT</h5>
+<p>First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
+controlled by these commands:</p>
+<p>MongoDB:  <code>mongod</code>.  This will run in a terminal window until it is killed.</p>
+<p>Neo4J: Run C:\Program Files\Newo4j Community\bin\neo4j-community.exe.  You can start and stop it
+by clicking a button.</p>
+<p>Couchbase: Couchbase will already be running after it is installed.</p>
+<p>Next, set up the server settings.  Instructions are located in the section <a href="#GSServerSettingsToc">Server Settings</a></p>
+<p>Now, seed the database with this command:</p>
+<p><code>python manager.py syncdb</code></p>
+<p>And run the tests:</p>
+<p><code>python manager.py test</code></p>
+<p>Assuming everything passed, you should then run:</p>
+<p><code>python manager.py start</code></p>
+<p>And browse to http://127.0.0.1:800 , where you should see a welcome page.</p>
+<p>If you run into problems, check the section <a href="#GSCommonHangupsToc">Common Hangups</a></p>
 <h3><a name="GSInstallMacOSXToc"></a> Installing HPIT on Mac OSX</h3>
 <h4>Installing X-Code, Command Line Tools, and Homebrew</h4>
 <ol>
@@ -157,9 +278,12 @@ that you confiqure HPIT to use postgreSQL over sqlite3.</p>
 <li><code>brew install mongodb sqlite</code></li>
 <li>(optional) Install postgresql with Postgres.app found here: http://postgresapp.com/</li>
 </ol>
+<p>Install the libpq headers, using: <code>sudo apt-get install libpq-dev</code>.  Try running <code>pg_config --version</code>
+to ensure it installed correctly.</p>
+<p>psycopg2 will be installed later with Pip.</p>
 <h4>Installing NodeJS and NPM</h4>
 <p>HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
-you will need to download and install node to be able to run the HPIT server. Luckily on Max OSX this is a relatively trivial task.</p>
+you will need to download and install node version 0.10.3 to be able to run the HPIT server. Luckily on Max OSX this is a relatively trivial task.</p>
 <ul>
 <li><code>brew install node</code></li>
 <li><code>npm install coffeescript-compiler less</code></li>
@@ -175,7 +299,7 @@ is again, through Homebrew.</p>
 <ol>
 <li>Clone the HPIT project from github: <code>git clone https://github.com/tutorgen/hpit_services hpit</code></li>
 <li>Change to the directory of the HPIT project: <code>cd hpit</code></li>
-<li>Create a reference to your python3 installation binary for virtualenv. <code>``export PY3_PATH=</code>which python3````</li>
+<li>Create a reference to your python3 installation binary for virtualenv. <code>export PY3_PATH=$(which python3)</code></li>
 <li>Create a new virtual environment with: <code>virtualenv -p $PY3_PATH env</code></li>
 <li>Activate that environment with: <code>source env/bin/activate</code></li>
 <li>Install HPIT's dependencies with: <code>pip3 install -r requirements.txt</code>.</li>
@@ -187,126 +311,225 @@ is again, through Homebrew.</p>
 <p>To start the HPIT server type: <code>python3 manager.py start</code> and open your browser 
 to http://127.0.0.1:8000. </p>
 <h3><a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04</h3>
-<h4>TODO</h4>
+<p>HPIT supports the Ubuntu 12.04 LTS release.  However, if possible, it is highly recommended to
+upgrade to the 14.04 LTS release.</p>
+<h4>Getting Started</h4>
+<p>The first thing you'll need to do is update and upgrade your apt repositories:</p>
+<p><code>sudo apt-get update</code></p>
+<p><code>sudo apt-get upgrade</code></p>
+<p>Next, install the C compiler and other build utilities:</p>
+<p><code>sudo apt-get install build-essential</code></p>
+<p>HPIT requires Python 3.4 or higher.  Ubuntu 12.04 does not include Python 3.4 in its
+repositories by default, so you must install it from the fkrull/deadsnakes PPA:</p>
+<p><code>sudo add-apt-repository ppa:fkrull/deadsnakes</code></p>
+<p><code>sudo apt-get update</code></p>
+<p><code>sudo apt-get install python3.4</code></p>
+<p>You can verify you have the correct version of Python by typing:</p>
+<p><code>python3.4 --version</code></p>
+<p>Next, to install the numerous Python packages HPIT requires, you'll need Pip, which
+needs to be compatible with Python 3.4.  The easiest way to do this is to use the 
+command:</p>
+<p><code>python3.4 -m ensurepip --upgrade</code></p>
+<p>We highly recommend using virtualenv when running HPIT.  If you are unfamiliar with
+virtualenv, you can read about it at http://virtualenv.readthedocs.org/en/latest/. 
+Install virtualenv from pip, with the command:</p>
+<p><code>pip3 install virtualenv</code></p>
+<h4>Databases</h4>
+<p>HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.</p>
+<h5>SQLite and MongoDB</h5>
+<p>Installing SQLite and MongoDB are easy to install, simply use apt-get:</p>
+<p><code>sudo apt-get install sqlite mongodb</code></p>
+<h5>PostgreSQL</h5>
+<p>To install PostgreSQL, use the commands:</p>
+<p><code>sudo apt-get install postgresql postgresql-contrib</code></p>
+<p>In order for Python to interact with PostgreSQL, we'll need the dependencies for the psycopg2 library.  Install
+instructions are found at http://initd.org/psycopg/docs/install.html#install-from-source , 
+and summarized here:</p>
+<p>Install the Python 3.4 headers, using: <code>sudo apt-get install libpython3.4-dev</code>.  This comes from
+this fkrull/deadsnakes repository.</p>
+<p>Install the libpq headers, using: <code>sudo apt-get install libpq-dev</code>.  Try running <code>pg_config --version</code>
+to ensure it installed correctly.</p>
+<p>psycopg2 will be installed later with Pip.</p>
+<h5>Neo4j</h5>
+<p>Next, we need to install Neo4j.  Neo4j requires Oracle JDK 7 or OpenJDK 7.  You can verify this is installed
+by using: <code>java -version</code>.</p>
+<p>To install Neo4j, follow the steps located at http://debian.neo4j.org/ , summarized below:</p>
+<p><code>sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key| apt-key add - # Import Neo4j signing key</code></p>
+<p><code>sudo echo 'deb http://debian.neo4j.org/repo stable/' &gt; /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file</code></p>
+<p><code>sudo apt-get update # Find out about the files in our repository</code></p>
+<p><code>sudo apt-get install neo4j # Install Neo4j, community edition</code></p>
+<h5>Couchbase</h5>
+<p>HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
+install instructions, summarized below:
+<em> Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
+</em> Use dpkg with sudo, for example, <code>sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb</code>.
+* After installing, go to http://localhost:8091/index.html to configure Couchbase.</p>
+<h4>NodeJS</h4>
+<p>HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
+NodeJS from source to ensure you get the latest version.  At least 0.10.3 is required. </p>
+<p>First, download the source code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
+You can use wget, like this:</p>
+<p><code>wget http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz</code></p>
+<p>Next, extract the archive.</p>
+<p><code>tar xvfz node-v0.10.31.tar.gz</code></p>
+<p>Now, cd into the node-v0.10.31.tar.gz directory, and run:</p>
+<p><code>./configure</code></p>
+<p><code>make</code></p>
+<p><code>sudo make install</code></p>
+<h4>Installing HPIT</h4>
+<h5>Downloading HPIT and More Dependencies</h5>
+<p>Now that the dependencies are installed, we can install HPIT.  To do this, you will need git:</p>
+<p><code>sudo apt-get install git</code></p>
+<p>Next, clone the HPIT repository using:</p>
+<p><code>git clone https://github.com/tutorgen/hpit_services</code></p>
+<p>Next, move into the hpit_services directory using <code>cd hpit_services</code></p>
+<p>Now it is time to create your virtual environment.  It is important that you are using the 
+correct Python binary when creating the virtual environment.  In our case, we used the command</p>
+<p><code>virtualenv -p python3.4 env</code></p>
+<p>Where virtualenv is the binary for the compatible version of virtualenv, python3.4 is your 
+Python 3.4 binary, and env is the directory that the virtual environment will live in.</p>
+<p>Next, activate the environment with the command <code>source env/bin/activate</code>.  Your command prompt
+should now be prefixed with (env).</p>
+<p>Now, install the Python dependencies using pip3.  The command will be:</p>
+<p><code>pip3 install -r requirements.txt</code></p>
+<h5>Configuring HPIT</h5>
+<p>First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
+controlled by these commands:</p>
+<p>MongoDB:  <code>sudo service mongodb start</code>, <code>sudo service mongodb stop</code></p>
+<p>Neo4J: <code>sudo service neo4j-service start</code>, <code>sudo service neo4j-service stop</code></p>
+<p>Couchbase: <code>sudo /etc/init.d/couchbase-server start</code>, <code>sudo /etc/init.d/couchbase-server stop</code></p>
+<p>Next, set up the server settings.  Instructions are located in the section <a href="#GSServerSettingsToc">Server Settings</a></p>
+<p>Now, seed the database with this command:</p>
+<p><code>python manager.py syncdb</code></p>
+<p>And run the tests:</p>
+<p><code>python manager.py test</code></p>
+<p>Assuming everything passed, you should then run:</p>
+<p><code>python manager.py start</code></p>
+<p>And browse to http://127.0.0.1:800 , where you should see a welcome page.</p>
+<p>If you run into problems, check the section <a href="#GSCommonHangupsToc">Common Hangups</a></p>
 <h3><a name="GSInstallUbuntu14Toc"></a> Installing HPIT on Ubuntu 14.04</h3>
-<h4>TODO</h4>
-<h2><a name="GSOldInstallGuideToc"></a> Old Install Guide</h2>
-<p>Ignore this section if you used the guides above.</p>
-<h3><a name="GSReqToc"></a> Python Requirements</h3>
-<p>HPIT requires Python 3.4. Make sure that you have this version of Python installed and
-linked into your PATH. Most systems that come with Python have Python 2.7x branch installed.
-You may need to install Python3.4 manually to get started depending on your operating system.</p>
-<p>You can check your version of Python by typing: <code>python --version</code> or <code>python3 --version</code></p>
-<p>Once you have the right version of Python installed you should also have <code>virtualenv</code> 
-and <code>pip</code> installed as well. If you are unfamiliar with either of these libraries I highly 
-encourage you research them, as they will make working with HPIT much simpler.</p>
-<p>Once you have pip and virtualenv installed you will need to install mongodb and sqlite3.</p>
-<ul>
-<li>On Ubuntu: <code>sudo apt-get install mongodb sqlite</code> </li>
-<li>On Mac OSX with HomeBrew: <code>brew install mongodb sqlite</code>. </li>
-<li>On Windows: installation binaries are available from http://www.mongodb.org and http://www.sqlite.org/download.html</li>
-</ul>
-<h3><a name="GSProdToc"></a> Production Considerations</h3>
-<p>If installing in PRODUCTION ONLY you should use PostgreSQL rather than SQLite3.</p>
-<ul>
-<li>On Ubuntu: <code>sudo apt-get install postgresql-server</code></li>
-<li>On Mac OSX: We recommend you install postgres using </li>
-<li>On Windows: Installation binaries are available from http://www.postgresql.com</li>
-</ul>
-<p>It is assumed that if you are installing this in a PRODUCTION ONLY environment, that you have experience with PostgreSQL. If not,
-then please read the tutorial here: http://www.postgresql.org/docs/9.3/static/tutorial.html In general you will need to 
-configure some security settings in postgres, create a database, then create login roles for that database. PostgreSQL by 
-default does not make itself discoverable, or connectible from outside the local machine. If it is installed in a location
-other than where you are installing HPIT you'll need to configure iptables, postgresql.conf and hba.conf in your postgreSQL
-installation directory.</p>
-<h3><a name="GSFrontendToc"></a> Frontend Requirements</h3>
-<p>HPIT's administrative frontend relies heavily on CoffeeScript and LESScss. CoffeeScript and LESScss are NodeJS packages and so
-you will need to download and install node to be able to run the HPIT server. Go to http://nodejs.org and follow the instructions
-for downloading and installing node and npm to your system. IMPORTANT! If you are using an older version of ubuntu (13.10 or earlier)
-you MUST download node and recompile from scratch. The version of node packaged with older versions of ubuntu is far out of date
-and neither coffeescript or less will work. We recommend putting your compiled node installation in /opt and symbolically linking
-the binaries to either /usr/bin or /usr/local/bin</p>
-<h3><a name="GSInstallToc"></a> Installing HPIT</h3>
-<p>Then you can begin installalling HPIT by:</p>
-<ol>
-<li>Change to the directory where you have downloaded hpit with: <code>cd /path/to/project</code></li>
-<li>Create a reference to your python3 installation binary for virtualenv. <code>``export PY3_PATH=</code>which python3````</li>
-<li>Create a new virtual environment with: <code>virtualenv -p $PY3_PATH my_environment</code></li>
-<li>Activate that environment with: <code>source my_environment/bin/activate</code></li>
-<li>On Mac or Linux, install HPIT's dependencies with: <code>pip3 install -r requirements.txt</code>.  On Windows, run: 'pip install -r requirements-win.txt'.</li>
-<li>If on Windows, install PyCrypto via a binary. </li>
-<li>Start the MongoDB instance with <code>mongod</code></li>
-<li>Sync the configuration database with sqlite. <code>python3 manager.py syncdb</code></li>
-<li>Run the test suite by typing <code>python3 manager.py test</code></li>
-</ol>
-<p>To start the HPIT server type: <code>python3 manager.py start</code> and open your browser 
-to http://127.0.0.1:8000. </p>
-<h3><a name="GSInstallOptToc"></a> Optional Installation for Hint Factory Plugin</h3>
-<p>If you are wanting to use the hint factory plugin you will need to install neo4j graph database.</p>
-<ol>
-<li>Install Neo4j<ul>
-<li>On Mac OSX: <code>brew install neo4j</code>.</li>
-<li>On Ubuntu: <code>sudo apt-get install neo4j</code>.</li>
-<li>On Windows, binaries are available.</li>
-</ul>
-</li>
-<li>Start NEO4J. <code>neo4j start</code>.  This may vary depending on your system configuration.</li>
-</ol>
-<h2><a name="AdminToc"></a> The Adminstration Panel</h2>
-<p>After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
-page after registering. The system will just direct you back to the signin/register page. After logging in
-two new options are available for you. 'My Plugins' and 'My Tutors'. On each of these pages you can register
-new plugins and tutors, respectively. For each plugin or tutor you create HPIT will generate for you an Entity ID
-(which never changes), and an API Key(which can change). The API Key will only be displayed once, if you lose 
-it you'll have to generate another and update your plugin or tutor code to match the new key. You will need 
-to supply the API key and Entity ID to HPIT for the plugin or tutor to connect to HPIT, and to send and 
-retrieve messages. You can think of the Entity ID and API Key as a sort of username/password pair for connecting
-your tutor or plugin to HPIT. Keep these two pieces of information secure. The Entity ID can be told and released
-to others, but NEVER share your API Key with anyone.</p>
-<p>The Docs page on the adminsitration panel, shows these docs. The routes page on the administration panel shows
-the web service endpoints that HPIT exposes to tutors and plugins.</p>
-<h2><a name="ManagerToc"></a> The HPIT Manager</h2>
-<p>The HPIT Manager can be used to quickly launch an HPIT server, configure plugins and tutors,
-and monitor how data is being passed between entities within the HPIT system.</p>
-<p>The HPIT manager can be run by typing: <code>python3 manager.py &lt;command&gt; &lt;command_args&gt;</code></p>
-<p>Depending on the command you wish to run the arguments to that command will vary. The command
-line manager for HPIT will help you along the way. For example typing just <code>python3 manager.py</code>
-will give you a list of commands that manager understands. Then typing 
-<code>python3 manager.py your_command</code> will show you the arguments that that command can take and a
-brief overview of what that command does.</p>
-<p>Currently the HPIT Manager has the following commands:</p>
-<ul>
-<li><code>python3 manager.py start</code> will start the HPIT server, all locally configured tutors, and all locally configured plugins.</li>
-<li><code>python3 manager.py stop</code> will stop the HPIT server, all locally configured tutors, and all locally configured plugins.</li>
-<li><code>python3 manager.py status</code> will show you whether or not the HPIT server is currently running.</li>
-<li><code>python3 manager.py add plugin &lt;name&gt; &lt;subtype&gt;</code> will help you create plugins with the specified name and subtype.</li>
-<li><code>python3 manager.py remove plugin &lt;name&gt;</code> will help you remove plugins with the specified name.</li>
-<li><code>python3 manager.py add tutor &lt;name&gt; &lt;subtype&gt;</code> will help you create tutors with the specified name and subtype.</li>
-<li><code>python3 manager.py remove tutor &lt;name&gt;</code> will help you remove tutors with the specified name.</li>
-<li><code>python3 manager.py assets</code> will compile frontend assets together into a single file to ready for production deployments.</li>
-<li><code>python3 manager.py debug</code> will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.</li>
-<li><code>python3 manager.py docs</code> copies this documentation file to the server assets directory.</li>
-<li><code>python3 manager.py routes</code> lists all the routes that the HPIT Server/Router exposes to the web.</li>
-<li><code>python3 manager.py syncdb</code> syncs the data model with the administration database.(PostgreSQL or Sqlite3)</li>
-<li><code>python3 manager.py mongo &lt;dbpath&gt;</code> Initializes MongoDB database.</li>
-<li><code>python3 manager.py test</code> runs the suite of tests for components within HPIT.</li>
-</ul>
-<h2><a name="ConfigToc"></a> The Tutor and Plugin Configuration</h2>
-<p>The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
-amount of entities for testing and evaluation of the software. Creating a new hpit 
-entity (tutor/plugin) adds it to the 'configuration.json'. Removing an hpit entity 
-removes it from the 'configuration.json' file. All entities within the configuration specify
-6 things: </p>
-<ol>
-<li>Whether it is a tutor or plugin (by virtue of being in the tutor or plugin list)</li>
-<li>active - Whether the plugin is currently running. (True if it is)</li>
-<li>name - The name of the entity. This is how the entity will register itself with HPIT.</li>
-<li>type - The subtype of the entity. e.g. 'example' or 'knowledge_tracer'</li>
-<li>entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.</li>
-<li>api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.</li>
-</ol>
-<h2><a name="SettingsToc"></a> Server Settings</h2>
-<p>There are various settings available for modification in the <code>server/settings.py</code> file.</p>
+<p>Ubuntu 14.04 LTS release is the preferred platform for HPIT.</p>
+<h4>Getting Started</h4>
+<p>The first thing you'll need to do is update and upgrade your apt repositories:</p>
+<p><code>sudo apt-get update</code></p>
+<p><code>sudo apt-get upgrade</code></p>
+<p>Next, install the C compiler and other build utilities:</p>
+<p><code>sudo apt-get install build-essential</code></p>
+<p>HPIT requires Python 3.4 or higher.  Ubuntu 14.04 comes pre-packaged with Python 3.4, with a 
+binary named python3.</p>
+<p>You can verify you have the correct version of Python by typing:</p>
+<p><code>python3 --version</code></p>
+<p>Next, to install the numerous Python packages HPIT requires, you'll need Pip, which
+needs to be compatible with Python 3.4.  The easiest way to do this is to use the 
+command:</p>
+<p><code>sudo apt-get install python3-pip</code></p>
+<p>We highly recommend using virtualenv when running HPIT.  If you are unfamiliar with
+virtualenv, you can read about it at http://virtualenv.readthedocs.org/en/latest/. 
+Install virtualenv from pip, with the command:</p>
+<p><code>pip3 install virtualenv</code></p>
+<h4>Databases</h4>
+<p>HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.</p>
+<h5>SQLite and MongoDB</h5>
+<p>Installing SQLite and MongoDB are easy to install, simply use apt-get:</p>
+<p><code>sudo apt-get install sqlite mongodb</code></p>
+<h5>PostgreSQL</h5>
+<p>To install PostgreSQL, use the commands:</p>
+<p><code>sudo apt-get install postgresql postgresql-contrib</code></p>
+<p>In order for Python to interact with PostgreSQL, we'll need the dependencies for the psycopg2 library.  Install
+instructions are found at http://initd.org/psycopg/docs/install.html#install-from-source , 
+and summarized here:</p>
+<p>Install the Python 3.4 headers, using: <code>sudo apt-get install libpython3-dev</code>.</p>
+<p>Install the libpq headers, using: <code>sudo apt-get install libpq-dev</code>.  Try running <code>pg_config --version</code>
+to ensure it installed correctly.</p>
+<p>psycopg2 will be installed later with Pip.</p>
+<h5>Neo4j</h5>
+<p>Next, we need to install Neo4j.  Neo4j requires Oracle JDK 7 or OpenJDK 7.  You can verify this is installed
+by using: <code>java -version</code>.</p>
+<p>To install Neo4j, follow the steps located at http://debian.neo4j.org/ , summarized below:</p>
+<p><code>sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key| apt-key add - # Import Neo4j signing key</code></p>
+<p><code>sudo echo 'deb http://debian.neo4j.org/repo stable/' &gt; /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file</code></p>
+<p><code>sudo apt-get update # Find out about the files in our repository</code></p>
+<p><code>sudo apt-get install neo4j # Install Neo4j, community edition</code></p>
+<h5>Couchbase</h5>
+<p>HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
+install instructions, summarized below:
+<em> Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
+</em> Use dpkg with sudo, for example, <code>sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb</code>.
+* After installing, go to http://localhost:8091/index.html to configure Couchbase.</p>
+<h4>NodeJS</h4>
+<p>HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
+NodeJS from source to ensure you get the latest version. At least 0.10.3 is required. </p>
+<p>First, download the source code.  At the time of writing, it was located at http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz.
+You can use wget, like this:</p>
+<p><code>wget http://nodejs.org/dist/v0.10.31/node-v0.10.31.tar.gz</code></p>
+<p>Next, extract the archive.</p>
+<p><code>tar xvfz node-v0.10.31.tar.gz</code></p>
+<p>Now, cd into the node-v0.10.31.tar.gz directory, and run:</p>
+<p><code>./configure</code></p>
+<p><code>make</code></p>
+<p><code>sudo make install</code></p>
+<h4>Installing HPIT</h4>
+<h5>Downloading HPIT and More Dependencies</h5>
+<p>Now that the dependencies are installed, we can install HPIT.  To do this, you will need git:</p>
+<p><code>sudo apt-get install git</code></p>
+<p>Next, clone the HPIT repository using:</p>
+<p><code>git clone https://github.com/tutorgen/hpit_services</code></p>
+<p>Next, move into the hpit_services directory using <code>cd hpit_services</code></p>
+<p>Now it is time to create your virtual environment.  It is important that you are using the 
+correct Python binary when creating the virtual environment.  In our case, we used the command</p>
+<p><code>virtualenv -p python3 env</code></p>
+<p>Where virtualenv is the binary for the compatible version of virtualenv, python3 is your 
+Python 3.4 binary, and env is the directory that the virtual environment will live in.</p>
+<p>Next, activate the environment with the command <code>source env/bin/activate</code>.  Your command prompt
+should now be prefixed with (env).</p>
+<p>Now, install the Python dependencies using pip3.  The command will be:</p>
+<p><code>pip3 install -r requirements.txt</code></p>
+<h5>Configuring HPIT</h5>
+<p>First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
+controlled by these commands:</p>
+<p>MongoDB:  <code>sudo service mongodb start</code>, <code>sudo service mongodb stop</code></p>
+<p>Neo4J: <code>sudo service neo4j-service start</code>, <code>sudo service neo4j-service stop</code></p>
+<p>Couchbase: <code>sudo /etc/init.d/couchbase-server start</code>, <code>sudo /etc/init.d/couchbase-server stop</code></p>
+<p>Next, set up the server settings.  Instructions are located in the section <a href="#GSServerSettingsToc">Server Settings</a></p>
+<p>Now, seed the database with this command:</p>
+<p><code>python manager.py syncdb</code></p>
+<p>And run the tests:</p>
+<p><code>python manager.py test</code></p>
+<p>Assuming everything passed, you should then run:</p>
+<p><code>python manager.py start</code></p>
+<p>And browse to http://127.0.0.1:800 , where you should see a welcome page.</p>
+<p>If you run into problems, check the section <a href="#GSCommonHangupsToc">Common Hangups</a></p>
+<h3><a name="GSServerSettingsToc"></a> Server Settings</h3>
+<p>The settings for HPIT can be set in JSON format, in a file called settings.json in the hpit_services root.<br />
+This file allows for multiple environment settings, for example, "test", "debug", and "production".  The structure
+of the file looks like this:</p>
+<pre><code>{
+    "debug": {
+        "plugin": {
+            [plugin settings go here (see below)]
+        },
+        "server": {
+            [server settings go here (see below)]
+        }
+    },
+    "production": {
+        "plugin": {
+            [plugin settings go here (see below)]
+        },
+        "server": {
+            [server settings go here (see below)]
+        }
+    }
+}
+</code></pre>
+<p>HPIT will check for an environment variable called HPIT_ENV to determine which environment to use.  So, to use the
+test settings, set a HPIT_ENV environment variable to "test" (without quotes).</p>
+<p>Most of these settings can be left as defaults, but the important ones to change are:
+<em> PROJECT_DIR - should be set to the directory this README is in
+</em> VENV_DIRNAME - shoule be a relative link from PROJECT_DIR to wherever the virtual environment is.</p>
+<h4>server</h4>
 <table>
 <thead>
 <tr>
@@ -332,7 +555,7 @@ removes it from the 'configuration.json' file. All entities within the configura
 <tr>
 <td>HPIT_PID_FILE</td>
 <td>'tmp/hpit_server.pid'</td>
-<td>Where to put the PID file for the hpit server (daemon)</td>
+<td>Where to put the PID file for the HPIT server (daemon)</td>
 <td></td>
 </tr>
 <tr>
@@ -350,7 +573,7 @@ removes it from the 'configuration.json' file. All entities within the configura
 <tr>
 <td>HPIT_BIND_ADDRESS</td>
 <td>HPIT_BIND_IP+":"+HPIT_BIND_PORT</td>
-<td>A comination of the IP and Port addresses</td>
+<td>A combination of the IP and Port addresses</td>
 <td>Don't change this.</td>
 </tr>
 <tr>
@@ -362,8 +585,8 @@ removes it from the 'configuration.json' file. All entities within the configura
 <tr>
 <td>VENV_DIRNAME</td>
 <td>'env'</td>
-<td>The directory where the virtual enviornment is located.</td>
-<td></td>
+<td>The directory where the virtual environment is located.</td>
+<td>Change this.</td>
 </tr>
 <tr>
 <td>MONGO_DBNAME</td>
@@ -493,59 +716,209 @@ removes it from the 'configuration.json' file. All entities within the configura
 </tr>
 </tbody>
 </table>
+<h4>plugin</h4>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>default</th>
+<th>description</th>
+<th>notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DataShop_ROOT_URL</td>
+<td>"https://pslcDataShop.web.cmu.edu/services"</td>
+<td>Root DataShop URL</td>
+<td></td>
+</tr>
+<tr>
+<td>DataShop_SERVICES_URL</td>
+<td>"http://pslc-qa.andrew.cmu.edu/DataShop/services"</td>
+<td>DataShop URL for services</td>
+<td></td>
+</tr>
+<tr>
+<td>MONGODB_URI</td>
+<td>"mongodb://localhost:27017/"</td>
+<td>The location of the Mongo database server</td>
+<td></td>
+</tr>
+<tr>
+<td>COUCHBASE_HOSTNAME</td>
+<td>"127.0.0.1"</td>
+<td>Couchbase host</td>
+<td></td>
+</tr>
+<tr>
+<td>COUCHBASE_BUCKET_URI</td>
+<td>"http://127.0.0.1:8091/pools/default/buckets"</td>
+<td>Couchbase buckets REST endpoint</td>
+<td></td>
+</tr>
+<tr>
+<td>COUCHBASE_AUTH</td>
+<td>["Administrator", "administrator"]</td>
+<td>Authentication for Couchbase server</td>
+<td>Set to your server credentials</td>
+</tr>
+</tbody>
+</table>
+<h3><a name="GSCommonHangupsToc"></a> Common Hangups</h3>
+<p>Here's a list of common problems when trying to install HPIT:
+<em> Permissions problems - if you're having troubles with permissions, make sure you are installing everything
+in your user account, not root.
+</em> Settings problems - make sure the settings are edited correctly for your system.  Verify that the paths to the
+project directory and virtual environment are correct.
+<em> Python problems - Make sure that Python, Pip, and virtualenv are all compatible with each other.
+</em> Virtualenv problems - remember to activate your virtualenv when installing any python modules.  </p>
+<h2><a name="AdminToc"></a> The Adminstration Panel</h2>
+<p>After starting the HPIT server, create an account, then sign-in to your account. There is no confirmation 
+page after registering. The system will just direct you back to the signin/register page. After logging in
+two new options are available for you. 'My Plugins' and 'My Tutors'. On each of these pages you can register
+new plugins and tutors, respectively. For each plugin or tutor you create HPIT will generate for you an Entity ID
+(which never changes), and an API Key(which can change). The API Key will only be displayed once, if you lose 
+it you'll have to generate another and update your plugin or tutor code to match the new key. You will need 
+to supply the API key and Entity ID to HPIT for the plugin or tutor to connect to HPIT, and to send and 
+retrieve messages. You can think of the Entity ID and API Key as a sort of username/password pair for connecting
+your tutor or plugin to HPIT. Keep these two pieces of information secure. The Entity ID can be told and released
+to others, but NEVER share your API Key with anyone.</p>
+<p>The Docs page on the administration panel, shows these docs. The routes page on the administration panel shows
+the web service endpoints that HPIT exposes to tutors and plugins.</p>
+<h2><a name="ManagerToc"></a> The HPIT Manager</h2>
+<p>The HPIT Manager can be used to quickly launch an HPIT server, configure plugins and tutors,
+and monitor how data is being passed between entities within the HPIT system.</p>
+<p>The HPIT manager can be run by typing: <code>python3 manager.py &lt;command&gt; &lt;command_args&gt;</code></p>
+<p>Depending on the command you wish to run the arguments to that command will vary. The command
+line manager for HPIT will help you along the way. For example typing just <code>python3 manager.py</code>
+will give you a list of commands that manager understands. Then typing 
+<code>python3 manager.py your_command</code> will show you the arguments that that command can take and a
+brief overview of what that command does.</p>
+<p>Currently the HPIT Manager has the following commands:</p>
+<ul>
+<li><code>python3 manager.py start</code> will start the HPIT server, all locally configured tutors, and all locally configured plugins.</li>
+<li><code>python3 manager.py stop</code> will stop the HPIT server, all locally configured tutors, and all locally configured plugins.</li>
+<li><code>python3 manager.py status</code> will show you whether or not the HPIT server is currently running.</li>
+<li><code>python3 manager.py assets</code> will compile frontend assets together into a single file to ready for production deployments.</li>
+<li><code>python3 manager.py debug</code> will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.</li>
+<li><code>python3 manager.py docs</code> copies this documentation file to the server assets directory.</li>
+<li><code>python3 manager.py routes</code> lists all the routes that the HPIT Server/Router exposes to the web.</li>
+<li><code>python3 manager.py syncdb</code> syncs the data model with the administration database.(PostgreSQL or Sqlite3)</li>
+<li><code>python3 manager.py mongo &lt;dbpath&gt;</code> Initializes MongoDB database.</li>
+<li><code>python3 manager.py test</code> runs the suite of tests for components within HPIT.</li>
+</ul>
+<h2><a name="ConfigToc"></a> The Tutor and Plugin Configuration</h2>
+<p>The goals behind the HPIT manager is to give TutorGen a way to create and destroy large 
+amount of entities for testing and evaluation of the software. Creating a new HPIT 
+entity (tutor/plugin) adds it to the 'configuration.json'. Removing an HPIT entity 
+removes it from the 'configuration.json' file. All entities within the configuration specify
+6 things: </p>
+<ol>
+<li>Whether it is a tutor or plugin (by virtue of being in the tutor or plugin list)</li>
+<li>active - Whether the plugin is currently running. (True if it is)</li>
+<li>name - The name of the entity. This is how the entity will register itself with HPIT.</li>
+<li>type - The subtype of the entity. e.g. 'example' or 'knowledge_tracer'</li>
+<li>entity_id - The assigned Entity ID you got from creating the plugin or tutor in the administration panel.</li>
+<li>api_key - The assigned API Key you got from creating the plugin or tutor in the administration panel.</li>
+</ol>
+<p>Optionally, you can specify two optional parameters:</p>
+<ol>
+<li>args - a json object for arguments that will be passed to the tutor or plugin</li>
+<li>once - a boolean that tells the tutor or plugin to run only one time.</li>
+</ol>
+<p>An example configuration would look like this:</p>
+<pre><code>{
+    "tutors" : [
+        {
+            "name": "replay_tutor", 
+            "args": {
+                "beforeTime": "02-11-2020 14:03:09", 
+                "filter": {
+                    "event": "kt_trace"
+                }
+            }, 
+            "type": "replay", 
+            "once": true, 
+            "active": false, 
+            "entity_id": "1234", 
+            "api_key": "1234"
+        }
+    ],
+    "plugins": [],
+}
+</code></pre>
 <h2><a name="DatabaseToc"></a> Database Structure</h2>
+<p>HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
+database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
+By default this database is configured as SQLite and stored on the filesystem in the 
+server/db subdirectory under HPIT. The models (tables) stored can be found in the server/models
+directory or by running SQLite and using the command '.tables'.</p>
 <p>The HPIT server uses a NoSQL MongoDB database to manage its messages and transactions. MongoDB uses a 
 lazy creation policy, so the database and its collections are created only after elements are inserted,
 and can be created with no prior configuration. The database contains five core collections:</p>
 <h3><a name="DBmessagesToc"></a> messages</h3>
 <p>A list of messages sent to the system before being duplicated to plugin_messages. Each message contains the following fields:</p>
 <ul>
-<li>entity_id: "The session ID of the sender"</li>
+<li>sender_entity_id: "The session ID of the sender"</li>
 <li>payload: "The data being sent."</li>
+<li>time_created: "Date of message creation"</li>
+<li>message_name: "The type of the message"</li>
 </ul>
 <h3><a name="DBpluginmesToc"></a> plugin_messages</h3>
 <p>Contains messages sent to plugins, as copied from the messages collection. It contains the following fields:</p>
 <ul>
-<li>plugin_name: "name of destination plugin"</li>
-<li>event_name: "name of event"</li>
-<li>message_id: "the ID of this message"</li>
-<li>message_payload: "The data contained in this message."</li>
-<li>sent_to_plugin: "Boolean if it has been processed or not"</li>
+<li>time_response_received: "The time the response was received (if any)"</li>
+<li>sent_to_plugin: "Boolean if was processed by plugin"</li>
+<li>message_name: "The type of the message"</li>
+<li>payload: "The data contained in this message."</li>
+<li>time_responded: "The time the response was created"</li>
+<li>sender_entity_id: "The id of the entity that sent the message"</li>
+<li>time_created: "The time the message was created"</li>
+<li>receiver_entity_id: "The plugin that received this message"</li>
+<li>time_received: "The time the message was processed by plugin"</li>
+<li>message_id: "The id of the message in the messages collection"</li>
 </ul>
 <h3><a name="DBresponsesToc"></a> responses</h3>
 <p>Stores responses for tutors or other plugins to poll. It contains the following fields:</p>
 <ul>
 <li>response_received: "Boolean if it has been processed or not"</li>
 <li>response: "data for this response"</li>
-<li>message_id: "the id of the original sent message"</li>
 <li>message: "the original message"</li>
+<li>message_id: "The ID of the message in the messages collection"</li>
+<li>receiver_entity_id: "the ID of the receiver"</li>
+<li>sender_entity_id: "The ID of the sender"</li>
+<li>time_response_received: "The time the response was processed"</li>
 </ul>
 <h3><a name="DBsessionsToc"></a> sessions</h3>
 <p>Stores session data for plugins and tutors. </p>
-<p>HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
-database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
-By default this database is configured as sqlite and stored on the filesystem in the 
-server/db subdirectory under hpit. The models (tables) stored can be found in the server/models
-directory or by running sqlite and using the command '.tables'.</p>
-<h2><a name="ServerToc"></a> The HPIT Server in depth</h2>
+<h3><a name="DBlogToc"></a> entity_log</h3>
+<p>Stores entity log information.  It contains the following fields:</p>
+<ul>
+<li>deleted: "Was this log deleted?</li>
+<li>log_entry: "The text of the log"</li>
+<li>created_on: "The date the log was created"</li>
+<li>entity_id: "The entity that created this log.</li>
+</ul>
+<h2><a name="ServerToc"></a> The HPIT Server in-depth</h2>
 <p>The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
 specifically to assist plugins and tutors to communicate via RESTful webserver. It is 
 schemaless, has no pre-defined events, and is agnostic to the kinds of data it routes 
-between plugins and tutors. In additon HPIT provides fundemental support for sessions,
+between plugins and tutors. In additon HPIT provides fundamental support for sessions,
 authentication, message routing, and entity tracking.</p>
-<p>Anyone can wrap these RESTful webservices in a client side library and will be able to interact
+<p>Anyone can wrap these RESTful web services in a client side library and will be able to interact
 with HPIT. We have delivered a client side library written in Python.</p>
 <p>The server supports a variety of routes to handle the connection, polling, and transfer of 
 data between HPIT entities. To get a list of these routes run the HPIT server with either 
 <code>python3 manager.py debug</code> or <code>python3 manager.py start</code> and open your browser to the HPIT
-administration page at http://localhost:8000/routes. Alternativately you can list the routes
+administration page at http://localhost:8000/routes. Alternatively you can list the routes
 available with <code>python3 manager.py routes</code></p>
-<h2><a name="TutorToc"></a> Tutors in depth</h2>
+<h2><a name="TutorToc"></a> Tutors in-depth</h2>
 <p>A Tutor is an HPIT entity that can send messages to HPIT. A message consists of
-an event name and a payload. The event name is an arbitrary string that defines what is in
-the payload. Plugins register to listen to messages based on the event name. The 
+an event name and a payload. The event name is an arbitrary string that defines what type
+of message it is. Plugins register to listen to messages based on the event name. The 
 message payload is an arbitrary JSON like document with data formatted based on plugin
-requirements. The kinds of messages a tutor can send is definied by the plugins 
+requirements. The kinds of messages a tutor can send is defined by the plugins 
 currently registered with HPIT. The HPIT server itself does not define what these 
 messages look like, however HPIT does package some plugins as part of it's architecture.</p>
 <p>For example the HPIT basic knowledge tracing plugin supports the following three events:</p>
@@ -558,53 +931,129 @@ messages look like, however HPIT does package some plugins as part of it's archi
 <p>Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.</p>
 <h2><a name="PluginToc"></a> Plugin Component Specification</h2>
-<p>A Plugin is an HPIT entity that subscribes to (listens to) certain event names, recieves
-transcation payloads, perfoms some arbitrary function based on the event and message
+<p>A Plugin is an HPIT entity that subscribes to (listens to) certain event names, receives
+transaction payloads, performs some arbitrary function based on the event and message
 payload, and may or may not return a response to the original sender of the message.</p>
-<p>A plugin may listen to and define any events it wishes. When a tutor sends a transcation
+<p>A plugin may listen to and define any events it wishes. When a tutor sends a message 
 to HPIT, if a plugin has registered itself with HPIT, and if that plugin and subscribed
-to the event name submitted with the tutor's transcation it will recieve a queued list
+to the event name submitted with the tutor's message, it will receive a queued list
 of messages when it polls the HPIT server for data. It is expected that plugins will
-do this type of polling periodically to see if any messages have been queued for 
+do this type of polling periodically to see if any new messages have been queued for 
 processing by HPIT.</p>
-<p>When a plugin processes an event from HPIT, it will recieve all the information in the 
+<p>When a plugin processes an event from HPIT, it will receive all the information in the 
 original message, including the information identifying the tutor that sent the
 message. This identifying information is called the entity_id of the tutor.</p>
 <p>A plugin may send a response to HPIT by providing the original message id, along with 
 a response payload, which will be sent to the original sender of the message message.</p>
 <p>It is possible for plugins to send messages like tutors and respond to messages
-like tutors. In this way, it is possible for plugins to listen to, and refire event 
+like tutors. In this way, it is possible for plugins to listen to, and re-fire event 
 messages while altering the event name of the message so that other dependent 
-plugins can also respond to the original trasaction. This can create a daisy chaining
+plugins can also respond to the original transaction. This can create a daisy chaining
 effect where plugins fire in series to process a complex series of messages.</p>
 <h2><a name="ExPlugin"></a> Example Plugin</h2>
 <p>The example plugin listens to the <code>test</code> and <code>example</code> event names and logs
 whatever data it's sent in the payload to a file.</p>
 <h2><a name="SMPlugin"></a> Student Management Plugin</h2>
-<p>The student management plugin allows you to track student across your 
-applications and integrates into skill management and knowledge tracing. In addition
-you can assign any number of attributes to your students and retreive them later. These
-attributes can cover anything from how much they like sports, to their age, and brand
-preferences.</p>
+<p>The student management plugin allows you to track students across your 
+applications and integrates into skill management and knowledge tracing. In addition,
+you can assign any number of attributes to your students and retrieve them later. These
+attributes can cover anything; how much they like sports, their age, brand preferences, etc.</p>
 <h4><a name="add_student"></a> add_student</h4>
+<p>Adds a student to the database, giving them a unique ID.</p>
+<p>Receives:</p>
+<ul>
+<li>(optional) attributes: a JSON value of key/value pairs of attributes</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>student_id : string - the ID for the new student</li>
+<li>attributes : JSON - the attributes for the new student </li>
+</ul>
 <h4><a name="get_student"></a> get_student</h4>
+<p>Gets an already created student from an ID.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the ID from a previously created student</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>student_id : string - the ID from a previously created student</li>
+<li>attributes : JSON - the attributes for the new student </li>
+</ul>
 <h4><a name='set_attribute'></a> set_attribute</h4>
+<p>Sets an attribute value for a student.  Will overwrite any existing value.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the ID from a previously created student  </li>
+<li>attribute_name : string - the name of the attribute </li>
+<li>attribute_value : string - the value of the new attribute</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>student_id : string - the ID for the student</li>
+<li>attributes : JSON - the attributes for the student  </li>
+</ul>
 <h4><a name="get_attribute"></a> get_attribute</h4>
+<p>Gets an attribute value for a student.  If the attribute does not exist, will respond
+with an empty string.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the ID from a previously created student  </li>
+<li>attribute_name : string - the name of the attribute</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>student_id : string - the ID for the student</li>
+<li>(attribute_name) : string - value of the requested attribute.</li>
+</ul>
+<h4><a name = "get_student_model"></a>get_student_model</h4>
+<p>Get the student model for a student.  The student model is an aggregation of information from
+all of the plugins that the student has interacted with.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the ID of the student</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>student_model : JSON - an object containing the student model.  This will contain lists and other objects from the various plugins.</li>
+<li>(optional) error : An error message if something went wrong of the request timed out.</li>
+</ul>
 <h2><a name="SKMPlugin"></a> Skill Management Plugin</h2>
 <p>The skill management plugin allows you to track skills across your applications
 and integrates into knowledge tracing, problem selection, problem management, and
-the hint factory. The skill manager idenitfies skills by either an assigned identifier
+the hint factory. The skill manager identifies skills by either an assigned identifier
 or by name.</p>
-<h4><a name="add_skill"></a> add_skill</h4>
-<h4><a name="remove_skill"></a> remove_skill</h4>
-<h4><a name="get_skill"></a> get_skill</h4>
+<h4><a name="get_skill_name"></a> get_skill_name</h4>
+<p>Gets the name of an existing skill from an ID.</p>
+<p>Receives:</p>
+<ul>
+<li>skill_id : string - the ID of the skill</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>skill_name : string - the name of the skill</li>
+<li>skill_id : string - the ID of a skill (should match sent ID)</li>
+</ul>
+<h4><a name="get_skill_id"></a> get_skill_id</h4>
+<p>Gets the ID of a skill from a skill name.  If the skill does not exist, it will be created.</p>
+<p>Receives:</p>
+<ul>
+<li>skill_name : string - the name of the skill</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>skill_name : string - the name of the skill (should match what was sent)</li>
+<li>skill_id : string - the ID of the skill, either newly created or retrieved.</li>
+<li>cached : boolean - whether this came from the cache or database</li>
+</ul>
 <h2><a name="KTPlugin"></a> Knowledge Tracing Plugin</h2>
+<p>The Knowledge Tracing Plugin performs knowledge tracing on a per-student and per-skill basis.</p>
 <h4><a name="kt_set_initial"></a> kt_set_initial</h4>
 <p>Sets the initial probabilistic values for the knowledge tracer.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id: string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>skill : string - String identifier for the skill.</li>
+<li>student_id : string - String ID of the student</li>
+<li>skill_id : string - String identifier for the skill.</li>
 <li>probability_known : float (0.0-1.0) - Probability the skill is already known</li>
 <li>probability_learned : float (0.0-1.0) - Probability the skill will be learned</li>
 <li>probability_guess : float (0.0-1.0) - Probability the answer is a guess</li>
@@ -612,7 +1061,8 @@ or by name.</p>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>skill : string - String identifier for the skill.</li>
+<li>student_id : string - String ID of the student</li>
+<li>skill_id : string - String identifier for the skill.</li>
 <li>probability_known : float (0.0-1.0) - Probability the skill is already known</li>
 <li>probability_learned : float (0.0-1.0) - Probability the skill will be learned</li>
 <li>probability_guess : float (0.0-1.0) - Probability the answer is a guess</li>
@@ -620,14 +1070,15 @@ or by name.</p>
 </ul>
 <h4><a name="kt_reset"></a> kt_reset</h4>
 <p>Resets the probabilistic values for the knowledge tracer.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id: string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>skill : string - String identifier for the skill.</li>
+<li>student_id: string - An identifier for the student.</li>
+<li>skill_id : string - String identifier for the skill.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>skill : string - String identifier for the skill.</li>
+<li>student_id: string - An identifier for the student.</li>
+<li>skill_id : string - String identifier for the skill.</li>
 <li>probability_known : 0.0 - Probability the skill is already known</li>
 <li>probability_learned : 0.0 - Probability the skill will be learned</li>
 <li>probability_guess : 0.0 - Probability the answer is a guess</li>
@@ -635,24 +1086,47 @@ or by name.</p>
 </ul>
 <h4><a name="kt_trace"></a> kt_trace</h4>
 <p>Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id: string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>skill : string - String identifier for the skill.</li>
+<li>student_id: string - A string ID for the student</li>
+<li>skill_id : string - String identifier for the skill.</li>
 <li>correct: boolean - True if correct. False if not.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>skill : string - String identifier for the skill.</li>
+<li>student_id: string - A string ID for the student</li>
+<li>skill_id : string - String identifier for the skill.</li>
 <li>probability_known : float (0.0-1.0) - Probability the skill is already known</li>
 <li>probability_learned : float (0.0-1.0) - Probability the skill will be learned</li>
 <li>probability_guess : float (0.0-1.0) - Probability the answer is a guess</li>
 <li>probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)</li>
 </ul>
+<h4><a name="kt_get_student_model_fragment"></a>get_student_model_fragment</h4>
+<p>Returns a this plugin's contribution to the overall student model.  For the knowledge tracing plugin,
+this is all of the student's skills and knowledge tracing values.  This is usually sent via the StudentManagement model
+after it receives a get_student_model message.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the ID of the student</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>name : string - The name of the fragment, will always be "knowledge_tracing".</li>
+<li>fragment : list - A list of skills, containing:<ul>
+<li>student_id: string - An identifier for the student.</li>
+<li>skill_id : string - String identifier for the skill.</li>
+<li>probability_known : 0.0 - Probability the skill is already known</li>
+<li>probability_learned : 0.0 - Probability the skill will be learned</li>
+<li>probability_guess : 0.0 - Probability the answer is a guess</li>
+<li>probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)</li>
+</ul>
+</li>
+</ul>
 <h2><a name="HFPlugin"></a> Hint Factory Plugin</h2>
+<p>The Hint Factory Plugin is used to dynamically provide hints using a graph theoretic approach.</p>
 <h4><a name="hf_init_problem"></a> hf_init_problem</h4>
 <p>Initializes a new problem for the hint factory.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
 <li>start_state : string - A string representing the starting state of the problem (i.e. "2x + 4 = 12")</li>
 <li>goal_problem: string - A string representing the goal of the problem (i.e. "x = 4")</li>
@@ -663,13 +1137,13 @@ or by name.</p>
 </ul>
 <h4><a name="hf_push_state"></a> hf_push_state</h4>
 <p>Pushes a new state on the problem.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
 <li>state : json - A json object representing the state to push.</li>
 <li>state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"</li>
 <li>state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]</li>
 <li>state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"</li>
-<li>state.problem: string - A string represting the problem i.e "2x + 4 = 12"</li>
+<li>state.problem: string - A string representing the problem i.e "2x + 4 = 12"</li>
 </ul>
 <p>Returns:</p>
 <ul>
@@ -677,13 +1151,13 @@ or by name.</p>
 </ul>
 <h4><a name="hf_hint_exists"></a> hf_hint_exists</h4>
 <p>Given a particular state structure. Does a hint exist for this problem?</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
 <li>state : json - A json object representing the state to push.</li>
 <li>state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"</li>
 <li>state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]</li>
 <li>state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"</li>
-<li>state.problem: string - A string represting the problem i.e "2x + 4 = 12"</li>
+<li>state.problem: string - A string representing the problem i.e "2x + 4 = 12"</li>
 </ul>
 <p>Returns:</p>
 <ul>
@@ -693,13 +1167,13 @@ or by name.</p>
 <h4><a name="hf_get_hint"></a> hf_get_hint</h4>
 <p>Given a particular state structure for a problem, retrieve the next most probable state that leads
 the student towards a solution.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
 <li>state : json - A json object representing the state to push.</li>
 <li>state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"</li>
 <li>state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]</li>
 <li>state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"</li>
-<li>state.problem: string - A string represting the problem i.e "2x + 4 = 12"</li>
+<li>state.problem: string - A string representing the problem i.e "2x + 4 = 12"</li>
 </ul>
 <p>Returns:</p>
 <ul>
@@ -710,9 +1184,8 @@ the student towards a solution.</p>
 <h2><a name="PMPlugin"></a> Problem Management Plugin</h2>
 <h4><a name="add_problem"></a> add_problem</h4>
 <p>Adds a problem to the problem manager.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
 <li>problem_name : string - The name of the problem.</li>
 <li>problem_text : string - Text for the problem.</li>
 </ul>
@@ -721,122 +1194,330 @@ the student towards a solution.</p>
 <li>problem_name : string - The problem name.</li>
 <li>problem_text : string - The problem's text.</li>
 <li>success : boolean - True if the data was saved to the database.</li>
-<li>updated : boolean - True if the data was updated (the record already existed)</li>
+<li>problem_id : string - String identifier for the new problem, or the existing problem if it already exists.</li>
+<li>(optional) error : string - The error message if something went wrong.</li>
 </ul>
 <h4><a name="remove_problem"></a> remove_problem</h4>
 <p>Remove a problem from the problem manager.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>problem_name : string - The name of the problem.</li>
+<li>problem_id : string - A string identifier for the problem.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>problem_name : string - The name of the problem that was removed.</li>
 <li>exists : boolean - True if the problem existed.</li>
 <li>success : boolean - True if the problem existed and was deleted.</li>
+<li>(optional) error : string - the error message if something went wrong</li>
 </ul>
 <h4><a name="get_problem"></a> get_problem</h4>
 <p>Gets a previously stored problem from the problem manager.</p>
-<p>Recieves:</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>problem_name : string - The name of the problem to retrieve.</li>
+<li>problem_id : string - The string identifier of the problem.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>problem_name : string - The name of the problem.</li>
-<li>problem_text : string - The text of the problem.</li>
+<li>problem_id : string - The string identifier of the problem</li>
 <li>exists : boolean - True if the problem existed.</li>
 <li>success : boolean - True if the problem existed.</li>
+<li>(optional) error: string - The error message if the problem does not exist.</li>
 </ul>
-<h4><a name="list_problems"></a> list_problems</h4>
-<p>Get all the problems for a given entity.</p>
-<p>Recieves:</p>
+<h4><a name="edit_problem"></a> edit_problem</h4>
+<p>Edits a problem.  The tutor or plugin editing it must have the same ID as edit_allowed_id.</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
+<li>problem_id :  string - a string representation of this problems ID</li>
+<li>fields : JSON - a JSON object with the fields and values to be changed</li>
+</ul>
+<p>Returns: 
+<em> problem_name : string - The name of the problem.
+</em> problem_text : string - The text of the problem.
+<em> date_created : datetime - The time the problem was created.
+</em> edit_allowed_id : string - The ID of the entity that can edit this problem.
+<em> success : boolean - If the edit was successful.
+</em> (optional) error : string - The error message, if an error occured.</p>
+<h4><a name="list_problems"></a> list_problems</h4>
+<p>Get all the problems in the database.</p>
+<p>Receives:</p>
+<ul>
+<li>Nothing</li>
 </ul>
 <p>Returns:</p>
 <ul>
 <li>problems : list - A list of problems with<ul>
 <li>problem_name : string - The name of the problem.</li>
 <li>problem_text : string - The text of the problem.</li>
+<li>date_created : datetime - When the problem was created.</li>
+<li>edit_allowed_id : string - The ID of the entity that can edit this.</li>
 </ul>
 </li>
 <li>success : True - Always returns True</li>
 </ul>
-<h2><a name="PSMPlugin"></a> Problem Step Management Plugin</h2>
-<h4><a name="add_problem_step"></a> add_problem_step</h4>
-<p>Adds a problem step to the problem step manager.</p>
-<p>Recieves:</p>
+<h4><a name="clone_problem"></a>clone_problem</h4>
+<p>Clone an existing problem so that another entity can modify it.</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>problem_name : string - The name of the problem.</li>
-<li>problem_step_name : string - The name of the problem step.</li>
-<li>problem_step_text : string - The text of the problem step.</li>
+<li>problem_id : string - The string identifier to the problem to be cloned.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>problem_name : string - The problem name.</li>
-<li>problem_step_name : string - The name of the problem step.</li>
-<li>problem_step_text : string - The text of the problem step.</li>
-<li>success : boolean - True if the data was saved to the database.</li>
-<li>updated : boolean - True if the data was updated (the record already existed)</li>
+<li>problem_id : string - The ID of the new cloned problem.</li>
+<li>step_ids : list - A list of string identifiers for the newly cloned steps.</li>
+<li>success: boolean - A boolean if everything went well.</li>
+<li>(optional) error : string - An error message if an error accurs, caused by not passing the correct
+parameters or the requested problem doesn't exist.</li>
 </ul>
-<h4><a name="remove_problem_step"></a> remove_problem_step</h4>
-<p>Remove a problem step from the problem step manager.</p>
-<p>Recieves:</p>
+<h4><a name="add_problem_worked"></a>add_problem_worked</h4>
+<p>This is used to show a student has worked on a problem.</p>
+<p>Receives: </p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>problem_name : string - The name of the problem.</li>
-<li>problem_step_name : string - The name of the problem step.</li>
+<li>problem_id : string - The string identifier of the problem the student has worked.</li>
+<li>student_id : string - The string identifier of the student that worked the problem.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>problem_name : string - The name of the problem.</li>
-<li>problem_step_name : string - The name of the problem that was removed.</li>
+<li>success : boolean - Whether everything went ok.</li>
+<li>(optional) error : string - If an error occurs, an error message.</li>
+</ul>
+<h4><a name="get_problems_worked"></a>get_problems_worked</h4>
+<p>Retrieves the problems a student has worked on.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the string ID of the student</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>success : boolean - whether everything went ok</li>
+<li>problems_worked : list - A list of problems, containing:<ul>
+<li>student_id : string - The ID of the student.</li>
+<li>problem_id : string - The ID of the problem.</li>
+</ul>
+</li>
+</ul>
+<h4><a name="add_step"></a> add_step</h4>
+<p>Adds a problem step to a problem.</p>
+<p>Receives:</p>
+<ul>
+<li>problem_id : string - The ID of the problem</li>
+<li>step_text : string - The text of the problem step.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>step_id : string - The ID of the newly created step.</li>
+<li>success : boolean - Whether everything went ok.</li>
+<li>(optional) error : string - An error message if something went wrong.</li>
+</ul>
+<h4><a name="remove_step"></a> remove_problem_step</h4>
+<p>Remove a problem step from the problem manager.</p>
+<p>Receives:</p>
+<ul>
+<li>step_id : string - The ID of the step.</li>
+</ul>
+<p>Returns:</p>
+<ul>
 <li>exists : boolean - True if the problem existed.</li>
 <li>success : boolean - True if the problem existed and was deleted.</li>
+<li>(optional) error : string - an error emssage if something went wrong</li>
 </ul>
-<h4><a name="get_problem_step"></a> get_problem_step</h4>
-<p>Gets a previously stored problem step from the problem step manager.</p>
-<p>Recieves:</p>
+<h4><a name="get_step"></a> get_problem_step</h4>
+<p>Gets a previously stored problem step from the problem manager.</p>
+<p>Receives:</p>
 <ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>problem_step_name : string - The name of the problem step.</li>
-<li>problem_name : string - The name of the problem to retrieve.</li>
-</ul>
-<p>Returns:</p>
-<ul>
-<li>problem_name : string - The name of the problem.</li>
-<li>problem_step_name : string - The name of the problem step.</li>
-<li>problem_step_text : string - The text of the problem step.</li>
-<li>exists : boolean - True if the problem existed.</li>
-<li>success : boolean - True if the problem existed.</li>
-</ul>
-<h4><a name="list_problem_steps"></a> list_problem_steps</h4>
-<p>Get all the problems for a given problem and entity. If the problem name is specified
-returns all problem steps for the given problem_name. If the problem_name is NOT 
-specified, returns all the problem steps for the given entity.</p>
-<p>Recieves:</p>
-<ul>
-<li>entity_id : string - An identifier for the sender. (Defined by the HPIT Server)</li>
-<li>(optional) problem_name : string - The name of the problem.</li>
+<li>step_id : string - The ID of the step.</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>problem_steps : list - A list of problems with<ul>
-<li>problem_step : string - The name of the problem.</li>
-<li>problem_step_name : string - The name of the problem step.</li>
-<li>problem_step_text : string - The text of the problem step.</li>
+<li>step_id : string - The ID of the step.</li>
+<li>step_text : string - The step's text.</li>
+<li>date_created : datetime - The time the step was created.</li>
+<li>allowed_edit_id : string - The ID of the entity that can edit this step.</li>
+<li>siccess : boolean - Whether everything went OK.</li>
+</ul>
+<h4><a name="get_problem_steps"></a> list_problem_steps</h4>
+<p>Get all the problem steps for a given problem..</p>
+<p>Receives:</p>
+<ul>
+<li>problem_id : string - The ID of the problem.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>steps : list - A list of problems with<ul>
+<li>step_id : string - The ID of the step.</li>
+<li>step_text : string - The step text.</li>
+<li>date_created : datetime - The time the step was created.</li>
 </ul>
 </li>
-<li>success : True - Always returns True</li>
+<li>problem_id : string - The ID of the problem the steps belong to.</li>
+<li>success : boolean - Whether everything went ok.</li>
+</ul>
+<h4><a name="pm_get_student_model_fragment"></a>get_student_model_fragment</h4>
+<p>Returns a this plugin's contribution to the overall student model.  For the problem management plugin,
+this is all of the problems the student has worked on.  This is usually sent via the StudentManagement model
+after it receives a get_student_model message.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the ID of the student</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>name : string - The name of the fragment, will always be "problem_management".</li>
+<li>fragment : list - A list of problems, containing:<ul>
+<li>problem_name : string - The name of the problem.</li>
+<li>problem_text : string - The text of the problem.</li>
+<li>date_created : datetime - The time this problem was created.</li>
+<li>edit_allowed_id : string - The ID of the tutor or plugin that can edit this problem.</li>
+</ul>
+</li>
+</ul>
+<h2><a name="PGPlugin"></a> Problem Generator Plugin</h2>
+<p>The Problem Generator Plugin is useful for randomly generating mathematics 
+problems on demand. Right now, this generator is used mostly for integration 
+tests between tutors and plugins. TutorGen may extend the possible set of 
+problems in the future.</p>
+<h4><a name="list_problems"></a>pg_list_problems</h4>
+<p>Retrieve a list of potential problems organized by, subject, category and skill.</p>
+<p>Receives:</p>
+<ul>
+<li>subject (optional): None or string - list categories and skills for this subject</li>
+<li>category (optional): None or string - list the skills for this category</li>
+<li>skill (optional): None or string - Does a generator for this particular skill exist?</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>json: a dict of dicts of lists organized by subjects, category and skills </li>
+</ul>
+<h4><a name="generate_problem"></a>pg_generate_problem</h4>
+<p>Generates a random problem for a specific subject, category, and skill. If the subject, category
+or skill doesn't have a generator associated with it, the plugin will return an error. If the subject,
+category, or skill is not provided the problem generator will choose one randomly.</p>
+<p>Recieves:</p>
+<ul>
+<li>subject (optional): string (or None) - Generate a random problem for this subject, (or random subject if None).</li>
+<li>category (optional): string (or None) - Generate a random problem for this category, (or random category if None).</li>
+<li>skill (optional): string (or None) - Generate a random problem for this skill, (or random skill if None).</li>
+<li>count (optional): 0 &lt; integer &lt;= 100 - Generate this number of random problems of this type. (between 0 and 100)</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>json: list of problems -&gt;<ul>
+<li>'subject': string - The subject this problem is mapped to.</li>
+<li>'category': string - The category this problem is mapped to.</li>
+<li>'skill': string - The skill this problem is mapped to.</li>
+<li>'problem_text': string - An ASCII textual representation of the problem.</li>
+<li>'answer_text': string or list - An ASCII textual representation of the solution or list of acceptable solutions.</li>
+</ul>
+</li>
+</ul>
+<p>Errors on invalid subject, category, or skill provided in request. Errors return as the following:</p>
+<ul>
+<li>error: string - A string representation of the error created.</li>
+<li>you_sent: json - A dictionary containing this parameters sent in the original request.<ul>
+<li>'subject': subject,</li>
+<li>'category': category,</li>
+<li>'skill': skill,</li>
+<li>'count': count,</li>
+<li>'options': options</li>
+</ul>
+</li>
 </ul>
 <h2><a name="DSPlugin"></a> Data Storage Plugin</h2>
-<h3>TODO</h3>
+<p>The Data Storage Plugin can be used to store any kind of key value information that a plugin
+or tutor may need.</p>
+<h4><a name="store_data"></a>store_data</h4>
+<p>Store a key value pair in the database.</p>
+<p>Receives:</p>
+<ul>
+<li>key : string - the key for the data</li>
+<li>value: string - the value for the data</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>insert_id : string - the ID of the data object</li>
+</ul>
+<h4><a name="retrieve_data"></a>retrieve_data</h4>
+<p>Get a value from the database via a key.</p>
+<p>Receives:</p>
+<ul>
+<li>key : string - the key to query.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>data : string - the data for the key</li>
+</ul>
+<h4><a name="remove_data"></a>remove_data</h4>
+<p>Removes data from the database.</p>
+<p>Receives:</p>
+<ul>
+<li>key : string - the key to remove.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status : string - the response from MongoDB</li>
+</ul>
 <h2><a name="DCPlugin"></a> PSLC DataShop Connection Plugin</h2>
-<h3>TODO</h3>
+<p>The PSLC DataShop Connection Plugin gives basic connectivity to the PSLC DataShop.  Currently, it
+only provides for a subset of functionality that they provide via their web services.</p>
+<h4><a name="get_dataset_metadata"></a>get_dataset_metadata</h4>
+<p>Gets the dataset metadata.</p>
+<p>Receives:</p>
+<ul>
+<li>dataset_id : string - the string representation of a DataShop dataset ID</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>response_xml : string - the XML from the DataShop server</li>
+<li>status_cude : string - the HTTP request status code.</li>
+</ul>
+<h4><a name="get_sample_metadata"></a>get_sample_metadata</h4>
+<p>Gets the metadata for a DataShop sample.</p>
+<p>Receives:</p>
+<ul>
+<li>dataset_id : string - the string representation of a DataShop dataset ID</li>
+<li>sample_id : string - the string representation of a DataShop sample ID</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>response_xml : string - the XML from the DataShop server</li>
+<li>status_cude : string - the HTTP request status code.</li>
+</ul>
+<h4><a name="get_transactions"></a>get_transactions</h4>
+<p>Gets transactions from a dataset or optionally a specific sample.</p>
+<p>Receives:</p>
+<ul>
+<li>dataset_id : string - the string representation of a DataShop dataset ID</li>
+<li>(optional) sample_id : string - the string representation of a DataShop sample ID</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>response_xml : string - the XML from the DataShop server</li>
+<li>status_cude : string - the HTTP request status code.</li>
+</ul>
+<h4><a name="get_student_steps"></a>get_student_steps</h4>
+<p>Gets the student steps from a dataset or optionally a specific sample.</p>
+<p>Receives:</p>
+<ul>
+<li>dataset_id : string - the string representation of a DataShop dataset ID</li>
+<li>(optional) sample_id : string - the string representation of a DataShop sample ID</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>response_xml : string - the XML from the DataShop server</li>
+<li>status_cude : string - the HTTP request status code.</li>
+</ul>
+<h4><a name="add_custom_field"></a>add_custom_field</h4>
+<p>Adds a custom field to a dataset.</p>
+<p>Receives:</p>
+<ul>
+<li>dataset_id : string - the string representation of a DataShop dataset ID</li>
+<li>name : string - the name of the custom field</li>
+<li>description : string - the description of the custom field</li>
+<li>type : string - the data type.  Can be "number", "string", "date", or "big".</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>response_xml : string - the XML from the DataShop server</li>
+<li>status_cude : string - the HTTP request status code.</li>
+</ul>
 <h2><a name="LicenseToc"></a> License</h2>
 <p>This software is dual licensed under the MIT License and the BSD 3-clause license.</p>
 <p>==============================================================================</p>
