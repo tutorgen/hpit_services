@@ -130,7 +130,10 @@ class PosixDaemon(BaseDaemon):
 
         self.logger = logging.getLogger(__name__)
 
-        self.entity = self.get_entity_class()
+        try:
+            self.entity = self.get_entity_class()
+        except Exception as e:
+            self.logger.error(str(e))
 
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)
@@ -159,7 +162,10 @@ class WindowsDaemon(BaseDaemon):
 
         self.logger = logging.getLogger(__name__)
 
-        self.entity = self.get_entity_class()
+        try:
+            self.entity = self.get_entity_class()
+        except Exception as e:
+            self.logger.debug(str(e))
         
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)

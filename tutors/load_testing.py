@@ -17,6 +17,7 @@ class LoadTestingTutor(Tutor):
         - problem manager
         - student model manager
         - knowledge tracer
+        - skill manager
     """
     
     def __init__(self, entity_id, api_key, logger, run_once=None, args = None):
@@ -34,8 +35,7 @@ class LoadTestingTutor(Tutor):
             self.args = json.loads(args[1:-1])
         else:
             self.args = None
-            
-        random.seed()
+
         
     def post_connect(self):
         self.send("add_student",{},self.new_student_callback)
