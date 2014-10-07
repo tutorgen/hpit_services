@@ -35,10 +35,11 @@ class LoadTestingTutor(Tutor):
         self.cities = ["Columbus", "Covington", "Richmond", "Lexington", "Louisville", "Vaudeville", "Lewisburg", "Leesville"]
         self.states = ["Alaska", "California", "Florida", "Ohio", "Indiana", "Nevada", "Virgina", "Pennsylvania"]
 
-        
+        self.problem_library = {}
+
     def post_connect(self):
-        self.send("add_student",{},self.new_student_callback)
-        
+        self.send('pg_list_problems', {}, self.list_problems_callback)
+
         
     def pre_disconnect(self):
         for sk in self.skills:
@@ -46,6 +47,7 @@ class LoadTestingTutor(Tutor):
                 'skill_id': self.skill_ids[sk],
                 'student_id':self.student_id,
                 })
+
 
     def create_student(self):
         """
@@ -61,7 +63,7 @@ class LoadTestingTutor(Tutor):
             'states': random.choice(self.states),
             'zip': '-'.join([
                 str(random.randint(10000, 100000)),
-                str(random.randint(1000, 10000))])
+                str(random.randint(1000, 10000))]),
             'country': "United States",
             'gender': random.choice(self.genders),
         }
@@ -107,6 +109,37 @@ class LoadTestingTutor(Tutor):
         """
         pass
 
+
+    def list_problems_callback(self, response):
+        """
+        Callback for listing the problems available in the problem generator.
+        """
+        self.send_log_entry("RECV: pg_list_problems response recieved. " + str(response))
+        self.logger.debug("RECV: pg_list_problems response recieved. " + str(response))
+
+        for subject_name, categories in response.items():
+            for category_name, skills in categories.items():
+                for skill_name in skills:
+                    sm_skill_name = '_'.join([subject_name, category_name, skill_name])
+
+                    self.problem_library[sm_skill_name] = {
+                        'subject': subject_name,
+                        'category': category_name,
+                        'skill_name': skill_name,
+                        'skill_id': None
+                    }
+
+                    self.send('get_skill_id', {'skill_name': sm_skill_name}, self.get_skill_id_callback)
+
+
+    def get_skill_id_callback(self, response):
+        """
+        Callback for getting the assigned skill id for a particular skill from this tutor.
+        """
+        problem_skill = self.problem_library[response['skill_name']]
+        problem_skill['skill_id'] = response['skill_id']
+
+
     def create_student_callback(self):
         """
         Callback for the create student event.
@@ -126,9 +159,9 @@ class LoadTestingTutor(Tutor):
             self.student_information
         ]
 
-        action = random.choice(actions)
-
-        action()
+        if self.problem_library:
+            action = random.choice(actions)
+            action()
 
         return True
 
@@ -158,12 +191,8 @@ class LoadTestingTutor(Tutor):
     def initial_response_callback(self, response):
         self.send_log_entry("RECV: kt_set_initial response recieved. " + str(response))
         self.logger.debug("RECV: kt_set_initial response recieved. " + str(response))
+
         
-    def new_student_callback(self,response):
-        self.student_id = response["student_id"]
-        for sk in self.skills:
-            self.send("get_skill_id",{"skill_name":sk},self.get_skills_callback)
-            
     def get_skills_callback(self,response):
         self.skill_ids[response["skill_name"]] = response["skill_id"]
         self.send('kt_set_initial', {
