@@ -14,6 +14,7 @@ settings = SettingsManager.get_plugin_settings()
 class ProblemGeneratorPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
+        self.logger = logger
         self.load_problem_library()
         super().__init__(entity_id, api_key)
 
@@ -32,7 +33,7 @@ class ProblemGeneratorPlugin(Plugin):
                 continue
 
             for fn in filenames:
-                import_path = dirpath.replace(os.getcwd(),'')[1:].split('/')
+                import_path = dirpath.replace(settings.PROJECT_DIR,'')[1:].split('/')
 
                 category_name = fn.split('.')[0]
                 subject_name = import_path[-1]
