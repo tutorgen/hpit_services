@@ -106,7 +106,7 @@ class BaseDaemon:
             if self.entity_subtype not in tutor_classes.keys():
                 raise Exception("Internal Error: Tutor type not supported.")
 
-        entity = None
+        entity = False
         if self.entity_type == 'plugin':
             entity = plugin_classes[entity_subtype](self.entity_id, self.api_key, self.logger, args=self.args)
         elif self.entity_type == 'tutor':

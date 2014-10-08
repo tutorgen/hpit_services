@@ -99,7 +99,7 @@ class KnowledgeTracingPlugin(Plugin):
             if self.logger:
                 self.send_log_entry("INFO: No initial settings for KT_TRACE message. Using defaults.")
 
-            self.db.insert({
+            new_trace = {
                 'sender_entity_id': message['sender_entity_id'],
                 'skill_id': str(message['skill_id']),
                 'student_id': message['student_id'],
@@ -107,20 +107,17 @@ class KnowledgeTracingPlugin(Plugin):
                 'probability_learned': 0.5,
                 'probability_guess': 0.5,
                 'probability_mistake': 0.5,
-            })
+            }
+
+            self.db.insert(new_trace)
+
+            del new_trace['sender_entity_id']
+            del new_trace['_id']
 
             #The calculation is the same regardless of correct 
             #or not with 50% probability settings so we just 
             #return with a response rather than calculate below.
-            self.send_response(message['message_id'], {
-                'skill_id': kt_config['skill_id'],
-                'probability_known': p_known,
-                'probability_learned': p_learned,
-                'probability_guess': p_guess,
-                'probability_mistake': p_mistake,
-                'student_id':message["student_id"]
-                })
-
+            self.send_response(message['message_id'], new_trace)
             return
 
         p_known = float(kt_config['probability_known'])

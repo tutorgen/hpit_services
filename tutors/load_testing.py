@@ -40,7 +40,6 @@ class LoadTestingTutor(Tutor):
         self.actions = [
             self.create_student, 
             self.create_problem, 
-            self.create_skill,
             self.student_solve,
             self.student_failure,
             self.student_information
@@ -57,6 +56,33 @@ class LoadTestingTutor(Tutor):
                 'skill_id': self.skill_ids[sk],
                 'student_id':self.student_id,
                 })
+
+
+    def get_skill_name_for_problem(self, problem):
+        return '_'.join([
+            problem['subject'], 
+            problem['category'],
+            problem['skill']
+        ])
+
+
+    def get_random_problem(self):
+        """
+        Gets a random problem_definition and problem
+        """
+        sm_skill_name, problem_def = random.choice(self.problem_library.items())
+
+        #May not have generated any problems yet.
+        if 'problems' not in problem_def:
+            return None;
+
+        #May not have generated any problems yet.
+        if not problem_def['problems']:
+            return None;
+
+        problem = random.choice(problem_def['problems'])
+
+        return (sm_skill_name, problem_def, problem)
 
 
     def create_student(self):
@@ -98,30 +124,73 @@ class LoadTestingTutor(Tutor):
         """
         Emulate a student asking for a problem.
         """
-        pass
+        self.send('pg_generate_problem', {'count': 3}, self.create_problem_callback)
 
-    def create_skill(self):
-        """
-        Emulate a tutor finding an existing problem for a student to solve.
-        """
 
     def student_solve(self):
         """
         Emulate a student solving a problem.
         """
-        pass
+        if not self.students:
+            return
+
+        random_problem = get_random_problem()
+
+        if not random_problem:
+            return
+
+        sm_skill_name, problem_def, problem = random_problem
+
+        student_id = random.choice(self.students.keys())
+
+        self.send('add_problem_worked', {
+            'student_id': student_id,
+        }, self.add_problem_worked_callback)
+
+        self.send('kt_trace', {
+            'student_id': student_id,
+            'skill_id': problem_def['skill_id'],
+            'correct': True
+        }, self.kt_trace_callback)
+
 
     def student_failure(self):
         """
         Emulate a student failing to solve a problem.
         """
-        pass
+        if not self.students:
+            return
+
+        random_problem = get_random_problem()
+
+        if not random_problem:
+            return
+
+        sm_skill_name, problem_def, problem = random_problem
+
+        student_id = random.choice(self.students.keys())
+
+        self.send('add_problem_worked', {
+            'student_id': student_id,
+        }, self.add_problem_worked_callback)
+
+        self.send('kt_trace', {
+            'student_id': student_id,
+            'skill_id': problem_def['skill_id'],
+            'correct': False
+        }, self.kt_trace_callback)
+
 
     def student_information(self):
         """
         Emulate a student requesting information about his student model.
         """
-        pass
+        if not self.students:
+            return
+
+        student_id = random.choice(self.students.keys())
+
+        self.send('get_student_model', {'student_id': student_id}, self.get_student_model_callback)
 
 
     def list_problems_callback(self, response):
@@ -134,14 +203,15 @@ class LoadTestingTutor(Tutor):
         for subject_name, categories in response.items():
             for category_name, skills in categories.items():
                 for skill_name in skills:
-                    sm_skill_name = '_'.join([subject_name, category_name, skill_name])
-
-                    self.problem_library[sm_skill_name] = {
+                    new_problem_def = {
                         'subject': subject_name,
                         'category': category_name,
                         'skill_name': skill_name,
                         'skill_id': None
                     }
+
+                    sm_skill_name = get_skill_name_for_problem(new_problem_def)
+                    self.problem_library[sm_skill_name] = new_problem_def
 
                     self.send('get_skill_id', {'skill_name': sm_skill_name}, self.get_skill_id_callback)
 
@@ -150,61 +220,97 @@ class LoadTestingTutor(Tutor):
         """
         Callback for getting the assigned skill id for a particular skill from this tutor.
         """
+        self.send_log_entry("RECV: get_skill_id response recieved. " + str(response))
+        self.logger.debug("RECV: get_skill_id response recieved. " + str(response))
+
         problem_skill = self.problem_library[response['skill_name']]
         problem_skill['skill_id'] = response['skill_id']
 
 
-    def create_student_callback(self):
+    def create_student_callback(self, response):
         """
         Callback for the create student event.
         """
         self.send_log_entry("RECV: add_student response recieved. " + str(response))
         self.logger.debug("RECV: add_student response recieved. " + str(response))
+
         self.students[response["student_id"]] = response["attributes"]
+
+
+    def create_problem_callback(self, response):
+        """
+        Callback for generating problems.
+        """
+        self.send_log_entry("RECV: pg_generate_problem response recieved. " + str(response))
+        self.logger.debug("RECV: pg_generate_problem response recieved. " + str(response))
+
+        for p in response:
+            sm_skill_name = self.get_skill_name_for_problem(p)
+
+            problem_def = self.problem_library[sm_skill_name]
+            if 'problems' not in problem_def:
+                problem_def['problems'] = []
+
+            problem_name = '/'.join([sm_skill_name, uuid.uuid4()])
+            problem_def['problems'].append({
+                'problem_name': problem_name,
+                'problem_text': p['problem_text'],
+                'answer_text': p['answer_text']
+                })
+
+            self.send('add_problem', {
+                'problem_name': problem_name,
+                'problem_text': p['problem_text']
+                }, self.add_problem_callback)
+
+
+    def add_problem_callback(self, response):
+        self.send_log_entry("RECV: add_problem_callback response recieved. " + str(response))
+        self.logger.debug("RECV: add_problem_callback response recieved. " + str(response))
+
+        if not response['success']:
+            raise Exception("Could not add problem to problem manager.")
+
+        sm_skill_name, unique_id = response['problem_name'].split('/')
+
+        problem_def = self.problem_library['sm_skill_name']
+
+        problem_match = filter(lambda x: x['problem_name'] == response['problem_name'], problem_def['problems'])
+
+        if len(problem_match) == 0:
+            raise Exception("Rouge Add Problem Callback")
+        elif len(problem_match) != 1:
+            raise Exception("More than 1 problem match found against uuid generated.")
+        else:
+            problem_match[0]['problem_id'] == response['problem_id']
+
+
+    def get_student_model_callback(self, response):
+        self.send_log_entry("RECV: get_student_model response recieved. " + str(response))
+        self.logger.debug("RECV: get_student_model response recieved. " + str(response))
+
+        student_id = response['student_id']
+
+        if student_id not in self.students:
+            return
+
+        self.students[student_id]['student_model'] = response['student_model']
+
+
+    def add_problem_worked_callback(self, response):
+        self.send_log_entry("RECV: add_problem_worked response recieved. " + str(response))
+        self.logger.debug("RECV: add_problem_worked response recieved. " + str(response))
+
+
+    def kt_trace_callback(self, response):
+        self.send_log_entry("RECV: kt_trace response recieved. " + str(response))
+        self.logger.debug("RECV: kt_trace response recieved. " + str(response))
 
 
     def main_callback(self):
         if self.problem_library:
             action = random.choice(self.actions)
+            self.logger.debug("New Action: " + str(action))
             action()
 
         return True
-
-        if self.student_id == None:
-            return True
-        for k,v in self.skill_ids.items():
-            if v == None:
-                return True
-   
-        for sk in self.skills:
-            if 90 < random.randint(0, 100):
-                correct = random.randint(0, 100)
-                self.send('kt_trace', {
-                    'skill_id': self.skill_ids[sk],
-                    'student_id':self.student_id,
-                    'correct': True if 50 < random.randint(0, 100) else False
-                    }, self.trace_response_callback)
-
-        sleep(.1)
-
-        return True
-
-    def trace_response_callback(self, response):
-        self.send_log_entry("RECV: kt_trace response recieved. " + str(response))
-        self.logger.debug("RECV: kt_trace response recieved. " + str(response))
-
-    def initial_response_callback(self, response):
-        self.send_log_entry("RECV: kt_set_initial response recieved. " + str(response))
-        self.logger.debug("RECV: kt_set_initial response recieved. " + str(response))
-
-        
-    def get_skills_callback(self,response):
-        self.skill_ids[response["skill_name"]] = response["skill_id"]
-        self.send('kt_set_initial', {
-                'skill_id': response["skill_id"],
-                'probability_known': random.randint(0, 1000) / 1000.0,
-                'probability_learned': random.randint(0, 1000) / 1000.0,
-                'probability_guess': random.randint(0, 1000) / 1000.0,
-                'probability_mistake': random.randint(0, 1000) / 1000.0,
-                'student_id':self.student_id
-                }, self.initial_response_callback)
