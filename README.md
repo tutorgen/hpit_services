@@ -1046,6 +1046,7 @@ Receives:
 
 Returns:
 
+* student_id : string - the ID of the student
 * student_model : JSON - an object containing the student model.  This will contain lists and other objects from the various plugins.
 * (optional) error : An error message if something went wrong of the request timed out.
 
@@ -1118,13 +1119,14 @@ Returns:
 
 * student_id: string - An identifier for the student.
 * skill_id : string - String identifier for the skill.
-* probability_known : 0.0 - Probability the skill is already known
-* probability_learned : 0.0 - Probability the skill will be learned
-* probability_guess : 0.0 - Probability the answer is a guess
-* probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)
+* probability_known : 0.5 - Probability the skill is already known
+* probability_learned : 0.5 - Probability the skill will be learned
+* probability_guess : 0.5 - Probability the answer is a guess
+* probability_mistake : 0.5 - Probability the student made a mistake (but knew the skill)
 
 ####<a name="kt_trace"></a> kt_trace
-Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result.
+Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result. If
+a setting doesn't exist this plugin will create one with initial values of 0.5 for each probablity.
 
 Receives:
 

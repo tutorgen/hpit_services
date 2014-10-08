@@ -82,21 +82,18 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         insert_doc["probability_mistake"] = .4
         
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{
-                'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
-                'send': {
-                    'event_name': 'kt_set_initial',
-                    'probability_known': 'float(0.0-1.0)', 
-                    'probability_learned': 'float(0.0-1.0)',
-                    'probability_guess': 'float(0.0-1.0)',
-                    'probability_mistake': 'float(0.0-1.0)',
-                    'student_id':'str(ObjectId)',
-                    'skill_id':'str(ObjectId)',
-                }
-            })
+        self.test_subject.send_response.assert_called_once_with("2", {
+            'probability_guess': 0.5, 
+            'probability_known': 0.75, 
+            'probability_learned': 0.5, 
+            'probability_mistake': 0.5, 
+            'skill_id': skill_id, 
+            'student_id': '4'
+        })
         self.test_subject.send_response.reset_mock()
-        
+
         client = MongoClient()
+        client.test_hpit.hpit_knowledge_tracing.remove({})
         client.test_hpit.hpit_knowledge_tracing.insert(insert_doc)
         self.test_subject.kt_trace(msg)
         #with correct  = true and these variables, p_known should be 
@@ -265,32 +262,27 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg['student_id'] = "4"
         
         self.test_subject.kt_reset(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{
-            'skill_id': str(skill_id),
-            'probability_known': 0.0,
-            'probability_learned': 0.0,
-            'probability_guess': 0.0,
-            'probability_mistake': 0.0,
-            'student_id':"4"
+        self.test_subject.send_response.assert_called_once_with("2", {
+            'error': 'No configuration found in knowledge tracer for skill/student combination.'
         })
         self.test_subject.send_response.reset_mock()
-        
+
         oid = self.test_subject.db.insert({"sender_entity_id":"3","skill_id":str(skill_id),"student_id":"4"})
         self.test_subject.kt_reset(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
             'skill_id': str(skill_id),
-            'probability_known': 0.0,
-            'probability_learned': 0.0,
-            'probability_guess': 0.0,
-            'probability_mistake': 0.0,
+            'probability_known': 0.5,
+            'probability_learned': 0.5,
+            'probability_guess': 0.5,
+            'probability_mistake': 0.5,
             'student_id':"4"
         })
         
         ob = self.test_subject.db.find_one({"_id":oid})
-        ob["probability_known"].should.equal(0.0)
-        ob["probability_learned"].should.equal(0.0)
-        ob["probability_guess"].should.equal(0.0)
-        ob["probability_mistake"].should.equal(0.0)
+        ob["probability_known"].should.equal(0.5)
+        ob["probability_learned"].should.equal(0.5)
+        ob["probability_guess"].should.equal(0.5)
+        ob["probability_mistake"].should.equal(0.5)
         
         
     def test_get_student_model_fragment(self):

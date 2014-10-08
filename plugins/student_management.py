@@ -120,26 +120,25 @@ class StudentManagementPlugin(Plugin):
             self.send_log_entry("GET_STUDENT_MODEL")
             self.send_log_entry(message)
             
-            
-        try:
-            student_id = message["student_id"]
-        except KeyError:
+           
+        if 'student_id'  not in message:
             self.send_response(message["message_id"],{
                 "error":"get_student_model requires a 'student_id'",         
             })
             return
-        
+
+        student_id = message["student_id"]
         self.student_models[message["message_id"]] = {}
         self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message])
         self.timeout_threads[message["message_id"]].start()
 
         self.send("get_student_model_fragment",{
                 "update":True,
-                "student_id" : message["student_id"],
-        },self.get_populate_student_model_callback_function(message))
+                "student_id" : student_id
+        }, self.get_populate_student_model_callback_function(student_id, message))
         
     
-    def get_populate_student_model_callback_function(self,message):
+    def get_populate_student_model_callback_function(self, student_id, message):
         def populate_student_model(response):
             
             #check if values exist
@@ -173,7 +172,8 @@ class StudentManagementPlugin(Plugin):
             else:
                 #student model complete, send response (unless timed out)
                 if message["message_id"] in self.timeout_threads:
-                    self.send_response(message["message_id"],{
+                    self.send_response(message["message_id"], {
+                        "student_id": student_id,
                         "student_model" : self.student_models[message["message_id"]],       
                     })
                     self.timeout_threads[message["message_id"]].cancel()
