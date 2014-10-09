@@ -6,7 +6,15 @@ from bson.objectid import ObjectId
 
 from threading import Timer
 
+from couchbase import Couchbase
+import couchbase
+
+import requests
+
 from plugins import StudentManagementPlugin
+
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
 
 class TestStudentManagementPlugin(unittest.TestCase):
 
@@ -14,13 +22,31 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
+        
+        options = {
+                "authType":"sasl",
+                "saslPassword":"",
+                "bucketType":"memcached",
+                "flushEnabled":1,
+                "name":"test_student_model_cache",
+                "ramQuotaMB":100,
+            }
+        req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
+        
         self.test_subject = StudentManagementPlugin(123,456,None)
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_students
+        
+        self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
         
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
+        
+        r = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_student_model_cache",auth=settings.COUCHBASE_AUTH)
+        if r.status_code != 200 and r.status_code != 404:
+            raise Exception("Failure to delete bucket")
+        
         client = MongoClient()
         client.drop_database("test_hpit")
         
@@ -206,9 +232,61 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.student_models["1"].should.equal({})
         self.test_subject.timeout_threads["1"].start.assert_called_with()
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
-            "update":True,
             "student_id":"123",
         },"3")
+    
+    def test_get_student_model_callback_cached(self):
+        """
+        StudentManagementPlugin.get_student_model_callback() Cached Test plan:
+            - put a student model in the cache
+            - run get_student_model_callback with no update, and update false, should proceed as planned
+            - run with update = true, should reply with what is in the cache.
+        """
+        
+        setattr(Timer,"start",MagicMock())
+        self.test_subject.send = MagicMock()
+        self.test_subject.send_response = MagicMock()
+        self.test_subject.get_populate_student_model_callback_function = MagicMock(return_value="3")
+
+        #no update, should send message get_student_model_fragment
+        msg = {"message_id":"1","student_id":"123"}
+
+        self.test_subject.get_student_model_callback(msg)
+
+        self.test_subject.send.assert_called_with("get_student_model_fragment",{
+            "student_id":"123",
+        },"3")
+        
+        #update set to true, same thing
+        msg["update"]=True
+        
+        self.test_subject.get_student_model_callback(msg)
+
+        self.test_subject.send.assert_called_with("get_student_model_fragment",{
+            "student_id":"123",
+        },"3")
+        
+        #update set to false, nothing exists, should do same thing
+        msg["update"]=False
+        
+        self.test_subject.get_student_model_callback(msg)
+
+        self.test_subject.send.assert_called_with("get_student_model_fragment",{
+            "student_id":"123",
+        },"3")
+        
+        #update false, thing in cache, should return student model
+        self.test_subject.cache.set("123",{"knowledge_tracing":["1","2"]})
+        self.test_subject.get_student_model_callback(msg)
+
+        self.test_subject.send_response.assert_called_with("1",{
+            "student_model" : {"knowledge_tracing":["1","2"]},
+            "cached": True,
+        })
+        
+       
+        
+        
     
     def test_get_populate_student_model_callback_function(self):
         """
@@ -222,6 +300,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         #init stuff
         self.test_subject.send_response = MagicMock()
+        self.test_subject.cache.set = MagicMock()
         msg = {"message_id":"1"}        
         self.test_subject.timeout_threads["1"] = Timer(15,self.test_subject.kill_timeout,[msg])
         self.test_subject.student_model_fragment_names = ["knowledge_tracing"]
@@ -262,17 +341,22 @@ class TestStudentManagementPlugin(unittest.TestCase):
         func = self.test_subject.get_populate_student_model_callback_function(msg)
         func({"name":"knowledge_tracing","fragment":"some_data"})
         self.test_subject.send_response.assert_called_with("1",{
-            "student_model":{"knowledge_tracing":"some_data"}
+            "student_model":{"knowledge_tracing":"some_data"},
+            "cached":False,
         })
         self.test_subject.timeout_threads.should_not.contain("1")
         self.test_subject.student_models.should_not.contain("1")
         self.test_subject.send_response.reset_mock()
         
+        self.test_subject.cache.set.assert_called_with("123",{"knowledge_tracing":"some_data"})
+        self.test_subject.cache.set.reset_mock()
+        
         #simulate timeout (timeout_thread["1"] will be deleted in above test)
         msg = {"message_id":"1","student_id":"123"}
         func = self.test_subject.get_populate_student_model_callback_function(msg)
-        func({"name":"knowledge_tracing","fragment":"some_data"})
+        func({"name":"knowledge_tracing","fragment":"some_data","cached":False})
         self.test_subject.send_response.call_count.should.equal(0)
+        self.test_subject.cache.set.call_count.should.equal(0)
         
         
     def test_kill_timeout(self):

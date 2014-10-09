@@ -1043,11 +1043,12 @@ all of the plugins that the student has interacted with.
 Receives:
 
 * student_id : string - the ID of the student
-
+* (optional) update : boolean - whether or not the student model should be updated (True) or from cache (False).
 Returns:
 
 * student_id : string - the ID of the student
 * student_model : JSON - an object containing the student model.  This will contain lists and other objects from the various plugins.
+* cached : boolean - whether this model was retrieved from a cache.
 * (optional) error : An error message if something went wrong of the request timed out.
 
 
