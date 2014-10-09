@@ -26,7 +26,7 @@ def index():
     tutors = list(Tutor.query.filter(Tutor.time_last_polled >= active_poll_time))
 
     end = datetime.now()
-    start = end - timedelta(days=7)
+    start = end - timedelta(days=1)
 
     messages = mongo.db.messages.find({
         'message_name': {

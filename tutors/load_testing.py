@@ -24,6 +24,7 @@ class LoadTestingTutor(Tutor):
         super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
         self.run_once = run_once
         self.logger = logger
+        self.poll_wait = 100
 
         self.students = []
         self.female_first_names = ["Mary", "Junell", "Elizabeth", "Ashley", "Rebecca", "Catherine", "Eris", "Fatima"]
@@ -206,11 +207,11 @@ class LoadTestingTutor(Tutor):
                     new_problem_def = {
                         'subject': subject_name,
                         'category': category_name,
-                        'skill_name': skill_name,
+                        'skill': skill_name,
                         'skill_id': None
                     }
 
-                    sm_skill_name = get_skill_name_for_problem(new_problem_def)
+                    sm_skill_name = self.get_skill_name_for_problem(new_problem_def)
                     self.problem_library[sm_skill_name] = new_problem_def
 
                     self.send('get_skill_id', {'skill_name': sm_skill_name}, self.get_skill_id_callback)
@@ -244,14 +245,18 @@ class LoadTestingTutor(Tutor):
         self.send_log_entry("RECV: pg_generate_problem response recieved. " + str(response))
         self.logger.debug("RECV: pg_generate_problem response recieved. " + str(response))
 
-        for p in response:
+        if 'problems' not in response:
+            import pdb; pdb.set_trace()
+
+        problems = response['problems']
+        for p in problems:
             sm_skill_name = self.get_skill_name_for_problem(p)
 
             problem_def = self.problem_library[sm_skill_name]
             if 'problems' not in problem_def:
                 problem_def['problems'] = []
 
-            problem_name = '/'.join([sm_skill_name, uuid.uuid4()])
+            problem_name = '/'.join([sm_skill_name, str(uuid.uuid4())])
             problem_def['problems'].append({
                 'problem_name': problem_name,
                 'problem_text': p['problem_text'],
@@ -273,16 +278,21 @@ class LoadTestingTutor(Tutor):
 
         sm_skill_name, unique_id = response['problem_name'].split('/')
 
-        problem_def = self.problem_library['sm_skill_name']
+        problem_def = self.problem_library[sm_skill_name]
 
-        problem_match = filter(lambda x: x['problem_name'] == response['problem_name'], problem_def['problems'])
+        problem_match = list(
+            filter(
+                lambda x: x['problem_name'] == response['problem_name'], 
+                problem_def['problems']
+            )
+        )
 
         if len(problem_match) == 0:
             raise Exception("Rouge Add Problem Callback")
         elif len(problem_match) != 1:
             raise Exception("More than 1 problem match found against uuid generated.")
         else:
-            problem_match[0]['problem_id'] == response['problem_id']
+            problem_match[0]['problem_id'] = response['problem_id']
 
 
     def get_student_model_callback(self, response):
