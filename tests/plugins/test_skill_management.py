@@ -38,6 +38,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_skills
         self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = settings.COUCHBASE_HOSTNAME)
        
+        self.test_subject.send_response = MagicMock()
+       
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
         call.
@@ -69,69 +71,72 @@ class TestSkillManagementPlugin(unittest.TestCase):
         isinstance(test_subject.db,Collection).should.equal(True)
         
         isinstance(test_subject.cache,couchbase.connection.Connection).should.equal(True)
-        
-
+    
     def test_get_skill_name_callback(self):
         """
         SkillManagementPlugin.get_skill_name_callback() Test plan:
             - pass in message without id, should respond with error
             - pass in message with bogus id, should respond with error
             - pass in message with good id, should respond with name
-        """
-        
-        self.test_subject.send_response = MagicMock()
-
-        msg = {"message_id":"1"}
-        self.test_subject.get_skill_name_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-                "error":"Message must contain a 'skill_id'",
-        })
-        self.test_subject.send_response.reset_mock()
-        
-        msg["skill_id"] = "foo"
-        self.test_subject.get_skill_name_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-                "error":"'skill_id' is not a valid ObjectId"      
-        })
-        self.test_subject.send_response.reset_mock()
-        
-        bogus_id = ObjectId()
-        msg["skill_id"] = bogus_id 
-        self.test_subject.get_skill_name_callback(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-                "error":"Skill with id " + str(bogus_id) + " does not exist."      
-        })
-        self.test_subject.send_response.reset_mock()
-        
+        """        
         real_id = self.test_subject.db.insert({"skill_name":"addition"})
-        msg["skill_id"] = real_id
+        msg= {"message_id":"1","skill_id":real_id}
         self.test_subject.get_skill_name_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
                 "skill_id": str(real_id),
         })
-        self.test_subject.send_response.reset_mock()
+            
+    def test_get_skill_name_callback_no_skill_id(self):
+        """
+        SkillManagementPlugin.get_skill_name_callback() No Skill Id
+        """
+        msg = {"message_id":"1"}
+        self.test_subject.get_skill_name_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error":"Message must contain a 'skill_id'",
+        })
         
+    def test_get_skill_name_callback_invalid_id(self):
+        """
+        SkillManagementPlugin.get_skill_name_callback() Invalid Skill Id
+        """
+        msg= {"message_id":"1","skill_id":"foo"}
+        self.test_subject.get_skill_name_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error":"'skill_id' is not a valid ObjectId"      
+        })
     
-    def test_get_skill_id_callback(self):
+    def test_get_skill_name_callback_no_exist_skill(self):
+        """
+        SkillManagementPlugin.get_skill_name_callback() Skill Id Does Not Exist
+        """
+        bogus_id = ObjectId()
+        msg= {"message_id":"1","skill_id":bogus_id}
+        self.test_subject.get_skill_name_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error":"Skill with id " + str(bogus_id) + " does not exist."      
+        })
+    
+    def test_get_skill_id_callback_no_skill_name(self):
         """
         SkillManagementPlugin.get_skill_id_callback() Test plan:
             - pass in message without name, should respond with error
             - pass in message with name for non existent, should create one
             - pass in message with existing name, should return proper id
         """
-        self.test_subject.send_response = MagicMock()
-        
+                
         msg = {"message_id":"1"}
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "error":"Message must contain a 'skill_name'",
         })
-        self.test_subject.send_response.reset_mock()
         
-        
-        
-        msg["skill_name"] = "addition"
+    def test_get_skill_id_callback_new_skill(self):
+        """
+        SkillManagementPlugin.get_skill_id_callback() New Skill
+        """
+        msg = {"message_id":"1","skill_name":"addition"}
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.db.find({"skill_name":"addition"}).count().should.equal(1)
         added_id = self.test_subject.db.find_one({"skill_name":"addition"})["_id"]
@@ -141,10 +146,17 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 "cached":False
         })
         
+    def test_get_skill_id_callback_existing_skill(self):
+        """
+        SkillManagementPlugin.get_skill_id_callback() Existing Skill
+        """
+        self.test_subject.cache.set("addition","123")
+        
+        msg = {"message_id":"1","skill_name":"addition"}
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
-                "skill_id":str(added_id),
+                "skill_id":"123",
                 "cached":True
         })
         
