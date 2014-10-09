@@ -26,35 +26,49 @@ def index():
     tutors = list(Tutor.query.filter(Tutor.time_last_polled >= active_poll_time))
 
     end = datetime.now()
-    start = end - timedelta(days=1)
 
-    messages = mongo.db.messages.find({
-        'message_name': {
-            '$ne': 'transaction'},
-        'time_created': {
-            '$gte': start,
-            '$lt': end }
-        }).count()
+    h_mes = mongo.db.messages.find({
+        'message_name': {'$ne': 'transaction'},
+        'time_created': {'$gte': end - timedelta(hours=1), '$lt': end }
+    }).count()
 
-    transactions = mongo.db.messages.find({
-        'message_name': 'transaction',
-        'time_created': {
-            '$gte': start,
-            '$lt': end }
-        }).count()
+    h_res = mongo.db.responses.find({
+        'message_name': {'$ne': 'transaction'},
+        'time_response_received': {'$gte': end - timedelta(hours=1), '$lt': end }
+    }).count()
 
-    responses = mongo.db.responses.find({
-        'time_response_received': {
-            '$gte': start,
-            '$lt': end }
-        }).count()
+    last_hour = (h_mes, h_res)
+
+    m_mes = mongo.db.messages.find({
+        'message_name': {'$ne': 'transaction'},
+        'time_created': {'$gte': end - timedelta(minutes=1), '$lt': end }
+    }).count()
+
+    m_res = mongo.db.responses.find({
+        'message_name': {'$ne': 'transaction'},
+        'time_response_received': {'$gte': end - timedelta(minutes=1), '$lt': end }
+    }).count()
+
+    last_minute = (m_mes, m_res)
+
+    d_mes = mongo.db.messages.find({
+        'message_name': {'$ne': 'transaction'},
+        'time_created': {'$gte': end - timedelta(days=1), '$lt': end }
+    }).count()
+
+    d_res = mongo.db.responses.find({
+        'message_name': {'$ne': 'transaction'},
+        'time_response_received': {'$gte': end - timedelta(days=1), '$lt': end }
+    }).count()
+
+    last_day = (d_mes, d_res)
 
     return render_template('index.html', 
         tutor_count=len(tutors),
         plugin_count=len(plugins),
         tutors=tutors,
         plugins=plugins,
-        events=[('Messages', messages), ('Transactions', transactions), ('Responses', responses)]
+        events={'last_minute': last_minute, 'last_hour': last_hour, 'last_day': last_day}
     )
 
 
