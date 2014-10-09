@@ -150,11 +150,10 @@ class StudentManagementPlugin(Plugin):
             return
 
         student_id = message["student_id"]
-            
-        try:
+          
+        update = False 
+        if "update" in message:
             update = message["update"]
-        except KeyError:
-            update = False
             
         if not update:
             try:
@@ -172,7 +171,7 @@ class StudentManagementPlugin(Plugin):
         self.timeout_threads[message["message_id"]].start()
 
         self.send("get_student_model_fragment",{
-                "update":True,
+                "update": update,
                 "student_id" : student_id
         }, self.get_populate_student_model_callback_function(student_id, message))
         
@@ -211,15 +210,11 @@ class StudentManagementPlugin(Plugin):
             else:
                 #student model complete, send response (unless timed out)
                 if message["message_id"] in self.timeout_threads:
-<<<<<<< HEAD
+
                     self.send_response(message["message_id"], {
                         "student_id": student_id,
                         "student_model" : self.student_models[message["message_id"]],       
-=======
-                    self.send_response(message["message_id"],{
-                        "student_model" : self.student_models[message["message_id"]],
                         "cached":False,
->>>>>>> b5657ec72eaa846511338649c815aec4238a37bd
                     })
                     
                     self.cache.set(str(message["student_id"]),self.student_models[message["message_id"]])

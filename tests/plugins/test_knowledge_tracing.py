@@ -121,6 +121,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send_response.called.should.equal(True) #can't check params because of float precision
         thing  = self.test_subject.db.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
         nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
+
      
     def test_kt_trace_correct_false(self):
         """
