@@ -47,18 +47,6 @@ class LoadTestingTutor(Tutor):
         ]
 
 
-    def post_connect(self):
-        self.send('pg_list_problems', {}, self.list_problems_callback)
-
-        
-    def pre_disconnect(self):
-        for sk in self.skills:
-            self.send('kt_reset', {
-                'skill_id': self.skill_ids[sk],
-                'student_id':self.student_id,
-                })
-
-
     def get_skill_name_for_problem(self, problem):
         return '_'.join([
             problem['subject'], 
@@ -319,8 +307,12 @@ class LoadTestingTutor(Tutor):
 
     def main_callback(self):
         if self.problem_library:
-            action = random.choice(self.actions)
-            self.logger.debug("New Action: " + str(action))
-            action()
+            for i in range(random.randint(10, 1000)):
+                action = random.choice(self.actions)
+                self.logger.debug("New Action: " + str(action))
+                action()
+        else:
+            self.send('pg_list_problems', {}, self.list_problems_callback)
+            sleep(5)
 
         return True
