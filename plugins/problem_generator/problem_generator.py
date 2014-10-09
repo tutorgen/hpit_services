@@ -33,7 +33,7 @@ class ProblemGeneratorPlugin(Plugin):
                 continue
 
             for fn in filenames:
-                import_path = dirpath.replace(settings.PROJECT_DIR,'')[1:].split('/')
+                import_path = dirpath.replace(settings.PROJECT_DIR, '')[1:].split(os.sep)
 
                 category_name = fn.split('.')[0]
                 subject_name = import_path[-1]
@@ -41,7 +41,8 @@ class ProblemGeneratorPlugin(Plugin):
 
                 if not category_name:
                     continue
-
+                    
+                
                 imported = importlib.import_module('.'.join(import_path))
 
                 functions = {}
