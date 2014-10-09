@@ -299,7 +299,7 @@ class SolvingTwoStepEquationsProblem:
         solution = solve(expression)
 
         if not solution:
-            return solving_two_step_equations(depth, rounding)
+            return self(depth, rounding)
 
         solution = solution[0]
         solution_1 = format_expression(solution)
