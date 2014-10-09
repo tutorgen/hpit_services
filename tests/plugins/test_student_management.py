@@ -231,6 +231,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.timeout_threads["1"].start.assert_called_with()
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
             "student_id":"123",
+            'update': False
         },"3")
     
     def test_get_student_model_callback_cached(self):
@@ -253,6 +254,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
             "student_id":"123",
+            "update": False
         },"3")
         
         #update set to true, same thing
@@ -261,6 +263,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
+            "update": True,
             "student_id":"123",
         },"3")
         
@@ -271,6 +274,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
             "student_id":"123",
+            "update": False
         },"3")
         
         #update false, thing in cache, should return student model
@@ -304,25 +308,25 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.student_model_fragment_names = ["knowledge_tracing"]
         
         #missing student_id
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"name":"knowledge_tracing","fragment":"some data"})
         self.test_subject.send_response.call_count.should.equal(0)
         
         #missing name
         msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"fragment":"some data"})
         self.test_subject.send_response.call_count.should.equal(0)
         
         #missing fragment
         msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"name":"knowledge_tracing"})
         self.test_subject.send_response.call_count.should.equal(0)
                
         #will still not be called, key error until 123 added to student models
         msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"name":"knowledge_tracing","fragment":"some_data"})
         self.test_subject.send_response.call_count.should.equal(0)
         
@@ -330,15 +334,16 @@ class TestStudentManagementPlugin(unittest.TestCase):
         
         #bogus name should break for loop
         msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"name":"bogus_name","fragment":"some_data"})
         self.test_subject.send_response.call_count.should.equal(0)
         
         #this should work
         msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"name":"knowledge_tracing","fragment":"some_data"})
         self.test_subject.send_response.assert_called_with("1",{
+            "student_id": "123",
             "student_model":{"knowledge_tracing":"some_data"},
             "cached":False,
         })
@@ -351,7 +356,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         
         #simulate timeout (timeout_thread["1"] will be deleted in above test)
         msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
+        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
         func({"name":"knowledge_tracing","fragment":"some_data","cached":False})
         self.test_subject.send_response.call_count.should.equal(0)
         self.test_subject.cache.set.call_count.should.equal(0)

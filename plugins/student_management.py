@@ -146,9 +146,10 @@ class StudentManagementPlugin(Plugin):
             })
             return
 
-        update = False
-
-        if 'update' in message:
+        student_id = message["student_id"]
+          
+        update = False 
+        if "update" in message:
             update = message["update"]
             
         if not update:
@@ -209,8 +210,8 @@ class StudentManagementPlugin(Plugin):
                 if message["message_id"] in self.timeout_threads:
                     self.send_response(message["message_id"], {
                         "student_id": student_id,
-                        "student_model" : self.student_models[message["message_id"]],
-                        "caches":False,
+                        "student_model" : self.student_models[message["message_id"]],       
+                        "cached":False,
                     })
                     
                     self.cache.set(str(message["student_id"]),self.student_models[message["message_id"]])
