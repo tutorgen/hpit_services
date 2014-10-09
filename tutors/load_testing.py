@@ -307,7 +307,7 @@ class LoadTestingTutor(Tutor):
 
     def main_callback(self):
         if self.problem_library:
-            for i in range(random.randint(10, 1000)):
+            for i in range(0, 100):
                 action = random.choice(self.actions)
                 self.logger.debug("New Action: " + str(action))
                 action()
