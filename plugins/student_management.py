@@ -10,6 +10,11 @@ import time
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
+from couchbase import Couchbase
+import couchbase
+
+import requests
+
 from utils import StudentAuthentication
 
 class StudentManagementPlugin(Plugin):
@@ -24,6 +29,23 @@ class StudentManagementPlugin(Plugin):
         self.student_model_fragment_names = ["knowledge_tracing","problem_management"]
         self.student_models = {}
         self.timeout_threads = {}
+        
+        
+        try:
+            self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
+        except couchbase.exceptions.BucketNotFoundError:
+            options = {
+                "authType":"sasl",
+                "saslPassword":"",
+                "bucketType":"memcached",
+                "flushEnabled":1,
+                "name":"student_model_cache",
+                "ramQuotaMB":100,
+            }
+            req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
+            
+            self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
+        
         
         StudentAuthentication.init_auth()
 
@@ -128,13 +150,28 @@ class StudentManagementPlugin(Plugin):
                 "error":"get_student_model requires a 'student_id'",         
             })
             return
+            
+        try:
+            update = message["update"]
+        except KeyError:
+            update = False
+            
+        if not update:
+            try:
+                cached_model = self.cache.get(str(student_id)).value
+                self.send_response(message["message_id"],{
+                        "student_model" : cached_model,
+                        "cached": True,
+                    })
+                return
+            except couchbase.exceptions.NotFoundError:
+                pass
         
         self.student_models[message["message_id"]] = {}
         self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message])
         self.timeout_threads[message["message_id"]].start()
 
         self.send("get_student_model_fragment",{
-                "update":True,
                 "student_id" : message["student_id"],
         },self.get_populate_student_model_callback_function(message))
         
@@ -174,8 +211,12 @@ class StudentManagementPlugin(Plugin):
                 #student model complete, send response (unless timed out)
                 if message["message_id"] in self.timeout_threads:
                     self.send_response(message["message_id"],{
-                        "student_model" : self.student_models[message["message_id"]],       
+                        "student_model" : self.student_models[message["message_id"]],
+                        "cached":False,
                     })
+                    
+                    self.cache.set(str(message["student_id"]),self.student_models[message["message_id"]])
+                    
                     self.timeout_threads[message["message_id"]].cancel()
                     del self.timeout_threads[message["message_id"]]
                     del self.student_models[message["message_id"]]
