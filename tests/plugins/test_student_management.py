@@ -282,6 +282,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send_response.assert_called_with("1",{
+            "student_id": "123",
             "student_model" : {"knowledge_tracing":["1","2"]},
             "cached": True,
         })
@@ -304,7 +305,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response = MagicMock()
         self.test_subject.cache.set = MagicMock()
         msg = {"message_id":"1"}        
-        self.test_subject.timeout_threads["1"] = Timer(15,self.test_subject.kill_timeout,[msg])
+        self.test_subject.timeout_threads["1"] = Timer(15,self.test_subject.kill_timeout,[msg, "123"])
         self.test_subject.student_model_fragment_names = ["knowledge_tracing"]
         
         #missing student_id
@@ -373,10 +374,11 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response = MagicMock()
         
         msg = {"message_id":"1","student_id":"123"}
-        self.test_subject.kill_timeout(msg)
+        self.test_subject.kill_timeout(msg, "123")
         self.test_subject.send_response.assert_called_with("1",{
             "error":"Get student model timed out. Here is a partial student model.",
-            "student_model":{}
+            "student_model":{},
+            "student_id": "123"
             })
         self.test_subject.send_response.reset_mock()
         
@@ -385,10 +387,11 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.timeout_threads = {"1":"value"}
         
         
-        self.test_subject.kill_timeout(msg)
+        self.test_subject.kill_timeout(msg, "123")
         self.test_subject.send_response.assert_called_with("1",{
             "error":"Get student model timed out. Here is a partial student model.",
             "student_model":"value",
+            "student_id": "123",
             })
         ("1" in self.test_subject.student_models).should.equal(False)
         ("1" in self.test_subject.timeout_threads).should.equal(False)
