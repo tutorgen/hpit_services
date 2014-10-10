@@ -156,6 +156,7 @@ class StudentManagementPlugin(Plugin):
             try:
                 cached_model = self.cache.get(str(student_id)).value
                 self.send_response(message["message_id"],{
+                        "student_id": student_id,
                         "student_model" : cached_model,
                         "cached": True,
                     })
@@ -166,7 +167,7 @@ class StudentManagementPlugin(Plugin):
         student_id = message["student_id"]
 
         self.student_models[message["message_id"]] = {}
-        self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message])
+        self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message, student_id])
         self.timeout_threads[message["message_id"]].start()
 
         self.send("get_student_model_fragment",{
@@ -213,27 +214,33 @@ class StudentManagementPlugin(Plugin):
                         "student_model" : self.student_models[message["message_id"]],       
                         "cached":False,
                     })
-                    
-                    self.cache.set(str(message["student_id"]),self.student_models[message["message_id"]])
-                    
-                    self.timeout_threads[message["message_id"]].cancel()
-                    del self.timeout_threads[message["message_id"]]
-                    del self.student_models[message["message_id"]]
+                   
+                    try: 
+                        self.cache.set(str(message["student_id"]), self.student_models[message["message_id"]])
+                        
+                        self.timeout_threads[message["message_id"]].cancel()
+                        del self.timeout_threads[message["message_id"]]
+                        del self.student_models[message["message_id"]]
+                    except KeyError:
+                        pass
+
                     return
- 
+
         return populate_student_model
         
-    def kill_timeout(self,message):
+    def kill_timeout(self, message, student_id):
         if self.logger:
             self.send_log_entry("TIMEOUT " + str(message))
         try:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
+                'student_id': student_id,
                 "student_model":self.student_models[str(message["message_id"])]
             })
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
+                'student_id': student_id,
                 "student_model":{},
             })
         
