@@ -26,7 +26,7 @@ class LoadTestingTutor(Tutor):
         self.logger = logger
         self.poll_wait = 100
 
-        self.students = []
+        self.students = {}
         self.female_first_names = ["Mary", "Junell", "Elizabeth", "Ashley", "Rebecca", "Catherine", "Eris", "Fatima"]
         self.male_first_names = ["Raymond", "Robert", "Ted", "John", "Jeff", "Josh", "Joe", "Chris", "Matthew", "Mark", "Luke"]
         self.last_names = ["Smith", "Barry", "Chandler", "Carmichael", "Nguyen", "Blink", "Sauer", "Slavins", "O'Reilly", "Ledermann"]
@@ -46,6 +46,8 @@ class LoadTestingTutor(Tutor):
             self.student_information
         ]
 
+    def post_connect(self):
+        self.send('pg_list_problems', {}, self.list_problems_callback)
 
     def get_skill_name_for_problem(self, problem):
         return '_'.join([
@@ -59,7 +61,7 @@ class LoadTestingTutor(Tutor):
         """
         Gets a random problem_definition and problem
         """
-        sm_skill_name, problem_def = random.choice(self.problem_library.items())
+        sm_skill_name, problem_def = random.choice(list(self.problem_library.items()))
 
         #May not have generated any problems yet.
         if 'problems' not in problem_def:
@@ -106,7 +108,7 @@ class LoadTestingTutor(Tutor):
 
         student_info['full_name'] = ' '.join([student_info['first_name'], student_info['last_name']])
 
-        self.send("add_student", student_info, self.create_student_callback)
+        self.send("add_student", {'attributes': student_info}, self.create_student_callback)
 
 
     def create_problem(self):
@@ -123,14 +125,14 @@ class LoadTestingTutor(Tutor):
         if not self.students:
             return
 
-        random_problem = get_random_problem()
+        random_problem = self.get_random_problem()
 
         if not random_problem:
             return
 
         sm_skill_name, problem_def, problem = random_problem
 
-        student_id = random.choice(self.students.keys())
+        student_id = random.choice(list(self.students.keys()))
 
         self.send('add_problem_worked', {
             'student_id': student_id,
@@ -150,14 +152,14 @@ class LoadTestingTutor(Tutor):
         if not self.students:
             return
 
-        random_problem = get_random_problem()
+        random_problem = self.get_random_problem()
 
         if not random_problem:
             return
 
         sm_skill_name, problem_def, problem = random_problem
 
-        student_id = random.choice(self.students.keys())
+        student_id = random.choice(list(self.students.keys()))
 
         self.send('add_problem_worked', {
             'student_id': student_id,
@@ -177,7 +179,7 @@ class LoadTestingTutor(Tutor):
         if not self.students:
             return
 
-        student_id = random.choice(self.students.keys())
+        student_id = random.choice(list(self.students.keys()))
 
         self.send('get_student_model', {'student_id': student_id}, self.get_student_model_callback)
 
@@ -232,9 +234,6 @@ class LoadTestingTutor(Tutor):
         """
         self.send_log_entry("RECV: pg_generate_problem response recieved. " + str(response))
         self.logger.debug("RECV: pg_generate_problem response recieved. " + str(response))
-
-        if 'problems' not in response:
-            import pdb; pdb.set_trace()
 
         problems = response['problems']
         for p in problems:
@@ -311,8 +310,5 @@ class LoadTestingTutor(Tutor):
                 action = random.choice(self.actions)
                 self.logger.debug("New Action: " + str(action))
                 action()
-        else:
-            self.send('pg_list_problems', {}, self.list_problems_callback)
-            sleep(5)
 
         return True
