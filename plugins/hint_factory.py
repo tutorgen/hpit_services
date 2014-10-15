@@ -442,7 +442,7 @@ class HintFactoryPlugin(Plugin):
             })
             return
             
-        hints_received = self.db.find({"student_id":student_id})
+        hints_received = self.hint_db.find({"student_id":student_id})
         hints = [h for h in hints_received]
         
         self.send_response(message["message_id"],{

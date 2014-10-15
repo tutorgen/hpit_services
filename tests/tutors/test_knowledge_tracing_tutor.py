@@ -92,6 +92,11 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         random.randint = MagicMock(return_value = 91)
         calls = []
+        calls.append(call('get_student_model',{
+            "student_id":"2",        
+        },self.test_subject.get_student_model_callback
+            )
+        )
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
                 call('kt_trace', {
@@ -108,7 +113,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         random.randint = MagicMock(return_value = 90)
         self.test_subject.main_callback().should.equal(True)
-        self.test_subject.send.call_count.should.equal(0)
+        self.test_subject.send.call_count.should.equal(1)
         
         
     
