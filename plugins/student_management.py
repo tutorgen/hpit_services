@@ -26,7 +26,7 @@ class StudentManagementPlugin(Plugin):
         self.db = self.mongo.hpit.hpit_students
         
         self.TIMEOUT = 15
-        self.student_model_fragment_names = ["knowledge_tracing","problem_management"]
+        self.student_model_fragment_names = ["knowledge_tracing","problem_management","hint_factory"]
         self.student_models = {}
         self.timeout_threads = {}
         

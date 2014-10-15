@@ -500,4 +500,15 @@ class TestHintFactoryPlugin(unittest.TestCase):
             "hint_text": "hint text"
         })
         self.test_subject.send_response.reset_mock()
+        
+        msg["student_id"] = "123"
+        self.test_subject.hf.get_hint = MagicMock(return_value="hint text")
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",
+            "exists":"YES",
+            "hint_text": "hint text"
+        })
+        self.test_subject.hint_db.find({"student_id":"123","hint_text":"hint text","state": dict(HintFactoryState(problem="2 + 2 = 4"))}).count().should.equal(1)
+        self.test_subject.send_response.reset_mock()
     
