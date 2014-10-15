@@ -21,9 +21,9 @@ class ExampleTutor(Tutor):
         event = random.choice(self.event_names)
 
         logger = logging.getLogger(__name__)
-        logger.debug("Sending a random event: " + event)
+        self.send_log_entry("Sending a random event: " + event)
         response = self.send(event, {'test': 1234})
-        logger.debug("RECV: " + str(response))
+        self.send_log_entry("RECV: " + str(response))
 
         sleep(1)
 

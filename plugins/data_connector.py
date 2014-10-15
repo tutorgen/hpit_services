@@ -33,7 +33,7 @@ class DataShopConnectorPlugin(Plugin):
    
     def get_dataset_metadata(self,payload):
         if self.logger:
-            self.logger.debug("RECV: get_dataset_metadata with message: " + str(payload))
+            self.send_log_entry("RECV: get_dataset_metadata with message: " + str(payload))
         
         path = "/datasets"
         dataset_id = payload['dataset_id']
@@ -46,7 +46,7 @@ class DataShopConnectorPlugin(Plugin):
    
     def get_sample_metadata(self,payload):
         if self.logger:
-            self.logger.debug("RECV: get_sample_metadata with message: " + str(payload))
+            self.send_log_entry("RECV: get_sample_metadata with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
         sample_id = payload['sample_id']
@@ -61,7 +61,7 @@ class DataShopConnectorPlugin(Plugin):
     
     def get_transactions(self,payload):
         if self.logger:
-            self.logger.debug("RECV: get_transactions with message: " + str(payload))
+            self.send_log_entry("RECV: get_transactions with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
         sample_id = None
@@ -80,7 +80,7 @@ class DataShopConnectorPlugin(Plugin):
     
     def get_student_steps(self,payload):
         if self.logger:
-            self.logger.debug("RECV: get_student_steps with message: " + str(payload))
+            self.send_log_entry("RECV: get_student_steps with message: " + str(payload))
         
         dataset_id = payload['dataset_id']
         sample_id = None
@@ -99,7 +99,7 @@ class DataShopConnectorPlugin(Plugin):
     
     def add_custom_field(self,payload):
         if self.logger:
-            self.logger.debug("RECV: add_custom_field with message: " + str(payload))
+            self.send_log_entry("RECV: add_custom_field with message: " + str(payload))
         
         try:
             dataset_id = payload['dataset_id']

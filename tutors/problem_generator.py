@@ -40,7 +40,6 @@ class ProblemGeneratorTutor(Tutor):
 
     def list_problems_callback(self, response):
         self.send_log_entry("RECV: pg_list_problems response recieved. " + str(response))
-        self.logger.debug("RECV: pg_list_problems response recieved. " + str(response))
 
         self.problem_list = response
         self.request_new_problem()
@@ -48,7 +47,6 @@ class ProblemGeneratorTutor(Tutor):
 
     def generate_problem_callback(self, response):
         self.send_log_entry("RECV: pg_generate_problem response recieved. " + str(response))
-        self.logger.debug("RECV: pg_generate_problem response recieved. " + str(response))
         print("NEW PROBLEMS RECIEVED")
         try:
             for p in response['problems']:

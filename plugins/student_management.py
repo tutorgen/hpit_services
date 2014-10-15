@@ -62,8 +62,8 @@ class StudentManagementPlugin(Plugin):
     #Student Management Plugin
     def add_student_callback(self, message):
         if self.logger:
-            self.logger.debug("ADD_STUDENT")
-            self.logger.debug(message)
+            self.send_log_entry("ADD_STUDENT")
+            self.send_log_entry(message)
         
         try:
             attributes = message["attributes"]
@@ -77,8 +77,8 @@ class StudentManagementPlugin(Plugin):
         
     def get_student_callback(self, message):
         if self.logger:
-            self.logger.debug("GET_STUDENT")
-            self.logger.debug(message)
+            self.send_log_entry("GET_STUDENT")
+            self.send_log_entry(message)
         
         try:
             student_id = message["student_id"]
@@ -94,8 +94,8 @@ class StudentManagementPlugin(Plugin):
             
     def set_attribute_callback(self, message):
         if self.logger:
-            self.logger.debug("SET_ATTRIBUTE")
-            self.logger.debug(message)
+            self.send_log_entry("SET_ATTRIBUTE")
+            self.send_log_entry(message)
         
         try:
             student_id = message["student_id"]
@@ -114,8 +114,8 @@ class StudentManagementPlugin(Plugin):
                
     def get_attribute_callback(self, message):
         if self.logger:
-            self.logger.debug("GET_ATTRIBUTE")
-            self.logger.debug(message)
+            self.send_log_entry("GET_ATTRIBUTE")
+            self.send_log_entry(message)
         
         try:
             student_id = message["student_id"]
@@ -137,11 +137,8 @@ class StudentManagementPlugin(Plugin):
 
     def get_student_model_callback(self,message):
         if self.logger:
-            self.logger.debug("GET_STUDENT_MODEL")
-            self.logger.debug(message)
             self.send_log_entry("GET_STUDENT_MODEL")
-            self.send_log_entry(message)
-            
+            self.send_log_entry(message)        
             
         try:
             student_id = message["student_id"]
@@ -194,7 +191,6 @@ class StudentManagementPlugin(Plugin):
             try:
                 self.student_models[str(message["message_id"])][response["name"]] = response["fragment"]
                 if self.logger:
-                    self.logger.debug("GOT FRAGMENT " + str(response["fragment"]))
                     self.send_log_entry("GOT FRAGMENT " + str(response["fragment"]))
                     
             except KeyError:
@@ -226,7 +222,6 @@ class StudentManagementPlugin(Plugin):
         
     def kill_timeout(self,message):
         if self.logger:
-            self.logger.debug("TIMEOUT " + str(message))
             self.send_log_entry("TIMEOUT " + str(message))
         try:
             self.send_response(message["message_id"],{

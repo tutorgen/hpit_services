@@ -64,11 +64,9 @@ class KnowledgeTracingTutor(Tutor):
 
     def trace_response_callback(self, response):
         self.send_log_entry("RECV: kt_trace response recieved. " + str(response))
-        self.logger.debug("RECV: kt_trace response recieved. " + str(response))
 
     def initial_response_callback(self, response):
         self.send_log_entry("RECV: kt_set_initial response recieved. " + str(response))
-        self.logger.debug("RECV: kt_set_initial response recieved. " + str(response))
         
     def new_student_callback(self,response):
         self.student_id = response["student_id"]
@@ -88,4 +86,3 @@ class KnowledgeTracingTutor(Tutor):
         
     def get_student_model_callback(self,response):
         self.send_log_entry("RECV: student_model response recieved. " + str(response))
-        self.logger.debug("RECV: student_model response recieved. " + str(response))

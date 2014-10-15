@@ -285,8 +285,8 @@ class HintFactoryPlugin(Plugin):
 
     def init_problem_callback(self, message):
         if self.logger:
-            self.logger.debug("INIT PROBLEM")
-            self.logger.debug(message)
+            self.send_log_entry("INIT PROBLEM")
+            self.send_log_entry(message)
             
         try:
             start_state = message["start_state"]
@@ -310,8 +310,8 @@ class HintFactoryPlugin(Plugin):
         
     def push_state_callback(self, message):
         if self.logger:
-            self.logger.debug("PUSH PROBLEM STATE")
-            self.logger.debug(message)
+            self.send_log_entry("PUSH PROBLEM STATE")
+            self.send_log_entry(message)
             
         try:
             state=  message["state"]
@@ -357,8 +357,8 @@ class HintFactoryPlugin(Plugin):
 
     def hint_exists_callback(self, message):
         if self.logger:
-            self.logger.debug("HINT EXISTS")
-            self.logger.debug(message)
+            self.send_log_entry("HINT EXISTS")
+            self.send_log_entry(message)
             
         try:
             state=  message["state"]
@@ -389,8 +389,8 @@ class HintFactoryPlugin(Plugin):
         
     def get_hint_callback(self, message):
         if self.logger:
-            self.logger.debug("GET HINT")
-            self.logger.debug(message)
+            self.send_log_entry("GET HINT")
+            self.send_log_entry(message)
         
         try:
             state=  message["state"]
@@ -432,7 +432,6 @@ class HintFactoryPlugin(Plugin):
     def get_student_model_fragment_callback(self,message):
         if self.logger:
             self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
-            self.logger.debug("GET STUDENT MODEL FRAGMENT" + str(message))
             
         try:
             student_id = message["student_id"]
