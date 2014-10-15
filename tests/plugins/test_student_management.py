@@ -37,6 +37,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_students
         
         self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
+        self.test_subject.logger = MagicMock()
+        self.test_subject.send_log_entry = MagicMock()
         
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
@@ -76,11 +78,10 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         test_message = {"message_id":"2","sender_entity_id":"3"}
         calls = [call("ADD_STUDENT"),call(test_message)]
-        self.test_subject.logger = MagicMock()
         self.test_subject.send_response = MagicMock()
         
         self.test_subject.add_student_callback(test_message)
-        self.test_subject.logger.debug.assert_has_calls(calls)
+        self.test_subject.send_log_entry.assert_has_calls(calls)
         
         client = MongoClient()
         result = client.test_hpit.hpit_students.find({})
@@ -108,11 +109,10 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         test_message = {"message_id":"2"}
         calls = [call("GET_STUDENT"),call(test_message)]
-        self.test_subject.logger = MagicMock()
         self.test_subject.send_response = MagicMock()
         
         self.test_subject.get_student_callback(test_message)
-        self.test_subject.logger.debug.assert_has_calls(calls)
+        self.test_subject.send_log_entry.assert_has_calls(calls)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id' to get a student"})
         self.test_subject.send_response.reset_mock()
         
@@ -137,11 +137,10 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         test_message = {"message_id":"2"}
         calls = [call("SET_ATTRIBUTE"),call(test_message)]
-        self.test_subject.logger = MagicMock()
         self.test_subject.send_response = MagicMock()
         
         self.test_subject.set_attribute_callback(test_message)
-        self.test_subject.logger.debug.assert_has_calls(calls)
+        self.test_subject.send_log_entry.assert_has_calls(calls)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
         self.test_subject.send_response.reset_mock()
         
@@ -178,11 +177,10 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         test_message = {"message_id":"2"}
         calls = [call("GET_ATTRIBUTE"),call(test_message)]
-        self.test_subject.logger = MagicMock()
         self.test_subject.send_response = MagicMock()
         
         self.test_subject.get_attribute_callback(test_message)
-        self.test_subject.logger.debug.assert_has_calls(calls)
+        self.test_subject.send_log_entry.assert_has_calls(calls)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id' and 'attribute_name'"})
         self.test_subject.send_response.reset_mock()
         

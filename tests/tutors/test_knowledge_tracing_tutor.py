@@ -123,10 +123,8 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
             -mock logger, should be called
             -mock send_log_entry, should be called
         """
-        self.test_subject.logger= MagicMock()
-        self.test_subject.send_log_entry = MagicMock()
+        self.test_subject.send_log_entry= MagicMock()
         self.test_subject.trace_response_callback("this is a response")
-        self.test_subject.logger.debug.assert_called_with("RECV: kt_trace response recieved. this is a response")
         self.test_subject.send_log_entry.assert_called_with("RECV: kt_trace response recieved. this is a response")
     
     def test_initial_response_callback(self):
@@ -135,10 +133,8 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
             -mock logger, should be called
             -mock send_log_entry, should be called
         """
-        self.test_subject.logger= MagicMock()
         self.test_subject.send_log_entry = MagicMock()
         self.test_subject.initial_response_callback("this is a response")
-        self.test_subject.logger.debug.assert_called_with("RECV: kt_set_initial response recieved. this is a response")
         self.test_subject.send_log_entry.assert_called_with("RECV: kt_set_initial response recieved. this is a response")
     
     def test_new_student_callback(self):

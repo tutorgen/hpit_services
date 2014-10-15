@@ -52,12 +52,11 @@ class TestExamplePlugin(unittest.TestCase):
         test_message = "This is a message"
         calls = [call("TEST"),call(test_message)]
         
-        mock=MagicMock()
-        self.test_subject.logger = mock
+        self.test_subject.send_log_entry=MagicMock()
         
         self.test_subject.test_plugin_callback(test_message)
         
-        mock.debug.assert_has_calls(calls)
+        self.test_subject.send_log_entry.assert_has_calls(calls)
 
 
     def example_plugin_callback(self):
@@ -68,9 +67,8 @@ class TestExamplePlugin(unittest.TestCase):
         test_message = "This is a message"
         calls = [call("EXAMPLE"),call(test_message)]
         
-        mock=MagicMock()
-        self.test_subject.logger = mock
+        self.test_subject.send_log_entry=MagicMock()
         
         self.test_subject.test_plugin_callback(test_message)
         
-        mock.debug.assert_has_calls(calls)
+        self.test_subject.send_log_entry.assert_has_calls(calls)
