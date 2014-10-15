@@ -363,7 +363,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
             - with nothing in threads or student_models, should exit cleanly, calling response
             - put something in student_models[student_id] and timeout_threads[student_id]
             - mock out send_response, ensured called with proper parameters
-            - make sure keys get deleted in student_models and timeout_threads
+            - make sure keys get deleted in student_models and timeout_threads 
         """
         self.test_subject.send_response = MagicMock()
         
