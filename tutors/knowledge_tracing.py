@@ -46,6 +46,8 @@ class KnowledgeTracingTutor(Tutor):
         for k,v in self.skill_ids.items():
             if v == None:
                 return True
+                
+        self.send("get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
    
         for sk in self.skills:
             if 90 < random.randint(0, 100):
@@ -83,3 +85,7 @@ class KnowledgeTracingTutor(Tutor):
                 'probability_mistake': random.randint(0, 1000) / 1000.0,
                 'student_id':self.student_id
                 }, self.initial_response_callback)
+        
+    def get_student_model_callback(self,response):
+        self.send_log_entry("RECV: student_model response recieved. " + str(response))
+        self.logger.debug("RECV: student_model response recieved. " + str(response))
