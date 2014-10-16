@@ -15,8 +15,6 @@ import couchbase
 
 import requests
 
-from hpit.utils import StudentAuthentication
-
 class StudentManagementPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
@@ -45,9 +43,6 @@ class StudentManagementPlugin(Plugin):
             req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
             
             self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
-        
-        
-        StudentAuthentication.init_auth()
 
     def post_connect(self):
         super().post_connect()
@@ -72,7 +67,6 @@ class StudentManagementPlugin(Plugin):
             
         student_id = self.db.insert({"attributes":attributes})
         
-        StudentAuthentication.add_student_auth(str(message["sender_entity_id"]),str(student_id))
         self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes})
         
     def get_student_callback(self, message):

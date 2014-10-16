@@ -27,6 +27,11 @@ class KnowledgeTracingPlugin(Plugin):
             kt_reset=self.kt_reset,
             kt_trace=self.kt_trace,
             get_student_model_fragment=self.get_student_model_fragment)
+        
+        #temporary POC code
+        response = self._get_data("message-owner/get_student_model_fragment")
+        if response["owner"] == self.entity_id:
+            self._post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"88bb246d-7347-4f57-8cbe-95944a4e0027"}) #problem manager
 
 
     def check_skill_manager(self, message):

@@ -2,6 +2,6 @@ from .user import User
 from .plugin import Plugin
 from .tutor import Tutor
 from .subscription import Subscription
-from .studentauth import StudentAuth 
+from .messageauth import MessageAuth
 
-__all__ = ['User', 'Plugin', 'Tutor', 'Subscription', 'StudentAuth']
+__all__ = ['User', 'Plugin', 'Tutor', 'Subscription', 'MessageAuth']

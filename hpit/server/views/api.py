@@ -11,12 +11,10 @@ mongo = app_instance.mongo
 db = app_instance.db
 csrf = app_instance.csrf
 
-from hpit.server.models import Plugin, Tutor, Subscription
+from hpit.server.models import Plugin, Tutor, Subscription, MessageAuth
 
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
-
-from hpit.utils import StudentAuthentication
 
 def _map_mongo_document(document):
     mapped_doc = {}
@@ -279,12 +277,22 @@ def subscribe():
         return auth_failed_response()
 
     message_name = request.json['message_name']
-    entity_id = session['entity_id']
+    entity_id = session['entity_id']         
 
     plugin = Plugin.query.filter_by(entity_id=entity_id).first()
 
     if not plugin:
         return not_found_response()
+        
+    #message auth
+    message_auth = MessageAuth.query.filter_by(message_name=message_name).first()
+    if not message_auth: #this will be the owner
+        new_message_auth = MessageAuth()
+        new_message_auth.entity_id = str(entity_id)
+        new_message_auth.message_name = message_name
+        new_message_auth.is_owner = True
+        db.session.add(new_message_auth)
+        db.session.commit()
 
     subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
 
@@ -543,6 +551,17 @@ def plugin_message_list():
 
     my_messages = list(my_messages)
 
+   
+    def is_auth(mname,eid):
+        message_auth = MessageAuth.query.filter_by(message_name=mname,entity_id=str(entity_id)).first()
+        if not message_auth:
+            return False
+        else:
+            return True
+    
+    my_messages = [m for m in my_messages if is_auth(m["message_name"],entity_id)]
+    
+            
     result = [
         (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
@@ -657,11 +676,6 @@ def message():
     message_name = request.json['name']
     payload = request.json['payload']
 
-    #student auth
-    if "student_id" in payload:
-        if not StudentAuthentication.student_auth(str(sender_entity_id), str(payload["student_id"])):
-            return auth_failed_response("Student ID " + str(payload["student_id"]) + " is not available to entity " + str(sender_entity_id))
-
     message = {
         'sender_entity_id': sender_entity_id,
         'time_created': datetime.now(),
@@ -679,7 +693,6 @@ def message():
         if message_name == 'transaction':
             mongo.db.plugin_transactions.insert({
                 'message_id': message_id,
-
                 'sender_entity_id': sender_entity_id,
                 'receiver_entity_id': plugin_entity_id,
 
@@ -817,3 +830,50 @@ def responses():
         })
 
     return jsonify({'responses': result})
+    
+@csrf.exempt
+@app.route("/message-auth", methods=["POST"])
+def message_auth():
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
+    entity = Plugin.query.filter_by(entity_id=entity_id).first()
+    
+    if "message_name" not in request.json:
+        return bad_parameter_response("message_name")
+    if "other_entity_id" not in request.json:
+        return bad_parameter_response("other_entity_id")
+    
+    message_name = request.json["message_name"]
+    other_entity_id = request.json["other_entity_id"]
+        
+    message_auth = MessageAuth.query.filter_by(message_name=message_name,entity_id=str(entity_id),is_owner=True).first()
+    if not message_auth:
+        return auth_failed_response()
+    else:
+        existing_message_auth = MessageAuth.query.filter_by(message_name=message_name,entity_id=str(other_entity_id),is_owner=False).first()
+        if not existing_message_auth:
+            new_message_auth = MessageAuth()
+            new_message_auth.entity_id = str(other_entity_id)
+            new_message_auth.message_name = message_name
+            new_message_auth.is_owner = False
+            db.session.add(new_message_auth)
+            db.session.commit()
+        return ok_response()
+    
+@app.route("/message-owner/<message_name>", methods=["GET"])
+def message_owner(message_name):
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+
+    message_auth = MessageAuth.query.filter_by(message_name=message_name,is_owner=True).first()
+    if not message_auth:
+        return not_found_response()
+    else:
+        return  jsonify({"owner":message_auth.entity_id})
+    
+    

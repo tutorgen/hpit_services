@@ -39,6 +39,12 @@ class ProblemManagementPlugin(Plugin):
             get_problem_steps=self.get_problem_steps_callback,
             get_student_model_fragment=self.get_student_model_fragment_callback)
 
+        #temporary POC code
+        response = self._get_data("message-owner/get_student_model_fragment")
+        if response["owner"] == self.entity_id:
+            self.post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"360798c9-2598-4468-a624-d60f6d4b9f4d"}) #knowledge tracing
+
+        
     #Problem Management Plugin
     def add_problem_callback(self, message):
         sender_entity_id = message['sender_entity_id']
