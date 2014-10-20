@@ -90,7 +90,6 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["probability_guess"] = .3
         msg["probability_mistake"] = .4
         self.test_subject.kt_trace(msg)
-
         self.test_subject.send_response.assert_called_once_with("2", {
             'probability_guess': 0.5, 
             'probability_known': 0.75, 
@@ -99,7 +98,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             'skill_id': skill_id, 
             'student_id': '4'
         })
-       
+
 
     def test_kt_trace_correct_true(self): 
         """
@@ -361,7 +360,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         """
         skill_id = str(ObjectId())
         msg = {"message_id":"2","sender_entity_id":"3","skill_id":"add","skill_id":skill_id,"student_id":"4"}
-        
+
         oid = self.test_subject.db.insert({"sender_entity_id":"3","skill_id":str(skill_id),"student_id":"4"})
         self.test_subject.kt_reset(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
