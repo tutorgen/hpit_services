@@ -10,8 +10,9 @@ import json
 
 import flask
 
-from hpit.server.models import Plugin, Tutor, Subscription
+from hpit.server.models import Plugin, Tutor, Subscription, MessageAuth
 from hpit.server.app import ServerApp
+
 app_instance = ServerApp.get_instance()
 app = app_instance.app
 mongo = app_instance.mongo
@@ -334,6 +335,7 @@ class TestServerAPI(unittest.TestCase):
             - not found response if a tutor tries to subscribe
             - first time around, ok response, a subscription should be in the db
             - second time around, exists response, nothing should be added
+            - make sure message auths are being created appropriately
         """
         response = self.test_client.post("/plugin/subscribe",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Missing parameter:')
@@ -355,7 +357,15 @@ class TestServerAPI(unittest.TestCase):
         
         response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
         response.data.should.contain(b'EXISTS')
+        
+
+        MessageAuth.query.filter_by(message_name="test_message",entity_id=str(self.plugin_entity_id),is_owner=True).first().should_not.equal(None)
         self.disconnect_helper("plugin")
+        
+        self.connect_helper("tutor") #just to get another entity... tutors can't subscribe to messages.
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
+        MessageAuth.query.filter_by(message_name="test_message",entity_id=str(self.tutor_entity_id)).first().should.equal(None)
+        
         
     def test_unsubscribe(self):
         """
@@ -595,6 +605,27 @@ class TestServerAPI(unittest.TestCase):
                 'message_id':"1",
                 'sender_entity_id':"1",
             },
+        ])
+        
+        #not auth, should not get
+        response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
+        response.data.should_not.contain(b'Valid payload 1')
+        
+        client[settings.MONGO_DBNAME].plugin_messages.remove({})
+        
+        #subscribe to get auth
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"some_message"}),content_type="application/json")
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"some_message",
+                'payload':{"msg":"Valid payload 1"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+            },
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
@@ -786,4 +817,125 @@ class TestServerAPI(unittest.TestCase):
         client[settings.MONGO_DBNAME].responses.count().should.equal(0)
         
         self.disconnect_helper("plugin")
+    
+    def test_message_owner_no_connect(self):
+        """
+        api.message_owner() Test plan:
+            - if no entity_id, auth should fail
+            - if message does not exist, return 404
+            - else, return the owner ID
+        """
+        response = self.test_client.get("/message-owner/test",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+    def test_message_owner_no_exist(self):
+        """
+        api.message_owner() Message does not exist:
+        """
+        self.connect_helper("plugin")
+        response = self.test_client.get("/message-owner/test",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not find the requested resource.')
+        
+        ma = MessageAuth()
+        ma.entity_id  = str(self.plugin_entity_id)
+        ma.message_name = "test"
+        ma.is_owner = False
+        db.session.add(ma)
+        db.session.commit()
+        
+        response = self.test_client.get("/message-owner/test",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not find the requested resource.')
+        
+    def test_message_owner_success(self):
+        """
+        api.message_owner() Success:
+        """
+        self.connect_helper("plugin")
+        
+        ma = MessageAuth()
+        ma.entity_id  = str(self.plugin_entity_id)
+        ma.message_name = "test"
+        ma.is_owner = True
+        db.session.add(ma)
+        db.session.commit()
+        
+        response = self.test_client.get("/message-owner/test",data = json.dumps({}),content_type="application/json")
+        rstring = response.get_data().decode('utf-8')
+        rstring.should.contain("owner")
+        rstring.should.contain(str(self.plugin_entity_id))
+        
+    def test_share_message_no_connect(self):
+        """
+        api.share_messaage() Test plan:
+            - no entity_id in session, should return auth failed
+            - no message_name or other_entity_ids, should return bad parameter
+            - if other_entity_ids is not a string or a list, should return bad parameter
+            - if other_entity_ids is a string or a list, should work fine
+            - if entity_id is not the owner, should return error
+            - if entity_id is owner, should add auth for each other_entity_id
+        """
+        response = self.test_client.post("/share-message",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+    def test_share_message_bad_params(self):
+        """
+        api.share_message() Missing parameters:
+        """
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/share-message",data = json.dumps({"other_entity_ids":"234"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+    def test_share_message_entity_id_format(self):
+        """
+        api.share_message() other_entity_ids format:
+        """
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test","other_entity_ids":3}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test","other_entity_ids":3}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test","other_entity_ids":"123"}),content_type="application/json")
+        response.data.should_not.contain(b'Missing parameter:')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test","other_entity_ids":["123"]}),content_type="application/json")
+        response.data.should_not.contain(b'Missing parameter:')
+     
+    def test_share_message_not_owner(self):
+        """
+        api.share_message() not owner:
+        """
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test","other_entity_ids":["123"]}),content_type="application/json")
+        response.data.should.contain(b'error')
+        
+    def test_share_message_owner(self):
+        """
+        api.share_message() is owner:
+        """
+        ma = MessageAuth()
+        ma.entity_id  = str(self.plugin_entity_id)
+        ma.message_name = "test"
+        ma.is_owner = True
+        db.session.add(ma)
+        db.session.commit()
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-message",data = json.dumps({"message_name":"test","other_entity_ids":["123","456"]}),content_type="application/json")
+        
+        response.data.should.contain(b"OK")
+        MessageAuth.query.filter_by(message_name="test",entity_id="123",is_owner=False).first().should_not.equal(None)
+        MessageAuth.query.filter_by(message_name="test",entity_id="456",is_owner=False).first().should_not.equal(None)
+        
+        
 
