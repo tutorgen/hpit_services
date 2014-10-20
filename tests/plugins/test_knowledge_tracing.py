@@ -83,7 +83,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         """
         KnowledgeTracingPlugin.kt_trace() No settings in db:
         """
-        msg = {"message_id":"2","sender_entity_id":"3","skill_id":str(ObjectId()),"correct":True,"student_id":"4"}
+        skill_id = str(ObjectId())
+        msg = {"message_id":"2","sender_entity_id":"3","skill_id":skill_id,"correct":True,"student_id":"4"}
         msg["probability_known"] = .7
         msg["probability_learned"] = .2
         msg["probability_guess"] = .3
@@ -98,18 +99,6 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             'skill_id': skill_id, 
             'student_id': '4'
         })
-        self.test_subject.send_response.reset_mock()
-
-        client = MongoClient()
-        client.test_hpit.hpit_knowledge_tracing.remove({})
-        client.test_hpit.hpit_knowledge_tracing.insert(insert_doc)
-
-        self.test_subject.kt_trace(msg)
-        #with correct  = true and these variables, p_known should be 
-        expected_value = (.42 / .51) + ( (1 - (.42 / .51)) * .2)
-        self.test_subject.send_response.called.should.equal(True) #can't check params because of float precision
-        thing  = self.test_subject.db.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
-        nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
        
 
     def test_kt_trace_correct_true(self): 
