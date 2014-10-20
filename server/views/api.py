@@ -831,7 +831,8 @@ def responses():
         })
 
     return jsonify({'responses': result})
-    
+ 
+"""
 @csrf.exempt
 @app.route("/message-auth", methods=["POST"])
 def message_auth():
@@ -852,7 +853,7 @@ def message_auth():
         
     message_auth = MessageAuth.query.filter_by(message_name=message_name,entity_id=str(entity_id),is_owner=True).first()
     if not message_auth:
-        return auth_failed_response()
+        return jsonify({"error":"not authorized to complete action"})
     else:
         existing_message_auth = MessageAuth.query.filter_by(message_name=message_name,entity_id=str(other_entity_id),is_owner=False).first()
         if not existing_message_auth:
@@ -863,7 +864,8 @@ def message_auth():
             db.session.add(new_message_auth)
             db.session.commit()
         return ok_response()
-    
+"""
+
 @app.route("/message-owner/<message_name>", methods=["GET"])
 def message_owner(message_name):
     if 'entity_id' not in session:
@@ -876,5 +878,45 @@ def message_owner(message_name):
         return not_found_response()
     else:
         return  jsonify({"owner":message_auth.entity_id})
+
+@csrf.exempt
+@app.route("/share-message", methods=["POST"])
+def share_message():
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
+    
+    if "message_name" not in request.json:
+        return bad_parameter_response("message_name")
+    if "other_entity_ids" not in request.json:
+        return bad_parameter_response("other_entity_ids")
+    
+    message_name = request.json["message_name"]
+    other_entity_ids = request.json["other_entity_ids"]
+    
+    if isinstance(other_entity_ids,str):
+        other_entity_ids = [other_entity_ids]
+    elif not isinstance(other_entity_ids,list):
+        return bad_parameter_response("other_entity_ids")
+    
+    message_auth = MessageAuth.query.filter_by(message_name=message_name,entity_id=str(entity_id),is_owner=True).first()
+    if not message_auth:
+        return jsonify({"error":"not owner"})
+    else:
+        for eid in other_entity_ids:
+            existing_message_auth = MessageAuth.query.filter_by(message_name=message_name, entity_id=str(eid)).first()
+            if not existing_message_auth:
+                new_message_auth = MessageAuth()
+                new_message_auth.entity_id = str(eid)
+                new_message_auth.message_name = message_name
+                new_message_auth.is_owner = False
+                db.session.add(new_message_auth)
+                db.session.commit()
+                
+        return ok_response()
+    
+        
+    
     
     

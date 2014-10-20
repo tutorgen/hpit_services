@@ -40,10 +40,10 @@ class ProblemManagementPlugin(Plugin):
             get_student_model_fragment=self.get_student_model_fragment_callback)
 
         #temporary POC code
-        response = self._get_data("message-owner/get_student_model_fragment")
-        if response["owner"] == self.entity_id:
-            self.post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"360798c9-2598-4468-a624-d60f6d4b9f4d"}) #knowledge tracing
-
+        #response = self._get_data("message-owner/get_student_model_fragment")
+        #if response["owner"] == self.entity_id:
+        #    self._post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"360798c9-2598-4468-a624-d60f6d4b9f4d"}) #knowledge tracing
+        self._post_data("share-message",{"message_name":"get_student_model_fragment","other_entity_ids":["360798c9-2598-4468-a624-d60f6d4b9f4d"]}) #knowledge tracing
         
     #Problem Management Plugin
     def add_problem_callback(self, message):

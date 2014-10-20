@@ -11,7 +11,10 @@ class ExamplePlugin(Plugin):
 
         self.subscribe(
             test=self.test_plugin_callback, 
-            example=self.example_plugin_callback)
+            example=self.example_plugin_callback,
+            kt_trace=self.kt_trace_callback)
+        
+        #self._post_data("message-auth",{"message_name":"kt_trace","other_entity_id":"01177f8f-c082-4d2d-a9b5-97623cb7bbc9"}) #problem manager
 
     #Example Plugin
     def test_plugin_callback(self, message):
@@ -21,3 +24,6 @@ class ExamplePlugin(Plugin):
     def example_plugin_callback(self, message):
         self.send_log_entry("EXAMPLE")
         self.send_log_entry(message)
+
+    def kt_trace_callback(self,message):
+        self.logger.debug("I got a message I shouldn't have!")
