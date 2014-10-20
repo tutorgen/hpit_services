@@ -6,6 +6,9 @@ from plugins import SimpleHintFactory
 from plugins import StateDoesNotExistException
 from plugins import HintDoesNotExistException
 
+from pymongo import MongoClient
+from pymongo.collection import Collection
+
 from utils.hint_factory_state import *
 
 import hashlib
@@ -282,9 +285,12 @@ class TestSimpleHintFactory(unittest.TestCase):
 class TestHintFactoryPlugin(unittest.TestCase):
     def setUp(self):
         self.test_subject = HintFactoryPlugin(123,456,None)
+        self.test_subject.hint_db = self.test_subject.mongo.test_hpit.hpit_hints
     
     def tearDown(self):
         self.test_subject = None
+        client = MongoClient()
+        client.drop_database("test_hpit")
         
     def test_constructor(self):
         """
@@ -500,4 +506,32 @@ class TestHintFactoryPlugin(unittest.TestCase):
             "hint_text": "hint text"
         })
         self.test_subject.send_response.reset_mock()
+        
+        #student model stuff
+        msg["student_id"] = "123"
+        self.test_subject.hf.get_hint = MagicMock(return_value="hint text")
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",
+            "exists":"YES",
+            "hint_text": "hint text"
+        })
+        self.test_subject.hint_db.find({"student_id":"123","hint_text":"hint text","state": dict(HintFactoryState(problem="2 + 2 = 4"))}).count().should.equal(1)
+        self.test_subject.send_response.reset_mock()
+        
+        #duplicate records?
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.hint_db.find({}).count().should.equal(1)
+        self.test_subject.send_response.reset_mock()
+        
+        self.test_subject.hf.get_hint = MagicMock(return_value="hint text 2")
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.hint_db.find({}).count().should.equal(2)
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = dict(HintFactoryState(problem="2 + 3 = 5"))
+        self.test_subject.get_hint_callback(msg)
+        self.test_subject.hint_db.find({}).count().should.equal(3)
+        self.test_subject.send_response.reset_mock()
+        
     

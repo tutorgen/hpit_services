@@ -15,9 +15,9 @@ class ExamplePlugin(Plugin):
 
     #Example Plugin
     def test_plugin_callback(self, message):
-        self.logger.debug("TEST")
-        self.logger.debug(message)
+        self.send_log_entry("TEST")
+        self.send_log_entry(message)
 
     def example_plugin_callback(self, message):
-        self.logger.debug("EXAMPLE")
-        self.logger.debug(message)
+        self.send_log_entry("EXAMPLE")
+        self.send_log_entry(message)

@@ -62,28 +62,13 @@ class TestExampleTutor(unittest.TestCase):
             -if run_once is false, returns false
             -if run_once is true, returns true
         """
-        responses.add(responses.POST,HPIT_URL_ROOT+"/connect",
-                                body='{"entity_name":"example_tutor","entity_id":"4"}',
-                                )
-        
-        responses.add(responses.POST,HPIT_URL_ROOT+"/disconnect",
-                                body='OK',
-                                )
-        responses.add(responses.POST,HPIT_URL_ROOT+"/message",
-                                body='{"message_id":"4"}',
-                                )
 
-        logger_mock = MagicMock()
         logger_calls = [call("Sending a random event: test"),call("RECV: {'message_id': '4'}")]
-        
-        logging.getLogger = MagicMock(return_value=logger_mock)
-        
+        self.test_subject.send_log_entry = MagicMock()
+        self.test_subject.send = MagicMock(return_value={"message_id":"4"})
         random.choice = MagicMock(return_value="test")
         
         self.test_subject.main_callback().should.equal(True)
-        
-        logger_mock.debug.assert_has_calls(logger_calls)
-        
+        self.test_subject.send_log_entry.assert_has_calls(logger_calls)
         self.test_subject.run_once = True
-
         self.test_subject.main_callback().should.equal(False)

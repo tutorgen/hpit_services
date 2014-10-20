@@ -7,6 +7,13 @@ import sys
 from hpitclient import Plugin
 from utils.hint_factory_state import *
 
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+import bson
+
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 from py2neo import neo4j
 
 class StateDoesNotExistException(Exception):
@@ -261,6 +268,10 @@ class HintFactoryPlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.hf = SimpleHintFactory()
+        
+        self.mongo = MongoClient(settings.MONGODB_URI)
+        self.hint_db = self.mongo.hpit.hpit_hints
+        
 
     def post_connect(self):
         super().post_connect()
@@ -269,12 +280,13 @@ class HintFactoryPlugin(Plugin):
              hf_init_problem=self.init_problem_callback, 
              hf_push_state=self.push_state_callback,
              hf_hint_exists=self.hint_exists_callback,
-             hf_get_hint=self.get_hint_callback)
+             hf_get_hint=self.get_hint_callback,
+             get_student_model_fragment=self.get_student_model_fragment_callback)
 
     def init_problem_callback(self, message):
         if self.logger:
-            self.logger.debug("INIT PROBLEM")
-            self.logger.debug(message)
+            self.send_log_entry("INIT PROBLEM")
+            self.send_log_entry(message)
             
         try:
             start_state = message["start_state"]
@@ -298,8 +310,8 @@ class HintFactoryPlugin(Plugin):
         
     def push_state_callback(self, message):
         if self.logger:
-            self.logger.debug("PUSH PROBLEM STATE")
-            self.logger.debug(message)
+            self.send_log_entry("PUSH PROBLEM STATE")
+            self.send_log_entry(message)
             
         try:
             state=  message["state"]
@@ -345,8 +357,8 @@ class HintFactoryPlugin(Plugin):
 
     def hint_exists_callback(self, message):
         if self.logger:
-            self.logger.debug("HINT EXISTS")
-            self.logger.debug(message)
+            self.send_log_entry("HINT EXISTS")
+            self.send_log_entry(message)
             
         try:
             state=  message["state"]
@@ -377,8 +389,8 @@ class HintFactoryPlugin(Plugin):
         
     def get_hint_callback(self, message):
         if self.logger:
-            self.logger.debug("GET HINT")
-            self.logger.debug(message)
+            self.send_log_entry("GET HINT")
+            self.send_log_entry(message)
         
         try:
             state=  message["state"]
@@ -401,6 +413,8 @@ class HintFactoryPlugin(Plugin):
             hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
             if hint:
                 self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint})
+                if "student_id" in message:
+                    self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
             else:
                 self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
         except HintDoesNotExistException as e:
@@ -415,6 +429,26 @@ class HintFactoryPlugin(Plugin):
         else:
             return False
             
+    def get_student_model_fragment_callback(self,message):
+        if self.logger:
+            self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
+            
+        try:
+            student_id = message["student_id"]
+        except KeyError:
+            self.send_response(message["message_id"],{
+                "error":"hint_factory get_student_model_fragment requires 'student_id'"       
+            })
+            return
+            
+        hints_received = self.hint_db.find({"student_id":student_id})
+        hints = [h for h in hints_received]
+        
+        self.send_response(message["message_id"],{
+               "name":"hint_factory",
+               "fragment": hints,
+        })
+        
             
 if __name__ == '__main__':
     hf = SimpleHintFactory()

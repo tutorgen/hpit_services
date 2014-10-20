@@ -32,7 +32,6 @@ class KnowledgeTracingPlugin(Plugin):
     def kt_trace(self, message):
         if self.logger:
             self.send_log_entry("RECV: kt_trace with message: " + str(message))
-            self.logger.debug("RECV: kt_trace with message: " + str(message))
 
         try:
             sender_entity_id = message["sender_entity_id"]
@@ -55,7 +54,6 @@ class KnowledgeTracingPlugin(Plugin):
         if not kt_config:
             if self.logger:
                 self.send_log_entry("ERROR: Could not find inital setting for knowledge tracer.")
-                self.logger.debug("ERROR: Could not find inital setting for knowledge tracer.")
 
             self.send_response(message['message_id'], {
                 'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
@@ -98,7 +96,6 @@ class KnowledgeTracingPlugin(Plugin):
         
         if self.logger:
             self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
-            self.logger.debug("SUCCESS: kt_trace with new data: " + str(kt_config))
 
         self.send_response(message['message_id'], {
             'skill_id': kt_config['skill_id'],
@@ -112,7 +109,6 @@ class KnowledgeTracingPlugin(Plugin):
     def kt_set_initial_callback(self, message):
         if self.logger:
             self.send_log_entry("RECV: kt_set_initial with message: " + str(message))
-            self.logger.debug("RECV: kt_set_initial with message: " + str(message))
         try:
             sender_entity_id = message["sender_entity_id"]
             skill = ObjectId(message["skill_id"])
@@ -157,7 +153,6 @@ class KnowledgeTracingPlugin(Plugin):
                 else:
                     if self.logger:
                         self.send_log_entry("ERROR: getting skill, " + str(response))
-                        self.logger.debug("ERROR: getting skill, " + str(response))
                     self.send_response(message["message_id"],{
                         "error":"skill_id " + str(message["skill_id"]) + " is invalid."   
                     })
@@ -189,7 +184,6 @@ class KnowledgeTracingPlugin(Plugin):
     def kt_reset(self, message):
         if self.logger:    
             self.send_log_entry("RECV: kt_reset with message: " + str(message))
-            self.logger.debug("RECV: kt_reset with message: " + str(message))
         
         try:
             sender_entity_id = message["sender_entity_id"]
@@ -229,7 +223,6 @@ class KnowledgeTracingPlugin(Plugin):
         
         if self.logger:
             self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
-            self.logger.debug("GET STUDENT MODEL FRAGMENT" + str(message))
         try:
             student_id = message['student_id']
         except KeyError:

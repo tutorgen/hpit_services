@@ -23,8 +23,8 @@ class DataStoragePlugin(Plugin):
 
     def store_data_callback(self, message):
         if self.logger:
-            self.logger.debug("STORE_DATA")
-            self.logger.debug(message)
+            self.send_log_entry("STORE_DATA")
+            self.send_log_entry(message)
         try:
             key = message["key"]
             data = message["data"]
@@ -37,8 +37,8 @@ class DataStoragePlugin(Plugin):
 
     def retrieve_data_callback(self, message):
         if self.logger:
-            self.logger.debug("RETRIEVE_DATA")
-            self.logger.debug(message)
+            self.send_log_entry("RETRIEVE_DATA")
+            self.send_log_entry(message)
         
         try:
             key = message["key"]
@@ -54,8 +54,8 @@ class DataStoragePlugin(Plugin):
             
     def remove_data_callback(self, message):
         if self.logger:
-            self.logger.debug("REMOVE_DATA")
-            self.logger.debug(message)
+            self.send_log_entry("REMOVE_DATA")
+            self.send_log_entry(message)
         
         try:
             key  = message["key"]

@@ -37,10 +37,13 @@ class StudentModelTutor(Tutor):
         pass
 
     def main_callback(self):
+        self.send_log_entry("LOG")
+        return False
+
         if self.student_id:
             self.send("get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
             self.student_id = None
-
+        
         if self.run_once:
             return False
         else:
@@ -48,4 +51,3 @@ class StudentModelTutor(Tutor):
 
     def get_student_model_callback(self,response):
         self.send_log_entry("RECV: student_model response recieved. " + str(response))
-        self.logger.debug("RECV: student_model response recieved. " + str(response))

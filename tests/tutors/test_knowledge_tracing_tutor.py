@@ -92,6 +92,11 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         random.randint = MagicMock(return_value = 91)
         calls = []
+        calls.append(call('get_student_model',{
+            "student_id":"2",        
+        },self.test_subject.get_student_model_callback
+            )
+        )
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
                 call('kt_trace', {
@@ -108,7 +113,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         random.randint = MagicMock(return_value = 90)
         self.test_subject.main_callback().should.equal(True)
-        self.test_subject.send.call_count.should.equal(0)
+        self.test_subject.send.call_count.should.equal(1)
         
         
     
@@ -118,10 +123,8 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
             -mock logger, should be called
             -mock send_log_entry, should be called
         """
-        self.test_subject.logger= MagicMock()
-        self.test_subject.send_log_entry = MagicMock()
+        self.test_subject.send_log_entry= MagicMock()
         self.test_subject.trace_response_callback("this is a response")
-        self.test_subject.logger.debug.assert_called_with("RECV: kt_trace response recieved. this is a response")
         self.test_subject.send_log_entry.assert_called_with("RECV: kt_trace response recieved. this is a response")
     
     def test_initial_response_callback(self):
@@ -130,10 +133,8 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
             -mock logger, should be called
             -mock send_log_entry, should be called
         """
-        self.test_subject.logger= MagicMock()
         self.test_subject.send_log_entry = MagicMock()
         self.test_subject.initial_response_callback("this is a response")
-        self.test_subject.logger.debug.assert_called_with("RECV: kt_set_initial response recieved. this is a response")
         self.test_subject.send_log_entry.assert_called_with("RECV: kt_set_initial response recieved. this is a response")
     
     def test_new_student_callback(self):

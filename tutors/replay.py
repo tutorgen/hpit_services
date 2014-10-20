@@ -61,7 +61,7 @@ class ReplayTutor(Tutor):
         client = MongoClient()
         messages = client[self.db_name].messages
         if self.logger:
-            self.logger.debug("filter is: " + str(self.args["filter"]))
+            self.send_log_entry("filter is: " + str(self.args["filter"]))
 
         for message in messages.find(self.args["filter"]):
             
@@ -87,7 +87,7 @@ class ReplayTutor(Tutor):
             if criteriaFlag == successFlag:
                 self.send(message["event"],message["payload"])
                 if self.logger:
-                    self.logger.debug("REPLAYED: "+str(message))
+                    self.send_log_entry("REPLAYED: "+str(message))
             
         
         if self.run_once:

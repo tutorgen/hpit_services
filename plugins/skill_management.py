@@ -44,8 +44,8 @@ class SkillManagementPlugin(Plugin):
     #Skill Management Plugin
     def get_skill_name_callback(self, message):
         if self.logger:
-            self.logger.debug("GET_NAME")
-            self.logger.debug(message)
+            self.send_log_entry("GET_NAME")
+            self.send_log_entry(message)
             
         try:
             skill_id = ObjectId(message["skill_id"])
@@ -75,8 +75,8 @@ class SkillManagementPlugin(Plugin):
 
     def get_skill_id_callback(self, message):
         if self.logger:
-            self.logger.debug("GET_ID")
-            self.logger.debug(message)
+            self.send_log_entry("GET_ID")
+            self.send_log_entry(message)
             
         try:
             skill_name = message["skill_name"]
