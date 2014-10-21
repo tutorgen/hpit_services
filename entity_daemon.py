@@ -21,15 +21,9 @@ from hpitclient.settings import HpitClientSettings
 settings = HpitClientSettings.settings()
 settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
 
-#import tutors
-from tutors import ExampleTutor, KnowledgeTracingTutor, ReplayTutor, ProblemGeneratorTutor, StudentModelTutor
-
-#import plugins
-from plugins import ExamplePlugin, DataStoragePlugin, KnowledgeTracingPlugin
-from plugins import ProblemGeneratorPlugin, ProblemManagementPlugin
-from plugins import SkillManagementPlugin, StudentManagementPlugin
-from plugins import DataShopConnectorPlugin
-from plugins import HintFactoryPlugin
+#import tutors and plugins
+from tutors import *
+from plugins import *
 
 random.seed(datetime.now())
 
@@ -39,7 +33,8 @@ tutor_types = [
     'replay',
     'data_connector',
     'problem_generator',
-    'student_model'
+    'student_model',
+    'load_testing'
 ]
 
 plugin_types = [
@@ -101,6 +96,7 @@ class BaseDaemon:
             'problem_generator': ProblemGeneratorTutor,
             'replay' : ReplayTutor,
             'student_model': StudentModelTutor,
+            'load_testing': LoadTestingTutor
         }
         
         if self.entity_type == 'plugin':
@@ -110,7 +106,7 @@ class BaseDaemon:
             if self.entity_subtype not in tutor_classes.keys():
                 raise Exception("Internal Error: Tutor type not supported.")
 
-        entity = None
+        entity = False
         if self.entity_type == 'plugin':
             entity = plugin_classes[entity_subtype](self.entity_id, self.api_key, self.logger, args=self.args)
         elif self.entity_type == 'tutor':
@@ -134,7 +130,10 @@ class PosixDaemon(BaseDaemon):
 
         self.logger = logging.getLogger(__name__)
 
-        self.entity = self.get_entity_class()
+        try:
+            self.entity = self.get_entity_class()
+        except Exception as e:
+            self.logger.error(str(e))
 
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)
@@ -163,7 +162,10 @@ class WindowsDaemon(BaseDaemon):
 
         self.logger = logging.getLogger(__name__)
 
-        self.entity = self.get_entity_class()
+        try:
+            self.entity = self.get_entity_class()
+        except Exception as e:
+            self.logger.debug(str(e))
         
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)

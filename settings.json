@@ -7,7 +7,8 @@
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "127.0.0.1",
             "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "Administrator"]
+            "COUCHBASE_AUTH" : ["Administrator", "Administrator"],
+            "PROJECT_DIR" : "/Users/raymond/Projects/TutorGen/hpit"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -54,7 +55,8 @@
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "127.0.0.1",
             "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "Administrator"]
+            "COUCHBASE_AUTH" : ["Administrator", "Administrator"],
+            "PROJECT_DIR" : "/Users/raymond/Projects/TutorGen/hpit"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -98,7 +100,8 @@
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "127.0.0.1",
             "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "administrator"]
+            "COUCHBASE_AUTH" : ["Administrator", "administrator"],
+            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -144,7 +147,8 @@
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "127.0.0.1",
             "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "administrator"]
+            "COUCHBASE_AUTH" : ["Administrator", "administrator"],
+            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -188,7 +192,8 @@
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "beta.hpit-project.org",
             "COUCHBASE_BUCKET_URI" : "http://beta.hpit-project.org:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"]
+            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"],
+            "PROJECT_DIR" : "/home/travis/build/tutorgen/hpit_services"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -237,7 +242,8 @@
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "beta.hpit-project.org",
             "COUCHBASE_BUCKET_URI" : "http://beta.hpit-project.org:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"]
+            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"],
+            "PROJECT_DIR" : "/home/travis/build/tutorgen/hpit_services"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -279,14 +285,15 @@
             "USER_REGISTER_TEMPLATE" : "flask_user/register.html"
         }
     },
-    "ansible": {
+    "ansible-test": {
         "plugin": {
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
             "COUCHBASE_HOSTNAME" : "beta.hpit-project.org",
             "COUCHBASE_BUCKET_URI" : "http://beta.hpit-project.org:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"]
+            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"],
+            "PROJECT_DIR" : "/home/ansible/hpit_services"
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.2) - Codename Asura",

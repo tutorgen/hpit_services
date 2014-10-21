@@ -83,25 +83,23 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         """
         KnowledgeTracingPlugin.kt_trace() No settings in db:
         """
-        msg = {"message_id":"2","sender_entity_id":"3","skill_id":str(ObjectId()),"correct":True,"student_id":"4"}
+        skill_id = str(ObjectId())
+        msg = {"message_id":"2","sender_entity_id":"3","skill_id":skill_id,"correct":True,"student_id":"4"}
         msg["probability_known"] = .7
         msg["probability_learned"] = .2
         msg["probability_guess"] = .3
         msg["probability_mistake"] = .4
         self.test_subject.kt_trace(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{
-                'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
-                'send': {
-                    'event_name': 'kt_set_initial',
-                    'probability_known': 'float(0.0-1.0)', 
-                    'probability_learned': 'float(0.0-1.0)',
-                    'probability_guess': 'float(0.0-1.0)',
-                    'probability_mistake': 'float(0.0-1.0)',
-                    'student_id':'str(ObjectId)',
-                    'skill_id':'str(ObjectId)',
-                }
-            })
-        
+        self.test_subject.send_response.assert_called_once_with("2", {
+            'probability_guess': 0.5, 
+            'probability_known': 0.75, 
+            'probability_learned': 0.5, 
+            'probability_mistake': 0.5, 
+            'skill_id': skill_id, 
+            'student_id': '4'
+        })
+
+
     def test_kt_trace_correct_true(self): 
         """
         KnowledgeTracingPlugin.kt_trace() Correct true:
@@ -121,6 +119,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send_response.called.should.equal(True) #can't check params because of float precision
         thing  = self.test_subject.db.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
         nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
+
      
     def test_kt_trace_correct_false(self):
         """
@@ -351,13 +350,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg = {"message_id":"2","sender_entity_id":"3","skill_id":"add","skill_id":skill_id,"student_id":"4"}
         
         self.test_subject.kt_reset(msg)
-        self.test_subject.send_response.assert_called_once_with("2",{
-            'skill_id': str(skill_id),
-            'probability_known': 0.0,
-            'probability_learned': 0.0,
-            'probability_guess': 0.0,
-            'probability_mistake': 0.0,
-            'student_id':"4"
+        self.test_subject.send_response.assert_called_once_with("2", {
+            'error': 'No configuration found in knowledge tracer for skill/student combination.'
         })
         
     def test_kt_reset_data_present(self):
@@ -366,22 +360,23 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         """
         skill_id = str(ObjectId())
         msg = {"message_id":"2","sender_entity_id":"3","skill_id":"add","skill_id":skill_id,"student_id":"4"}
+
         oid = self.test_subject.db.insert({"sender_entity_id":"3","skill_id":str(skill_id),"student_id":"4"})
         self.test_subject.kt_reset(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
             'skill_id': str(skill_id),
-            'probability_known': 0.0,
-            'probability_learned': 0.0,
-            'probability_guess': 0.0,
-            'probability_mistake': 0.0,
+            'probability_known': 0.5,
+            'probability_learned': 0.5,
+            'probability_guess': 0.5,
+            'probability_mistake': 0.5,
             'student_id':"4"
         })
         
         ob = self.test_subject.db.find_one({"_id":oid})
-        ob["probability_known"].should.equal(0.0)
-        ob["probability_learned"].should.equal(0.0)
-        ob["probability_guess"].should.equal(0.0)
-        ob["probability_mistake"].should.equal(0.0)
+        ob["probability_known"].should.equal(0.5)
+        ob["probability_learned"].should.equal(0.5)
+        ob["probability_guess"].should.equal(0.5)
+        ob["probability_mistake"].should.equal(0.5)
         
         
     def test_get_student_model_fragment_no_student_id(self):

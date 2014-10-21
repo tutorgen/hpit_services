@@ -1,6 +1,9 @@
 import os
 from server.app import ServerApp
-db = ServerApp.get_instance().db
+app_instance = ServerApp.get_instance()
+app = app_instance.app
+db = app_instance.db
+mongo = app_instance.mongo
 
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
@@ -16,6 +19,9 @@ class Command:
         self.configuration = configuration
 
         db.create_all()
+
+        with app.app_context():
+            mongo.db.plugin_messages.create_index('receiver_entity_id')
 
         try:
             os.mkdir(os.path.join(settings.PROJECT_DIR, 'server/db/mongo'))

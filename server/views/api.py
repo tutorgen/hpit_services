@@ -164,7 +164,6 @@ def disconnect():
     if not entity.authenticate(api_key):
         return auth_failed_response()
 
-    entity.connected = False
     db.session.add(entity)
     db.session.commit()
 
@@ -381,7 +380,7 @@ def plugin_list_subscriptions():
 def plugin_message_history():
     """
     SUPPORTS: GET
-    Lists the message history for the plugin - including queued messages.
+    Lists the messages that were previously sent to the entity.
 
     !!! IMPORTANT - Does not mark the messages as received. 
 
@@ -399,9 +398,9 @@ def plugin_message_history():
 
     entity_id = session['entity_id']
 
-    my_messages = mongo.db.plugin_messages.find({
+    my_messages = mongo.db.sent_messages_and_transactions.find({
         'receiver_entity_id': entity_id,
-        'message_name' : {"$ne" : "transaction"}, 
+        'message_name': {"$ne" : "transaction"}
     })
 
     result = [{
@@ -416,8 +415,7 @@ def plugin_message_history():
 def plugin_transaction_history():
     """
     SUPPORTS: GET
-    Lists the transaction history for a specific plugin - including queued messages.
-    Does not mark them as received. 
+    Lists the messages that were previously sent to the entity.
 
     If you wish to preview queued transactions only use the '/transaction-preview' route instead.
     If you wish to actually CONSUME the queue (mark as received) use the '/transactions' route instead.
@@ -434,9 +432,9 @@ def plugin_transaction_history():
 
     entity_id = session['entity_id']
 
-    my_messages = mongo.db.plugin_messages.find({
+    my_messages = mongo.db.sent_messages_and_transactions.find({
         'receiver_entity_id': entity_id,
-        'message_name' : "transaction", 
+        'message_name': "transaction"
     })
 
     result = [{
@@ -468,9 +466,7 @@ def plugin_message_preview():
     entity_id = session['entity_id']
 
     my_messages = mongo.db.plugin_messages.find({
-        'sent_to_plugin': False,
         'receiver_entity_id': entity_id,
-        'message_name' : {"$ne" : "transaction"},
     })
 
     result = [{
@@ -501,10 +497,8 @@ def plugin_transaction_preview():
 
     entity_id = session['entity_id']
 
-    my_messages = mongo.db.plugin_messages.find({
-        'sent_to_plugin': False,
+    my_messages = mongo.db.plugin_transactions.find({
         'receiver_entity_id': entity_id,
-        'message_name' : "transaction",
     })
 
     result = [{
@@ -544,28 +538,33 @@ def plugin_message_list():
     db.session.commit()
 
     my_messages = mongo.db.plugin_messages.find({
-        'sent_to_plugin': False,
         'receiver_entity_id': entity_id,
-        'message_name' : {"$ne" : "transaction"},
     })
+
+    my_messages = list(my_messages)
 
     result = [
         (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
-    update_ids = [t[0] for t in result]
+    to_remove = [t[0] for t in result]
     result = [{
         'message_id': str(t[1]),
         'message_name': t[2],
         'sender_entity_id': t[3],
         'message': t[4]} for t in result]
 
-    mongo.db.plugin_messages.update(
-        {'_id':{'$in': update_ids}},
-        {"$set": {'sent_to_plugin':True, 'time_received': datetime.now()}}, 
-        multi=True
-    )
+    #Move sent messages to another collection.
+    if my_messages:
+        for t in my_messages:
+            t['time_received'] = datetime.now() 
+
+        mongo.db.sent_messages_and_transactions.insert(my_messages)
+
+        mongo.db.plugin_messages.remove({
+            '_id': {'$in': to_remove}
+        })
 
     return jsonify({'messages': result})
 
@@ -598,29 +597,33 @@ def plugin_transaction_list():
     db.session.add(plugin)
     db.session.commit()
 
-    my_messages = mongo.db.plugin_messages.find({
-        'sent_to_plugin': False,
+    my_messages = mongo.db.plugin_transactions.find({
         'receiver_entity_id': entity_id,
-        'message_name' : "transaction",
     })
+
+    my_messages = list(my_messages)
 
     result = [
         (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
-    update_ids = [t[0] for t in result]
+    to_remove = [t[0] for t in result]
     result = [{
         'message_id': str(t[1]),
         'message_name': t[2],
         'sender_entity_id': t[3],
         'message': t[4]} for t in result]
 
-    mongo.db.plugin_messages.update(
-        {'_id':{'$in': update_ids}},
-        {"$set": {'sent_to_plugin':True}}, 
-        multi=True
-    )
+    #Move sent transactions to another collection.
+    if my_messages:
+        for t in my_messages:
+            t['time_received'] = datetime.now() 
+        mongo.db.sent_messages_and_transactions.insert(my_messages)
+
+        mongo.db.plugin_transactions.remove({
+            '_id': {'$in': to_remove}
+        })
 
     return jsonify({'transactions': result})
 
@@ -666,29 +669,43 @@ def message():
         'payload': payload,
     }     
 
-    message_id = mongo.db.messages.insert(message)
+    message_id = mongo.db.messages_and_transactions.insert(message)
 
     subscriptions = Subscription.query.filter_by(message_name=message_name)
 
     for subscription in subscriptions:
         plugin_entity_id = subscription.plugin.entity_id
 
-        mongo.db.plugin_messages.insert({
-            'message_id': message_id,
+        if message_name == 'transaction':
+            mongo.db.plugin_transactions.insert({
+                'message_id': message_id,
 
-            'sender_entity_id': sender_entity_id,
-            'receiver_entity_id': plugin_entity_id,
+                'sender_entity_id': sender_entity_id,
+                'receiver_entity_id': plugin_entity_id,
 
-            'time_created': datetime.now(),
-            'time_received': datetime.now(),
-            'time_responded': datetime.now(),
-            'time_response_received': datetime.now(),
+                'time_created': datetime.now(),
+                'time_received': datetime.now(),
+                'time_responded': datetime.now(),
+                'time_response_received': datetime.now(),
 
-            'message_name': message_name,
-            'payload': payload,
+                'message_name': message_name,
+                'payload': payload
+            })
+        else:
+            mongo.db.plugin_messages.insert({
+                'message_id': message_id,
 
-            'sent_to_plugin': False,
-        })
+                'sender_entity_id': sender_entity_id,
+                'receiver_entity_id': plugin_entity_id,
+
+                'time_created': datetime.now(),
+                'time_received': datetime.now(),
+                'time_responded': datetime.now(),
+                'time_response_received': datetime.now(),
+
+                'message_name': message_name,
+                'payload': payload
+            })
 
     return jsonify(message_id=str(message_id))
 
@@ -722,13 +739,16 @@ def response():
     message_id = request.json['message_id']
     payload = request.json['payload']
 
-    plugin_message = mongo.db.plugin_messages.find_one({
+    plugin_message = mongo.db.sent_messages_and_transactions.find_one({
         'message_id': ObjectId(message_id),
         'receiver_entity_id': responder_entity_id
     })
 
-    mongo.db.plugin_messages.update(
-        {'_id':plugin_message['_id']},
+    if not plugin_message:
+        return not_found_response()
+
+    mongo.db.sent_messages_and_transactions.update(
+        {'_id': plugin_message['_id']},
         {"$set": {'time_responded': datetime.now()}}
     )
 
@@ -737,8 +757,7 @@ def response():
         'sender_entity_id': responder_entity_id,
         'receiver_entity_id': plugin_message['sender_entity_id'],
         'message': plugin_message,
-        'response': payload,
-        'response_received': False
+        'response': payload
     })
 
     return jsonify(response_id=str(response_id))
@@ -773,23 +792,28 @@ def responses():
 
     my_responses = mongo.db.responses.find({
         'receiver_entity_id': entity_id,
-        'response_received': False
     })
+
+    my_responses = list(my_responses)
 
     result = [
         (t['_id'], _map_mongo_document(t['message']), _map_mongo_document(t['response']))
         for t in my_responses
     ]
 
-    update_ids = [t[0] for t in result]
+    to_remove = [t[0] for t in result]
     result = [{
         'message': t[1],
         'response': t[2]} for t in result]
 
-    mongo.db.responses.update(
-        {'_id':{'$in': update_ids}},
-        {"$set": {'response_received':True, 'time_response_received': datetime.now()}}, 
-        multi=True
-    )
+    #Move sent responses to another collection.
+    if my_responses:
+        for t in my_responses:
+            t['time_response_received'] = datetime.now()
+        mongo.db.sent_responses.insert(my_responses)
+
+        mongo.db.responses.remove({
+            '_id': {'$in': to_remove}
+        })
 
     return jsonify({'responses': result})

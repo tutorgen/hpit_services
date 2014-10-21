@@ -139,24 +139,24 @@ class StudentManagementPlugin(Plugin):
         if self.logger:
             self.send_log_entry("GET_STUDENT_MODEL")
             self.send_log_entry(message)        
-            
-        try:
-            student_id = message["student_id"]
-        except KeyError:
+           
+        if 'student_id' not in message:
             self.send_response(message["message_id"],{
                 "error":"get_student_model requires a 'student_id'",         
             })
             return
-            
-        try:
+
+        student_id = message["student_id"]
+          
+        update = False 
+        if "update" in message:
             update = message["update"]
-        except KeyError:
-            update = False
             
         if not update:
             try:
                 cached_model = self.cache.get(str(student_id)).value
                 self.send_response(message["message_id"],{
+                        "student_id": student_id,
                         "student_model" : cached_model,
                         "cached": True,
                     })
@@ -164,16 +164,19 @@ class StudentManagementPlugin(Plugin):
             except couchbase.exceptions.NotFoundError:
                 pass
         
+        student_id = message["student_id"]
+
         self.student_models[message["message_id"]] = {}
-        self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message])
+        self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message, student_id])
         self.timeout_threads[message["message_id"]].start()
 
         self.send("get_student_model_fragment",{
-                "student_id" : message["student_id"],
-        },self.get_populate_student_model_callback_function(message))
+                "update": update,
+                "student_id" : student_id
+        }, self.get_populate_student_model_callback_function(student_id, message))
         
     
-    def get_populate_student_model_callback_function(self,message):
+    def get_populate_student_model_callback_function(self, student_id, message):
         def populate_student_model(response):
             
             #check if values exist
@@ -206,31 +209,38 @@ class StudentManagementPlugin(Plugin):
             else:
                 #student model complete, send response (unless timed out)
                 if message["message_id"] in self.timeout_threads:
-                    self.send_response(message["message_id"],{
-                        "student_model" : self.student_models[message["message_id"]],
+                    self.send_response(message["message_id"], {
+                        "student_id": student_id,
+                        "student_model" : self.student_models[message["message_id"]],       
                         "cached":False,
                     })
-                    
-                    self.cache.set(str(message["student_id"]),self.student_models[message["message_id"]])
-                    
-                    self.timeout_threads[message["message_id"]].cancel()
-                    del self.timeout_threads[message["message_id"]]
-                    del self.student_models[message["message_id"]]
+                   
+                    try: 
+                        self.cache.set(str(message["student_id"]), self.student_models[message["message_id"]])
+                        
+                        self.timeout_threads[message["message_id"]].cancel()
+                        del self.timeout_threads[message["message_id"]]
+                        del self.student_models[message["message_id"]]
+                    except KeyError:
+                        pass
+
                     return
- 
+
         return populate_student_model
         
-    def kill_timeout(self,message):
+    def kill_timeout(self, message, student_id):
         if self.logger:
             self.send_log_entry("TIMEOUT " + str(message))
         try:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
+                'student_id': student_id,
                 "student_model":self.student_models[str(message["message_id"])]
             })
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
+                'student_id': student_id,
                 "student_model":{},
             })
         

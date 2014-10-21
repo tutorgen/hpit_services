@@ -28,8 +28,52 @@ class KnowledgeTracingPlugin(Plugin):
             kt_trace=self.kt_trace,
             get_student_model_fragment=self.get_student_model_fragment)
 
+
+    def check_skill_manager(self, message):
+        """
+        This method is called to verify that the skill id is valid in a call to the knowledge tracer.
+        """
+
+        def _callback_sm(response):
+            if not "error" in response:
+                self.db.insert({
+                    'sender_entity_id': message['sender_entity_id'],
+                    'skill_id': str(message['skill_id']),
+                    'probability_known': message['probability_known'],
+                    'probability_learned': message['probability_learned'],
+                    'probability_guess': message['probability_guess'],
+                    'probability_mistake': message['probability_mistake'],
+                    'student_id': message['student_id'],
+                })
+                self.send_response(message["message_id"],{
+                    'skill_id': str(message['skill_id']),
+                    'probability_known': message['probability_known'],
+                    'probability_learned': message['probability_learned'],
+                    'probability_guess': message['probability_guess'],
+                    'probability_mistake': message['probability_mistake'],
+                    'student_id':message['student_id']
+                })
+            else:
+                if self.logger:
+                    self.send_log_entry("ERROR: getting skill, " + str(response))
+                self.send_response(message["message_id"],{
+                    "error":"skill_id " + str(message["skill_id"]) + " is invalid."   
+                })
+        
+        self.send("get_skill_name",{"skill_id":str(message["skill_id"])}, _callback_sm)
+
+
     #Knowledge Tracing Plugin
     def kt_trace(self, message):
+        """
+        This is the bulk of the knowledge tracing plugin. The knowledge tracer
+        pairs the student_id, the skill_id of the knowledge being traced, and the tutor
+        we are tracing together. In this method, if no initial settings were provided
+        for this skill on this student with a kt_set_initial message we will initialize
+        the initial settings with a 50% probability before running the trace. If that fails
+        then we will return an error to the caller of this message.
+        """
+
         if self.logger:
             self.send_log_entry("RECV: kt_trace with message: " + str(message))
 
@@ -53,22 +97,28 @@ class KnowledgeTracingPlugin(Plugin):
         
         if not kt_config:
             if self.logger:
-                self.send_log_entry("ERROR: Could not find inital setting for knowledge tracer.")
+                self.send_log_entry("INFO: No initial settings for KT_TRACE message. Using defaults.")
 
-            self.send_response(message['message_id'], {
-                'error': 'No initial settings for plugin (KnowledgeTracingPlugin).',
-                'send': {
-                    'event_name': 'kt_set_initial',
-                    'probability_known': 'float(0.0-1.0)', 
-                    'probability_learned': 'float(0.0-1.0)',
-                    'probability_guess': 'float(0.0-1.0)',
-                    'probability_mistake': 'float(0.0-1.0)',
-                    'student_id':'str(ObjectId)',
-                    'skill_id':'str(ObjectId)',
-                }
-            })
+            new_trace = {
+                'sender_entity_id': message['sender_entity_id'],
+                'skill_id': str(message['skill_id']),
+                'student_id': message['student_id'],
+                'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
+                'probability_learned': 0.5,
+                'probability_guess': 0.5,
+                'probability_mistake': 0.5,
+            }
 
-            return True
+            self.db.insert(new_trace)
+
+            del new_trace['sender_entity_id']
+            del new_trace['_id']
+
+            #The calculation is the same regardless of correct 
+            #or not with 50% probability settings so we just 
+            #return with a response rather than calculate below.
+            self.send_response(message['message_id'], new_trace)
+            return
 
         p_known = float(kt_config['probability_known'])
         p_learned = float(kt_config['probability_learned'])
@@ -127,42 +177,11 @@ class KnowledgeTracingPlugin(Plugin):
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
             'skill_id': str(message['skill_id']),
-            'student_id': message['student_id']
+            'student_id': message['student_id'],
         })
         
         if not kt_config:
-            def check_skill_manager(response):
-                if not "error" in response:
-                    self.db.insert({
-                        'sender_entity_id': message['sender_entity_id'],
-                        'skill_id': str(message['skill_id']),
-                        'probability_known': message['probability_known'],
-                        'probability_learned': message['probability_learned'],
-                        'probability_guess': message['probability_guess'],
-                        'probability_mistake': message['probability_mistake'],
-                        'student_id': message['student_id'],
-                    })
-                    self.send_response(message["message_id"],{
-                        'skill_id': str(message['skill_id']),
-                        'probability_known': message['probability_known'],
-                        'probability_learned': message['probability_learned'],
-                        'probability_guess': message['probability_guess'],
-                        'probability_mistake': message['probability_mistake'],
-                        'student_id':message['student_id']
-                    })
-                else:
-                    if self.logger:
-                        self.send_log_entry("ERROR: getting skill, " + str(response))
-                    self.send_response(message["message_id"],{
-                        "error":"skill_id " + str(message["skill_id"]) + " is invalid."   
-                    })
-            
-            self.send("get_skill_name",{
-                  "skill_id":str(message["skill_id"])    
-                },
-                check_skill_manager,
-            )
-            
+            self.check_skill_manager(message)
         else:
             self.db.update({'_id': kt_config['_id']},
                 {'$set': {
@@ -204,20 +223,25 @@ class KnowledgeTracingPlugin(Plugin):
 
         if kt_config:
             self.db.update({'_id': kt_config['_id']}, {'$set': {
-                'probability_known': 0.0,
-                'probability_learned': 0.0,
-                'probability_guess': 0.0,
-                'probability_mistake': 0.0
+                'probability_known': 0.5,
+                'probability_learned': 0.5,
+                'probability_guess': 0.5,
+                'probability_mistake': 0.5
             }})
 
-        self.send_response(message['message_id'], {
-            'skill_id': str(message['skill_id']),
-            'probability_known': 0.0,
-            'probability_learned': 0.0,
-            'probability_guess': 0.0,
-            'probability_mistake': 0.0,
-            'student_id':message["student_id"]
-        })
+            self.send_response(message['message_id'], {
+                'skill_id': str(message['skill_id']),
+                'probability_known': 0.5,
+                'probability_learned': 0.5,
+                'probability_guess': 0.5,
+                'probability_mistake': 0.5,
+                'student_id':message["student_id"]
+            })
+        else:
+            self.send_response(message["message_id"], {
+                "error": "No configuration found in knowledge tracer for skill/student combination."
+            })
+
 
     def get_student_model_fragment(self,message):
         

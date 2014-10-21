@@ -8,22 +8,27 @@
     Number of Tutors Connected: {{tutor_count}}<br/>
     Number of Plugins Connected: {{plugin_count}}<br/>
 
-    <h4>Event Throughput (previous week)</h4>
+    <h4>Event Throughput</h4>
     <table>
         <tr>
             <td><b>Event Type</b></td>
-            <td><b>Every Second</b></td>
-            <td><b>Every Minute</b></td>
-            <td><b>Every Hour</b></td>
+            <td><b>Last Minute</b></td>
+            <td><b>Last Hour</b></td>
+            <td><b>Last 24 Hours</b></td>
         </tr>
-        {% for ev in events %}
-            <tr>
-                <td><b>{{ev.0}}</b></td>
-                <td>{{(ev.1 / 604800)|round(2)}}</td>
-                <td>{{(ev.1 / 10080)|round(2)}}</td>
-                <td>{{(ev.1 / 168)|round(2)}}</td>
-            </tr>
-        {% endfor %}
+        <tr>
+            <td><b>Messages</b></td>
+            <td>{{events.last_minute.0}}</td>
+            <td>{{events.last_hour.0}}</td>
+            <td>{{events.last_day.0}}</td>
+        </tr>
+
+        <tr>
+            <td><b>Responses</b></td>
+            <td>{{events.last_minute.1}}</td>
+            <td>{{events.last_hour.1}}</td>
+            <td>{{events.last_day.1}}</td>
+        </tr>
     </table>
 
     <h4>Connected Tutors</h4>
