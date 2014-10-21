@@ -89,13 +89,7 @@ class UnixManager(BaseManager):
             print("Starting the HPIT Hub Server for Unix...")
             with open("tmp/output_server.txt","w") as f:
                 subprocess.call(['uwsgi', 
-                    '--http-socket', self.settings.HPIT_BIND_ADDRESS, 
-                    '--venv', os.path.join(self.settings.PROJECT_DIR, self.settings.VENV_DIRNAME),
-                    '--wsgi-file', 'start_server.py',
-                    '--processes', '4',
-                    '--callable', 'app',
-                    '--pidfile', self.settings.HPIT_PID_FILE,
-                    '--daemonize2', 'log/hpit_server.log'],
+                    '--ini', os.path.join(self.settings.PROJECT_DIR, 'uwsgi_config.ini')],
                     stdout = f, stderr = f)
 
             for i in range(0, 10):

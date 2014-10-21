@@ -73,47 +73,6 @@ class BaseManager:
         return os.path.isfile(self.settings.HPIT_PID_FILE)
         
         
-    def run_status(self, arguments, configuration):
-        from commands.status import Command
-        Command(arguments, configuration).run()
-
-    def run_add(self, arguments, configuration):
-        from commands.add import Command
-        Command(arguments, configuration).run()
-
-    def run_remove(self, arguments, configuration):
-        from commands.remove import Command
-        Command(arguments, configuration).run()
-
-    def run_test(self, arguments, configuration):
-        from commands.test import Command
-        Command(arguments, configuration).run()
-
-    def run_debug(self, arguments, configuration):
-        from commands.debug import Command
-        Command(arguments, configuration).run()
-
-    def run_syncdb(self, arguments, configuration):
-        from commands.syncdb import Command
-        Command(arguments, configuration).run()
-
-    def run_mongo(self, arguments, configuration):
-        from commands.mongo import Command
-        Command(arguments, configuration).run()
-
-    def run_routes(self, arguments, configuration):
-        from commands.routes import Command
-        Command(arguments, configuration).run()
-
-    def run_docs(self, arguments, configuration):
-        from commands.docs import Command
-        Command(arguments, configuration).run()
-
-    def run_assets(self, arguments, configuration):
-        from commands.assets import Command
-        Command(arguments, configuration).run()
-
-
     def build_sub_commands(self, subparsers):
         pkgpath = os.path.dirname(commands.__file__)
         pkgs = pkgutil.iter_modules([pkgpath])
