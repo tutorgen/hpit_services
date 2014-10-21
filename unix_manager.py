@@ -122,15 +122,7 @@ class UnixManager(BaseManager):
             self.wind_down_all('tutor', configuration)
 
             print("Stopping the HPIT Hub Server...")
-            with open(self.settings.HPIT_PID_FILE) as f:
-                pid = f.read()
-            try:
-                os.kill(int(pid), signal.SIGTERM)
-                os.remove(self.settings.HPIT_PID_FILE) #Force for Mac
-            except FileNotFoundError: #On Linux
-                pass #On linux file is removed when process dies, on mac it needs forced.
-            except ProcessLookupError:
-                print("ERROR: The HPIT server could not be stopped because it shutdown unexpectedly!")
+            subprocess.call(['uwsgi', '--stop', '/home/hpitserver/hpitserver.pid'])
 
             #Cleanup the tmp directory
             shutil.rmtree('tmp')
