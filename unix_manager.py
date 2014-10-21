@@ -92,6 +92,7 @@ class UnixManager(BaseManager):
                     '--http-socket', self.settings.HPIT_BIND_ADDRESS, 
                     '--venv', os.path.join(self.settings.PROJECT_DIR, self.settings.VENV_DIRNAME),
                     '--wsgi-file', 'start_server.py',
+                    '--processes', '4',
                     '--callable', 'app',
                     '--pidfile', self.settings.HPIT_PID_FILE,
                     '--daemonize2', 'log/hpit_server.log'],

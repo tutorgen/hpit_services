@@ -434,7 +434,7 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'message-history')
         
         client = MongoClient()
-        client[settings.MONGO_DBNAME].plugin_messages.insert([
+        client[settings.MONGO_DBNAME].sent_messages_and_transactions.insert([
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
@@ -446,22 +446,16 @@ class TestServerAPI(unittest.TestCase):
                 'payload':{"msg":"Valid payload 2"},
             },
             {
-                'receiver_entity_id':"1234",
-                'message_name':"some message",
-                'payload':{"msg":"Bad value"},
-            },
-            {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"transaction",
-                'payload':{"msg":"Bad value 2"},
-            },
+                'payload':{"msg":"Bad payload"},
+            }
         ])
         
         response = self.test_client.get("/plugin/message/history",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Valid payload 1')
         response.data.should.contain(b'Valid payload 2')
-        response.data.should_not.contain(b'Bad value')
-        response.data.should_not.contain(b'Bad value 2')
+        response.data.should_not.contain(b'Bad payload')
        
         self.disconnect_helper("plugin")
 
@@ -481,7 +475,7 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'transaction-history')
         
         client = MongoClient()
-        client[settings.MONGO_DBNAME].plugin_messages.insert([
+        client[settings.MONGO_DBNAME].sent_messages_and_transactions.insert([
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"transaction",
@@ -493,22 +487,16 @@ class TestServerAPI(unittest.TestCase):
                 'payload':{"msg":"Valid payload 2"},
             },
             {
-                'receiver_entity_id':"1234",
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value"},
-            },
-            {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
-                'payload':{"msg":"Bad value 2"},
-            },
+                'payload':{"msg":"Bad payload"},
+            }
         ])
         
         response = self.test_client.get("/plugin/transaction/history",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Valid payload 1')
         response.data.should.contain(b'Valid payload 2')
-        response.data.should_not.contain(b'Bad value')
-        response.data.should_not.contain(b'Bad value 2')
+        response.data.should_not.contain(b'Bad payload')
        
         self.disconnect_helper("plugin")
 
@@ -533,47 +521,17 @@ class TestServerAPI(unittest.TestCase):
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
                 'payload':{"msg":"Valid payload 1"},
-                'sent_to_plugin': False,
             },
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
                 'payload':{"msg":"Valid payload 2"},
-                'sent_to_plugin': False,
-            },
-            {
-                'receiver_entity_id':"1234",
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value"},
-                'sent_to_plugin': False,
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value 2"},
-                'sent_to_plugin': False,
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value 3"},
-                'sent_to_plugin': True,
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value 4"},
-                'send_to_plugin': True,
-            },
+            }
         ])
         
         response = self.test_client.get("/plugin/message/preview",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Valid payload 1')
         response.data.should.contain(b'Valid payload 2')
-        response.data.should_not.contain(b'Bad value')
-        response.data.should_not.contain(b'Bad value 2')
-        response.data.should_not.contain(b'Bad value 3')
-        response.data.should_not.contain(b'Bad value 4')
        
         self.disconnect_helper("plugin")
 
@@ -593,52 +551,22 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'transaction-preview')
         
         client = MongoClient()
-        client[settings.MONGO_DBNAME].plugin_messages.insert([
+        client[settings.MONGO_DBNAME].plugin_transactions.insert([
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"transaction",
                 'payload':{"msg":"Valid payload 1"},
-                'sent_to_plugin': False,
             },
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"transaction",
                 'payload':{"msg":"Valid payload 2"},
-                'sent_to_plugin': False,
-            },
-            {
-                'receiver_entity_id':"1234",
-                'message_name':"transaction",
-                'message_payload':{"msg":"Bad value"},
-                'sent_to_plugin': False,
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value 2"},
-                'sent_to_plugin': False,
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value 3"},
-                'sent_to_plugin': True,
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value 4"},
-                'send_to_plugin': True,
-            },
+            }
         ])
         
         response = self.test_client.get("/plugin/transaction/preview",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Valid payload 1')
         response.data.should.contain(b'Valid payload 2')
-        response.data.should_not.contain(b'Bad value')
-        response.data.should_not.contain(b'Bad value 2')
-        response.data.should_not.contain(b'Bad value 3')
-        response.data.should_not.contain(b'Bad value 4')
        
         self.disconnect_helper("plugin")
 
@@ -664,7 +592,6 @@ class TestServerAPI(unittest.TestCase):
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
                 'payload':{"msg":"Valid payload 1"},
-                'sent_to_plugin': False,
                 'message_id':"1",
                 'sender_entity_id':"1",
             },
@@ -672,60 +599,16 @@ class TestServerAPI(unittest.TestCase):
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"some_message",
                 'payload':{"msg":"Valid payload 2"},
-                'sent_to_plugin': False,
                 'message_id':"1",
                 'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':"1234",
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value"},
-                'sent_to_plugin': False,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value 2"},
-                'sent_to_plugin': False,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value 3"},
-                'sent_to_plugin': True,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value 4"},
-                'send_to_plugin': True,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
+            }
         ])
         
         response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Valid payload 1')
         response.data.should.contain(b'Valid payload 2')
-        response.data.should_not.contain(b'Bad value')
-        response.data.should_not.contain(b'Bad value 2')
-        response.data.should_not.contain(b'Bad value 3')
-        response.data.should_not.contain(b'Bad value 4')
        
-        client[settings.MONGO_DBNAME].plugin_messages.find(
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'sent_to_plugin': True,
-            }     
-        ).count().should.equal(3)
-        
+        client[settings.MONGO_DBNAME].plugin_messages.count().should.equal(0)
        
         self.disconnect_helper("plugin")
 
@@ -746,12 +629,11 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'transactions')
         
         client = MongoClient()
-        client[settings.MONGO_DBNAME].plugin_messages.insert([
+        client[settings.MONGO_DBNAME].plugin_transactions.insert([
             {
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"transaction",
                 'payload':{"msg":"Valid payload 1"},
-                'sent_to_plugin': False,
                 'message_id':"1",
                 'sender_entity_id':"1",
             },
@@ -759,60 +641,16 @@ class TestServerAPI(unittest.TestCase):
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"transaction",
                 'payload':{"msg":"Valid payload 2"},
-                'sent_to_plugin': False,
                 'message_id':"1",
                 'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':"1234",
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value"},
-                'sent_to_plugin': False,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value 2"},
-                'sent_to_plugin': False,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'payload':{"msg":"Bad value 3"},
-                'sent_to_plugin': True,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"some_message",
-                'payload':{"msg":"Bad value 4"},
-                'send_to_plugin': True,
-                'message_id':"1",
-                'sender_entity_id':"1",
-            },
+            }
         ])
         
         response = self.test_client.get("/plugin/transaction/list",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Valid payload 1')
         response.data.should.contain(b'Valid payload 2')
-        response.data.should_not.contain(b'Bad value')
-        response.data.should_not.contain(b'Bad value 2')
-        response.data.should_not.contain(b'Bad value 3')
-        response.data.should_not.contain(b'Bad value 4')
        
-        client[settings.MONGO_DBNAME].plugin_messages.find(
-            {
-                'receiver_entity_id':self.plugin_entity_id,
-                'message_name':"transaction",
-                'sent_to_plugin': True,
-            }     
-        ).count().should.equal(3)
-        
+        client[settings.MONGO_DBNAME].plugin_transactions.count().should.equal(0)
        
         self.disconnect_helper("plugin")
 
@@ -842,7 +680,7 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'message_id')
         
         client = MongoClient()
-        client[settings.MONGO_DBNAME].messages.find(
+        client[settings.MONGO_DBNAME].messages_and_transactions.find(
             {
                 'sender_entity_id':self.plugin_entity_id,
                 'message_name':"test",
@@ -861,7 +699,6 @@ class TestServerAPI(unittest.TestCase):
                 'receiver_entity_id':self.plugin_entity_id,
                 'message_name':"test",
                 'payload': {"test":"test"},
-                'sent_to_plugin':False,
             }     
         ).count().should.equal(1)
         
@@ -898,6 +735,7 @@ class TestServerAPI(unittest.TestCase):
         self.disconnect_helper("tutor")
         
         self.connect_helper("plugin")
+        self.test_client.get("/plugin/message/list")
         response = self.test_client.post("/response",data = json.dumps({"message_id":str(message_id),"payload":{"response":"test response"}}),content_type="application/json")
         response.data.should.contain(b'response_id')
 
@@ -908,7 +746,6 @@ class TestServerAPI(unittest.TestCase):
                 'sender_entity_id':self.plugin_entity_id,
                 'receiver_entity_id':self.tutor_entity_id,
                 'response': {"response":"test response"},
-                'response_received':False,
             }     
         ).count().should.equal(1)
         self.disconnect_helper("plugin")
@@ -932,37 +769,21 @@ class TestServerAPI(unittest.TestCase):
         client[settings.MONGO_DBNAME].responses.insert([
                 {
                     "receiver_entity_id":self.plugin_entity_id,
-                    "response_received":False,
                     "response":{"res":"Good value 1"},
                     "message":{"m":"some message"},
                 },
                 {
                     "receiver_entity_id":self.plugin_entity_id,
-                    "response_received":False,
                     "response":{"res":"Good value 2"},
                     "message":{"m":"some message"},
-                },
-                {
-                    "receiver_entity_id":self.plugin_entity_id,
-                    "response_received":True,
-                    "response":{"res":"Bad value 1"},
-                    "message":{"m":"some message"},
-                },
-                {
-                    "receiver_entity_id":"1234",
-                    "response_received":False,
-                    "response":{"res":"Bad value 2"},
-                    "message":{"m":"some message"},
-                },
+                }
         ])
         
         response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Good value 1')
         response.data.should.contain(b'Good value 2')
-        response.data.should_not.contain(b'Bad value 1')
-        response.data.should_not.contain(b'Bad value 2')
         
-        client[settings.MONGO_DBNAME].responses.find({"response_received":True}).count().should.equal(3)
+        client[settings.MONGO_DBNAME].responses.count().should.equal(0)
         
         self.disconnect_helper("plugin")
 
