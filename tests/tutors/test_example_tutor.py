@@ -4,9 +4,6 @@ import responses
 from mock import *
 
 import logging
-from hpitclient.settings import HpitClientSettings
-
-HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
 import random
 
 from tutors import ExampleTutor

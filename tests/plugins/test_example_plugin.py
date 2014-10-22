@@ -1,11 +1,6 @@
 import responses
 import unittest
-from urllib.parse import urljoin
 from mock import *
-
-from hpitclient.settings import HpitClientSettings
-
-HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
 
 from plugins import ExamplePlugin
 
@@ -39,7 +34,7 @@ class TestExamplePlugin(unittest.TestCase):
         ExamplePlugin.post_connect() Test plan:
             -ensure callbacks are set for test and example
         """
-        responses.add(responses.POST, urljoin(HPIT_URL_ROOT, '/plugin/subscribe'), body='OK')
+        responses.add(responses.POST, 'https://www.hpit-project.org/plugin/subscribe', body='OK')
         self.test_subject.post_connect()
         self.test_subject.callbacks["test"].should.equal(self.test_subject.test_plugin_callback)
         self.test_subject.callbacks["example"].should.equal(self.test_subject.example_plugin_callback)

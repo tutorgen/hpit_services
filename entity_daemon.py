@@ -17,9 +17,7 @@ try:
 except KeyError:
     settings_manager = SettingsManager.init_instance('debug')
 
-from hpitclient.settings import HpitClientSettings
-settings = HpitClientSettings.settings()
-settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'
+plugin_settings = settings_manager.get_plugin_settings()
 
 #import tutors and plugins
 from tutors import *
@@ -137,6 +135,7 @@ class PosixDaemon(BaseDaemon):
 
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)
+            self.entity.set_hpit_root_url(plugin_settings.HPIT_URL_ROOT)
             self.entity.start()
 
     def start(self):
@@ -169,6 +168,7 @@ class WindowsDaemon(BaseDaemon):
         
         if self.entity:
             signal.signal(signal.SIGTERM, self.entity.disconnect)
+            self.entity.set_hpit_root_url(plugin_settings.HPIT_URL_ROOT)
             self.entity.start()
 
         os.remove(pid)

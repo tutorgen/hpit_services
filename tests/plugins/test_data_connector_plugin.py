@@ -2,9 +2,6 @@ import unittest
 from mock import *
 import responses
 
-from hpitclient.settings import HpitClientSettings
-HPIT_URL_ROOT = HpitClientSettings.settings().HPIT_URL_ROOT
-
 from plugins import DataShopConnectorPlugin
 
 class TestDataShopConnectorPlugin(unittest.TestCase):
