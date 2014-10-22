@@ -86,16 +86,7 @@ class UnixManager(BaseManager):
         if self.server_is_running():
             print("The HPIT Server is already running.")
         else:
-            print("Starting the HPIT Hub Server for Unix...")
-            with open("tmp/output_server.txt","w") as f:
-                subprocess.call(['uwsgi', 
-                    '--ini', os.path.join(self.settings.PROJECT_DIR, 'uwsgi_config.ini')],
-                    stdout = f, stderr = f)
-
-            for i in range(0, 10):
-                print("Waiting " + str(10 - i) + " seconds for the server to boot.\r", end='')
-                time.sleep(1)
-            print("")
+            print("Spining up all the plugins and tutors...")
 
             print("Starting plugins...")
             self.spin_up_all('plugin', configuration)
