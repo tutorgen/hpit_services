@@ -10,7 +10,7 @@ import json
 
 import flask
 
-from server.models import Plugin, Tutor, Subscription, MessageAuth
+from server.models import Plugin, Tutor, Subscription, MessageAuth, User
 from server.app import ServerApp
 app_instance = ServerApp.get_instance()
 app = app_instance.app
@@ -55,6 +55,14 @@ class TestServerAPI(unittest.TestCase):
         db.drop_all()
         db.create_all()
         
+        self.user = User()
+        self.user.username="test"
+        self.user.password="pass"
+        self.user.company = "Test Company"
+        db.session.add(self.user)
+        db.session.commit()
+        
+        
         self.tutor = Tutor()
         self.tutor_name = "Test tutor"
         self.tutor.name = self.tutor_name
@@ -64,6 +72,8 @@ class TestServerAPI(unittest.TestCase):
         self.tutor_entity_id = str(uuid4())
         self.tutor.entity_id = self.tutor_entity_id
         self.tutor_secret_key = self.tutor.generate_key()
+        
+        self.tutor.user = self.user
         
         db.session.add(self.tutor)
         db.session.commit()
@@ -78,6 +88,8 @@ class TestServerAPI(unittest.TestCase):
         self.plugin_entity_id = str(uuid4())
         self.plugin.entity_id = self.plugin_entity_id
         self.plugin_secret_key = self.plugin.generate_key()
+        
+        self.plugin.user = self.user
         
         db.session.add(self.plugin)
         db.session.commit()
@@ -354,17 +366,28 @@ class TestServerAPI(unittest.TestCase):
         subscription = Subscription.query.filter_by(plugin=plugin, message_name="test_message").first()
         subscription.should_not.equal(None)
         
+        #see if message_auth are being created correctly
         response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
         response.data.should.contain(b'EXISTS')
         
-
         MessageAuth.query.filter_by(message_name="test_message",entity_id=str(self.plugin_entity_id),is_owner=True).first().should_not.equal(None)
         self.disconnect_helper("plugin")
         
         self.connect_helper("tutor") #just to get another entity... tutors can't subscribe to messages.
         response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_message"}),content_type="application/json")
         MessageAuth.query.filter_by(message_name="test_message",entity_id=str(self.tutor_entity_id)).first().should.equal(None)
+        self.disconnect_helper("tutor")
         
+        #subscription intelligence
+        self.connect_helper("plugin")
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"boguscompany.test_message"}),content_type="application/json")
+        MessageAuth.query.filter_by(message_name="boguscompany.test_message",entity_id=str(self.plugin_entity_id),is_owner=True).first().should.equal(None)
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test company.test_message"}),content_type="application/json")
+        MessageAuth.query.filter_by(message_name="test company.test_message",entity_id=str(self.plugin_entity_id),is_owner=True).first().should.equal(None)
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_company.test_message"}),content_type="application/json")
+        MessageAuth.query.filter_by(message_name="test_company.test_message",entity_id=str(self.plugin_entity_id),is_owner=True).first().should_not.equal(None)
         
     def test_unsubscribe(self):
         """

@@ -32,6 +32,19 @@ def _map_mongo_document(document):
 
     return mapped_doc
 
+def user_verified(message_name,plugin):
+    if "." in message_name:
+        message_parts = message_name.split(".")
+        company_name = plugin.user.company.replace(" ","_").lower()
+        if message_parts[0] == company_name:
+            return True
+        else:
+            return False
+    else:
+        return True
+        
+        
+    
 
 def bad_parameter_response(parameter):
     return ("Missing parameter: " + parameter, 401, dict(mimetype="application/json"))
@@ -288,12 +301,13 @@ def subscribe():
     #message auth
     message_auth = MessageAuth.query.filter_by(message_name=message_name).first()
     if not message_auth: #this will be the owner
-        new_message_auth = MessageAuth()
-        new_message_auth.entity_id = str(entity_id)
-        new_message_auth.message_name = message_name
-        new_message_auth.is_owner = True
-        db.session.add(new_message_auth)
-        db.session.commit()
+        if user_verified(message_name,plugin):
+            new_message_auth = MessageAuth()
+            new_message_auth.entity_id = str(entity_id)
+            new_message_auth.message_name = message_name
+            new_message_auth.is_owner = True
+            db.session.add(new_message_auth)
+            db.session.commit()
 
     subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
 
