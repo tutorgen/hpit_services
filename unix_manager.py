@@ -83,21 +83,16 @@ class UnixManager(BaseManager):
         if not os.path.exists('log'):
             os.makedirs('log')
 
-        if self.server_is_running():
-            print("The HPIT Server is already running.")
-        else:
-            print("Spining up all the plugins and tutors...")
+        print("Starting plugins...")
+        self.spin_up_all('plugin', configuration)
 
-            print("Starting plugins...")
-            self.spin_up_all('plugin', configuration)
-
-            for i in range(0, 10):
-                print("Waiting " + str(10 - i) + " seconds for the plugins to boot.\r", end='')
-                time.sleep(1)
-            print("")
-            
-            print("Starting tutors...")
-            self.spin_up_all('tutor', configuration)
+        for i in range(0, 10):
+            print("Waiting " + str(10 - i) + " seconds for the plugins to boot.\r", end='')
+            time.sleep(1)
+        print("")
+        
+        print("Starting tutors...")
+        self.spin_up_all('tutor', configuration)
         print("DONE!")
 
 
@@ -106,17 +101,14 @@ class UnixManager(BaseManager):
         Stop the hpit server, plugins, and tutors.
         """
         
-        if self.server_is_running():
-            print("Stopping plugins...")
-            self.wind_down_all('plugin', configuration)
-            print("Stopping tutors...")
-            self.wind_down_all('tutor', configuration)
+        print("Stopping plugins...")
+        self.wind_down_all('plugin', configuration)
+        print("Stopping tutors...")
+        self.wind_down_all('tutor', configuration)
 
-            print("Stopping the HPIT Hub Server...")
-            subprocess.call(['uwsgi', '--stop', '/home/hpitserver/hpitserver.pid'])
+        print("Stopping the HPIT Hub Server...")
+        subprocess.call(['uwsgi', '--stop', '/home/hpitserver/hpitserver.pid'])
 
-            #Cleanup the tmp directory
-            shutil.rmtree('tmp')
-        else:
-            print("The HPIT Server is not running.")
+        #Cleanup the tmp directory
+        shutil.rmtree('tmp')
         print("DONE!")

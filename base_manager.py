@@ -66,13 +66,6 @@ class BaseManager:
         return os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
         
         
-    def server_is_running(self):
-        """
-        If the PID is there, then it must be running
-        """
-        return os.path.isfile(self.settings.HPIT_PID_FILE)
-        
-        
     def build_sub_commands(self, subparsers):
         pkgpath = os.path.dirname(commands.__file__)
         pkgs = pkgutil.iter_modules([pkgpath])

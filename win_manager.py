@@ -11,6 +11,13 @@ from base_manager import BaseManager
 
 class WindowsManager(BaseManager):
 
+    def server_is_running(self):
+        """
+        If the PID is there, then it must be running
+        """
+        return os.path.isfile(self.settings.HPIT_PID_FILE)
+        
+        
     def spin_up_all(self, entity_type, configuration):
         """
         Start all entities of a given type, as specified in configuration
