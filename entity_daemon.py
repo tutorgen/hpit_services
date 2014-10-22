@@ -17,7 +17,7 @@ try:
 except KeyError:
     settings_manager = SettingsManager.init_instance('debug')
 
-plugin_settings = settings_manager.get_plugin_settings()
+plugin_settings = SettingsManager.get_plugin_settings()
 
 #import tutors and plugins
 from tutors import *
