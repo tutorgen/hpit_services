@@ -106,9 +106,6 @@ class UnixManager(BaseManager):
         print("Stopping tutors...")
         self.wind_down_all('tutor', configuration)
 
-        print("Stopping the HPIT Hub Server...")
-        subprocess.call(['uwsgi', '--stop', '/home/hpitserver/hpitserver.pid'])
-
         #Cleanup the tmp directory
         shutil.rmtree('tmp')
         print("DONE!")
