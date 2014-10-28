@@ -39,8 +39,8 @@ class TestExampleTutor(unittest.TestCase):
         
         self.test_subject.logger.should.equal(None)
         self.test_subject.event_names.should.equal([
-                'test', 'example', 'add_student', 
-                'remove_student', 'trace'])
+                'tutorgen.test', 'tutorgen.example', 'tutorgen.add_student', 
+                'tutorgen.remove_student', 'tutorgen.trace'])
         self.test_subject.run_once.should.equal(None)
 
     def test_setup(self):

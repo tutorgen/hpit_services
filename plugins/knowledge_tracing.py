@@ -22,11 +22,11 @@ class KnowledgeTracingPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            kt_set_initial=self.kt_set_initial_callback,
-            kt_reset=self.kt_reset,
-            kt_trace=self.kt_trace,
-            get_student_model_fragment=self.get_student_model_fragment)
+        self.subscribe({
+            "tutorgen.kt_set_initial":self.kt_set_initial_callback,
+            "tutorgen.kt_reset":self.kt_reset,
+            "tutorgen.kt_trace":self.kt_trace,
+            "get_student_model_fragment":self.get_student_model_fragment})
         
         #temporary POC code
         #response = self._get_data("message-owner/get_student_model_fragment")

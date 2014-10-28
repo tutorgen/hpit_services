@@ -30,12 +30,12 @@ class KnowledgeTracingTutor(Tutor):
         random.seed()
         
     def post_connect(self):
-        self.send("add_student",{},self.new_student_callback)
+        self.send("tutorgen.add_student",{},self.new_student_callback)
         
         
     def pre_disconnect(self):
         for sk in self.skills:
-            self.send('kt_reset', {
+            self.send('tutorgen.kt_reset', {
                 'skill_id': self.skill_ids[sk],
                 'student_id':self.student_id,
                 })
@@ -49,12 +49,12 @@ class KnowledgeTracingTutor(Tutor):
                 
         self.send("get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
    
-        self.send("get_student_model",{"student_id":self.student_id},self.get_student_model_callback)
+        self.send("tutorgen.get_student_model",{"student_id":self.student_id},self.get_student_model_callback)
    
         for sk in self.skills:
             if 90 < random.randint(0, 100):
                 correct = random.randint(0, 100)
-                self.send('kt_trace', {
+                self.send('tutorgen.kt_trace', {
                     'skill_id': self.skill_ids[sk],
                     'student_id':self.student_id,
                     'correct': True if 50 < random.randint(0, 100) else False
@@ -73,11 +73,11 @@ class KnowledgeTracingTutor(Tutor):
     def new_student_callback(self,response):
         self.student_id = response["student_id"]
         for sk in self.skills:
-            self.send("get_skill_id",{"skill_name":sk},self.get_skills_callback)
+            self.send("tutorgen.get_skill_id",{"skill_name":sk},self.get_skills_callback)
             
     def get_skills_callback(self,response):
         self.skill_ids[response["skill_name"]] = response["skill_id"]
-        self.send('kt_set_initial', {
+        self.send('tutorgen.kt_set_initial', {
                 'skill_id': response["skill_id"],
                 'probability_known': random.randint(0, 1000) / 1000.0,
                 'probability_learned': random.randint(0, 1000) / 1000.0,

@@ -23,12 +23,12 @@ class DataShopConnectorPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            get_dataset_metadata=self.get_dataset_metadata,
-            get_sample_metadata=self.get_sample_metadata,
-            get_transactions=self.get_transactions,
-            get_student_steps=self.get_student_steps,
-            add_custom_field=self.add_custom_field)
+        self.subscribe({
+            "tutorgen.get_dataset_metadata":self.get_dataset_metadata,
+            "tutorgen.get_sample_metadata":self.get_sample_metadata,
+            "tutorgen.get_transactions":self.get_transactions,
+            "tutorgen.get_student_steps":self.get_student_steps,
+            "tutorgen.add_custom_field":self.add_custom_field})
         
    
     def get_dataset_metadata(self,payload):

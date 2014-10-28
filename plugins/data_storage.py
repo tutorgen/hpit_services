@@ -16,10 +16,10 @@ class DataStoragePlugin(Plugin):
     def post_connect(self):
         super().post_connect()
 
-        self.subscribe(
-            store_data=self.store_data_callback,
-            retrieve_data=self.retrieve_data_callback,
-            remove_data=self.remove_data_callback)
+        self.subscribe({
+            "tutorgen.store_data":self.store_data_callback,
+            "tutorgen.retrieve_data":self.retrieve_data_callback,
+            "tutorgen.remove_data":self.remove_data_callback})
 
     def store_data_callback(self, message):
         if self.logger:

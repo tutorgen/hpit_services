@@ -9,10 +9,10 @@ class ExamplePlugin(Plugin):
     def post_connect(self):
         super().post_connect()
 
-        self.subscribe(
-            test=self.test_plugin_callback, 
-            example=self.example_plugin_callback,
-            kt_trace=self.kt_trace_callback)
+        self.subscribe({
+            "tutorgen.test":self.test_plugin_callback, 
+            "tutorgen.example":self.example_plugin_callback,
+            "tutorgen.kt_trace":self.kt_trace_callback})
         
         #self._post_data("message-auth",{"message_name":"kt_trace","other_entity_id":"01177f8f-c082-4d2d-a9b5-97623cb7bbc9"}) #problem manager
 
