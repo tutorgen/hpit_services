@@ -1,0 +1,50 @@
+{
+    "debug": {
+        "plugin": {
+            "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
+            "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
+            "MONGODB_URI" : "mongodb://localhost:27017/",
+            "COUCHBASE_HOSTNAME" : "127.0.0.1",
+            "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
+            "COUCHBASE_AUTH" : ["Administrator", "administrator"],
+            "HPIT_URL_ROOT": "localhost",
+            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services",
+        },
+        "server": {
+            "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
+            "DEBUG" : false,
+
+            "HPIT_PID_FILE" : "tmp/hpit_server.pid",
+            "HPIT_BIND_IP" : "0.0.0.0",
+            "HPIT_BIND_PORT" : "8000",
+            "HPIT_BIND_ADDRESS" : "0.0.0.0:8000",
+            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services",
+            "VENV_DIRNAME" : "env",
+
+            "MONGO_DBNAME" : "hpit_development",
+            "SECRET_KEY" : "j#n%$*1+w_op#v4sqc$z2ey+p=9z0#$8ahbs=!8tv3oq$vzc9+",
+            "SQLALCHEMY_DATABASE_URI" : "sqlite:///db/hpit_development.sqlite",
+            "CSRF_ENABLED" : true,
+
+            "MAIL_DEBUG" : true,
+            "MAIL_SERVER"   : "smtp.gmail.com",
+            "MAIL_PORT"     : 465,
+            "MAIL_USE_SSL"  : true,
+            "MAIL_USERNAME" : "hpit@tutorgen.com",
+            "MAIL_PASSWORD" : "abcd1234",
+            "MAIL_DEFAULT_SENDER" : "\"HPIT Production\" <hpit@tutorgen.com>",
+
+            "USER_PASSWORD_HASH" : "bcrypt_sha256",
+
+            "USER_ENABLE_EMAIL"            : false,
+            "USER_ENABLE_USERNAME"         : true,
+            "USER_ENABLE_CONFIRM_EMAIL"    : false,
+            "USER_ENABLE_CHANGE_USERNAME"  : false,
+            "USER_ENABLE_CHANGE_PASSWORD"  : true,
+            "USER_ENABLE_FORGOT_PASSWORD"  : false,
+            "USER_ENABLE_RETYPE_PASSWORD"  : true,
+            "USER_LOGIN_TEMPLATE" : "flask_user/login_or_register.html",
+            "USER_REGISTER_TEMPLATE" : "flask_user/register.html"
+        }
+    }
+}

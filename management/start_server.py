@@ -1,3 +1,7 @@
+"""
+This script is used to start the Flask server through uWSGI on *nix systems.
+"""
+
 import os
 from environment.settings_manager import SettingsManager
 
