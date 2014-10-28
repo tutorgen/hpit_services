@@ -289,7 +289,7 @@ class ProblemManagementPlugin(Plugin):
         
     def get_problems_worked_callback(self,message):
         try:
-            student_id = message["student_id"]
+            student_id = str(message["student_id"])
         except KeyError:
             self.send_response(message["message_id"],{
                     "error" : "add_problem_worked requires a 'student_id'",
@@ -314,7 +314,7 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            problem_id = str(message["problem_id"])
+            problem_id = ObjectId(str(message["problem_id"]))
             step_text = message["step_text"]
         except KeyError:
             self.send_response(message["message_id"],{
@@ -322,7 +322,13 @@ class ProblemManagementPlugin(Plugin):
                     "success":False
             })
             return
-            
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
+            })
+            return
+        
         problem = self.db.find_one({
                 "_id":ObjectId(problem_id),
                 "allowed_edit_id":entity_id
@@ -350,10 +356,16 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            step_id = str(message["step_id"])
+            step_id = ObjectId(str(message["step_id"]))
         except KeyError:
             self.send_response(message["message_id"], {
                     "error": "remove_step requires 'step_id'",
+                    "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
                     "success":False
             })
             return
@@ -379,11 +391,17 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            step_id = message["step_id"]
+            step_id = ObjectId(str(message["step_id"]))
         except KeyError:
             self.send_response(message["message_id"],{
                     "error": "get_step requires a 'step_id'",
                     "success":False,
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
+                    "success":False
             })
             return
         
@@ -408,11 +426,17 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            problem_id = str(message["problem_id"])
+            problem_id = ObjectId(str(message["problem_id"]))
         except KeyError:
             self.send_response(message["message_id"], {
                 "error":"get_problem_callback requires a 'problem_id'",   
                 "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
             })
             return
             
@@ -444,7 +468,7 @@ class ProblemManagementPlugin(Plugin):
             self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
             
         try:
-            student_id = message["student_id"]
+            student_id = str(message["student_id"])
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"problem_managment get_student_model_fragment requires 'student_id'"       
