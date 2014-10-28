@@ -25,7 +25,7 @@ from .sessions import MongoSessionInterface
 #from sessions import MongoSessionInterface
 #from settings import MONGO_DBNAME, SECRET_KEY, DEBUG_MODE
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 class ServerApp:

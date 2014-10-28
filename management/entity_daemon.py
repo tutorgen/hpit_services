@@ -10,7 +10,7 @@ import platform
 if platform.system() != "Windows":
     from daemonize import Daemonize
 
-from environment.settings_manager import SettingsManager
+from settings_manager import SettingsManager
 
 try:
     settings_manager = SettingsManager.init_instance(os.environ['HPIT_ENV'])

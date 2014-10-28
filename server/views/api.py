@@ -13,7 +13,7 @@ csrf = app_instance.csrf
 
 from server.models import Plugin, Tutor, Subscription
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 from utils import StudentAuthentication

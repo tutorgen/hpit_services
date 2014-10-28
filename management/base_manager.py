@@ -1,11 +1,11 @@
 import argparse
 import json
 import os
-import commands
 import pkgutil
+from management import commands
 
 from server.app import ServerApp
-from environment.settings_manager import SettingsManager
+from .settings_manager import SettingsManager
 
 class BaseManager:
 
@@ -70,7 +70,7 @@ class BaseManager:
         pkgpath = os.path.dirname(commands.__file__)
         pkgs = pkgutil.iter_modules([pkgpath])
         for _, name, _ in pkgs:
-            pkg = __import__('commands.' + name, globals(), locals(), ['Command'], 0)
+            pkg = __import__('management.commands.' + name, globals(), locals(), ['Command'], 0)
             pkg_parser = subparsers.add_parser(name)
             cmd = pkg.Command(self, pkg_parser)
             pkg_parser.set_defaults(description=cmd.description, func=cmd.run)

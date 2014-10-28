@@ -7,7 +7,7 @@ import signal
 import shutil
 import sys
 
-from base_manager import BaseManager
+from .base_manager import BaseManager
 
 class UnixManager(BaseManager):
 

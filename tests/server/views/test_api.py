@@ -3,7 +3,7 @@ import unittest
 from mock import *
 import nose
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 import json

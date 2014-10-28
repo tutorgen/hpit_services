@@ -5,7 +5,7 @@ workaround so the relative imports are preserved in Windows.
 """
 
 import os
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 
 try:
     settings_manager = SettingsManager.init_instance(os.environ['HPIT_ENV'])

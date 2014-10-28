@@ -14,7 +14,7 @@ import requests
 
 from plugins import SkillManagementPlugin
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
 class TestSkillManagementPlugin(unittest.TestCase):

@@ -3,7 +3,7 @@ This script is used to start the Flask server through uWSGI on *nix systems.
 """
 
 import os
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 
 try:
     settings_manager = SettingsManager.init_instance(os.environ['HPIT_ENV'])

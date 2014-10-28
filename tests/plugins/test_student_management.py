@@ -13,7 +13,7 @@ import requests
 
 from plugins import StudentManagementPlugin
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
 class TestStudentManagementPlugin(unittest.TestCase):

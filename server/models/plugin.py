@@ -5,7 +5,7 @@ from Crypto.Hash import HMAC, SHA512
 from server.app import ServerApp
 db = ServerApp.get_instance().db
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 class Plugin(db.Model):

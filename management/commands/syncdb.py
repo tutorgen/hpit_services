@@ -5,7 +5,7 @@ app = app_instance.app
 db = app_instance.db
 mongo = app_instance.mongo
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 class Command:

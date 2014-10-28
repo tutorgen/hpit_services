@@ -1,7 +1,7 @@
 import platform
 import os
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 
 try:
     settings = SettingsManager.init_instance(os.environ['HPIT_ENV'])
@@ -10,10 +10,10 @@ except KeyError:
 
 manager = None
 if platform.system() == "Windows":
-    from win_manager import WindowsManager
+    from management.win_manager import WindowsManager
     manager = WindowsManager()
 else:
-    from unix_manager import UnixManager
+    from management.unix_manager import UnixManager
     manager = UnixManager()
 
 import server.views.api

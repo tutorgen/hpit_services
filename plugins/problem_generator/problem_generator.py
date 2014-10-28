@@ -8,7 +8,7 @@ from plugins.problem_generator import problems
 
 from hpitclient import Plugin
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
 class ProblemGeneratorPlugin(Plugin):

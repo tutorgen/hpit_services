@@ -1,7 +1,7 @@
 from server.app import ServerApp
 app = ServerApp.get_instance().app
 
-from environment.settings_manager import SettingsManager
+from management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 class Command:
