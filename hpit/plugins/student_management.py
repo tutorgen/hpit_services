@@ -47,12 +47,12 @@ class StudentManagementPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            add_student=self.add_student_callback,
-            get_student=self.get_student_callback,
-            set_attribute=self.set_attribute_callback,
-            get_attribute=self.get_attribute_callback,
-            get_student_model = self.get_student_model_callback)
+        self.subscribe({
+            "tutorgen.add_student":self.add_student_callback,
+            "tutorgen.get_student":self.get_student_callback,
+            "tutorgen.set_attribute":self.set_attribute_callback,
+            "tutorgen.get_attribute":self.get_attribute_callback,
+            "tutorgen.get_student_model":self.get_student_model_callback})
 
     #Student Management Plugin
     def add_student_callback(self, message):

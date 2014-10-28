@@ -37,9 +37,9 @@ class SkillManagementPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            get_skill_name=self.get_skill_name_callback,
-            get_skill_id = self.get_skill_id_callback)
+        self.subscribe({
+            "tutorgen.get_skill_name":self.get_skill_name_callback,
+            "tutorgen.get_skill_id":self.get_skill_id_callback})
 
     #Skill Management Plugin
     def get_skill_name_callback(self, message):

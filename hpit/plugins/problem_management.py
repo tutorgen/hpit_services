@@ -24,20 +24,20 @@ class ProblemManagementPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            add_problem=self.add_problem_callback,
-            remove_problem=self.remove_problem_callback,
-            get_problem=self.get_problem_callback,
-            edit_problem=self.edit_problem_callback,
-            list_problems=self.list_problems_callback,
-            clone_problem=self.clone_problem_callback,
-            add_problem_worked=self.add_problem_worked_callback,
-            get_problems_worked=self.get_problems_worked_callback,
-            add_step=self.add_step_callback,
-            remove_step=self.remove_step_callback,
-            get_step=self.get_step_callback,
-            get_problem_steps=self.get_problem_steps_callback,
-            get_student_model_fragment=self.get_student_model_fragment_callback)
+        self.subscribe({
+            "tutorgen.add_problem":self.add_problem_callback,
+            "tutorgen.remove_problem":self.remove_problem_callback,
+            "tutorgen.get_problem":self.get_problem_callback,
+            "tutorgen.edit_problem":self.edit_problem_callback,
+            "tutorgen.list_problems":self.list_problems_callback,
+            "tutorgen.clone_problem":self.clone_problem_callback,
+            "tutorgen.add_problem_worked":self.add_problem_worked_callback,
+            "tutorgen.get_problems_worked":self.get_problems_worked_callback,
+            "tutorgen.add_step":self.add_step_callback,
+            "tutorgen.remove_step":self.remove_step_callback,
+            "tutorgen.get_step":self.get_step_callback,
+            "tutorgen.get_problem_steps":self.get_problem_steps_callback,
+            "get_student_model_fragment":self.get_student_model_fragment_callback})
 
         #temporary POC code
         #response = self._get_data("message-owner/get_student_model_fragment")
