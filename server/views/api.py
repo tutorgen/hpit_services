@@ -2,7 +2,7 @@ from uuid import uuid4
 from bson.objectid import ObjectId
 from datetime import datetime
 from flask import session, jsonify, abort, request, Response
-
+import uuid
 
 from server.app import ServerApp
 app_instance = ServerApp.get_instance()
@@ -11,7 +11,7 @@ mongo = app_instance.mongo
 db = app_instance.db
 csrf = app_instance.csrf
 
-from server.models import Plugin, Tutor, Subscription, MessageAuth
+from server.models import Plugin, Tutor, Subscription, MessageAuth, ResourceAuth
 
 from environment.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
@@ -308,6 +308,8 @@ def subscribe():
             new_message_auth.is_owner = True
             db.session.add(new_message_auth)
             db.session.commit()
+        else:
+            return jsonify({"error":"invalid message name"})
 
     subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
 
@@ -425,6 +427,15 @@ def plugin_message_history():
         'receiver_entity_id': entity_id,
         'message_name': {"$ne" : "transaction"}
     })
+    
+    def is_auth(mname,eid):
+        message_auth = MessageAuth.query.filter_by(message_name=mname,entity_id=str(entity_id)).first()
+        if not message_auth:
+            return False
+        else:
+            return True
+    
+    my_messages = [m for m in my_messages if is_auth(m["message_name"],entity_id)]
 
     result = [{
         'message_name': t['message_name'],
@@ -491,6 +502,15 @@ def plugin_message_preview():
     my_messages = mongo.db.plugin_messages.find({
         'receiver_entity_id': entity_id,
     })
+    
+    def is_auth(mname,eid):
+        message_auth = MessageAuth.query.filter_by(message_name=mname,entity_id=str(entity_id)).first()
+        if not message_auth:
+            return False
+        else:
+            return True
+    
+    my_messages = [m for m in my_messages if is_auth(m["message_name"],entity_id)]
 
     result = [{
         'message_name': t['message_name'],
@@ -821,6 +841,18 @@ def responses():
     my_responses = mongo.db.responses.find({
         'receiver_entity_id': entity_id,
     })
+    
+    def is_auth(r):
+        if "resource_id" in r["response"]:
+            ra = ResourceAuth.query.filter_by(entity_id=r["receiver_entity_id"],resource_id=r["response"]["resource_id"]).first()
+            if not ra:
+                return False
+            else:
+                return True
+        else:
+            return True
+            
+    my_responses = [r for r in my_responses if is_auth(r)]
 
     my_responses = list(my_responses)
 
@@ -929,8 +961,66 @@ def share_message():
                 db.session.commit()
                 
         return ok_response()
-    
+
+@csrf.exempt
+@app.route("/new-resource", methods=["POST"])
+def new_resource():
+    if 'entity_id' not in session:
+        return auth_failed_response()
         
+    if "owner_id" not in request.json:
+        return bad_parameter_response("owner_id")
+        
+    owner_id = request.json["owner_id"]    
     
+    new_id =  str(uuid.uuid4())
+    
+    new_resource_auth = ResourceAuth()
+    new_resource_auth.entity_id = owner_id
+    new_resource_auth.is_owner = True
+    new_resource_auth.resource_id = new_id
+    
+    db.session.add(new_resource_auth)
+    db.session.commit()
+    
+    return jsonify({"resource_id":new_id})
+        
+@csrf.exempt
+@app.route("/share-resource", methods=["POST"])
+def share_resource():
+    if 'entity_id' not in session:
+        return auth_failed_response()
+    
+    entity_id = session['entity_id']
+    
+    if "resource_id" not in request.json:
+        return bad_parameter_response("resource_id")
+    if "other_entity_ids" not in request.json:
+        return bad_parameter_response("other_entity_ids")
+        
+    resource_id = request.json["resource_id"]
+    other_entity_ids = request.json["other_entity_ids"]
+        
+    if isinstance(other_entity_ids,str):
+        other_entity_ids = [other_entity_ids]
+    elif not isinstance(other_entity_ids,list):
+        return bad_parameter_response("other_entity_ids")
+    
+    resource_auth = ResourceAuth().query.filter_by(entity_id=entity_id,is_owner=True,resource_id=resource_id).first()
+    
+    if not resource_auth:
+        return jsonify({"error":"not owner"})
+    else:
+        for eid in other_entity_ids:
+            existing_resource_auth = ResourceAuth().query.filter_by(entity_id=eid,resource_id=resource_id).first()
+            if not existing_resource_auth:
+                new_resource_auth = ResourceAuth()
+                new_resource_auth.entity_id = eid
+                new_resource_auth.resource_id = resource_id
+                new_resource_auth.is_owner = False
+                db.session.add(new_resource_auth)
+                db.session.commit()
+    
+        return ok_response()
     
     

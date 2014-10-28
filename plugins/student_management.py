@@ -64,10 +64,13 @@ class StudentManagementPlugin(Plugin):
             attributes = message["attributes"]
         except KeyError:
             attributes = {}
-            
-        student_id = self.db.insert({"attributes":attributes})
         
-        self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes})
+        response = self._post_data("new-resource",{"owner_id":message["sender_entity_id"]}).json()
+        resource_id = response["resource_id"]
+        
+        student_id = self.db.insert({"attributes":attributes,"resource_id":str(resource_id),"owner_id":str(message["sender_entity_id"])})
+        
+        self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes,"resource_id":str(resource_id)})
         
     def get_student_callback(self, message):
         if self.logger:
@@ -80,11 +83,11 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"error":"Must provide a 'student_id' to get a student"})
             return
         
-        return_student = self.db.find_one({"_id":ObjectId(student_id)})
+        return_student = self.db.find_one({"_id":ObjectId(student_id),"owner_id":str(message["sender_entity_id"])})
         if not return_student:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
         else:
-            self.send_response(message["message_id"],{"student_id":str(return_student["_id"]),"attributes":return_student["attributes"]})
+            self.send_response(message["message_id"],{"student_id":str(return_student["_id"]),"resource_id":str(return_student["resource_id"]),"attributes":return_student["attributes"]})
             
     def set_attribute_callback(self, message):
         if self.logger:
@@ -99,7 +102,7 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
             return
             
-        update = self.db.update({'_id':ObjectId(str(student_id))},{'$set':{'attributes.'+str(attribute_name): str(attribute_value)}},upsert=False, multi=False)
+        update = self.db.update({'_id':ObjectId(str(student_id)),"owner_id":str(message["sender_entity_id"])},{'$set':{'attributes.'+str(attribute_name): str(attribute_value)}},upsert=False, multi=False)
         if not update["updatedExisting"]:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
         else:
@@ -118,7 +121,7 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"error":"Must provide a 'student_id' and 'attribute_name'"})
             return 
             
-        student = self.db.find_one({'_id':ObjectId(str(student_id))})
+        student = self.db.find_one({'_id':ObjectId(str(student_id)),"owner_id":str(message["sender_entity_id"])})
         if not student:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
             return
@@ -127,8 +130,8 @@ class StudentManagementPlugin(Plugin):
                 attr = student["attributes"][attribute_name]
             except KeyError:
                 attr = ""
-            self.send_response(message["message_id"],{"student_id":str(student["_id"]),attribute_name:attr})
-
+            self.send_response(message["message_id"],{"student_id":str(student["_id"]),attribute_name:attr,"resource_id":student["resource_id"]})
+ 
     def get_student_model_callback(self,message):
         if self.logger:
             self.send_log_entry("GET_STUDENT_MODEL")
@@ -148,17 +151,17 @@ class StudentManagementPlugin(Plugin):
             
         if not update:
             try:
+                student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
                 cached_model = self.cache.get(str(student_id)).value
                 self.send_response(message["message_id"],{
                         "student_id": student_id,
                         "student_model" : cached_model,
                         "cached": True,
+                        "resource_id":student["resource_id"]
                     })
                 return
             except couchbase.exceptions.NotFoundError:
                 pass
-        
-        student_id = message["student_id"]
 
         self.student_models[message["message_id"]] = {}
         self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message, student_id])
@@ -166,8 +169,9 @@ class StudentManagementPlugin(Plugin):
 
         self.send("get_student_model_fragment",{
                 "update": update,
-                "student_id" : student_id
-        }, self.get_populate_student_model_callback_function(student_id, message))
+                "student_id" : str(message["student_id"]),
+        },self.get_populate_student_model_callback_function(message))
+
         
     
     def get_populate_student_model_callback_function(self, student_id, message):
@@ -202,11 +206,13 @@ class StudentManagementPlugin(Plugin):
                     break
             else:
                 #student model complete, send response (unless timed out)
+                student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
                 if message["message_id"] in self.timeout_threads:
                     self.send_response(message["message_id"], {
                         "student_id": student_id,
                         "student_model" : self.student_models[message["message_id"]],       
                         "cached":False,
+                        "resource_id":student["resource_id"]
                     })
                    
                     try: 
@@ -225,17 +231,22 @@ class StudentManagementPlugin(Plugin):
     def kill_timeout(self, message, student_id):
         if self.logger:
             self.send_log_entry("TIMEOUT " + str(message))
+        
+        student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+        
         try:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
                 'student_id': student_id,
-                "student_model":self.student_models[str(message["message_id"])]
+                "student_model":self.student_models[str(message["message_id"])],
+                "resource_id":student["resource_id"]
             })
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
                 'student_id': student_id,
                 "student_model":{},
+                "resource_id":student["resource_id"]
             })
         
         try:

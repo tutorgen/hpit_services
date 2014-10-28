@@ -4,6 +4,14 @@ import responses
 from mock import *
 
 import logging
+<<<<<<< HEAD
+=======
+from hpitclient.settings import HpitClientSettings
+
+from environment.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+HPIT_URL_ROOT = settings.HPIT_URL_ROOT
+>>>>>>> message lockdown and resource auth
 import random
 
 from tutors import ExampleTutor
@@ -59,7 +67,23 @@ class TestExampleTutor(unittest.TestCase):
             -if run_once is false, returns false
             -if run_once is true, returns true
         """
+<<<<<<< HEAD
 
+=======
+        """
+        responses.add(responses.POST,HPIT_URL_ROOT+"/connect",
+                                body='{"entity_name":"example_tutor","entity_id":"4"}',
+                                )
+        
+        responses.add(responses.POST,HPIT_URL_ROOT+"/disconnect",
+                                body='OK',
+                                )
+        responses.add(responses.POST,HPIT_URL_ROOT+"/message",
+                                body='{"message_id":"4"}',
+                                )
+        
+        logger_mock = MagicMock()
+>>>>>>> message lockdown and resource auth
         logger_calls = [call("Sending a random event: test"),call("RECV: {'message_id': '4'}")]
         self.test_subject.send_log_entry = MagicMock()
         self.test_subject.send = MagicMock(return_value={"message_id":"4"})
@@ -69,3 +93,5 @@ class TestExampleTutor(unittest.TestCase):
         self.test_subject.send_log_entry.assert_has_calls(logger_calls)
         self.test_subject.run_once = True
         self.test_subject.main_callback().should.equal(False)
+        """
+        
