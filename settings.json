@@ -95,6 +95,7 @@
     },
     "brian-debug": {
         "plugin": {
+            "HPIT_URL_ROOT": "http://localhost:8000",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
@@ -142,6 +143,7 @@
     },
     "brian-test": {
         "plugin": {
+            "HPIT_URL_ROOT": "http://localhost:8000",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
@@ -187,6 +189,7 @@
     },
     "travis-test": {
         "plugin": {
+            "HPIT_URL_ROOT": "localhost",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
@@ -237,6 +240,7 @@
     },
     "travis": {
         "plugin": {
+            "HPIT_URL_ROOT": "localhost",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
@@ -287,6 +291,7 @@
     },
     "ansible-test": {
         "plugin": {
+            "HPIT_URL_ROOT": "localhost",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
