@@ -2,7 +2,7 @@ import responses
 import unittest
 from mock import *
 
-from plugins import ExamplePlugin
+from hpit.plugins import ExamplePlugin
 
 
 class TestExamplePlugin(unittest.TestCase):

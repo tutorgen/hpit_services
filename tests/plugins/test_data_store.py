@@ -3,7 +3,7 @@ from mock import *
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-from plugins import DataStoragePlugin
+from hpit.plugins import DataStoragePlugin
 
 class TestDataStoragePlugin(unittest.TestCase):
     

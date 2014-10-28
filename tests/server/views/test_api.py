@@ -3,15 +3,15 @@ import unittest
 from mock import *
 import nose
 
-from management.settings_manager import SettingsManager
+from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 import json
 
 import flask
 
-from server.models import Plugin, Tutor, Subscription
-from server.app import ServerApp
+from hpit.server.models import Plugin, Tutor, Subscription
+from hpit.server.app import ServerApp
 app_instance = ServerApp.get_instance()
 app = app_instance.app
 mongo = app_instance.mongo
