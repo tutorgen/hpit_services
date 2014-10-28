@@ -10,7 +10,7 @@ import json
 
 import flask
 
-from hpit.server.models import Plugin, Tutor, Subscription, MessageAuth, User
+from hpit.server.models import Plugin, Tutor, Subscription, MessageAuth, User, ResourceAuth
 from hpit.server.app import ServerApp
 
 app_instance = ServerApp.get_instance()
@@ -463,6 +463,10 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
         
         self.connect_helper("plugin")
+        
+        #subscribe to get auth
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"some_message"}),content_type="application/json")
+        
         response = self.test_client.get("/plugin/message/history",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'message-history')
         
@@ -545,6 +549,10 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
         
         self.connect_helper("plugin")
+        
+        #subscribe to get auth
+        response = self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"some_message"}),content_type="application/json")
+        
         response = self.test_client.get("/plugin/message/preview",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'message-preview')
         
@@ -840,6 +848,39 @@ class TestServerAPI(unittest.TestCase):
         client[settings.MONGO_DBNAME].responses.count().should.equal(0)
         
         self.disconnect_helper("plugin")
+        
+    def test_response_list_auth_required(self):
+        """
+        api.response_list() auth required():
+        """
+        self.connect_helper("plugin")
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].responses.insert([
+                {
+                    "receiver_entity_id":self.plugin_entity_id,
+                    "response_received":False,
+                    "response":{"res":"Good value 1","resource_id":"1"},
+                    "message":{"m":"some message"},
+                },
+        ])
+        
+        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
+        response.data.should_not.contain(b'Good value 1')
+        
+        ra = ResourceAuth()
+        ra.entity_id = self.plugin_entity_id
+        ra.resource_id = "1"
+        ra.is_owner = False
+        db.session.add(ra)
+        db.session.commit()
+        
+        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Good value 1')
+        
+        
+        
+        
     
     def test_message_owner_no_connect(self):
         """
@@ -960,5 +1001,113 @@ class TestServerAPI(unittest.TestCase):
         MessageAuth.query.filter_by(message_name="test",entity_id="123",is_owner=False).first().should_not.equal(None)
         MessageAuth.query.filter_by(message_name="test",entity_id="456",is_owner=False).first().should_not.equal(None)
         
-        
+    def test_new_resource(self):
+        """
+        api.new_resource() Test plan:
+            - see if not connected, should respond auth_failed
+            - if not other_entity_id, should respond with bad param
+            - otherwise, should add new resource_auth and return id
+        """
+        response = self.test_client.post("/new-resource",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+       
+    def test_new_resource_bad_params(self):
+       """
+       api.new_resource() bad parameters:
+       """
+       self.connect_helper("plugin")
+       
+       response = self.test_client.post("/new-resource",data = json.dumps({}),content_type="application/json")
+       response.data.should.contain(b'Missing parameter:')
+       
+    def test_new_resource_success(self):
+       """
+       api.new_resource() success:
+       """
+       self.connect_helper("plugin")
+       response = self.test_client.post("/new-resource",data = json.dumps({"owner_id":"213"}),headers={'content-type': 'application/json'})
+       response.data.should.contain(b'"resource_id":')
 
+    def test_share_resource(self):
+        """
+        api.share_resource() Test plan:
+            -test if not connected, make sure responds with auth failed
+            - check to make sure params are sent
+            - check to see if other_entity_id not list or string, bad param
+            - check to see if not owner, should respond with error
+            - if is owner, should respond ok_response, add a record for the other ids
+        """
+        response = self.test_client.post("/share-resource",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+    def test_share_resource_bad_params(self):
+        """
+        api.share_resource() bad params:
+        """
+        self.connect_helper("plugin")
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"other_entity_ids":"456"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+    def test_share_resource_param_type(self):
+        """
+        api.share_resource() bad param types:
+        """
+
+        self.connect_helper("plugin")
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123","other_entity_ids":3}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123","other_entity_ids":"3"}),content_type="application/json")
+        response.data.should_not.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123","other_entity_ids":["3","4"]}),content_type="application/json")
+        response.data.should_not.contain(b'Missing parameter:')
+        
+    def test_share_resource_not_owner(self):
+        """
+        api.share_resource() not owner:
+        """
+        self.connect_helper("plugin")
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123","other_entity_ids":"3"}),content_type="application/json")
+        response.data.should.contain(b'error')
+        
+    def test_share_resource_success(self):
+        """
+        api.share_resource() success:
+        """
+        self.connect_helper("plugin")
+        
+        ra = ResourceAuth()
+        ra.entity_id = self.plugin_entity_id
+        ra.is_owner = True
+        ra.resource_id = "123"
+        db.session.add(ra)
+        db.session.commit()
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123","other_entity_ids":"3"}),content_type="application/json")
+        response.data.should.contain(b'OK')
+        
+        ResourceAuth.query.filter_by(entity_id="3",resource_id="123",is_owner=False).first().should_not.equal(None)
+        
+        response = self.test_client.post("/share-resource",data = json.dumps({"resource_id":"123","other_entity_ids":["4","5"]}),content_type="application/json")
+        response.data.should.contain(b'OK')
+        
+        ResourceAuth.query.filter_by(entity_id="4",resource_id="123",is_owner=False).first().should_not.equal(None)
+        ResourceAuth.query.filter_by(entity_id="5",resource_id="123",is_owner=False).first().should_not.equal(None)
+        
+        
+        
+        
+        
+        
+        
+        
+        

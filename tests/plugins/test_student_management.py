@@ -77,9 +77,12 @@ class TestStudentManagementPlugin(unittest.TestCase):
             -Should be two distinc messages now
             -mock response, should have a call with the message id and student id
         """
+
         test_message = {"message_id":"2","sender_entity_id":"3"}
         calls = [call("ADD_STUDENT"),call(test_message)]
         self.test_subject.send_response = MagicMock()
+        self.test_subject._post_data = MagicMock(return_value=requests.Response())
+        requests.Response.json = MagicMock(return_value={"resource_id":"456"})
         
         self.test_subject.add_student_callback(test_message)
         self.test_subject.send_log_entry.assert_has_calls(calls)
@@ -88,7 +91,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         result = client.test_hpit.hpit_students.find({})
         result.count().should.equal(1)
         result[0]["attributes"].should.equal({})  
-        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{}})
+        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{},"resource_id":"456"})
         self.test_subject.send_response.reset_mock()
         
         test_message = {"message_id":"2","attributes":{"attr":"value"},"sender_entity_id":"3"}
@@ -96,11 +99,11 @@ class TestStudentManagementPlugin(unittest.TestCase):
         result = client.test_hpit.hpit_students.find({})
         result.count().should.equal(2)
         result[1]["attributes"].should.equal({"attr":"value"})
-        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[1]["_id"]),"attributes":{"attr":"value"}})
+        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[1]["_id"]),"attributes":{"attr":"value"},"resource_id":"456"})
         
     def test_get_student_callback(self):
         """
-        StudentManagementPlugin.get_skill_callback() Test plan:
+        StudentManagementPlugin.get_student_callback() Test plan:
             - Mock logger, ensure written to when called
             - mock response
             - send message without student id, response should contain error
@@ -108,7 +111,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
             - add a student
             - response should have call with student_id, and attributes
         """
-        test_message = {"message_id":"2"}
+        test_message = {"message_id":"2","sender_entity_id":"123"}
         calls = [call("GET_STUDENT"),call(test_message)]
         self.test_subject.send_response = MagicMock()
         
@@ -117,17 +120,27 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id' to get a student"})
         self.test_subject.send_response.reset_mock()
         
+        #get non existing student
         bogus_id = ObjectId()
-        test_message = {"message_id":"2","student_id":str(bogus_id)}
+        test_message = {"message_id":"2","student_id":str(bogus_id),"sender_entity_id":"123"}
         self.test_subject.get_student_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(bogus_id)+" not found."})
         self.test_subject.send_response.reset_mock()
         
-        sid = self.test_subject.db.insert({"attributes":{"key":"value"}})
-        test_message = {"message_id":"2","student_id":sid}
+        #try with a good student
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"4"})
+        test_message = {"message_id":"2","student_id":sid,"sender_entity_id":"123"}
         self.test_subject.get_student_callback(test_message)
-        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"attributes":{"key":"value"}})
-      
+        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"resource_id":"4","attributes":{"key":"value"}})
+        self.test_subject.send_response.reset_mock()
+        
+        #try without owner
+        test_message = {"message_id":"2","student_id":sid,"sender_entity_id":"456"}
+        self.test_subject.get_student_callback(test_message)
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(sid)+" not found."})
+        self.test_subject.send_response.reset_mock()
+        
+        
     def test_set_attribute_callback(self):
         """
         StudentManagementPlugin.set_attribute_callback() Test plan:
@@ -136,36 +149,47 @@ class TestStudentManagementPlugin(unittest.TestCase):
             - Get an attribute with a bum ID; should send back error
             - Send in a real OID, should have real response.  Attribute should be changed in response and in db
         """
-        test_message = {"message_id":"2"}
+        test_message = {"message_id":"2","sender_entity_id":"123"}
         calls = [call("SET_ATTRIBUTE"),call(test_message)]
         self.test_subject.send_response = MagicMock()
         
+        #no id
         self.test_subject.set_attribute_callback(test_message)
         self.test_subject.send_log_entry.assert_has_calls(calls)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
         self.test_subject.send_response.reset_mock()
         
-        test_message = {"message_id":"2","student_id":ObjectId()}
+        #no attr
+        test_message = {"message_id":"2","student_id":ObjectId(),"sender_entity_id":"123"}
         self.test_subject.set_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
         self.test_subject.send_response.reset_mock()
         
-        test_message = {"message_id":"2","student_id":ObjectId(),"attribute_name":"attr"}
+        #no val
+        test_message = {"message_id":"2","student_id":ObjectId(),"attribute_name":"attr","sender_entity_id":"123"}
         self.test_subject.set_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
         self.test_subject.send_response.reset_mock()
         
+        #bogus id
         bogus_id = ObjectId()
-        test_message = {"message_id":"2","student_id":str(bogus_id),"attribute_name":"attr","attribute_value":"val"}
+        test_message = {"message_id":"2","student_id":str(bogus_id),"attribute_name":"attr","attribute_value":"val","sender_entity_id":"123"}
         self.test_subject.set_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(bogus_id)+" not found."})
         self.test_subject.send_response.reset_mock()
         
-        sid = self.test_subject.db.insert({"attributes":{"key":"value"}})
-        test_message = {"message_id":"2","student_id":sid,"attribute_name":"key","attribute_value":"new_value"} #override previous val
+        #good id
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123"})
+        test_message = {"message_id":"2","student_id":sid,"attribute_name":"key","attribute_value":"new_value","sender_entity_id":"123"} #override previous val
         self.test_subject.set_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"attributes":{"key":"new_value"}})
         self.test_subject.db.find_one({"_id":sid})["attributes"]["key"].should.equal("new_value")
+        self.test_subject.send_response.reset_mock()
+        
+        #not owner
+        test_message["sender_entity_id"]="456"
+        self.test_subject.set_attribute_callback(test_message)
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(sid)+" not found."})
         
     def test_get_attribute_callback(self):
         """
@@ -176,35 +200,46 @@ class TestStudentManagementPlugin(unittest.TestCase):
             - Try with valid attribute, should respond with value
             - Try with bogus attribute, should reply empty
         """
-        test_message = {"message_id":"2"}
+        test_message = {"message_id":"2","sender_entity_id":"123"}
         calls = [call("GET_ATTRIBUTE"),call(test_message)]
         self.test_subject.send_response = MagicMock()
         
+        #no student id
         self.test_subject.get_attribute_callback(test_message)
         self.test_subject.send_log_entry.assert_has_calls(calls)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id' and 'attribute_name'"})
         self.test_subject.send_response.reset_mock()
         
-        test_message = {"message_id":"2","student_id":ObjectId()}
+        #no attribute name
+        test_message = {"message_id":"2","student_id":ObjectId(),"sender_entity_id":"123"}
         self.test_subject.get_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id' and 'attribute_name'"})
         self.test_subject.send_response.reset_mock()
         
+        #bogus student id
         bogus_id = ObjectId()
-        test_message = {"message_id":"2","student_id":str(bogus_id),"attribute_name":"attr"}
+        test_message = {"message_id":"2","student_id":str(bogus_id),"attribute_name":"attr","sender_entity_id":"123"}
         self.test_subject.get_attribute_callback(test_message)
         self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(bogus_id)+" not found."})
         self.test_subject.send_response.reset_mock()
         
-        sid = self.test_subject.db.insert({"attributes":{"key":"value"}})
-        test_message = {"message_id":"2","student_id":sid,"attribute_name":"key"}
+        #get good key
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
+        test_message = {"message_id":"2","student_id":sid,"attribute_name":"key","sender_entity_id":"123"}
         self.test_subject.get_attribute_callback(test_message)
-        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"key":"value"})
+        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"key":"value","resource_id":"456"})
         self.test_subject.send_response.reset_mock()
         
-        test_message = {"message_id":"2","student_id":sid,"attribute_name":"bogus_key"}
+        #get bogus key
+        test_message = {"message_id":"2","student_id":sid,"attribute_name":"bogus_key","sender_entity_id":"123"}
         self.test_subject.get_attribute_callback(test_message)
-        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"bogus_key":""})
+        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"bogus_key":"","resource_id":"456"})
+        self.test_subject.send_response.reset_mock()
+        
+        #not owner
+        test_message["sender_entity_id"] = "890"
+        self.test_subject.get_attribute_callback(test_message)
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(sid)+" not found."})
         
     def test_get_student_model_callback(self):
         """
@@ -216,6 +251,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         self.test_subject.send_response = MagicMock()
         
+        #no id
         msg = {"message_id":"1"}
         self.test_subject.get_student_model_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
@@ -223,7 +259,17 @@ class TestStudentManagementPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
-        msg["student_id"] = "123"
+        #bogus id
+        bogus = ObjectId()
+        msg["student_id"] = bogus
+        self.test_subject.get_student_model_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"student with id " + str(bogus) + " does not exist.",     
+        })
+        
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
+        msg["student_id"] = sid
+        msg["sender_entity_id"]="123"
         setattr(Timer,"start",MagicMock())
         self.test_subject.send = MagicMock()
         self.test_subject.get_populate_student_model_callback_function = MagicMock(return_value="3")
@@ -231,8 +277,12 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.student_models["1"].should.equal({})
         self.test_subject.timeout_threads["1"].start.assert_called_with()
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
+<<<<<<< HEAD
             "student_id":"123",
             'update': False
+=======
+            "student_id":str(sid),
+>>>>>>> message lockdown and resource auth
         },"3")
     
     def test_get_student_model_callback_cached(self):
@@ -249,13 +299,18 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_populate_student_model_callback_function = MagicMock(return_value="3")
 
         #no update, should send message get_student_model_fragment
-        msg = {"message_id":"1","student_id":"123"}
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"456","resource_id":"789"})
+        msg = {"message_id":"1","student_id":sid,"sender_entity_id":"456"}
 
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
+<<<<<<< HEAD
             "student_id":"123",
             "update": False
+=======
+            "student_id":str(sid),
+>>>>>>> message lockdown and resource auth
         },"3")
         
         #update set to true, same thing
@@ -264,8 +319,12 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
+<<<<<<< HEAD
             "update": True,
             "student_id":"123",
+=======
+            "student_id":str(sid),
+>>>>>>> message lockdown and resource auth
         },"3")
         
         #update set to false, nothing exists, should do same thing
@@ -274,18 +333,23 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
+<<<<<<< HEAD
             "student_id":"123",
             "update": False
+=======
+            "student_id":str(sid),
+>>>>>>> message lockdown and resource auth
         },"3")
         
         #update false, thing in cache, should return student model
-        self.test_subject.cache.set("123",{"knowledge_tracing":["1","2"]})
+        self.test_subject.cache.set(str(sid),{"knowledge_tracing":["1","2"]})
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send_response.assert_called_with("1",{
             "student_id": "123",
             "student_model" : {"knowledge_tracing":["1","2"]},
             "cached": True,
+            "resource_id":"789"
         })
         
        
@@ -341,24 +405,36 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.call_count.should.equal(0)
         
         #this should work
+<<<<<<< HEAD
         msg = {"message_id":"1","student_id":"123"}
         func = self.test_subject.get_populate_student_model_callback_function("123", msg)
+=======
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
+        msg = {"message_id":"1","student_id":sid,"sender_entity_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+>>>>>>> message lockdown and resource auth
         func({"name":"knowledge_tracing","fragment":"some_data"})
         self.test_subject.send_response.assert_called_with("1",{
             "student_id": "123",
             "student_model":{"knowledge_tracing":"some_data"},
             "cached":False,
+            "resource_id":"456"
         })
         self.test_subject.timeout_threads.should_not.contain("1")
         self.test_subject.student_models.should_not.contain("1")
         self.test_subject.send_response.reset_mock()
         
-        self.test_subject.cache.set.assert_called_with("123",{"knowledge_tracing":"some_data"})
+        self.test_subject.cache.set.assert_called_with(str(sid),{"knowledge_tracing":"some_data"})
         self.test_subject.cache.set.reset_mock()
         
         #simulate timeout (timeout_thread["1"] will be deleted in above test)
+<<<<<<< HEAD
         msg = {"message_id":"1","student_id":"123"}
         func = self.test_subject.get_populate_student_model_callback_function("123", msg)
+=======
+        msg = {"message_id":"1","student_id":sid,"sender_entity_id":"123"}
+        func = self.test_subject.get_populate_student_model_callback_function(msg)
+>>>>>>> message lockdown and resource auth
         func({"name":"knowledge_tracing","fragment":"some_data","cached":False})
         self.test_subject.send_response.call_count.should.equal(0)
         self.test_subject.cache.set.call_count.should.equal(0)
@@ -374,12 +450,23 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         self.test_subject.send_response = MagicMock()
         
+<<<<<<< HEAD
         msg = {"message_id":"1","student_id":"123"}
         self.test_subject.kill_timeout(msg, "123")
         self.test_subject.send_response.assert_called_with("1",{
             "error":"Get student model timed out. Here is a partial student model.",
             "student_model":{},
             "student_id": "123"
+=======
+        sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
+        
+        msg = {"message_id":"1","student_id":str(sid),"sender_entity_id":"123"}
+        self.test_subject.kill_timeout(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"Get student model timed out. Here is a partial student model.",
+            "student_model":{},
+            "resource_id":"456"
+>>>>>>> message lockdown and resource auth
             })
         self.test_subject.send_response.reset_mock()
         
@@ -392,7 +479,11 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("1",{
             "error":"Get student model timed out. Here is a partial student model.",
             "student_model":"value",
+<<<<<<< HEAD
             "student_id": "123",
+=======
+            "resource_id":"456"
+>>>>>>> message lockdown and resource auth
             })
         ("1" in self.test_subject.student_models).should.equal(False)
         ("1" in self.test_subject.timeout_threads).should.equal(False)
