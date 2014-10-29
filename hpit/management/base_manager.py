@@ -21,7 +21,7 @@ class BaseManager:
         
         try:
             with open('configuration.json', 'r') as f:
-                return json.loads(''.join(f.readlines()))
+                return json.loads(''.join(f.read()))
         except FileNotFoundError:
             return {}
             

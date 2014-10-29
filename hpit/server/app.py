@@ -67,7 +67,12 @@ class ServerApp:
         self.md = Markdown(self.app)
         self.csrf = CsrfProtect(self.app)
 
+        self.user_bootstrapped = False
+
+
     def bootstrap_user(self):
-        from .models import User
-        self.db_adapter = SQLAlchemyAdapter(self.db, User)
-        self.user_manager = UserManager(self.db_adapter, self.app)
+        if not self.user_bootstrapped:
+            from .models import User
+            self.db_adapter = SQLAlchemyAdapter(self.db, User)
+            self.user_manager = UserManager(self.db_adapter, self.app)
+            self.user_bootstrapped = True
