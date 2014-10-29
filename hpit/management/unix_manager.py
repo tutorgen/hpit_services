@@ -32,8 +32,7 @@ class UnixManager(BaseManager):
                 print("Starting entity: " + name + " ID#: " + entity_id)
                 pidfile = self.get_entity_pid_file(entity_type, entity_id)
                
-                daemon_path = os.path.join(self.settings.PROJECT_DIR, 'management', 'entity_daemon.py') 
-                subp_args = [sys.executable, daemon_path, "--daemon", "--pid", pidfile]
+                subp_args = [sys.executable, '-m', 'hpit.management.entity_daemon']
 
                 if 'args' in item:
                     entity_args = shlex.quote(json.dumps(item['args']))
@@ -49,7 +48,11 @@ class UnixManager(BaseManager):
                     raise Exception("Error: unknown entity type in spin_up_all")
                 
                 with open("log/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
-                    subprocess.call(subp_args, stdout = f, stderr = f)
+                    subp = subprocess.Popen(subp_args, stdout = f, stderr = f)
+
+                with open(pidfile,"w") as pfile:
+                    pfile.write(str(subp.pid))
+
 
     def wind_down_collection(self, entity_type, entity_collection):
         """
@@ -69,6 +72,8 @@ class UnixManager(BaseManager):
                         os.kill(int(pid), signal.SIGTERM)
 
                     os.remove(pidfile)
+                except ProcessLookupError:
+                    print("Error: Process ID not found. The process may have exited prematurely.")
                 except FileNotFoundError:
                     print("Error: Could not find PIDfile for entity: " + entity_id)
 

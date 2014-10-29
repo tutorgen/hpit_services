@@ -35,8 +35,7 @@ class WindowsManager(BaseManager):
                 print("Starting entity: " + entity_id)
                 pidfile = self.get_entity_pid_file(entity_type, entity_id)
                 
-                daemon_path = os.path.join(self.settings.PROJECT_DIR, 'management', 'entity_daemon.py') 
-                subp_args = [sys.executable, daemon_path, "--pid", pidfile]
+                subp_args = [sys.executable, '-m', 'hpit.management.entity_daemon', "--daemon", "--pid", pidfile]
                 
                 if 'args' in item:
                     entity_args = shlex.quote(json.dumps(item['args']))

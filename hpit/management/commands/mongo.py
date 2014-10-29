@@ -14,4 +14,4 @@ class Command:
         self.args = args
         self.configuration = configuration
        
-        subprocess.call(['mongod', '--dbpath', os.path.join(settings.PROJECT_DIR, 'server/db/mongo')]) 
+        subprocess.call(['mongod', '--dbpath', os.path.join(settings.PROJECT_DIR, 'hpit/server/db/mongo')]) 

@@ -42,7 +42,6 @@ class ProblemGeneratorPlugin(Plugin):
                 if not category_name:
                     continue
                     
-                
                 imported = importlib.import_module('.'.join(import_path))
 
                 functions = {}
