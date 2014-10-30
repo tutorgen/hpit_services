@@ -28,7 +28,7 @@ class TestBaseManager(unittest.TestCase):
     def test_read_configuration_no_file(self):
         m = mock_open(mock=Mock(side_effect=FileNotFoundError()))
 
-        with patch('hpit.management.base_manager.open', m, create=True):
+        with patch('hpit.management.entity_manager.open', m, create=True):
             result = self.subject.read_configuration()
             result.should.equal({})
 
@@ -36,14 +36,14 @@ class TestBaseManager(unittest.TestCase):
     def test_read_configuration_bad_file(self):
         m = mock_open(read_data='{...')
 
-        with patch('hpit.management.base_manager.open', m, create=True):
+        with patch('hpit.management.entity_manager.open', m, create=True):
             self.subject.read_configuration.when.called_with().should.throw(ValueError)
 
 
     def test_read_configuration_good_file(self):
         m = mock_open(read_data='{"plugins": ["A", "B", "C"]}')
 
-        with patch('hpit.management.base_manager.open', m, create=True):
+        with patch('hpit.management.entity_manager.open', m, create=True):
             result = self.subject.read_configuration()
             result.should.equal({'plugins': ['A', 'B', 'C']})
 
@@ -51,7 +51,7 @@ class TestBaseManager(unittest.TestCase):
     def test_write_configuration(self):
         m = mock_open()
 
-        with patch('hpit.management.base_manager.open', m, create=True):
+        with patch('hpit.management.entity_manager.open', m, create=True):
             self.subject.write_configuration({'plugins': ['A', 'B', 'C']})
 
         handle = m()
@@ -82,13 +82,4 @@ class TestBaseManager(unittest.TestCase):
     def test_run_manager(self):
         pass
 
-
-    def test_wind_down_all(self):
-        self.subject.get_entity_collection = MagicMock(return_value=['A', 'B', 'C'])
-        self.subject.wind_down_collection = MagicMock()
-        
-        self.subject.wind_down_all('plugin', self.configuration)
-
-        self.subject.get_entity_collection.assert_called_once_with('plugin', self.configuration)
-        self.subject.wind_down_collection.assert_called_once_with('plugin', ['A', 'B', 'C'])
 
