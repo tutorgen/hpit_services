@@ -1,13 +1,19 @@
+import os
 import unittest
 from mock import *
 import sure
 
-from hpit.management.base_manager import BaseManager
+from hpit.management.entity_manager import EntityManager
 
 class TestBaseManager(unittest.TestCase):
 
     def setUp(self):
-        self.subject = BaseManager()
+        self.subject = EntityManager()
+
+        self.configuration = {
+            'plugins': ['A', 'B', 'C'],
+            'tutors': ['D', 'E', 'F']
+        }
 
     def test_constructor(self):
         """
@@ -53,23 +59,36 @@ class TestBaseManager(unittest.TestCase):
 
 
     def test_get_entity_collection(self):
-        pass
+        result = self.subject.get_entity_collection('plugin', self.configuration)
+        result.should.equal(['A', 'B', 'C'])
 
-    def test_set_entity_collection(self):
-        pass
+        result = self.subject.get_entity_collection('tutor', self.configuration)
+        result.should.equal(['D', 'E', 'F'])
+
 
     def test_get_entity_pid_file(self):
-        pass
+        result = self.subject.get_entity_pid_file('plugin', 'abcdef')
+        result.should.equal(os.path.join('tmp', 'plugin_abcdef.pid'))
+
 
     def test_build_sub_commands(self):
         pass
 
+
     def test_build_argument_parser(self):
         pass
+
 
     def test_run_manager(self):
         pass
 
+
     def test_wind_down_all(self):
-        pass
+        self.subject.get_entity_collection = MagicMock(return_value=['A', 'B', 'C'])
+        self.subject.wind_down_collection = MagicMock()
+        
+        self.subject.wind_down_all('plugin', self.configuration)
+
+        self.subject.get_entity_collection.assert_called_once_with('plugin', self.configuration)
+        self.subject.wind_down_collection.assert_called_once_with('plugin', ['A', 'B', 'C'])
 

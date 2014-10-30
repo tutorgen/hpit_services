@@ -8,13 +8,8 @@ try:
 except KeyError:
     settings = SettingsManager.init_instance('debug')
 
-manager = None
-if platform.system() == "Windows":
-    from hpit.management.win_manager import WindowsManager
-    manager = WindowsManager()
-else:
-    from hpit.management.unix_manager import UnixManager
-    manager = UnixManager()
+from hpit.management.entity_manager import EntityManager
+manager = EntityManager()
 
 import hpit.server.views.api
 import hpit.server.views.dashboard
