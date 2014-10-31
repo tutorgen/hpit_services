@@ -74,6 +74,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
             - mock randint to return 90, send not called
             - should return true
         """
+        self.test_subject.wait_int = 4
         self.test_subject.student_id = None
         self.test_subject.send = MagicMock()
         
@@ -92,8 +93,9 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         random.randint = MagicMock(return_value = 91)
         calls = []
-        calls.append(call('get_student_model',{
-            "student_id":"2",        
+        calls.append(call('tutorgen.get_student_model',{
+            "student_id":"2",
+            "update":True,
         },self.test_subject.get_student_model_callback
             )
         )
