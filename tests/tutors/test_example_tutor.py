@@ -6,7 +6,7 @@ from mock import *
 import logging
 import random
 
-from tutors import ExampleTutor
+from hpit.tutors import ExampleTutor
 
 class TestExampleTutor(unittest.TestCase):
 

@@ -1,15 +1,15 @@
 import unittest
 from mock import *
 
-from plugins import HintFactoryPlugin
-from plugins import SimpleHintFactory
-from plugins import StateDoesNotExistException
-from plugins import HintDoesNotExistException
+from hpit.plugins import HintFactoryPlugin
+from hpit.plugins import SimpleHintFactory
+from hpit.plugins import StateDoesNotExistException
+from hpit.plugins import HintDoesNotExistException
 
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-from utils.hint_factory_state import *
+from hpit.utils.hint_factory_state import *
 
 import hashlib
 

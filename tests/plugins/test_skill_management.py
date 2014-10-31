@@ -12,9 +12,9 @@ import couchbase
 
 import requests
 
-from plugins import SkillManagementPlugin
+from hpit.plugins import SkillManagementPlugin
 
-from environment.settings_manager import SettingsManager
+from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
 class TestSkillManagementPlugin(unittest.TestCase):

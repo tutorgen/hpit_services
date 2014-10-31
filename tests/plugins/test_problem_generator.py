@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from bson.objectid import ObjectId
 
-from plugins import ProblemGeneratorPlugin
+from hpit.plugins import ProblemGeneratorPlugin
 
 class TestProblemGeneratorPlugin(unittest.TestCase):
 

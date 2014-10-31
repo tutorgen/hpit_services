@@ -1,7 +1,7 @@
 {
     "debug": {
         "plugin": {
-            "HPIT_URL_ROOT": "localhost",
+            "HPIT_URL_ROOT": "http://localhost:8000",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
@@ -49,7 +49,7 @@
     },
     "raymond-test": {
         "plugin": {
-            "HPIT_URL_ROOT": "localhost",
+            "HPIT_URL_ROOT": "http://localhost:8000",
             "DATASHOP_ROOT_URL" : "https://pslcdatashop.web.cmu.edu/services",
             "DATASHOP_SERVICES_URL" : "http://pslc-qa.andrew.cmu.edu/datashop/services",
             "MONGODB_URI" : "mongodb://localhost:27017/",
@@ -333,18 +333,6 @@
             "USER_ENABLE_RETYPE_PASSWORD"  : true,
             "USER_LOGIN_TEMPLATE" : "flask_user/login_or_register.html",
             "USER_REGISTER_TEMPLATE" : "flask_user/register.html"
-        }
-    },
-    "beta": {
-        "plugin": {
-        },
-        "server": {
-        }
-    },
-    "production": {
-        "plugin": {
-        },
-        "server": {
         }
     }
 }

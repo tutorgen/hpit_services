@@ -3,7 +3,7 @@ from mock import *
 
 import random
 
-from tutors import KnowledgeTracingTutor
+from hpit.tutors import KnowledgeTracingTutor
 
 class TestKnowledgeTracingTutor(unittest.TestCase):
 
