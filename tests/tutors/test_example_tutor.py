@@ -5,7 +5,7 @@ from mock import *
 
 import logging
 
-from environment.settings_manager import SettingsManager
+from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 HPIT_URL_ROOT = settings.HPIT_URL_ROOT
 
