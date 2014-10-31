@@ -25,7 +25,7 @@ install:
   - 'cd sympy && python3 setup.py install && cd ..'
 script:
   - "export HPIT_ENV=travis-test"
-  - python manager.py syncdb
-  - python manager.py test
+  - python manage.py syncdb
+  - python manage.py test
   - "export HPIT_ENV=travis"
-  - python manager.py syncdb
+  - python manage.py syncdb

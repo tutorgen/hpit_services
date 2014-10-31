@@ -2,7 +2,7 @@ import unittest
 from mock import *
 import responses
 
-from plugins import DataShopConnectorPlugin
+from hpit.plugins import DataShopConnectorPlugin
 
 class TestDataShopConnectorPlugin(unittest.TestCase):
     

@@ -11,7 +11,7 @@ import shlex
 from pymongo import MongoClient
 import datetime
 
-from tutors import ReplayTutor
+from hpit.tutors import ReplayTutor
 
 class TestReplayTutor(unittest.TestCase):
     

@@ -1,7 +1,7 @@
 env
 *.pyc
 configuration.json
-server/settings.py
-server/db
+hpit/server/settings.py
+hpit/server/db
 tmp
 log
