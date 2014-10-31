@@ -1,4 +1,4 @@
-from server.app import ServerApp
+from hpit.server.app import ServerApp
 db = ServerApp.get_instance().db
 
 class ResourceAuth(db.Model):
