@@ -24,7 +24,7 @@ class Command:
             mongo.db.plugin_messages.create_index('receiver_entity_id')
 
         try:
-            os.mkdir(os.path.join(settings.PROJECT_DIR, 'server/db/mongo'))
+            os.mkdir(os.path.join(settings.PROJECT_DIR, 'hpit/server/db/mongo'))
         except FileExistsError:
             pass
 
