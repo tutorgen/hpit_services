@@ -58,19 +58,6 @@ class TestBaseManager(unittest.TestCase):
         handle.write.assert_called_one_with('{"plugins": ["A", "B", "C"]}')
 
 
-    def test_get_entity_collection(self):
-        result = self.subject.get_entity_collection('plugin', self.configuration)
-        result.should.equal(['A', 'B', 'C'])
-
-        result = self.subject.get_entity_collection('tutor', self.configuration)
-        result.should.equal(['D', 'E', 'F'])
-
-
-    def test_get_entity_pid_file(self):
-        result = self.subject.get_entity_pid_file('plugin', 'abcdef')
-        result.should.equal(os.path.join('tmp', 'plugin_abcdef.pid'))
-
-
     def test_build_sub_commands(self):
         pass
 

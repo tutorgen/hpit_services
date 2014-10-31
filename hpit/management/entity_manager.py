@@ -40,28 +40,6 @@ class EntityManager:
             f.write(json.dumps(configuration, indent=4))
             
             
-    def get_entity_collection(self, entity_type, configuration):
-        """
-        Get a collection of entities based on its name, from a given configuration.
-        """
-
-        plural = entity_type + 's'
-
-        things = []
-        if plural in configuration:
-            things = configuration[plural]
-
-        return things
-        
-        
-    def get_entity_pid_file(self, entity_type, entity_id):
-        """
-        Get the PID filename, which helps the system keep track of running processes.
-        """
-        
-        return os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
-        
-        
     def build_sub_commands(self, subparsers):
         pkgpath = os.path.dirname(commands.__file__)
         pkgs = pkgutil.iter_modules([pkgpath])
@@ -145,7 +123,7 @@ class EntityManager:
         with open("log/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
             subp = subprocess.Popen(subp_args, stdout = f, stderr = f)
 
-        pidfile = self.get_entity_pid_file(entity_type, entity_id)
+        pidfile = os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
        
         with open(pidfile,"w") as pfile:
             pfile.write(str(subp.pid))
@@ -158,7 +136,7 @@ class EntityManager:
         
         entity_id = entity['entity_id']
         print("Stopping entity: " + entity_id)
-        pidfile = self.get_entity_pid_file(entity_type, entity_id)
+        pidfile = os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
 
         try:
             with open(pidfile) as f:
@@ -188,7 +166,7 @@ class EntityManager:
             os.makedirs('log')
 
         print("Starting plugins...")
-        entity_collection = self.get_entity_collection('plugin', configuration)
+        entity_collection = configuration['plugins']
 
         for item in entity_collection:
             if item['active']:
@@ -203,7 +181,7 @@ class EntityManager:
         print("")
         
         print("Starting tutors...")
-        entity_collection = self.get_entity_collection('tutor', configuration)
+        entity_collection = configuration['tutors']
 
         for item in entity_collection:
             if item['active']:
@@ -221,7 +199,7 @@ class EntityManager:
         """
         
         print("Stopping plugins...")
-        entity_collection = self.get_entity_collection('plugin', configuration)
+        entity_collection = configuration['plugins']
 
         for item in entity_collection:
             if not item['active']:
@@ -231,7 +209,7 @@ class EntityManager:
             self.wind_down_entity(item, 'plugin')
 
         print("Stopping tutors...")
-        entity_collection = self.get_entity_collection('tutor', configuration)
+        entity_collection = configuration['tutors']
 
         for item in entity_collection:
             if not item['active']:
