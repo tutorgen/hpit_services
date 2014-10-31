@@ -18,12 +18,12 @@ import requests
 class StudentManagementPlugin(Plugin):
 
     def __init__(self, entity_id, api_key, logger, args = None):
-        super().__init__(entity_id, api_key)
+        super().__init__(entity_id, api_key) 
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_students
         
-        self.TIMEOUT = 15
+        self.TIMEOUT = 30
         self.student_model_fragment_names = ["knowledge_tracing","problem_management","hint_factory"]
         self.student_models = {}
         self.timeout_threads = {}
@@ -142,8 +142,14 @@ class StudentManagementPlugin(Plugin):
                 "error":"get_student_model requires a 'student_id'",         
             })
             return
-
         student_id = message["student_id"]
+          
+        student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+        if not student:
+            self.send_response(message["message_id"],{
+                "error":"student with id " + str(student_id) + " does not exist.",
+            })
+            return
           
         update = False 
         if "update" in message:
@@ -151,10 +157,9 @@ class StudentManagementPlugin(Plugin):
             
         if not update:
             try:
-                student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
                 cached_model = self.cache.get(str(student_id)).value
                 self.send_response(message["message_id"],{
-                        "student_id": student_id,
+                        "student_id": str(student_id),
                         "student_model" : cached_model,
                         "cached": True,
                         "resource_id":student["resource_id"]
@@ -170,7 +175,7 @@ class StudentManagementPlugin(Plugin):
         self.send("get_student_model_fragment",{
                 "update": update,
                 "student_id" : str(message["student_id"]),
-        },self.get_populate_student_model_callback_function(message))
+        },self.get_populate_student_model_callback_function(student_id,message))
 
         
     
@@ -190,9 +195,9 @@ class StudentManagementPlugin(Plugin):
 
             #fill student model
             try:
-                self.student_models[str(message["message_id"])][response["name"]] = response["fragment"]
+                self.student_models[message["message_id"]][response["name"]] = response["fragment"]
                 if self.logger:
-                    self.send_log_entry("GOT FRAGMENT " + str(response["fragment"]))
+                    self.send_log_entry("GOT FRAGMENT " + str(response["fragment"]) + str(message["message_id"]))
                     
             except KeyError:
                 return
@@ -200,7 +205,7 @@ class StudentManagementPlugin(Plugin):
             #check to see if student model complete
             for name in self.student_model_fragment_names:
                 try:
-                    if self.student_models[str(message["message_id"])][name] == None:
+                    if self.student_models[message["message_id"]][name] == None:
                         break
                 except KeyError:
                     break
@@ -209,10 +214,11 @@ class StudentManagementPlugin(Plugin):
                 student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
                 if message["message_id"] in self.timeout_threads:
                     self.send_response(message["message_id"], {
-                        "student_id": student_id,
+                        "student_id": str(student_id),
                         "student_model" : self.student_models[message["message_id"]],       
                         "cached":False,
-                        "resource_id":student["resource_id"]
+                        "resource_id":student["resource_id"],
+                        "message_id":str(message["message_id"]),
                     })
                    
                     try: 
@@ -239,19 +245,21 @@ class StudentManagementPlugin(Plugin):
                 "error":"Get student model timed out. Here is a partial student model.",
                 'student_id': student_id,
                 "student_model":self.student_models[str(message["message_id"])],
-                "resource_id":student["resource_id"]
+                "resource_id":student["resource_id"],
+                "message_id":str(message["message_id"])
             })
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"Get student model timed out. Here is a partial student model.",
                 'student_id': student_id,
                 "student_model":{},
-                "resource_id":student["resource_id"]
+                "resource_id":student["resource_id"],
+                "message_id":str(message["message_id"])
             })
         
         try:
-            del self.timeout_threads[str(message["message_id"])]
-            del self.student_models[str(message["message_id"])]
+            del self.timeout_threads[message["message_id"]]
+            del self.student_models[message["message_id"]]
         except KeyError:
             pass
         

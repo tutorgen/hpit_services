@@ -19,6 +19,7 @@ class KnowledgeTracingTutor(Tutor):
         self.skill_ids = {}
         for sk in self.skills:
             self.skill_ids[sk] = None
+        self.wait_int = 0
         
         self.student_id = None
       
@@ -46,11 +47,10 @@ class KnowledgeTracingTutor(Tutor):
         for k,v in self.skill_ids.items():
             if v == None:
                 return True
-                
-        self.send("get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
+        if self.wait_int<4:
+            return True
    
-        self.send("tutorgen.get_student_model",{"student_id":self.student_id},self.get_student_model_callback)
-   
+        self.send("tutorgen.get_student_model",{"student_id":str(self.student_id),"update":True},self.get_student_model_callback)
         for sk in self.skills:
             if 90 < random.randint(0, 100):
                 correct = random.randint(0, 100)
@@ -68,6 +68,7 @@ class KnowledgeTracingTutor(Tutor):
         self.send_log_entry("RECV: kt_trace response recieved. " + str(response))
 
     def initial_response_callback(self, response):
+        self.wait_int +=1
         self.send_log_entry("RECV: kt_set_initial response recieved. " + str(response))
         
     def new_student_callback(self,response):

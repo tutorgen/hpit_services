@@ -252,7 +252,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response = MagicMock()
         
         #no id
-        msg = {"message_id":"1"}
+        msg = {"message_id":"1","sender_entity_id":"123"}
         self.test_subject.get_student_model_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"get_student_model requires a 'student_id'",     
@@ -267,6 +267,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
              "error":"student with id " + str(bogus) + " does not exist.",     
         })
         
+        #this should work
         sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
         msg["student_id"] = sid
         msg["sender_entity_id"]="123"
@@ -277,12 +278,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.student_models["1"].should.equal({})
         self.test_subject.timeout_threads["1"].start.assert_called_with()
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
-<<<<<<< HEAD
-            "student_id":"123",
-            'update': False
-=======
             "student_id":str(sid),
->>>>>>> message lockdown and resource auth
+            'update': False
         },"3")
     
     def test_get_student_model_callback_cached(self):
@@ -305,12 +302,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
-<<<<<<< HEAD
-            "student_id":"123",
-            "update": False
-=======
             "student_id":str(sid),
->>>>>>> message lockdown and resource auth
+            "update": False
         },"3")
         
         #update set to true, same thing
@@ -319,12 +312,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
-<<<<<<< HEAD
             "update": True,
-            "student_id":"123",
-=======
             "student_id":str(sid),
->>>>>>> message lockdown and resource auth
         },"3")
         
         #update set to false, nothing exists, should do same thing
@@ -333,12 +322,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send.assert_called_with("get_student_model_fragment",{
-<<<<<<< HEAD
-            "student_id":"123",
-            "update": False
-=======
             "student_id":str(sid),
->>>>>>> message lockdown and resource auth
+            "update": False
         },"3")
         
         #update false, thing in cache, should return student model
@@ -346,7 +331,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.get_student_model_callback(msg)
 
         self.test_subject.send_response.assert_called_with("1",{
-            "student_id": "123",
+            "student_id": str(sid),
             "student_model" : {"knowledge_tracing":["1","2"]},
             "cached": True,
             "resource_id":"789"
@@ -405,20 +390,16 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.call_count.should.equal(0)
         
         #this should work
-<<<<<<< HEAD
-        msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
-=======
         sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
         msg = {"message_id":"1","student_id":sid,"sender_entity_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
->>>>>>> message lockdown and resource auth
+        func = self.test_subject.get_populate_student_model_callback_function(str(sid),msg)
         func({"name":"knowledge_tracing","fragment":"some_data"})
         self.test_subject.send_response.assert_called_with("1",{
-            "student_id": "123",
+            "student_id": str(sid),
             "student_model":{"knowledge_tracing":"some_data"},
             "cached":False,
-            "resource_id":"456"
+            "resource_id":"456",
+            "message_id":"1",
         })
         self.test_subject.timeout_threads.should_not.contain("1")
         self.test_subject.student_models.should_not.contain("1")
@@ -428,13 +409,8 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.cache.set.reset_mock()
         
         #simulate timeout (timeout_thread["1"] will be deleted in above test)
-<<<<<<< HEAD
-        msg = {"message_id":"1","student_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function("123", msg)
-=======
         msg = {"message_id":"1","student_id":sid,"sender_entity_id":"123"}
-        func = self.test_subject.get_populate_student_model_callback_function(msg)
->>>>>>> message lockdown and resource auth
+        func = self.test_subject.get_populate_student_model_callback_function(str(sid),msg)
         func({"name":"knowledge_tracing","fragment":"some_data","cached":False})
         self.test_subject.send_response.call_count.should.equal(0)
         self.test_subject.cache.set.call_count.should.equal(0)
@@ -450,23 +426,16 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         self.test_subject.send_response = MagicMock()
         
-<<<<<<< HEAD
-        msg = {"message_id":"1","student_id":"123"}
-        self.test_subject.kill_timeout(msg, "123")
-        self.test_subject.send_response.assert_called_with("1",{
-            "error":"Get student model timed out. Here is a partial student model.",
-            "student_model":{},
-            "student_id": "123"
-=======
         sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"456"})
         
         msg = {"message_id":"1","student_id":str(sid),"sender_entity_id":"123"}
-        self.test_subject.kill_timeout(msg)
+        self.test_subject.kill_timeout(msg,str(sid))
         self.test_subject.send_response.assert_called_with("1",{
             "error":"Get student model timed out. Here is a partial student model.",
             "student_model":{},
-            "resource_id":"456"
->>>>>>> message lockdown and resource auth
+            "student_id": str(sid),
+            "resource_id":"456",
+            "message_id":"1",
             })
         self.test_subject.send_response.reset_mock()
         
@@ -475,15 +444,13 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.timeout_threads = {"1":"value"}
         
         
-        self.test_subject.kill_timeout(msg, "123")
+        self.test_subject.kill_timeout(msg, str(sid))
         self.test_subject.send_response.assert_called_with("1",{
             "error":"Get student model timed out. Here is a partial student model.",
             "student_model":"value",
-<<<<<<< HEAD
-            "student_id": "123",
-=======
-            "resource_id":"456"
->>>>>>> message lockdown and resource auth
+            "student_id": str(sid),
+            "resource_id":"456",
+            "message_id":"1",
             })
         ("1" in self.test_subject.student_models).should.equal(False)
         ("1" in self.test_subject.timeout_threads).should.equal(False)
