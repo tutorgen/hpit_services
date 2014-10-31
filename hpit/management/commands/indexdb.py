@@ -9,7 +9,7 @@ from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
 class Command:
-    description = "Creates all the tables in the database."
+    description = "Indexes the Mongo Database."
     
     def __init__(self, manager, parser):
         self.manager = manager
@@ -18,14 +18,12 @@ class Command:
         self.arguments = arguments
         self.configuration = configuration
 
-        db.create_all()
-
         with app.app_context():
             mongo.db.plugin_messages.create_index('receiver_entity_id')
+            mongo.db.sent_messages_and_transactions.create_index([
+                ("receiver_entity_id", -1),
+                ("message_id", 1)
+            ])
+            mongo.db.responses.create_index('receiver_entity_id')
 
-        try:
-            os.mkdir(os.path.join(settings.PROJECT_DIR, 'hpit/server/db/mongo'))
-        except FileExistsError:
-            pass
-
-        print("DONE! - Sync'd the database with the data model. You may want to index the mongo database by running 'python3 manage.py indexdb'.")
+        print("DONE! - Indexed the mongo database.")
