@@ -4,6 +4,11 @@ import responses
 from mock import *
 
 import logging
+
+from hpit.management.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+HPIT_URL_ROOT = settings.HPIT_URL_ROOT
+
 import random
 
 from hpit.tutors import ExampleTutor
@@ -31,8 +36,8 @@ class TestExampleTutor(unittest.TestCase):
         
         self.test_subject.logger.should.equal(None)
         self.test_subject.event_names.should.equal([
-                'test', 'example', 'add_student', 
-                'remove_student', 'trace'])
+                'tutorgen.test', 'tutorgen.example', 'tutorgen.add_student', 
+                'tutorgen.remove_student', 'tutorgen.trace'])
         self.test_subject.run_once.should.equal(None)
 
     def test_setup(self):
@@ -59,7 +64,18 @@ class TestExampleTutor(unittest.TestCase):
             -if run_once is false, returns false
             -if run_once is true, returns true
         """
-
+        responses.add(responses.POST,HPIT_URL_ROOT+"/connect",
+                                body='{"entity_name":"example_tutor","entity_id":"4"}',
+                                )
+        
+        responses.add(responses.POST,HPIT_URL_ROOT+"/disconnect",
+                                body='OK',
+                                )
+        responses.add(responses.POST,HPIT_URL_ROOT+"/message",
+                                body='{"message_id":"4"}',
+                                )
+        
+        logger_mock = MagicMock()
         logger_calls = [call("Sending a random event: test"),call("RECV: {'message_id': '4'}")]
         self.test_subject.send_log_entry = MagicMock()
         self.test_subject.send = MagicMock(return_value={"message_id":"4"})
@@ -69,3 +85,5 @@ class TestExampleTutor(unittest.TestCase):
         self.test_subject.send_log_entry.assert_has_calls(logger_calls)
         self.test_subject.run_once = True
         self.test_subject.main_callback().should.equal(False)
+        
+        

@@ -24,21 +24,27 @@ class ProblemManagementPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            add_problem=self.add_problem_callback,
-            remove_problem=self.remove_problem_callback,
-            get_problem=self.get_problem_callback,
-            edit_problem=self.edit_problem_callback,
-            list_problems=self.list_problems_callback,
-            clone_problem=self.clone_problem_callback,
-            add_problem_worked=self.add_problem_worked_callback,
-            get_problems_worked=self.get_problems_worked_callback,
-            add_step=self.add_step_callback,
-            remove_step=self.remove_step_callback,
-            get_step=self.get_step_callback,
-            get_problem_steps=self.get_problem_steps_callback,
-            get_student_model_fragment=self.get_student_model_fragment_callback)
+        self.subscribe({
+            "tutorgen.add_problem":self.add_problem_callback,
+            "tutorgen.remove_problem":self.remove_problem_callback,
+            "tutorgen.get_problem":self.get_problem_callback,
+            "tutorgen.edit_problem":self.edit_problem_callback,
+            "tutorgen.list_problems":self.list_problems_callback,
+            "tutorgen.clone_problem":self.clone_problem_callback,
+            "tutorgen.add_problem_worked":self.add_problem_worked_callback,
+            "tutorgen.get_problems_worked":self.get_problems_worked_callback,
+            "tutorgen.add_step":self.add_step_callback,
+            "tutorgen.remove_step":self.remove_step_callback,
+            "tutorgen.get_step":self.get_step_callback,
+            "tutorgen.get_problem_steps":self.get_problem_steps_callback,
+            "get_student_model_fragment":self.get_student_model_fragment_callback})
 
+        #temporary POC code
+        #response = self._get_data("message-owner/get_student_model_fragment")
+        #if response["owner"] == self.entity_id:
+        #    self._post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"360798c9-2598-4468-a624-d60f6d4b9f4d"}) #knowledge tracing
+        self._post_data("share-message",{"message_name":"get_student_model_fragment","other_entity_ids":["360798c9-2598-4468-a624-d60f6d4b9f4d"]}) #knowledge tracing
+        
     #Problem Management Plugin
     def add_problem_callback(self, message):
         sender_entity_id = message['sender_entity_id']
@@ -283,7 +289,7 @@ class ProblemManagementPlugin(Plugin):
         
     def get_problems_worked_callback(self,message):
         try:
-            student_id = message["student_id"]
+            student_id = str(message["student_id"])
         except KeyError:
             self.send_response(message["message_id"],{
                     "error" : "add_problem_worked requires a 'student_id'",
@@ -308,7 +314,7 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            problem_id = str(message["problem_id"])
+            problem_id = ObjectId(str(message["problem_id"]))
             step_text = message["step_text"]
         except KeyError:
             self.send_response(message["message_id"],{
@@ -316,7 +322,13 @@ class ProblemManagementPlugin(Plugin):
                     "success":False
             })
             return
-            
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
+            })
+            return
+        
         problem = self.db.find_one({
                 "_id":ObjectId(problem_id),
                 "allowed_edit_id":entity_id
@@ -344,10 +356,16 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            step_id = str(message["step_id"])
+            step_id = ObjectId(str(message["step_id"]))
         except KeyError:
             self.send_response(message["message_id"], {
                     "error": "remove_step requires 'step_id'",
+                    "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
                     "success":False
             })
             return
@@ -373,11 +391,17 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            step_id = message["step_id"]
+            step_id = ObjectId(str(message["step_id"]))
         except KeyError:
             self.send_response(message["message_id"],{
                     "error": "get_step requires a 'step_id'",
                     "success":False,
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
+                    "success":False
             })
             return
         
@@ -402,11 +426,17 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            problem_id = str(message["problem_id"])
+            problem_id = ObjectId(str(message["problem_id"]))
         except KeyError:
             self.send_response(message["message_id"], {
                 "error":"get_problem_callback requires a 'problem_id'",   
                 "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
             })
             return
             
@@ -438,7 +468,7 @@ class ProblemManagementPlugin(Plugin):
             self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
             
         try:
-            student_id = message["student_id"]
+            student_id = str(message["student_id"])
         except KeyError:
             self.send_response(message["message_id"],{
                 "error":"problem_managment get_student_model_fragment requires 'student_id'"       

@@ -22,12 +22,17 @@ class KnowledgeTracingPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
         
-        self.subscribe(
-            kt_set_initial=self.kt_set_initial_callback,
-            kt_reset=self.kt_reset,
-            kt_trace=self.kt_trace,
-            get_student_model_fragment=self.get_student_model_fragment)
-
+        self.subscribe({
+            "tutorgen.kt_set_initial":self.kt_set_initial_callback,
+            "tutorgen.kt_reset":self.kt_reset,
+            "tutorgen.kt_trace":self.kt_trace,
+            "get_student_model_fragment":self.get_student_model_fragment})
+        
+        #temporary POC code
+        #response = self._get_data("message-owner/get_student_model_fragment")
+        #if response["owner"] == self.entity_id:
+        #    self._post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"88bb246d-7347-4f57-8cbe-95944a4e0027"}) #problem manager
+        self._post_data("share-message",{"message_name":"get_student_model_fragment","other_entity_ids":["88bb246d-7347-4f57-8cbe-95944a4e0027"]}) #problem manager
 
     def check_skill_manager(self, message):
         """
@@ -35,16 +40,30 @@ class KnowledgeTracingPlugin(Plugin):
         """
 
         def _callback_sm(response):
-            if not "error" in response:
-                self.db.insert({
-                    'sender_entity_id': message['sender_entity_id'],
-                    'skill_id': str(message['skill_id']),
-                    'probability_known': message['probability_known'],
-                    'probability_learned': message['probability_learned'],
-                    'probability_guess': message['probability_guess'],
-                    'probability_mistake': message['probability_mistake'],
-                    'student_id': message['student_id'],
-                })
+            if not "error" in response: #response from skill manager
+                existing = self.db.find_one({'student_id':str(message['student_id']),'skill_id':str(message['skill_id'])})
+                if not existing:
+                    self.db.insert({
+                        'sender_entity_id': message['sender_entity_id'],
+                        'skill_id': str(message['skill_id']),
+                        'probability_known': message['probability_known'],
+                        'probability_learned': message['probability_learned'],
+                        'probability_guess': message['probability_guess'],
+                        'probability_mistake': message['probability_mistake'],
+                        'student_id': message['student_id'],
+                    })
+                else:
+                    self.db.update(
+                        {'student_id':str(message['student_id']),'skill_id':str(message['skill_id'])},
+                         {'$set': {
+                             'probability_known': message['probability_known'],
+                             'probability_learned': message['probability_learned'],
+                             'probability_guess': message['probability_guess'],
+                             'probability_mistake': message['probability_mistake'],
+                         }
+                        }    
+                    )
+                    
                 self.send_response(message["message_id"],{
                     'skill_id': str(message['skill_id']),
                     'probability_known': message['probability_known'],
@@ -60,7 +79,7 @@ class KnowledgeTracingPlugin(Plugin):
                     "error":"skill_id " + str(message["skill_id"]) + " is invalid."   
                 })
         
-        self.send("get_skill_name",{"skill_id":str(message["skill_id"])}, _callback_sm)
+        self.send("tutorgen.get_skill_name",{"skill_id":str(message["skill_id"])}, _callback_sm)
 
 
     #Knowledge Tracing Plugin
@@ -92,7 +111,7 @@ class KnowledgeTracingPlugin(Plugin):
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
             'skill_id': str(message['skill_id']),
-            'student_id':message['student_id']
+            'student_id':str(message['student_id'])
         })
         
         if not kt_config:
@@ -153,7 +172,7 @@ class KnowledgeTracingPlugin(Plugin):
             'probability_learned': p_learned,
             'probability_guess': p_guess,
             'probability_mistake': p_mistake,
-            'student_id':message["student_id"]
+            'student_id':str(message["student_id"])
             })
 
     def kt_set_initial_callback(self, message):
@@ -177,7 +196,7 @@ class KnowledgeTracingPlugin(Plugin):
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
             'skill_id': str(message['skill_id']),
-            'student_id': message['student_id'],
+            'student_id': str(message['student_id']),
         })
         
         if not kt_config:
@@ -197,7 +216,7 @@ class KnowledgeTracingPlugin(Plugin):
                 'probability_learned': message['probability_learned'],
                 'probability_guess': message['probability_guess'],
                 'probability_mistake': message['probability_mistake'],
-                'student_id':message['student_id']
+                'student_id':str(message['student_id'])
                 })
 
     def kt_reset(self, message):
@@ -218,7 +237,7 @@ class KnowledgeTracingPlugin(Plugin):
         kt_config = self.db.find_one({
             'sender_entity_id': message['sender_entity_id'],
             'skill_id': str(message['skill_id']),
-            'student_id': message['student_id']
+            'student_id': str(message['student_id'])
         })
 
         if kt_config:
@@ -228,14 +247,13 @@ class KnowledgeTracingPlugin(Plugin):
                 'probability_guess': 0.5,
                 'probability_mistake': 0.5
             }})
-
             self.send_response(message['message_id'], {
                 'skill_id': str(message['skill_id']),
                 'probability_known': 0.5,
                 'probability_learned': 0.5,
                 'probability_guess': 0.5,
                 'probability_mistake': 0.5,
-                'student_id':message["student_id"]
+                'student_id':str(message["student_id"])
             })
         else:
             self.send_response(message["message_id"], {
@@ -244,7 +262,6 @@ class KnowledgeTracingPlugin(Plugin):
 
 
     def get_student_model_fragment(self,message):
-        
         if self.logger:
             self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
         try:
@@ -257,7 +274,7 @@ class KnowledgeTracingPlugin(Plugin):
         
         skill_list = []
         skills = self.db.find({
-            'student_id': message['student_id']
+            'student_id': str(message['student_id'])
         })
         
         for skill in skills:
@@ -267,7 +284,7 @@ class KnowledgeTracingPlugin(Plugin):
                 'probability_learned': skill['probability_learned'],
                 'probability_guess': skill['probability_guess'],
                 'probability_mistake': skill['probability_mistake'],
-                'student_id':skill['student_id']
+                'student_id':str(skill['student_id'])
             })
         
         self.send_response(message['message_id'],{
