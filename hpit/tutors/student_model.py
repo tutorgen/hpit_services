@@ -41,7 +41,7 @@ class StudentModelTutor(Tutor):
         return False
 
         if self.student_id:
-            self.send("get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
+            self.send("tutorgen.get_student_model",{"student_id":str(self.student_id)},self.get_student_model_callback)
             self.student_id = None
         
         if self.run_once:

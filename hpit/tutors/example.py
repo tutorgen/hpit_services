@@ -14,8 +14,8 @@ class ExampleTutor(Tutor):
         self.run_once = run_once
         self.logger = logger
         self.event_names = [
-            'test', 'example', 'add_student', 
-            'remove_student', 'trace']
+            'tutorgen.test', 'tutorgen.example', 'tutorgen.add_student', 
+            'tutorgen.remove_student', 'tutorgen.trace']
 
     def main_callback(self):
         event = random.choice(self.event_names)

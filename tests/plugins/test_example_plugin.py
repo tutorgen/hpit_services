@@ -36,8 +36,8 @@ class TestExamplePlugin(unittest.TestCase):
         """
         responses.add(responses.POST, 'https://www.hpit-project.org/plugin/subscribe', body='OK')
         self.test_subject.post_connect()
-        self.test_subject.callbacks["test"].should.equal(self.test_subject.test_plugin_callback)
-        self.test_subject.callbacks["example"].should.equal(self.test_subject.example_plugin_callback)
+        self.test_subject.callbacks["tutorgen.test"].should.equal(self.test_subject.test_plugin_callback)
+        self.test_subject.callbacks["tutorgen.example"].should.equal(self.test_subject.example_plugin_callback)
 
     def test_plugin_callback(self):
         """

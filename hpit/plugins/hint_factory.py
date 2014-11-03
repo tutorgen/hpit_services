@@ -276,12 +276,12 @@ class HintFactoryPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
 
-        self.subscribe(
-             hf_init_problem=self.init_problem_callback, 
-             hf_push_state=self.push_state_callback,
-             hf_hint_exists=self.hint_exists_callback,
-             hf_get_hint=self.get_hint_callback,
-             get_student_model_fragment=self.get_student_model_fragment_callback)
+        self.subscribe({
+             "tutorgen.hf_init_problem":self.init_problem_callback, 
+             "tutorgen.hf_push_state":self.push_state_callback,
+             "tutorgen.hf_hint_exists":self.hint_exists_callback,
+             "tutorgen.hf_get_hint":self.get_hint_callback,
+             "get_student_model_fragment":self.get_student_model_fragment_callback})
 
     def init_problem_callback(self, message):
         if self.logger:

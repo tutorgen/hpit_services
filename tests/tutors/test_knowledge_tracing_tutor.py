@@ -42,7 +42,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         """
         self.test_subject.send = MagicMock()
         self.test_subject.post_connect()
-        self.test_subject.send.assert_called_with("add_student",{},self.test_subject.new_student_callback)
+        self.test_subject.send.assert_called_with("tutorgen.add_student",{},self.test_subject.new_student_callback)
     
     def test_pre_disconnect(self):
         """
@@ -56,10 +56,10 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         self.test_subject.skill_ids["multiplication"] = "*"
         self.test_subject.skill_ids["division"] = "/"
         calls = [
-            call('kt_reset',{'skill_id':"+","student_id":"2"}),
-            call('kt_reset',{'skill_id':"-","student_id":"2"}),
-            call('kt_reset',{'skill_id':"*","student_id":"2"}),
-            call('kt_reset',{'skill_id':"/","student_id":"2"}),
+            call('tutorgen.kt_reset',{'skill_id':"+","student_id":"2"}),
+            call('tutorgen.kt_reset',{'skill_id':"-","student_id":"2"}),
+            call('tutorgen.kt_reset',{'skill_id':"*","student_id":"2"}),
+            call('tutorgen.kt_reset',{'skill_id':"/","student_id":"2"}),
         ]
         self.test_subject.pre_disconnect()
         self.test_subject.send.assert_has_calls(calls)
@@ -74,6 +74,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
             - mock randint to return 90, send not called
             - should return true
         """
+        self.test_subject.wait_int = 4
         self.test_subject.student_id = None
         self.test_subject.send = MagicMock()
         
@@ -92,14 +93,15 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         random.randint = MagicMock(return_value = 91)
         calls = []
-        calls.append(call('get_student_model',{
-            "student_id":"2",        
+        calls.append(call('tutorgen.get_student_model',{
+            "student_id":"2",
+            "update":True,
         },self.test_subject.get_student_model_callback
             )
         )
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
-                call('kt_trace', {
+                call('tutorgen.kt_trace', {
                     'skill_id': self.test_subject.skill_ids[sk],
                     'student_id':"2",
                     'correct': True
@@ -149,7 +151,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         calls = []
         for sk in ["addition","subtraction","multiplication","division"]:
             calls.append(
-                call("get_skill_id",{"skill_name":sk},self.test_subject.get_skills_callback)
+                call("tutorgen.get_skill_id",{"skill_name":sk},self.test_subject.get_skills_callback)
             )
             
         self.test_subject.new_student_callback({"student_id":"2"})
@@ -169,7 +171,7 @@ class TestKnowledgeTracingTutor(unittest.TestCase):
         
         self.test_subject.get_skills_callback({"skill_id":"+","skill_name":"addition"})
   
-        self.test_subject.send.assert_called_with('kt_set_initial', {
+        self.test_subject.send.assert_called_with('tutorgen.kt_set_initial', {
             'skill_id': "+",
             'probability_known': 1.0,
             'probability_learned': 1.0,
