@@ -81,7 +81,7 @@ class LoadTestingTutor(Tutor):
         Emulate a student logging onto the tutor.
         """
         if len(self.students) >= 1000:
-            del self.actions[self.create_student]
+            self.actions.remove(self.create_student)
             return
 
         student_info = {
