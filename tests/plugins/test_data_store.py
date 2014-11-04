@@ -30,7 +30,7 @@ class TestDataStoragePlugin(unittest.TestCase):
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
-        ds.db.full_name.should.equal("hpit.data_storage")
+        ds.db.full_name.should.equal("hpit_unit_test_db.data_storage")
         
     def test_store_data_callback(self):
         """

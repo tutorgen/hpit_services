@@ -42,11 +42,11 @@ class TestProblemManagementPlugin(unittest.TestCase):
         pmp.logger.should.equal(None)
         isinstance(pmp.mongo,MongoClient).should.equal(True)
         isinstance(pmp.db,Collection).should.equal(True)
-        pmp.db.full_name.should.equal("hpit.hpit_problems")
+        pmp.db.full_name.should.equal("hpit_unit_test_db.hpit_problems")
         isinstance(pmp.step_db,Collection).should.equal(True)
-        pmp.step_db.full_name.should.equal("hpit.hpit_steps")
+        pmp.step_db.full_name.should.equal("hpit_unit_test_db.hpit_steps")
         isinstance(pmp.worked_db,Collection).should.equal(True)
-        pmp.worked_db.full_name.should.equal("hpit.hpit_problems_worked")
+        pmp.worked_db.full_name.should.equal("hpit_unit_test_db.hpit_problems_worked")
         
     def test_add_problem_callback(self):
         """
