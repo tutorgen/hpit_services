@@ -34,5 +34,6 @@ class Command:
                 ('student_id', 1),
                 ('sender_entity_id', 1)
             ])
+            mongo.db.hpit_knowledge_tracing.create_index('student_id')
 
         print("DONE! - Indexed the mongo database.")
