@@ -47,7 +47,7 @@ class LoadTestingTutor(Tutor):
         ]
 
     def post_connect(self):
-        self.send('pg_list_problems', {}, self.list_problems_callback)
+        self.send('tutorgen.pg_list_problems', {}, self.list_problems_callback)
 
     def get_skill_name_for_problem(self, problem):
         return '_'.join([
@@ -108,14 +108,14 @@ class LoadTestingTutor(Tutor):
 
         student_info['full_name'] = ' '.join([student_info['first_name'], student_info['last_name']])
 
-        self.send("add_student", {'attributes': student_info}, self.create_student_callback)
+        self.send("tutorgen.add_student", {'attributes': student_info}, self.create_student_callback)
 
 
     def create_problem(self):
         """
         Emulate a student asking for a problem.
         """
-        self.send('pg_generate_problem', {'count': 3}, self.create_problem_callback)
+        self.send('tutorgen.pg_generate_problem', {'count': 3}, self.create_problem_callback)
 
 
     def student_solve(self):
@@ -134,11 +134,11 @@ class LoadTestingTutor(Tutor):
 
         student_id = random.choice(list(self.students.keys()))
 
-        self.send('add_problem_worked', {
+        self.send('tutorgen.add_problem_worked', {
             'student_id': student_id,
         }, self.add_problem_worked_callback)
 
-        self.send('kt_trace', {
+        self.send('tutorgen.kt_trace', {
             'student_id': student_id,
             'skill_id': problem_def['skill_id'],
             'correct': True
@@ -161,11 +161,11 @@ class LoadTestingTutor(Tutor):
 
         student_id = random.choice(list(self.students.keys()))
 
-        self.send('add_problem_worked', {
+        self.send('tutorgen.add_problem_worked', {
             'student_id': student_id,
         }, self.add_problem_worked_callback)
 
-        self.send('kt_trace', {
+        self.send('tutorgen.kt_trace', {
             'student_id': student_id,
             'skill_id': problem_def['skill_id'],
             'correct': False
@@ -181,7 +181,7 @@ class LoadTestingTutor(Tutor):
 
         student_id = random.choice(list(self.students.keys()))
 
-        self.send('get_student_model', {'student_id': student_id}, self.get_student_model_callback)
+        self.send('tutorgen.get_student_model', {'student_id': student_id}, self.get_student_model_callback)
 
 
     def list_problems_callback(self, response):
@@ -204,7 +204,7 @@ class LoadTestingTutor(Tutor):
                     sm_skill_name = self.get_skill_name_for_problem(new_problem_def)
                     self.problem_library[sm_skill_name] = new_problem_def
 
-                    self.send('get_skill_id', {'skill_name': sm_skill_name}, self.get_skill_id_callback)
+                    self.send('tutorgen.get_skill_id', {'skill_name': sm_skill_name}, self.get_skill_id_callback)
 
 
     def get_skill_id_callback(self, response):
@@ -250,7 +250,7 @@ class LoadTestingTutor(Tutor):
                 'answer_text': p['answer_text']
                 })
 
-            self.send('add_problem', {
+            self.send('tutorgen.add_problem', {
                 'problem_name': problem_name,
                 'problem_text': p['problem_text']
                 }, self.add_problem_callback)

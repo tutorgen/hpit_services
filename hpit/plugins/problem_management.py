@@ -15,9 +15,9 @@ class ProblemManagementPlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.db = self.mongo.hpit.hpit_problems
-        self.step_db = self.mongo.hpit.hpit_steps
-        self.worked_db = self.mongo.hpit.hpit_problems_worked
+        self.db = self.mongo[settings.MONGO_DBNAME].hpit_problems
+        self.step_db = self.mongo[settings.MONGO_DBNAME].hpit_steps
+        self.worked_db = self.mongo[settings.MONGO_DBNAME].hpit_problems_worked
         
         self.problem_fields = ["problem_name","problem_text"]
 

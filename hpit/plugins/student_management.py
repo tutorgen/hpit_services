@@ -21,7 +21,7 @@ class StudentManagementPlugin(Plugin):
         super().__init__(entity_id, api_key) 
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.db = self.mongo.hpit.hpit_students
+        self.db = self.mongo[settings.MONGO_DBNAME].hpit_students
         
         self.TIMEOUT = 30
         self.student_model_fragment_names = ["knowledge_tracing","problem_management","hint_factory"]

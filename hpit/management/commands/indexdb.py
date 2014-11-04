@@ -25,5 +25,14 @@ class Command:
                 ("message_id", 1)
             ])
             mongo.db.responses.create_index('receiver_entity_id')
+            mongo.db.hpit_problems.create_index([
+                ('problem_text', 1),
+                ('problem_name', 1)
+            ])
+            mongo.db.hpit_knowledge_tracing.create_index([
+                ('skill_id', 1),
+                ('student_id', 1),
+                ('sender_entity_id', 1)
+            ])
 
         print("DONE! - Indexed the mongo database.")
