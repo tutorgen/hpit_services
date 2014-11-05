@@ -66,7 +66,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         smp = StudentManagementPlugin(123,456,None)
         isinstance(smp.mongo,MongoClient).should.equal(True)
         isinstance(smp.db,Collection).should.equal(True)
-        smp.db.full_name.should.equal("hpit.hpit_students")
+        smp.db.full_name.should.equal("hpit_unit_test_db.hpit_students")
         
     def test_add_student_callback(self):
         """

@@ -16,7 +16,7 @@ class KnowledgeTracingPlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.db = self.mongo.hpit.hpit_knowledge_tracing
+        self.db = self.mongo[settings.MONGO_DBNAME].hpit_knowledge_tracing
 
 
     def post_connect(self):

@@ -39,7 +39,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
-        ds.db.full_name.should.equal("hpit.hpit_knowledge_tracing")
+        ds.db.full_name.should.equal("hpit_unit_test_db.hpit_knowledge_tracing")
         
     def test_kt_trace_no_params(self):
         """

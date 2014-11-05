@@ -270,7 +270,7 @@ class HintFactoryPlugin(Plugin):
         self.hf = SimpleHintFactory()
         
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.hint_db = self.mongo.hpit.hpit_hints
+        self.hint_db = self.mongo[settings.MONGO_DBNAME].hpit_hints
         
 
     def post_connect(self):
