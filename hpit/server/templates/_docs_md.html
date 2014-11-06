@@ -1012,10 +1012,15 @@ all of the plugins that the student has interacted with.</p>
 <p>Receives:</p>
 <ul>
 <li>student_id : string - the ID of the student</li>
-</ul>
-<p>Returns:</p>
-<ul>
+<li>
+<p>(optional) update : boolean - whether or not the student model should be updated (True) or from cache (False).
+Returns:</p>
+</li>
+<li>
+<p>student_id : string - the ID of the student</p>
+</li>
 <li>student_model : JSON - an object containing the student model.  This will contain lists and other objects from the various plugins.</li>
+<li>cached : boolean - whether this model was retrieved from a cache.</li>
 <li>(optional) error : An error message if something went wrong of the request timed out.</li>
 </ul>
 <h2><a name="SKMPlugin"></a> Skill Management Plugin</h2>
@@ -1079,13 +1084,14 @@ or by name.</p>
 <ul>
 <li>student_id: string - An identifier for the student.</li>
 <li>skill_id : string - String identifier for the skill.</li>
-<li>probability_known : 0.0 - Probability the skill is already known</li>
-<li>probability_learned : 0.0 - Probability the skill will be learned</li>
-<li>probability_guess : 0.0 - Probability the answer is a guess</li>
-<li>probability_mistake : 0.0 - Probability the student made a mistake (but knew the skill)</li>
+<li>probability_known : 0.5 - Probability the skill is already known</li>
+<li>probability_learned : 0.5 - Probability the skill will be learned</li>
+<li>probability_guess : 0.5 - Probability the answer is a guess</li>
+<li>probability_mistake : 0.5 - Probability the student made a mistake (but knew the skill)</li>
 </ul>
 <h4><a name="kt_trace"></a> kt_trace</h4>
-<p>Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result.</p>
+<p>Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result. If
+a setting doesn't exist this plugin will create one with initial values of 0.5 for each probablity.</p>
 <p>Receives:</p>
 <ul>
 <li>student_id: string - A string ID for the student</li>
