@@ -165,30 +165,32 @@ class EntityManager:
         if not os.path.exists('log'):
             os.makedirs('log')
 
-        print("Starting plugins...")
-        entity_collection = configuration['plugins']
+        if 'plugins' in configuration:
+            print("Starting plugins...")
+            entity_collection = configuration['plugins']
 
-        for item in entity_collection:
-            if item['active']:
-                continue;
+            for item in entity_collection:
+                if item['active']:
+                    continue;
 
-            item['active'] = True
-            self.spin_up_entity(item, 'plugin')
+                item['active'] = True
+                self.spin_up_entity(item, 'plugin')
 
-        for i in range(0, 10):
-            print("Waiting " + str(10 - i) + " seconds for the plugins to boot.\r", end='')
-            time.sleep(1)
-        print("")
+            for i in range(0, 10):
+                print("Waiting " + str(10 - i) + " seconds for the plugins to boot.\r", end='')
+                time.sleep(1)
+            print("")
         
-        print("Starting tutors...")
-        entity_collection = configuration['tutors']
+        if 'tutors' in configuration:
+            print("Starting tutors...")
+            entity_collection = configuration['tutors']
 
-        for item in entity_collection:
-            if item['active']:
-                continue;
+            for item in entity_collection:
+                if item['active']:
+                    continue;
 
-            item['active'] = True
-            self.spin_up_entity(item, 'tutor')
+                item['active'] = True
+                self.spin_up_entity(item, 'tutor')
 
         print("DONE!")
 
@@ -197,26 +199,28 @@ class EntityManager:
         """
         Stop the hpit server, plugins, and tutors.
         """
-        
-        print("Stopping plugins...")
-        entity_collection = configuration['plugins']
+    
+        if 'plugins' in configuration:
+            print("Stopping plugins...")
+            entity_collection = configuration['plugins']
 
-        for item in entity_collection:
-            if not item['active']:
-                continue;
+            for item in entity_collection:
+                if not item['active']:
+                    continue;
 
-            item['active'] = False
-            self.wind_down_entity(item, 'plugin')
+                item['active'] = False
+                self.wind_down_entity(item, 'plugin')
 
-        print("Stopping tutors...")
-        entity_collection = configuration['tutors']
+        if 'tutors' in configuration:
+            print("Stopping tutors...")
+            entity_collection = configuration['tutors']
 
-        for item in entity_collection:
-            if not item['active']:
-                continue;
+            for item in entity_collection:
+                if not item['active']:
+                    continue;
 
-            item['active'] = False
-            self.wind_down_entity(item, 'tutor')
+                item['active'] = False
+                self.wind_down_entity(item, 'tutor')
 
         #Cleanup the tmp directory
         try:
