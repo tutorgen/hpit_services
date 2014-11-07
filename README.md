@@ -11,7 +11,7 @@
     * [Installing HPIT on Ubuntu 12.04](#GSInstallUbuntu12Toc)
     * [Installing HPIT on Ubuntu 14.04](#GSInstallUbuntu14Toc)
     * [Common Hangups](#GSCommonHangupsToc)
-    * [Server Settings](#GSServerSettingsToc)
+    * [The Settings Manager](#GSServerSettingsToc)
 * [The Administration Panel](#AdminToc)
 * [The HPIT Manager](#ManagerToc)
 * [The Tutor and Plugin Configuration](#ConfigToc)
@@ -19,60 +19,62 @@
     * [messages](#DBmessagesToc)
     * [plugin_messages](#DBpluginmesToc)
     * [responses](#DBresponsesToc)
-    * [sessions](#DBsessionsToc)
+    * [sent_messages_and_transactions](#DBsent_messagesToc)
+    * [sent_responses](#DBsent_responsesToc)
     * [entity_log](#DBlogToc)
 * [The HPIT Server in-depth](#ServerToc)
 * [Tutors in-depth](#TutorToc)
+* [Entity Authorization Model](#EntityAuthToc)
 * [Plugin Component Specification](#PluginToc)
     * [Echo Example](#ExPlugin)
     * [Data Connection to PSLC DataShop](#DCPlugin)
     * [Data Storage](#DSPlugin)
     * [Student Management](#SMPlugin)
-        * [add_student](#add_student)
-        * [get_student](#get_student)
-        * [set_attribute](#set_attribute)
-        * [get_attribute](#get_attribute)
-        * [get_student_model](#get_student_model)
+        * [tutorgen.add_student](#add_student)
+        * [tutorgen.get_student](#get_student)
+        * [tutorgen.set_attribute](#set_attribute)
+        * [tutorgen.get_attribute](#get_attribute)
+        * [tutorgen.get_student_model](#get_student_model)
     * [Skill Management](#SKMPlugin)
-        * [get_skill_name](#get_skill_name)
-        * [get_skill_id](#get_skill_id)
+        * [tutorgen.get_skill_name](#get_skill_name)
+        * [tutorgen.get_skill_id](#get_skill_id)
     * [Knowledge Tracing](#KTPlugin)
-        * [kt_set_initial](#kt_set_initial)
-        * [kt_reset](#kt_reset)
-        * [kt_trace](#kt_trace)
+        * [tutorgen.kt_set_initial](#kt_set_initial)
+        * [tutorgen.kt_reset](#kt_reset)
+        * [tutorgen.kt_trace](#kt_trace)
     * [Hint Factory (model tracing)](#HFPlugin)
-        * [hf_init_problem](#hf_init_problem)
-        * [hf_push_state](#hf_push_state)
-        * [hf_hint_exists](#hf_hint_exists)
-        * [hf_get_hint](#hf_get_hint)
-        * [get_student_model_fragment](#kt_get_student_model_fragment)
+        * [tutorgen.hf_init_problem](#hf_init_problem)
+        * [tutorgen.hf_push_state](#hf_push_state)
+        * [tutorgen.hf_hint_exists](#hf_hint_exists)
+        * [tutorgen.hf_get_hint](#hf_get_hint)
+        * [tutorgen.get_student_model_fragment](#kt_get_student_model_fragment)
     * [Problem Management](#PMPlugin)
-        * [add_problem](#add_problem)
-        * [remove_problem](#remove_problem)
-        * [get_problem](#get_problem)
-        * [edit_problem](#edit_problem)
-        * [list_problems](#list_problems)
-        * [clone_problem](#clone_problem)
-        * [add_problem_worked](#add_problem_worked)
-        * [get_problems_worked](#get_problems_worked)
-        * [add_step](#add_step)
-        * [remove_step](#remove_step)
-        * [get_step](#get_step)
-        * [get_problem_steps](#get_problem_steps)
-        * [get_student_model_fragment](#pm_get_student_model_fragment)
+        * [tutorgen.add_problem](#add_problem)
+        * [tutorgen.remove_problem](#remove_problem)
+        * [tutorgen.get_problem](#get_problem)
+        * [tutorgen.edit_problem](#edit_problem)
+        * [tutorgen.list_problems](#list_problems)
+        * [tutorgen.clone_problem](#clone_problem)
+        * [tutorgen.add_problem_worked](#add_problem_worked)
+        * [tutorgen.get_problems_worked](#get_problems_worked)
+        * [tutorgen.add_step](#add_step)
+        * [tutorgen.remove_step](#remove_step)
+        * [tutorgen.get_step](#get_step)
+        * [tutorgen.get_problem_steps](#get_problem_steps)
+        * [tutorgen.get_student_model_fragment](#pm_get_student_model_fragment)
     * [Problem Generator](#PGPlugin)
-        * [pg_list_problems](#list_problems)
-        * [pg_generate_problem](#generate_problem)
+        * [tutorgen.pg_list_problems](#list_problems)
+        * [tutorgen.pg_generate_problem](#generate_problem)
     * [Data Storage Plugin](#DSPlugin)
-        * [store_data](#store_data)
-        * [retrieve_data](#retrieve_data)
-        * [remove_data](#remove_data)
+        * [tutorgen.store_data](#store_data)
+        * [tutorgen.retrieve_data](#retrieve_data)
+        * [tutorgen.remove_data](#remove_data)
     * [PSLC DataShop Connection Plugin](#DCPlugin)
-        * [get_dataset_metadata](#get_dataset_metadata)
-        * [get_sample_metadata](#get_sample_metadata)
-        * [get_transactions](#get_transactions)
-        * [get_student_steps](#get_student_steps)
-        * [add_custom_field](#add_custom_field)
+        * [tutorgen.get_dataset_metadata](#get_dataset_metadata)
+        * [tutorgen.get_sample_metadata](#get_sample_metadata)
+        * [tutorgen.get_transactions](#get_transactions)
+        * [tutorgen.get_student_steps](#get_student_steps)
+        * [tutorgen.add_custom_field](#add_custom_field)
         
 * [Developing New Plugins and Tutors](https://github.com/tutorgen/HPIT-python-client/blob/master/README.md)
 * [License](#LicenseToc)
@@ -89,16 +91,16 @@ Currently our tech stack consists of the following:
 - Python 3.4
 - MongoDB
 - PostgreSQL
+- Couchbase
 - Neo4j
 - Flask
 - Jinja2
 - WTForms
 - PyMongo
 - SQLAlchemy
-- Daemonize
 - PyCrypto
 - Requests
-- Gunicorn
+- uWSGI
 - Gears
 - Twitter Bootstrap
 - BackboneJS
@@ -130,6 +132,8 @@ a Flash game, or some other system that interacts with students in an effort to 
 Plugin - An HPIT Plugin is a module that specializes in a very specific and narrow band of responsibility.
 A plugin may exist inside of HPIT itself(at TutorGen) or on a network or system outside of HPIT. Regardless of
 where the plugin sits it must communicate with the central HPIT router/server.
+
+Entity - A generic term for either a Plugin or Tutor.
 
 HPIT Manager - The manager is used to load the HPIT router, and a set of plugins and tutors. It
 is used primarily for testing and development.
@@ -287,17 +291,21 @@ Next, set up the server settings.  Instructions are located in the section [Serv
 
 Now, seed the database with this command:
 
-`python manager.py syncdb`
+`python manage.py syncdb`
+
+Optionally index the MongoDB for faster performance with this command:
+
+`python manage.py indexdb`
 
 And run the tests:
 
-`python manager.py test`
+`python manage.py test`
 
 Assuming everything passed, you should then run:
 
-`python manager.py start`
+`python manage.py debug`
 
-And browse to http://127.0.0.1:800 , where you should see a welcome page.
+And browse to http://127.0.0.1:8000 , where you should see a welcome page.
 
 If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
 
@@ -353,12 +361,13 @@ is again, through Homebrew.
 3. Create a new virtual environment with: `virtualenv -p $PY3_PATH env`
 3. Activate that environment with: `source env/bin/activate`
 4. Install HPIT's dependencies with: `pip3 install -r requirements.txt`.
-7. Sync the configuration database with sqlite. `python3 manager.py syncdb`
-8. Seed the Mongo Database with `python3 manager.py mongo server/db/mongo`
-6. Start the MongoDB instance with `mongod --dbpath server/db/mongo`
-8. Run the test suite by typing `python3 manager.py test`
+7. Sync the configuration database with sqlite. `python3 manage.py syncdb`
+8. Seed the Mongo Database with `python3 manage.py mongo`
+9. (optional) Setup the MongoDB Indexes for faster performance. `python3 manage.py indexdb`
+10. Start the MongoDB instance with `python3 manage.py mongo`
+8. Run the test suite by typing `python3 manage.py test`
 
-To start the HPIT server type: `python3 manager.py start` and open your browser 
+To start the HPIT server type: `python3 manage.py debug` and open your browser 
 to http://127.0.0.1:8000. 
 
 ###<a name="GSInstallUbuntu12Toc"></a> Installing HPIT on Ubuntu 12.04
@@ -512,17 +521,21 @@ Next, set up the server settings.  Instructions are located in the section [Serv
 
 Now, seed the database with this command:
 
-`python manager.py syncdb`
+`python manage.py syncdb`
+
+Optionally, index the mongoDB wiht this command:
+
+`python manage.py indexdb`
 
 And run the tests:
 
-`python manager.py test`
+`python manage.py test`
 
 Assuming everything passed, you should then run:
 
-`python manager.py start`
+`python manage.py start`
 
-And browse to http://127.0.0.1:800 , where you should see a welcome page.
+And browse to http://127.0.0.1:8000 , where you should see a welcome page.
 
 If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
 
@@ -669,25 +682,34 @@ Next, set up the server settings.  Instructions are located in the section [Serv
 
 Now, seed the database with this command:
 
-`python manager.py syncdb`
+`python manage.py syncdb`
+
+Optionally index the MongoDB for faster performance, with this command:
+
+`python manage.py indexdb`
 
 And run the tests:
 
-`python manager.py test`
+`python manage.py test`
 
 Assuming everything passed, you should then run:
 
-`python manager.py start`
+`python manage.py start`
 
-And browse to http://127.0.0.1:800 , where you should see a welcome page.
+And browse to http://127.0.0.1:8000 , where you should see a welcome page.
 
 If you run into problems, check the section [Common Hangups](#GSCommonHangupsToc)
 
-###<a name="GSServerSettingsToc"></a> Server Settings
-The settings for HPIT can be set in JSON format, in a file called settings.json in the hpit_services root.  
-This file allows for multiple environment settings, for example, "test", "debug", and "production".  The structure
+###<a name="GSServerSettingsToc"></a> The Settings Manager
+The settings manager manages settings for the server and the pre-packages plugins that come with HPIT. The 
+settings are first stored in JSON format, in a file called settings.json in the hpit_services root. When the
+settings manager is imported and initialized, it will read this JSON file and load the values into a settings
+object which then can be used project wide. This JSON file allows for multiple environment settings, for 
+example, "test", "debug", and "production". By default, HPIT will look for the 'debug' settings but you can
+override this by setting the HPIT_ENV environment variable i.e. (`export HPIT_ENV=production`). The structure 
 of the file looks like this:
 
+```json
     {
         "debug": {
             "plugin": {
@@ -706,10 +728,8 @@ of the file looks like this:
             }
         }
     }
+```
 
-HPIT will check for an environment variable called HPIT_ENV to determine which environment to use.  So, to use the
-test settings, set a HPIT_ENV environment variable to "test" (without quotes).
-    
 Most of these settings can be left as defaults, but the important ones to change are:
 * PROJECT_DIR - should be set to the directory this README is in
 * VENV_DIRNAME - shoule be a relative link from PROJECT_DIR to wherever the virtual environment is.
@@ -722,7 +742,7 @@ DEBUG                       | False                                       | Whet
 HPIT_PID_FILE               | 'tmp/hpit_server.pid'                       | Where to put the PID file for the HPIT server (daemon)      |                              
 HPIT_BIND_IP                | "0.0.0.0"                                   | The IP Address to listen for connections on.                |                              
 HPIT_BIND_PORT              | "8000"                                      | The Port Address to listen for connections on.              |                              
-HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A combination of the IP and Port addresses                   | Don't change this.           
+HPIT_BIND_ADDRESS           | HPIT_BIND_IP+":"+HPIT_BIND_PORT             | A combination of the IP and Port addresses                  | Don't change this.           
 PROJECT_DIR                 | '/Users/raymond/Projects/TutorGen/hpit'     | The root working directory for HPIT.                        | Change this.                 
 VENV_DIRNAME                | 'env'                                       | The directory where the virtual environment is located.     | Change this.                             
 MONGO_DBNAME                | 'hpit_development'                          | The name of the mongo database to store information in.     |                              
@@ -749,14 +769,17 @@ USER_REGISTER_TEMPLATE      | 'flask_user/register.html'                  | Regi
 
 
 ####plugin
-name                        | default                                     | description                                                 | notes                        
---------------------------- | ------------------------------------------- | ----------------------------------------------------------- | -----------------------------
-DataShop_ROOT_URL           | "https://pslcDataShop.web.cmu.edu/services"   | Root DataShop URL                                         |
-DataShop_SERVICES_URL       | "http://pslc-qa.andrew.cmu.edu/DataShop/services" | DataShop URL for services                             |
-MONGODB_URI                 | "mongodb://localhost:27017/"                  | The location of the Mongo database server                 |
-COUCHBASE_HOSTNAME          | "127.0.0.1"                                   | Couchbase host                                            |
-COUCHBASE_BUCKET_URI        | "http://127.0.0.1:8091/pools/default/buckets" | Couchbase buckets REST endpoint                           |
-COUCHBASE_AUTH              |  ["Administrator", "administrator"]           | Authentication for Couchbase server                       | Set to your server credentials
+name                        | default                                           | description                                          | notes                        
+--------------------------- | ------------------------------------------------- | ---------------------------------------------------- | -----------------------------------
+HPIT_URL_ROOT               | "http://localhost:8000"                           | The web address for HPIT                             |
+DATASHOP_ROOT_URL           | "https://pslcDataShop.web.cmu.edu/services"       | Root DataShop URL                                    |
+DATASHOP_SERVICES_URL       | "http://pslc-qa.andrew.cmu.edu/DataShop/services" | DataShop URL for services                            |
+MONGODB_URI                 | "mongodb://localhost:27017/"                      | The location of the Mongo database server            |
+MONGO_DBNAME                | "hpit_development"                                | The name of the mongoDB database to use for plugins. |
+COUCHBASE_HOSTNAME          | "127.0.0.1"                                       | Couchbase host                                       |
+COUCHBASE_BUCKET_URI        | "http://127.0.0.1:8091/pools/default/buckets"     | Couchbase buckets REST endpoint                      |
+COUCHBASE_AUTH              |  ["Administrator", "administrator"]               | Authentication for Couchbase server                  | Set to your server credentials
+PROJECT_DIR                 | "/Users/raymond/Projects/TutorGen/hpit"           | The directory where the plugins are installed.       | Change this.
 
 ###<a name="GSCommonHangupsToc"></a> Common Hangups
 Here's a list of common problems when trying to install HPIT:
@@ -766,6 +789,7 @@ in your user account, not root.
 project directory and virtual environment are correct.
 * Python problems - Make sure that Python, Pip, and virtualenv are all compatible with each other.
 * Virtualenv problems - remember to activate your virtualenv when installing any python modules.  
+* Enviornment Variable Problems - Remember to set the HPIT_ENV environment to map to the settings file.
 
 ## <a name="AdminToc"></a> The Adminstration Panel
 
@@ -788,26 +812,27 @@ the web service endpoints that HPIT exposes to tutors and plugins.
 The HPIT Manager can be used to quickly launch an HPIT server, configure plugins and tutors,
 and monitor how data is being passed between entities within the HPIT system.
 
-The HPIT manager can be run by typing: `python3 manager.py <command> <command_args>`
+The HPIT manager can be run by typing: `python3 manage.py <command> <command_args>`
 
 Depending on the command you wish to run the arguments to that command will vary. The command
-line manager for HPIT will help you along the way. For example typing just `python3 manager.py`
+line manager for HPIT will help you along the way. For example typing just `python3 manage.py`
 will give you a list of commands that manager understands. Then typing 
-`python3 manager.py your_command` will show you the arguments that that command can take and a
+`python3 manage.py your_command` will show you the arguments that that command can take and a
 brief overview of what that command does.
 
 Currently the HPIT Manager has the following commands:
 
-* `python3 manager.py start` will start the HPIT server, all locally configured tutors, and all locally configured plugins.
-* `python3 manager.py stop` will stop the HPIT server, all locally configured tutors, and all locally configured plugins.
-* `python3 manager.py status` will show you whether or not the HPIT server is currently running.
-* `python3 manager.py assets` will compile frontend assets together into a single file to ready for production deployments.
-* `python3 manager.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
-* `python3 manager.py docs` copies this documentation file to the server assets directory.
-* `python3 manager.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
-* `python3 manager.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
-* `python3 manager.py mongo <dbpath>` Initializes MongoDB database.
-* `python3 manager.py test` runs the suite of tests for components within HPIT.
+* `python3 manage.py start` will start all locally configured tutors, and all locally configured plugins.
+* `python3 manage.py stop` will stop all locally configured tutors, and all locally configured plugins.
+* `python3 manage.py assets` will compile frontend assets together into a single file to ready for production deployments.
+* `python3 manage.py debug` will run the HPIT server in debug mode and WILL NOT start any plugins or tutors.
+* `python3 manage.py docs` copies this documentation file to the server assets directory.
+* `python3 manage.py routes` lists all the routes that the HPIT Server/Router exposes to the web.
+* `python3 manage.py syncdb` syncs the data model with the administration database.(PostgreSQL or Sqlite3)
+* `python3 manage.py indexdb` strategically indexes the databases, and in particular MongoDB for faster performance.
+* `python3 manage.py mongo <dbpath>` Initializes MongoDB database and starts the mongoDB server.
+* `python3 manage.py test` runs the suite of tests for components within HPIT.
+* `python3 manage.py admin` turns a user account into an admin, or deactivate admin for a user account.
 
 ##<a name="ConfigToc"></a> The Tutor and Plugin Configuration
 
@@ -831,6 +856,7 @@ Optionally, you can specify two optional parameters:
 
 An example configuration would look like this:
 
+```json
     {
         "tutors" : [
             {
@@ -850,7 +876,7 @@ An example configuration would look like this:
         ],
         "plugins": [],
     }
-
+```
 
 ## <a name="DatabaseToc"></a> Database Structure
 
@@ -864,41 +890,58 @@ The HPIT server uses a NoSQL MongoDB database to manage its messages and transac
 lazy creation policy, so the database and its collections are created only after elements are inserted,
 and can be created with no prior configuration. The database contains five core collections:
 
-### <a name="DBmessagesToc"></a> messages
+### <a name="DBmessagesToc"></a> messages_and_transactions
 A list of messages sent to the system before being duplicated to plugin_messages. Each message contains the following fields:
 
-- sender_entity_id: "The session ID of the sender"
+- message_name: "The type of the message. e.g. tutorgen.kt_trace"
+- sender_entity_id: "The entity ID of the sender"
 - payload: "The data being sent."
-- time_created: "Date of message creation"
-- message_name: "The type of the message"
+- time_created: "Date the message was created."
 
 ### <a name="DBpluginmesToc"></a> plugin_messages
 Contains messages sent to plugins, as copied from the messages collection. It contains the following fields:
 
+- receiver_entity_id: "The plugin that should recieve this message"
+- message_name: "The type of the message. e.g. tutorgen.kt_trace"
 - time_response_received: "The time the response was received (if any)"
-- sent_to_plugin: "Boolean if was processed by plugin"
-- message_name: "The type of the message"
 - payload: "The data contained in this message."
 - time_responded: "The time the response was created"
-- sender_entity_id: "The id of the entity that sent the message"
-- time_created: "The time the message was created"
-- receiver_entity_id: "The plugin that received this message"
 - time_received: "The time the message was processed by plugin"
 - message_id: "The id of the message in the messages collection"
+- time_created: "The time the message was created"
+- sender_entity_id: "The entity ID of the sender"
 
 ### <a name="DBresponsesToc"></a> responses
 Stores responses for tutors or other plugins to poll. It contains the following fields:
 
-- response_received: "Boolean if it has been processed or not"
 - response: "data for this response"
 - message: "the original message"
 - message_id: "The ID of the message in the messages collection"
-- receiver_entity_id: "the ID of the receiver"
-- sender_entity_id: "The ID of the sender"
-- time_response_received: "The time the response was processed"
+- receiver_entity_id: "the Entity ID of the receiver"
+- sender_entity_id: "The Entity ID of the sender"
 
-### <a name="DBsessionsToc"></a> sessions
-Stores session data for plugins and tutors. 
+### <a name="DBsent_messagesToc"></a> sent_messages_and_transactions
+Stores plugin messages once they have been sent to plugin. It contains the following fields:
+
+- receiver_entity_id: "The plugin that should recieve this message"
+- message_name: "The type of the message. e.g. tutorgen.kt_trace"
+- time_response_received: "The time the response was received (if any)"
+- payload: "The data contained in this message."
+- time_responded: "The time the response was created"
+- time_received: "The time the message was processed by plugin"
+- message_id: "The id of the message in the messages collection"
+- time_created: "The time the message was created"
+- sender_entity_id: "The entity ID of the sender"
+
+### <a name="DBsent_responsesToc"></a> sent_responses
+Store plugin responses once they have been sent to the original message sender (plugin or tutor). It contains the following fields:
+
+- response: "data for this response"
+- message: "the original message"
+- message_id: "The ID of the message in the messages collection"
+- receiver_entity_id: "the Entity ID of the receiver"
+- sender_entity_id: "The Entity ID of the sender"
+- time_response_received: "The time the response was processed"
 
 ### <a name="DBlogToc"></a> entity_log
 Stores entity log information.  It contains the following fields:
@@ -911,7 +954,7 @@ Stores entity log information.  It contains the following fields:
 ## <a name="ServerToc"></a> The HPIT Server in-depth
 
 The HPIT Server is nothing more than an event-driven publish and subscribe framework, built
-specifically to assist plugins and tutors to communicate via RESTful webserver. It is 
+specifically to assist plugins and tutors to communicate via RESTful webservices. It is 
 schemaless, has no pre-defined events, and is agnostic to the kinds of data it routes 
 between plugins and tutors. In additon HPIT provides fundamental support for sessions,
 authentication, message routing, and entity tracking.
@@ -921,9 +964,9 @@ with HPIT. We have delivered a client side library written in Python.
 
 The server supports a variety of routes to handle the connection, polling, and transfer of 
 data between HPIT entities. To get a list of these routes run the HPIT server with either 
-`python3 manager.py debug` or `python3 manager.py start` and open your browser to the HPIT
-administration page at http://localhost:8000/routes. Alternatively you can list the routes
-available with `python3 manager.py routes`
+`python3 manage.py debug` and open your browser to the HPIT administration page at 
+http://localhost:8000/routes. Alternatively you can list the routes available with 
+`python3 manage.py routes`
 
 ## <a name="TutorToc"></a> Tutors in-depth
 
@@ -937,14 +980,19 @@ messages look like, however HPIT does package some plugins as part of it's archi
 
 For example the HPIT basic knowledge tracing plugin supports the following three events:
 
-* kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.
-* kt_trace - Performs a knowledge tracing operation on the KT Skill.
-* kt_reset - Resets the inital values for the knowledge tracer on the KT Skill.
+* tutorgen.kt_set_initial - Sets the initial values for the knowledge tracer on the KT Skill.
+* tutorgen.kt_trace - Performs a knowledge tracing operation on the KT Skill.
+* tutorgen.kt_reset - Resets the inital values for the knowledge tracer on the KT Skill.
 
-Depending on the event name(eg kt_set_initial, or kt_trace) the payload the plugin expects will be different.
+Depending on the event name(eg tutorgen.kt_set_initial, or tutorgen.kt_trace) the payload 
+the plugin expects will be different.
 
 Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.
+
+## <a name="EntityAuthToc"></a> Entity Authorization Model
+
+TODO
 
 ## <a name="PluginToc"></a> Plugin Component Specification
 
@@ -984,7 +1032,7 @@ applications and integrates into skill management and knowledge tracing. In addi
 you can assign any number of attributes to your students and retrieve them later. These
 attributes can cover anything; how much they like sports, their age, brand preferences, etc.
 
-####<a name="add_student"></a> add_student
+####<a name="add_student"></a> tutorgen.add_student
 Adds a student to the database, giving them a unique ID.
 
 Receives:
@@ -996,7 +1044,7 @@ Returns:
 * student_id : string - the ID for the new student
 * attributes : JSON - the attributes for the new student 
 
-####<a name="get_student"></a> get_student
+####<a name="get_student"></a> tutorgen.get_student
 Gets an already created student from an ID.
 
 Receives:
@@ -1008,7 +1056,7 @@ Returns:
 * student_id : string - the ID from a previously created student
 * attributes : JSON - the attributes for the new student 
 
-####<a name='set_attribute'></a> set_attribute
+####<a name='set_attribute'></a> tutorgen.set_attribute
 Sets an attribute value for a student.  Will overwrite any existing value.
 
 Receives:
@@ -1022,7 +1070,7 @@ Returns:
 * student_id : string - the ID for the student
 * attributes : JSON - the attributes for the student  
 
-####<a name="get_attribute"></a> get_attribute
+####<a name="get_attribute"></a> tutorgen.get_attribute
 Gets an attribute value for a student.  If the attribute does not exist, will respond
 with an empty string.
 
@@ -1036,7 +1084,7 @@ Returns:
 * student_id : string - the ID for the student
 * (attribute_name) : string - value of the requested attribute.
 
-####<a name = "get_student_model"></a>get_student_model
+####<a name = "get_student_model"></a>tutorgen.get_student_model
 Get the student model for a student.  The student model is an aggregation of information from
 all of the plugins that the student has interacted with.
 
@@ -1059,7 +1107,7 @@ and integrates into knowledge tracing, problem selection, problem management, an
 the hint factory. The skill manager identifies skills by either an assigned identifier
 or by name.
 
-####<a name="get_skill_name"></a> get_skill_name
+####<a name="get_skill_name"></a> tutorgen.get_skill_name
 Gets the name of an existing skill from an ID.
 
 Receives:
@@ -1071,7 +1119,7 @@ Returns:
 * skill_name : string - the name of the skill
 * skill_id : string - the ID of a skill (should match sent ID)
 
-####<a name="get_skill_id"></a> get_skill_id
+####<a name="get_skill_id"></a> tutorgen.get_skill_id
 Gets the ID of a skill from a skill name.  If the skill does not exist, it will be created.
 
 Receives:
@@ -1087,7 +1135,7 @@ Returns:
 ##<a name="KTPlugin"></a> Knowledge Tracing Plugin
 The Knowledge Tracing Plugin performs knowledge tracing on a per-student and per-skill basis.
 
-####<a name="kt_set_initial"></a> kt_set_initial
+####<a name="kt_set_initial"></a> tutorgen.kt_set_initial
 Sets the initial probabilistic values for the knowledge tracer.
 
 Receives:
@@ -1108,7 +1156,7 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
-####<a name="kt_reset"></a> kt_reset
+####<a name="kt_reset"></a> tutorgen.kt_reset
 Resets the probabilistic values for the knowledge tracer.
 
 Receives:
@@ -1125,7 +1173,7 @@ Returns:
 * probability_guess : 0.5 - Probability the answer is a guess
 * probability_mistake : 0.5 - Probability the student made a mistake (but knew the skill)
 
-####<a name="kt_trace"></a> kt_trace
+####<a name="kt_trace"></a> tutorgen.kt_trace
 Runs a knowledge tracing algorithm on the skill/tutor combination and returns the result. If
 a setting doesn't exist this plugin will create one with initial values of 0.5 for each probablity.
 
@@ -1144,7 +1192,7 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
-####<a name="kt_get_student_model_fragment"></a>get_student_model_fragment
+####<a name="kt_get_student_model_fragment"></a> tutorgen.get_student_model_fragment
 Returns a this plugin's contribution to the overall student model.  For the knowledge tracing plugin,
 this is all of the student's skills and knowledge tracing values.  This is usually sent via the StudentManagement model
 after it receives a get_student_model message.
@@ -1167,7 +1215,7 @@ Returns:
 ##<a name="HFPlugin"></a> Hint Factory Plugin
 The Hint Factory Plugin is used to dynamically provide hints using a graph theoretic approach.
 
-####<a name="hf_init_problem"></a> hf_init_problem
+####<a name="hf_init_problem"></a> tutorgen.hf_init_problem
 Initializes a new problem for the hint factory.
 
 Receives:
@@ -1179,7 +1227,7 @@ Returns:
 
 * status: string - OK or NOT_OK on success and failure respectively
 
-####<a name="hf_push_state"></a> hf_push_state
+####<a name="hf_push_state"></a> tutorgen.hf_push_state
 Pushes a new state on the problem.
 
 Receives:
@@ -1194,7 +1242,7 @@ Returns:
 
 * status: string - OK
 
-####<a name="hf_hint_exists"></a> hf_hint_exists
+####<a name="hf_hint_exists"></a> tutorgen.hf_hint_exists
 Given a particular state structure. Does a hint exist for this problem?
 
 Receives:
@@ -1210,7 +1258,7 @@ Returns:
 * status: string - OK
 * exists: string - YES if a hint is available, NO if it isn't
 
-####<a name="hf_get_hint"></a> hf_get_hint
+####<a name="hf_get_hint"></a> tutorgen.hf_get_hint
 Given a particular state structure for a problem, retrieve the next most probable state that leads
 the student towards a solution.
 
@@ -1230,7 +1278,7 @@ Returns:
 
 ##<a name="PMPlugin"></a> Problem Management Plugin
 
-####<a name="add_problem"></a> add_problem
+####<a name="add_problem"></a> tutorgen.add_problem
 Adds a problem to the problem manager.
 
 Receives:
@@ -1246,7 +1294,7 @@ Returns:
 * problem_id : string - String identifier for the new problem, or the existing problem if it already exists.
 * (optional) error : string - The error message if something went wrong.
 
-####<a name="remove_problem"></a> remove_problem
+####<a name="remove_problem"></a> tutorgen.remove_problem
 Remove a problem from the problem manager.
 
 Receives:
@@ -1259,7 +1307,7 @@ Returns:
 * success : boolean - True if the problem existed and was deleted.
 * (optional) error : string - the error message if something went wrong
 
-####<a name="get_problem"></a> get_problem
+####<a name="get_problem"></a> tutorgen.get_problem
 Gets a previously stored problem from the problem manager.
 
 Receives:
@@ -1273,7 +1321,7 @@ Returns:
 * success : boolean - True if the problem existed.
 * (optional) error: string - The error message if the problem does not exist.
 
-####<a name="edit_problem"></a> edit_problem
+####<a name="edit_problem"></a> tutorgen.edit_problem
 Edits a problem.  The tutor or plugin editing it must have the same ID as edit_allowed_id.
 
 Receives:
@@ -1289,7 +1337,7 @@ Returns:
 * success : boolean - If the edit was successful.
 * (optional) error : string - The error message, if an error occured.
 
-####<a name="list_problems"></a> list_problems
+####<a name="list_problems"></a> tutorgen.list_problems
 Get all the problems in the database.
 
 Receives:
@@ -1305,7 +1353,7 @@ Returns:
     * edit_allowed_id : string - The ID of the entity that can edit this.
 * success : True - Always returns True
 
-####<a name="clone_problem"></a>clone_problem
+####<a name="clone_problem"></a> tutorgen.clone_problem
 Clone an existing problem so that another entity can modify it.
 
 Receives:
@@ -1320,7 +1368,7 @@ Returns:
 * (optional) error : string - An error message if an error accurs, caused by not passing the correct
 parameters or the requested problem doesn't exist.
 
-####<a name="add_problem_worked"></a>add_problem_worked
+####<a name="add_problem_worked"></a> tutorgen.add_problem_worked
 This is used to show a student has worked on a problem.
 
 Receives: 
@@ -1333,7 +1381,7 @@ Returns:
 * success : boolean - Whether everything went ok.
 * (optional) error : string - If an error occurs, an error message.
 
-####<a name="get_problems_worked"></a>get_problems_worked
+####<a name="get_problems_worked"></a> tutorgen.get_problems_worked
 Retrieves the problems a student has worked on.
 
 Receives:
@@ -1347,7 +1395,7 @@ Returns:
     * student_id : string - The ID of the student.
     * problem_id : string - The ID of the problem.
 
-####<a name="add_step"></a> add_step
+####<a name="add_step"></a> tutorgen.add_step
 Adds a problem step to a problem.
 
 Receives:
@@ -1361,7 +1409,7 @@ Returns:
 * success : boolean - Whether everything went ok.
 * (optional) error : string - An error message if something went wrong.
 
-####<a name="remove_step"></a> remove_problem_step
+####<a name="remove_step"></a> tutorgen.remove_problem_step
 Remove a problem step from the problem manager.
 
 Receives:
@@ -1374,7 +1422,7 @@ Returns:
 * success : boolean - True if the problem existed and was deleted.
 * (optional) error : string - an error emssage if something went wrong
 
-####<a name="get_step"></a> get_problem_step
+####<a name="get_step"></a> tutorgen.get_problem_step
 Gets a previously stored problem step from the problem manager.
 
 Receives:
@@ -1389,7 +1437,7 @@ Returns:
 * allowed_edit_id : string - The ID of the entity that can edit this step.
 * siccess : boolean - Whether everything went OK.
 
-####<a name="get_problem_steps"></a> list_problem_steps
+####<a name="get_problem_steps"></a> tutorgen.list_problem_steps
 Get all the problem steps for a given problem..
 
 Receives:
@@ -1405,7 +1453,7 @@ Returns:
 * problem_id : string - The ID of the problem the steps belong to.
 * success : boolean - Whether everything went ok.
 
-####<a name="pm_get_student_model_fragment"></a>get_student_model_fragment
+####<a name="pm_get_student_model_fragment"></a> tutorgen.get_student_model_fragment
 Returns a this plugin's contribution to the overall student model.  For the problem management plugin,
 this is all of the problems the student has worked on.  This is usually sent via the StudentManagement model
 after it receives a get_student_model message.
@@ -1430,7 +1478,7 @@ problems on demand. Right now, this generator is used mostly for integration
 tests between tutors and plugins. TutorGen may extend the possible set of 
 problems in the future.
 
-####<a name="list_problems"></a>pg_list_problems
+####<a name="list_problems"></a> tutorgen.pg_list_problems
 Retrieve a list of potential problems organized by, subject, category and skill.
 
 Receives:
@@ -1443,7 +1491,7 @@ Returns:
 
 * json: a dict of dicts of lists organized by subjects, category and skills 
 
-####<a name="generate_problem"></a>pg_generate_problem
+####<a name="generate_problem"></a> tutorgen.pg_generate_problem
 
 Generates a random problem for a specific subject, category, and skill. If the subject, category
 or skill doesn't have a generator associated with it, the plugin will return an error. If the subject,
@@ -1479,7 +1527,7 @@ Errors on invalid subject, category, or skill provided in request. Errors return
 ##<a name="DSPlugin"></a> Data Storage Plugin
 The Data Storage Plugin can be used to store any kind of key value information that a plugin
 or tutor may need.
-####<a name="store_data"></a>store_data
+####<a name="store_data"></a> tutorgen.store_data
 Store a key value pair in the database.
 
 Receives:
@@ -1491,7 +1539,7 @@ Returns:
 
 * insert_id : string - the ID of the data object
 
-####<a name="retrieve_data"></a>retrieve_data
+####<a name="retrieve_data"></a> tutorgen.retrieve_data
 Get a value from the database via a key.
 
 Receives:
@@ -1502,7 +1550,7 @@ Returns:
 
 * data : string - the data for the key
 
-####<a name="remove_data"></a>remove_data
+####<a name="remove_data"></a> tutorgen.remove_data
 Removes data from the database.
 
 Receives:
@@ -1517,7 +1565,7 @@ Returns:
 The PSLC DataShop Connection Plugin gives basic connectivity to the PSLC DataShop.  Currently, it
 only provides for a subset of functionality that they provide via their web services.
 
-####<a name="get_dataset_metadata"></a>get_dataset_metadata
+####<a name="get_dataset_metadata"></a> tutorgen.get_dataset_metadata
 Gets the dataset metadata.
 
 Receives:
@@ -1529,7 +1577,7 @@ Returns:
 * response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
-####<a name="get_sample_metadata"></a>get_sample_metadata
+####<a name="get_sample_metadata"></a> tutorgen.get_sample_metadata
 Gets the metadata for a DataShop sample.
 
 Receives:
@@ -1542,7 +1590,7 @@ Returns:
 * response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
-####<a name="get_transactions"></a>get_transactions
+####<a name="get_transactions"></a> tutorgen.get_transactions
 Gets transactions from a dataset or optionally a specific sample.
 
 Receives:
@@ -1555,7 +1603,7 @@ Returns:
 * response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
-####<a name="get_student_steps"></a>get_student_steps
+####<a name="get_student_steps"></a> tutorgen.get_student_steps
 Gets the student steps from a dataset or optionally a specific sample.
 
 Receives:
@@ -1568,7 +1616,7 @@ Returns:
 * response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
 
-####<a name="add_custom_field"></a>add_custom_field
+####<a name="add_custom_field"></a> tutorgen.add_custom_field
 Adds a custom field to a dataset.
 
 Receives:
