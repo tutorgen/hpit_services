@@ -20,7 +20,7 @@ class Command:
 
         doc_html = markdown.markdown(doc_md, extensions=['tables'])
 
-        with open(os.path.join(settings.PROJECT_DIR, 'server/templates/_docs_md.html'), 'w') as f:
+        with open(os.path.join(settings.PROJECT_DIR, 'hpit/server/templates/_docs_md.html'), 'w') as f:
             f.write(doc_html)
 
         print("Updated documentation HTML based on README.md")

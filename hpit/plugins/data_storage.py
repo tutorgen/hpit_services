@@ -11,7 +11,7 @@ class DataStoragePlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.db = self.mongo.hpit.data_storage
+        self.db = self.mongo[settings.MONGO_DBNAME].data_storage
 
     def post_connect(self):
         super().post_connect()

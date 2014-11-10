@@ -28,4 +28,4 @@ class Command:
         except FileExistsError:
             pass
 
-        print("DONE! - Sync'd the database with the data model")
+        print("DONE! - Sync'd the database with the data model. You may want to index the mongo database by running 'python3 manage.py indexdb'.")

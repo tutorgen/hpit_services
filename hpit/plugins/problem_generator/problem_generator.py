@@ -103,9 +103,10 @@ class ProblemGeneratorPlugin(Plugin):
     def post_connect(self):
         super().post_connect()
 
-        self.subscribe(
-            pg_list_problems=self.list_problems_callback,
-            pg_generate_problem=self.generate_problem_callback)
+        self.subscribe({
+            "tutorgen.pg_list_problems":self.list_problems_callback,
+            "tutorgen.pg_generate_problem":self.generate_problem_callback
+        })
 
 
     def list_problems_callback(self, message):
