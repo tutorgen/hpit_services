@@ -992,8 +992,29 @@ send a response depending on the plugin.
 
 ## <a name="EntityAuthToc"></a> Entity Authorization Model
 
-TODO
+When a plugin first subscribes to a new message it is now said to "own" that message type. For
+example: Tutorgen owns the 'tutorgen.kt_trace' message type. We use this message internally in our
+knowledge tracer. You are welcome to send 'tutorgen.kt_trace' messages from a tutor or plugin, and
+our knowledge tracer will recieve the message and respond back to you with a result. However, If you 
+were to write a plugin and try to subscribe to the 'tutorgen.kt_trace' message, the HPIT server 
+would give you an access denied error because you don't "own" that message type. If you were curious
+as to what entity "owned" a particular message, you can query the "message-owner" RESTFUL API endpoint
+and we would tell you that plugin Entity ID: XXXXX owned it.
 
+Now let's say you have a perfectly good reason to intercept a 'tutorgen.kt_trace' message, maybe you 
+are a very tightly coupled partner of ours and we should give you the ability to read these messages,
+we could, as the "Message Owner" can grant you access to intercept and handle messages of this type. This
+is called an "Access Grant" and it is made by the owning entity when they send access grant information
+to the 'share-message' RESTFUL API endpoint.
+
+In addition to owning messages. Anyone entity can also "lock down" certain resources that they control, 
+by requesting a new resource token from HPIT. In the future if that resource is attempted to be accessed
+by someone you haven't given explicit permission to access, HPIT will prevent such a message from routing
+through it's system. You can request new resource token with the 'new-resource' RESTFUL API endpoin.
+
+If you want to share a resource token with another entity you can do so by sending a resource access grant
+to the 'share-resource' RESTFUL API endpoint.
+    
 ## <a name="PluginToc"></a> Plugin Component Specification
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, receives
