@@ -85,12 +85,18 @@ class SkillManagementPlugin(Plugin):
                 "error":"Message must contain a 'skill_name'",      
             })
             return
-            
+        
+        if "skill_model" not in message:
+            skill_model = "Default"
+        else:
+            skill_model = str(message["skill_model"])
+        
         try:
-            cached_skill = self.cache.get(skill_name)
+            cached_skill = self.cache.get(skill_model+skill_name)
             skill_id = cached_skill.value
             self.send_response(message["message_id"],{
                 "skill_name": skill_name,
+                "skill_model":skill_model,
                 "skill_id": str(skill_id),
                 "cached":True
             })
@@ -98,21 +104,22 @@ class SkillManagementPlugin(Plugin):
         except couchbase.exceptions.NotFoundError:
             cached_skill = None
             
-        skill = self.db.find_one({"skill_name":skill_name})
+        skill = self.db.find_one({"skill_name":skill_name,"skill_model":skill_model})
         if not skill:
-            skill_id = self.db.insert({"skill_name":skill_name})
+            skill_id = self.db.insert({"skill_name":skill_name,"skill_model":skill_model})
             self.send_response(message["message_id"],{
                 "skill_name": skill_name,
+                "skill_model":skill_model,
                 "skill_id": str(skill_id),
                 "cached":False
             })
-            self.cache.set(str(skill_name),str(skill_id))
         else:
             self.send_response(message["message_id"],{
                 "skill_name": skill_name,
+                "skill_model":skill_model,
                 "skill_id": str(skill["_id"]),
                 "cached":False
             })
-            
+        self.cache.set(str(skill_model+skill_name),str(skill_id))      
             
             

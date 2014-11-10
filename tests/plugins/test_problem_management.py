@@ -404,21 +404,56 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "step_text":"subtract",
                     "date_created":"3:40",
                     "problem_id":good_id,
-                    "allowed_edit_id":"3",
+                    "edit_allowed_id":"3",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
                 },
                 {
                     "step_text":"subtract",
                     "date_created":"3:40",
                     "problem_id":good_id,
-                    "allowed_edit_id":"3",
+                    "edit_allowed_id":"3",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
                 },
                 {
                     "step_text":"subtract",
                     "date_created":"3:40",
                     "problem_id":bogus_id,
-                    "allowed_edit_id":"4",
+                    "edit_allowed_id":"4",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
                 },
         ])
+        for sid in step_ids:
+            self.test_subject.transaction_db.insert([
+                 {
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":sid,
+                    "edit_allowed_id":"3",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                },
+                {
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":sid,
+                    "edit_allowed_id":"3",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                },
+                {
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":sid,
+                    "edit_allowed_id":"4",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                },  
+            ])
+            
+        import nose; nose.tools.set_trace()
         
         msg = {"message_id":"1","sender_entity_id":"2","problem_id":good_id}
         self.test_subject.clone_problem_callback(msg)
@@ -433,14 +468,21 @@ class TestProblemManagementPlugin(unittest.TestCase):
         new_added_ids = self.test_subject.step_db.find({
                 "step_text":"subtract",
                 "problem_id":new_added_problem["_id"],
-                "allowed_edit_id":"2", 
+                "edit_allowed_id":"2", 
+        })
+        
+        new_added_transactions = self.test_subject.transaction_db.find({
+               "transaction_text":"transaction",
+                "edit_allowed_id":"2",  
         })
         
         new_added_ids.count().should.equal(2)
+        new_added_transactions.count().should.equal(4)
         
         self.test_subject.send_response.assert_called_with("1", {
                 "problem_id": str(new_added_problem["_id"]),
                 "step_ids": [str(s["_id"]) for s in new_added_ids],
+                "transaction_ids":[],
                 "success": True
         })
         
@@ -592,7 +634,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
             - response should contain step id and success
         """
         good_id = self.test_subject.db.insert({
-                "allowed_edit_id":"2",
+                "edit_allowed_id":"2",
         })
         msg = {"message_id":"1", "sender_entity_id":"2","step_text":"subtract","problem_id":good_id}
         self.test_subject.add_step_callback(msg)
@@ -643,7 +685,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         ProblemManagementPlugin.add_step_callback() Permission Denied:
         """
         good_id = self.test_subject.db.insert({
-                "allowed_edit_id":"2",
+                "edit_allowed_id":"2",
         })
         msg = {"message_id":"1", "sender_entity_id":"3","step_text":"subtract","problem_id":ObjectId()}
         self.test_subject.add_step_callback(msg)
@@ -661,7 +703,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
             - make sure proper response is removed, record removed on good call
         """
         good_id = self.test_subject.step_db.insert({
-                "allowed_edit_id":"2",
+                "edit_allowed_id":"2",
         })
         msg = {"message_id":"1", "sender_entity_id":"2","step_id":good_id}
         self.test_subject.remove_step_callback(msg)
@@ -699,7 +741,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         ProblemManagmentPlugin.remove_step_callback() Permission Denied:
         """
         good_id = self.test_subject.step_db.insert({
-                "allowed_edit_id":"2",
+                "edit_allowed_id":"2",
         })
         msg = {"message_id":"1", "sender_entity_id":"3","step_id":good_id}  
         self.test_subject.remove_step_callback(msg)
@@ -721,7 +763,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         good_id = self.test_subject.step_db.insert({
                     "step_text": "subtract",
                     "date_created": "3:40",
-                    "allowed_edit_id": "2",
+                    "edit_allowed_id": "2",
             })
         msg = {"message_id":"1", "sender_entity_id":"2","step_id":good_id}
         
@@ -731,7 +773,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "step_id": str(good_id),
                     "step_text": "subtract",
                     "date_created": "3:40",
-                    "allowed_edit_id": "2",
+                    "edit_allowed_id": "2",
                     "success":True,
             })
         
@@ -775,19 +817,19 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "step_text":"subtract",
                     "date_created":"3:40",
                     "problem_id":good_id,
-                    "allowed_edit_id":"2",
+                    "edit_allowed_id":"2",
                 },
                 {
                     "step_text":"subtract",
                     "date_created":"3:40",
                     "problem_id":good_id,
-                    "allowed_edit_id":"2",
+                    "edit_allowed_id":"2",
                 },
                 {
                     "step_text":"subtract",
                     "date_created":"3:40",
                     "problem_id":bogus_id,
-                    "allowed_edit_id":"2",
+                    "edit_allowed_id":"2",
                 },
         ])
         
@@ -799,13 +841,13 @@ class TestProblemManagementPlugin(unittest.TestCase):
                         "step_id" : str(ids[0]),
                         "step_text": "subtract",
                         "date_created": "3:40",
-                        "allowed_edit_id": "2",
+                        "edit_allowed_id": "2",
                     },
                     {
                         "step_id" : str(ids[1]),
                         "step_text": "subtract",
                         "date_created": "3:40",
-                        "allowed_edit_id": "2",
+                        "edit_allowed_id": "2",
                     }
                 ],
                 "problem_id":str(good_id),

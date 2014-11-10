@@ -17,6 +17,7 @@ class ProblemManagementPlugin(Plugin):
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo.hpit.hpit_problems
         self.step_db = self.mongo.hpit.hpit_steps
+        self.transaction_db = self.mongo.hpit.hpit_transactions
         self.worked_db = self.mongo.hpit.hpit_problems_worked
         
         self.problem_fields = ["problem_name","problem_text"]
@@ -212,11 +213,17 @@ class ProblemManagementPlugin(Plugin):
         entity_id = message["sender_entity_id"]
         
         try:
-            problem_id = str(message["problem_id"])
+            problem_id = ObjectId(str(message["problem_id"]))
         except KeyError:
             self.send_response(message["message_id"],{
                     "error": "clone_problem requires a 'problem_id'.",
                     "success":False,
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'problem_id' is not a valid ObjectId.",
+                    "success":False
             })
             return
         
@@ -245,14 +252,30 @@ class ProblemManagementPlugin(Plugin):
             new_step_id = self.step_db.insert({
                     "problem_id":new_problem_id,
                     "step_text": step["step_text"],
-                    "allowed_edit_id": entity_id,
+                    "edit_allowed_id": entity_id,
                     "date_created":datetime.now(),
+                    "skill_ids":step["skill_ids"],
+                    "skill_names":step["skill_names"],
             })
             step_ids.append(str(new_step_id))
+        
+            transactions = self.transaction_db.find({"step_id":new_step_id})
+            transaction_ids = []
+            for transaction in transactions:
+                new_transaction_id = self.transaction_db.insert({
+                    "step_id":new_step_id,
+                    "transaction_text":transaction["transaction_text"],
+                    "edit_allowed_id":entity_id,
+                    "date_created":datetime.now(),
+                    "skill_ids":transaction["skill_ids"],
+                    "skill_names":transaction["skill_names"],
+                })
+                transaction_ids.append(str(new_transaction_id))
         
         self.send_response(message["message_id"], {
             "problem_id":str(new_problem_id),
             "step_ids":step_ids,
+            "transaction_ids":transaction_ids,
             "success":True
         })
         
@@ -305,11 +328,7 @@ class ProblemManagementPlugin(Plugin):
                "success":True,
                "problems_worked": problems,
         })
-        
-            
-        
-            
-        
+
     def add_step_callback(self,message):
         entity_id = message["sender_entity_id"]
         
@@ -329,9 +348,33 @@ class ProblemManagementPlugin(Plugin):
             })
             return
         
+        try:
+            if "skill_ids" not in message:
+                skill_ids = {}
+            else:
+                skill_ids = dict(message["skill_ids"])
+        except TypeError:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'skill_ids' is not valid; must be dict.",
+                    "success":False
+            })
+            return
+        
+        try:
+            if "skill_names" not in message:
+                skill_names = {}
+            else: 
+                skill_names = dict(message["skill_names"])
+        except TypeError:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'skill_names' is not valid; must be dict.",
+                    "success":False
+            })
+            return
+            
         problem = self.db.find_one({
                 "_id":ObjectId(problem_id),
-                "allowed_edit_id":entity_id
+                "edit_allowed_id":entity_id
         })
         
         if not problem:
@@ -344,8 +387,10 @@ class ProblemManagementPlugin(Plugin):
             step_id = self.step_db.insert({
                     "problem_id":problem["_id"],
                     "step_text": step_text,
-                    "allowed_edit_id": entity_id,
-                    "date_created": datetime.now()
+                    "edit_allowed_id": entity_id,
+                    "date_created": datetime.now(),
+                    "skill_ids": skill_ids,
+                    "skill_names": skill_names,
             })
             self.send_response(message["message_id"], {
                 "step_id": str(step_id),
@@ -372,7 +417,7 @@ class ProblemManagementPlugin(Plugin):
             
         step = self.step_db.find_one({
                 "_id":ObjectId(step_id),
-                "allowed_edit_id": entity_id,
+                "edit_allowed_id": entity_id,
         })
         if not step:
             self.send_response(message["message_id"], {
@@ -417,7 +462,9 @@ class ProblemManagementPlugin(Plugin):
                     "step_id": str(step["_id"]),
                     "step_text": step["step_text"],
                     "date_created": step["date_created"],
-                    "allowed_edit_id": step["allowed_edit_id"],
+                    "edit_allowed_id": step["edit_allowed_id"],
+                    "skill_ids": step["skill_ids"],
+                    "skill_names": step["skill_names"],
                     "success":True,
             })
             return
@@ -455,14 +502,165 @@ class ProblemManagementPlugin(Plugin):
                         "step_id" : str(step["_id"]),
                         "step_text": step["step_text"],
                         "date_created": step["date_created"],
-                        "allowed_edit_id": step["allowed_edit_id"],
+                        "edit_allowed_id": step["edit_allowed_id"],
+                        "skill_ids": step["skill_ids"],
+                        "skill_names": step["skill_names"],
                 })
             self.send_response(message["message_id"], {
                 "steps": return_steps,
                 "problem_id": str(problem_id),
                 "success":True,
             })
+    
+    def add_transaction_callback():
+        entity_id = message["sender_entity_id"]
+        
+        try:
+            step_id = ObjectId(str(message["step_id"]))
+            transaction_text = message["transaction_text"]
+        except KeyError:
+            self.send_response(message["message_id"],{
+                    "error": "add_transaction requires a 'step_id' and 'transaction_text'",
+                    "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
+                    "success":False
+            })
+            return
             
+        try:
+            if "skill_ids" not in message:
+                skill_ids = {}
+            else:
+                skill_ids = dict(message["skill_ids"])
+        except TypeError:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'skill_ids' is not valid; must be dict.",
+                    "success":False
+            })
+            return
+        
+        try:
+            if "skill_names" not in message:
+                skill_names = {}
+            else: 
+                skill_names = dict(message["skill_names"])
+        except TypeError:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'skill_names' is not valid; must be dict.",
+                    "success":False
+            })
+            return
+        
+        step = self.db.find_one({
+                "_id":ObjectId(step_id),
+                "edit_allowed_id":entity_id
+        })
+        
+        if not step:
+            self.send_response(message["message_id"], {
+                "error": "Error: either step with provided id doesn't exist, or you do not have permission to edit.",
+                "success":False,
+            })
+            return
+        else:
+            transaction_id = self.transaction_db.insert({
+                    "step_id":step["_id"],
+                    "transaction_text": transaction_text,
+                    "edit_allowed_id": entity_id,
+                    "date_created": datetime.now(),
+                    "skill_ids": skill_ids,
+                    "skill_names": skill_names,
+            })
+            self.send_response(message["message_id"], {
+                "transaction_id": str(transaction_id),
+                "success": True,
+            })
+    
+    def remove_transaction_callback():
+        entity_id = message["sender_entity_id"]
+        
+        try:
+            transaction_id = ObjectId(str(message["transaction_id"]))
+        except KeyError:
+            self.send_response(message["message_id"], {
+                    "error": "remove_transaction requires 'transaction_id'",
+                    "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'transaction_id' is not a valid ObjectId.",
+                    "success":False
+            })
+            return
+            
+        transaction = self.transaction_db.find_one({
+                "_id":ObjectId(transaction_id),
+                "edit_allowed_id": entity_id,
+        })
+        if not transaction:
+            self.send_response(message["message_id"], {
+                    "error": "Either the transaction doesn't exist or you don't have permission to remove it.",
+                    "success":False
+            })
+            return
+        else:
+            self.transaction_db.remove({"_id":ObjectId(transaction_id)})
+            self.send_response(message["message_id"], {
+                    "success":True,
+                    "exists":True,
+            })
+    
+    def get_step_transactions_callback():
+        entity_id = message["sender_entity_id"]
+        
+        try:
+            step_id = ObjectId(str(message["step_id"]))
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error":"get_step_transactions_callback requires a 'step_id'",   
+                "success":False
+            })
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
+                    "success":False
+            })
+            return
+            
+        step = self.step_db.find_one({"_id":ObjectId(step_id)})
+        if not step:
+            self.send_response(message["message_id"], {
+                "error":"Step with ID " + str(step_id) + " does not exist.",
+                "success":False
+            })
+            return
+        else:
+            transactions = self.tramsaction_db.find({"step_id":ObjectId(step_id)})
+            return_steps = []
+            for transaction in transactions:
+                return_transactionss.append({
+                        "transaction_id" : str(transaction["_id"]),
+                        "transaction_text": transaction["transaction_text"],
+                        "date_created": transaction["date_created"],
+                        "edit_allowed_id": transaction["edit_allowed_id"],
+                        "skill_ids":transaction["skill_ids"],
+                        "skill_names":transaction["skill_names"],
+                })
+            self.send_response(message["message_id"], {
+                "transactions": return_transactions,
+                "step_id": str(step_id),
+                "success":True,
+            })
+    
+    
+    
+    
     def get_student_model_fragment_callback(self,message):      
         if self.logger:
             self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
