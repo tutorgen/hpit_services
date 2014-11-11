@@ -28,36 +28,30 @@ def index():
     end = datetime.now()
 
     h_mes = mongo.db.sent_messages_and_transactions.find({
-        'message_name': {'$ne': 'transaction'},
         'time_received': {'$gte': end - timedelta(hours=1), '$lt': end }
     }).count()
 
     h_res = mongo.db.sent_responses.find({
-        'message_name': {'$ne': 'transaction'},
         'time_response_received': {'$gte': end - timedelta(hours=1), '$lt': end }
     }).count()
 
     last_hour = (h_mes, h_res)
 
     m_mes = mongo.db.sent_messages_and_transactions.find({
-        'message_name': {'$ne': 'transaction'},
         'time_received': {'$gte': end - timedelta(minutes=1), '$lt': end }
     }).count()
 
     m_res = mongo.db.sent_responses.find({
-        'message_name': {'$ne': 'transaction'},
         'time_response_received': {'$gte': end - timedelta(minutes=1), '$lt': end }
     }).count()
 
     last_minute = (m_mes, m_res)
 
     d_mes = mongo.db.sent_messages_and_transactions.find({
-        'message_name': {'$ne': 'transaction'},
         'time_received': {'$gte': end - timedelta(days=1), '$lt': end }
     }).count()
 
     d_res = mongo.db.sent_responses.find({
-        'message_name': {'$ne': 'transaction'},
         'time_response_received': {'$gte': end - timedelta(days=1), '$lt': end }
     }).count()
 

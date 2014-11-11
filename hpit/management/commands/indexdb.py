@@ -20,6 +20,11 @@ class Command:
 
         with app.app_context():
             mongo.db.plugin_messages.create_index('receiver_entity_id')
+            mongo.db.plugin_transactions.create_index('receiver_entity_id')
+
+            mongo.db.sent_messages_and_transactions.create_index('time_received')
+            mongo.db.sent_responses.create_index('time_response_received')
+
             mongo.db.sent_messages_and_transactions.create_index([
                 ("receiver_entity_id", -1),
                 ("message_id", 1)
