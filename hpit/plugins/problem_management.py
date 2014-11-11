@@ -15,10 +15,11 @@ class ProblemManagementPlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.db = self.mongo.hpit.hpit_problems
-        self.step_db = self.mongo.hpit.hpit_steps
-        self.transaction_db = self.mongo.hpit.hpit_transactions
-        self.worked_db = self.mongo.hpit.hpit_problems_worked
+
+        self.db = self.mongo[settings.MONGO_DBNAME].hpit_problems
+        self.step_db = self.mongo[settings.MONGO_DBNAME].hpit_steps
+        self.transaction_db = self.mongo[settings.MONGO_DBNAME].hpit_transactions
+        self.worked_db = self.mongo[settings.MONGO_DBNAME].hpit_problems_worked
         
         self.problem_fields = ["problem_name","problem_text"]
 
@@ -246,8 +247,10 @@ class ProblemManagementPlugin(Plugin):
                 'date_created': datetime.now(),
             })
         
-        steps = self.step_db.find({"problem_id":problem["_id"]})
+        steps = self.step_db.find({"problem_id":problem["_id"],"edit_allowed_id":problem["edit_allowed_id"]})
+        
         step_ids = []
+        transaction_ids = []
         for step in steps:
             new_step_id = self.step_db.insert({
                     "problem_id":new_problem_id,
@@ -259,8 +262,8 @@ class ProblemManagementPlugin(Plugin):
             })
             step_ids.append(str(new_step_id))
         
-            transactions = self.transaction_db.find({"step_id":new_step_id})
-            transaction_ids = []
+            transactions = self.transaction_db.find({"step_id":step["_id"],"edit_allowed_id":problem["edit_allowed_id"]})
+            
             for transaction in transactions:
                 new_transaction_id = self.transaction_db.insert({
                     "step_id":new_step_id,
@@ -512,7 +515,7 @@ class ProblemManagementPlugin(Plugin):
                 "success":True,
             })
     
-    def add_transaction_callback():
+    def add_transaction_callback(self,message):
         entity_id = message["sender_entity_id"]
         
         try:
@@ -555,7 +558,7 @@ class ProblemManagementPlugin(Plugin):
             })
             return
         
-        step = self.db.find_one({
+        step = self.step_db.find_one({
                 "_id":ObjectId(step_id),
                 "edit_allowed_id":entity_id
         })
@@ -580,7 +583,7 @@ class ProblemManagementPlugin(Plugin):
                 "success": True,
             })
     
-    def remove_transaction_callback():
+    def remove_transaction_callback(self,message):
         entity_id = message["sender_entity_id"]
         
         try:
@@ -615,7 +618,7 @@ class ProblemManagementPlugin(Plugin):
                     "exists":True,
             })
     
-    def get_step_transactions_callback():
+    def get_step_transactions_callback(self,message):
         entity_id = message["sender_entity_id"]
         
         try:

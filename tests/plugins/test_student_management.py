@@ -34,7 +34,6 @@ class TestStudentManagementPlugin(unittest.TestCase):
         req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
         
         self.test_subject = StudentManagementPlugin(123,456,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_students
         
         self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
         self.test_subject.logger = MagicMock()
@@ -51,7 +50,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
                 raise Exception("Failure to delete bucket")
         
         client = MongoClient()
-        client.drop_database("test_hpit")
+        client.drop_database(settings.MONGO_DBNAME)
         
         self.test_subject = None
 
@@ -66,7 +65,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         smp = StudentManagementPlugin(123,456,None)
         isinstance(smp.mongo,MongoClient).should.equal(True)
         isinstance(smp.db,Collection).should.equal(True)
-        smp.db.full_name.should.equal("hpit.hpit_students")
+        smp.db.full_name.should.equal("hpit_unit_test_db.hpit_students")
         
     def test_add_student_callback(self):
         """
@@ -88,7 +87,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_log_entry.assert_has_calls(calls)
         
         client = MongoClient()
-        result = client.test_hpit.hpit_students.find({})
+        result = client[settings.MONGO_DBNAME].hpit_students.find({})
         result.count().should.equal(1)
         result[0]["attributes"].should.equal({})  
         self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{},"resource_id":"456"})
@@ -96,7 +95,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         
         test_message = {"message_id":"2","attributes":{"attr":"value"},"sender_entity_id":"3"}
         self.test_subject.add_student_callback(test_message)
-        result = client.test_hpit.hpit_students.find({})
+        result = client[settings.MONGO_DBNAME].hpit_students.find({})
         result.count().should.equal(2)
         result[1]["attributes"].should.equal({"attr":"value"})
         self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[1]["_id"]),"attributes":{"attr":"value"},"resource_id":"456"})

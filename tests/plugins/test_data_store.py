@@ -5,16 +5,18 @@ from pymongo.collection import Collection
 
 from hpit.plugins import DataStoragePlugin
 
+from hpit.management.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 class TestDataStoragePlugin(unittest.TestCase):
     
     def setUp(self):
         self.test_subject = DataStoragePlugin(1234,5678,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit.data_storage
         self.test_subject.send_response = MagicMock()
         
     def tearDown(self):
         client = MongoClient()
-        client.drop_database("test_hpit")
+        client.drop_database(settings.MONGO_DBNAME)
         
         self.test_subject = None
         
@@ -30,7 +32,7 @@ class TestDataStoragePlugin(unittest.TestCase):
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
-        ds.db.full_name.should.equal("hpit.data_storage")
+        ds.db.full_name.should.equal("hpit_unit_test_db.data_storage")
         
     def test_store_data_callback(self):
         """

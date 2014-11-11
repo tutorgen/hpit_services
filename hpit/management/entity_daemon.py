@@ -121,9 +121,9 @@ class BaseDaemon:
             self.entity = self.get_entity_class()
         except Exception as e:
             self.logger.error(str(e))
-        self.logger.debug("Entity: " + str(self.entity) + " Found.")
 
         if self.entity:
+            self.logger.debug("Entity: " + str(self.entity) + " Found.")
             signal.signal(signal.SIGTERM, self.entity.disconnect)
             self.entity.set_hpit_root_url(plugin_settings.HPIT_URL_ROOT)
             self.entity.start()

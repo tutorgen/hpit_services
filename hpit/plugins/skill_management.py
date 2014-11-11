@@ -17,7 +17,7 @@ class SkillManagementPlugin(Plugin):
         super().__init__(entity_id, api_key)
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
-        self.db = self.mongo.hpit.hpit_skills
+        self.db = self.mongo[settings.MONGO_DBNAME].hpit_skills
 
         try:
             self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
