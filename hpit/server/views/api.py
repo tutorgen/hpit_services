@@ -924,6 +924,7 @@ def message_owner(message_name):
     else:
         return  jsonify({"owner":message_auth.entity_id})
 
+
 @csrf.exempt
 @app.route("/share-message", methods=["POST"])
 def share_message():
@@ -961,6 +962,7 @@ def share_message():
                 
         return ok_response()
 
+
 @csrf.exempt
 @app.route("/new-resource", methods=["POST"])
 def new_resource():
@@ -983,7 +985,8 @@ def new_resource():
     db.session.commit()
     
     return jsonify({"resource_id":new_id})
-        
+       
+ 
 @csrf.exempt
 @app.route("/share-resource", methods=["POST"])
 def share_resource():
