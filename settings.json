@@ -42,7 +42,7 @@
             "USER_ENABLE_CONFIRM_EMAIL"    : false,
             "USER_ENABLE_CHANGE_USERNAME"  : false,
             "USER_ENABLE_CHANGE_PASSWORD"  : true,
-            "USER_ENABLE_FORGOT_PASSWORD"  : false,
+            "USER_ENABLE_FORGOT_PASSWORD"  : true,
             "USER_ENABLE_RETYPE_PASSWORD"  : true,
             "USER_LOGIN_TEMPLATE" : "flask_user/login_or_register.html",
             "USER_REGISTER_TEMPLATE" : "flask_user/register.html"

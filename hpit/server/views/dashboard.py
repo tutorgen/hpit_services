@@ -75,6 +75,15 @@ def docs():
     return render_template('docs.html')
 
 
+@app.route("/client-docs")
+def client_docs():
+    """
+    SUPPORTS: GET
+    Shows the Python Client Documentation
+    """
+    return render_template('client_docs.html')
+
+
 @app.route("/routes")
 def routes():
     """
