@@ -177,8 +177,7 @@ class StudentManagementPlugin(Plugin):
                 "student_id" : str(message["student_id"]),
         },self.get_populate_student_model_callback_function(student_id,message))
 
-        
-    
+
     def get_populate_student_model_callback_function(self, student_id, message):
         def populate_student_model(response):
             

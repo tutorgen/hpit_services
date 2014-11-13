@@ -396,3 +396,34 @@ def tutor_delete(tutor_id):
     db.session.commit()
 
     return redirect(url_for('tutors'))
+
+
+@app.route('/account/company', methods=["POST"])
+@login_required
+def account_company():
+    """
+    SUPPORTS: PUT
+    Updates the currently loggest in user's company.
+    """
+    new_company_name = request.form['company']
+
+    if not new_company_name:
+        return render_template('account_detail.html', error="Your company cannot be empty.")
+
+    current_user.company = new_company_name
+    db.session.add(current_user)
+    db.session.commit()
+
+    return render_template('account_detail.html', flash='Your company was updated successfully!')
+
+
+@app.route('/account', methods=["GET"])
+@login_required
+def account_details():
+    """
+    SUPPORTS: GET
+    Shows the currently logged in user's account details.
+    """
+    return render_template('account_detail.html')
+
+
