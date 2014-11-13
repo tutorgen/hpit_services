@@ -40,16 +40,15 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">The HPIT Project</a>
+                <a class="navbar-brand" href="/">The HPIT Project</a>
               </div>
 
               <!-- Collect the nav links, forms, and other content for toggling -->
               <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
 
-                  <li><a href="/">Dashboard</a></li>
-
                   {% if current_user.is_authenticated() %}
+                    <li><a href="/account">Dashboard</a></li>
                     <li><a href="/plugins">Plugins</a></li>
                     <li><a href="/tutors">Tutors</a></li>
                   {% endif %}
@@ -70,18 +69,7 @@
                 <ul class="nav navbar-nav navbar-right">
                   {% if current_user.is_authenticated() %}
                     <li><a>Hello, {{current_user.username}}</a></li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                          My Account
-                          <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu" role="menu">
-                          <li><a href="/user/change-password">Change Password</a></li>
-                          <li><a href="/account">Settings</a></li>
-                          <li class="divider"></li>
-                          <li><a href="/user/sign-out">Signout</a></li>
-                        </ul>
-                    </li>
+                    <li><a href="/user/sign-out">Signout</a></li>
                   {% else %}
                     <li><a href="/user/sign-in">Sign in</a></li>
                     <li><a href="/user/register">Register</a></li>
