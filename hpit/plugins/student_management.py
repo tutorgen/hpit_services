@@ -5,6 +5,8 @@ from bson.objectid import ObjectId
 
 from threading import Timer
 
+from datetime import datetime
+
 import time
 
 from hpit.management.settings_manager import SettingsManager
@@ -22,6 +24,7 @@ class StudentManagementPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo[settings.MONGO_DBNAME].hpit_students
+        self.session_db = self.mongo[settings.MONGO_DBNAME].hpit_sessions
         
         self.TIMEOUT = 30
         self.student_model_fragment_names = ["knowledge_tracing","problem_management","hint_factory"]
@@ -67,10 +70,12 @@ class StudentManagementPlugin(Plugin):
         
         response = self._post_data("new-resource",{"owner_id":message["sender_entity_id"]}).json()
         resource_id = response["resource_id"]
-        
+               
         student_id = self.db.insert({"attributes":attributes,"resource_id":str(resource_id),"owner_id":str(message["sender_entity_id"])})
         
-        self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes,"resource_id":str(resource_id)})
+        session_id = self.session_db.insert({"student_id":str(student_id),"date_created":datetime.now()})
+        
+        self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes,"resource_id":str(resource_id),"session_id":str(session_id)})
         
     def get_student_callback(self, message):
         if self.logger:
@@ -87,7 +92,8 @@ class StudentManagementPlugin(Plugin):
         if not return_student:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
         else:
-            self.send_response(message["message_id"],{"student_id":str(return_student["_id"]),"resource_id":str(return_student["resource_id"]),"attributes":return_student["attributes"]})
+            session_id = self.session_db.insert({"student_id":str(student_id),"date_created":datetime.now()})
+            self.send_response(message["message_id"],{"student_id":str(return_student["_id"]),"resource_id":str(return_student["resource_id"]),"attributes":return_student["attributes"],"session_id":str(session_id)})
             
     def set_attribute_callback(self, message):
         if self.logger:

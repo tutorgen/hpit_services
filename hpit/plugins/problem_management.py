@@ -521,9 +521,11 @@ class ProblemManagementPlugin(Plugin):
         try:
             step_id = ObjectId(str(message["step_id"]))
             transaction_text = message["transaction_text"]
+            session_id = message["session_id"]
+            student_id = message["student_id"]
         except KeyError:
             self.send_response(message["message_id"],{
-                    "error": "add_transaction requires a 'step_id' and 'transaction_text'",
+                    "error": "add_transaction requires a 'step_id', 'session_id','student_id' and 'transaction_text'",
                     "success":False
             })
             return
@@ -558,6 +560,18 @@ class ProblemManagementPlugin(Plugin):
             })
             return
         
+        try:
+            if "level_names" not in message:
+                level_names = {"Default":"default"}
+            else:
+                level_names = dict(message["level_names"])
+        except TypeError:
+            self.send_response(message["message_id"],{
+                "error": "The supplied 'level_names' is not valid; must be dict.",
+                "success":False,
+            })
+            return
+        
         step = self.step_db.find_one({
                 "_id":ObjectId(step_id),
                 "edit_allowed_id":entity_id
@@ -577,6 +591,9 @@ class ProblemManagementPlugin(Plugin):
                     "date_created": datetime.now(),
                     "skill_ids": skill_ids,
                     "skill_names": skill_names,
+                    "session_id":str(session_id),
+                    "student_id":str(student_id),
+                    "level_names":level_names,
             })
             self.send_response(message["message_id"], {
                 "transaction_id": str(transaction_id),
@@ -644,10 +661,10 @@ class ProblemManagementPlugin(Plugin):
             })
             return
         else:
-            transactions = self.tramsaction_db.find({"step_id":ObjectId(step_id)})
-            return_steps = []
+            transactions = self.transaction_db.find({"step_id":ObjectId(step_id)})
+            return_transactions = []
             for transaction in transactions:
-                return_transactionss.append({
+                return_transactions.append({
                         "transaction_id" : str(transaction["_id"]),
                         "transaction_text": transaction["transaction_text"],
                         "date_created": transaction["date_created"],

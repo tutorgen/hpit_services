@@ -904,7 +904,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         msg = {"message_id":"1","sender_entity_id":"2"}
         self.test_subject.add_transaction_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "error": "add_transaction requires a 'step_id' and 'transaction_text'",
+            "error":"add_transaction requires a 'step_id', 'session_id','student_id' and 'transaction_text'",
                     "success":False     
         })
         
@@ -916,10 +916,34 @@ class TestProblemManagementPlugin(unittest.TestCase):
         msg = {"message_id":"1","sender_entity_id":"2","step_id":bogus_id}
         self.test_subject.add_transaction_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "error": "add_transaction requires a 'step_id' and 'transaction_text'",
+            "error": "add_transaction requires a 'step_id', 'session_id','student_id' and 'transaction_text'",
             "success":False     
         })
-        
+    
+    def test_add_transaction_callback_no_session_id(self):
+        """
+        ProblemManagementPlugin.add_transaction_callback() No session id:
+        """
+        bogus_id = ObjectId()
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":bogus_id,"transaction_text":"transaction"}
+        self.test_subject.add_transaction_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error": "add_transaction requires a 'step_id', 'session_id','student_id' and 'transaction_text'",
+            "success":False     
+        })
+    
+    def test_add_transaction_callback_no_student_id(self):
+        """
+        ProblemManagementPlugin.add_transaction_callback() No student_id:
+        """
+        bogus_id = ObjectId()
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":bogus_id,"transaction_text":"transaction","student_id":"456"}
+        self.test_subject.add_transaction_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error": "add_transaction requires a 'step_id', 'session_id','student_id' and 'transaction_text'",
+            "success":False     
+        })
+    
     def test_add_transaction_callback_bad_step_id(self):
         """
         ProblemManagementPlugin.add_transaction_callback() Bad step_id:
@@ -936,7 +960,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         ProblemManagementPlugin.add_transaction_callback() Step doesn't exist:
         """
         bogus_id = ObjectId()
-        msg = {"message_id":"1","sender_entity_id":"2","step_id":bogus_id,"transaction_text":"transaction"}
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":bogus_id,"transaction_text":"transaction","student_id":"000","session_id":"999"}
         self.test_subject.add_transaction_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "error": "Error: either step with provided id doesn't exist, or you do not have permission to edit.",
@@ -956,7 +980,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "skill_names":{"math":"subtract"}
                 })
         
-        msg = {"message_id":"1","sender_entity_id":"2","step_id":step_id,"transaction_text":"transaction"}
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":step_id,"transaction_text":"transaction","student_id":"000","session_id":"999"}
         self.test_subject.add_transaction_callback(msg)
         
         new_transaction = self.test_subject.transaction_db.find_one({"step_id":step_id})
@@ -971,7 +995,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = {"skill":"skill_id"}
         msg["skill_names"] = {"skill_model":"skill_name"}
         self.test_subject.add_transaction_callback(msg)
-        new_transaction = self.test_subject.transaction_db.find_one({"step_id":step_id,"skill_names":{"skill_model":"skill_name"},"skill_ids":{"skill":"skill_id"}})
+        new_transaction = self.test_subject.transaction_db.find_one({"step_id":step_id,"skill_names":{"skill_model":"skill_name"},"skill_ids":{"skill":"skill_id"},"student_id":"000","session_id":"999"})
         new_transaction.should_not.equal(None)
         
         
@@ -979,16 +1003,176 @@ class TestProblemManagementPlugin(unittest.TestCase):
     def test_remove_transaction_callback(self):
         """
         ProblemManagementPlugin.remove_transaction_callback() Test plan:
-            -
+            - pass no transaction id, should throw error
+            - pass invalid transaction id, should throw error
+            - try a transaction Id that doesn't exist, should throw error
+            - try a transaction that doesn't have our entity Id, should throw error
+            - on success, make sure transaction gets removed
         """
-        raise Exception()
+        #no transaction id
+        msg = {"message_id":"1", "sender_entity_id":"2"}
+        self.test_subject.remove_transaction_callback(msg) 
+        self.test_subject.send_response.assert_called_with("1",{
+                "error": "remove_transaction requires 'transaction_id'",
+                 "success":False
+        })
+        
+    def test_remove_transaction_callback_invalid_id(self):
+        """
+        ProblemManagementPlugin.remove_transaction_callback() Invalid transaction ID:
+        """
+        msg = {"message_id":"1", "sender_entity_id":"2","transaction_id":4}
+        self.test_subject.remove_transaction_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error": "The supplied 'transaction_id' is not a valid ObjectId.",
+                 "success":False
+        })
+        
+    def test_remove_transaction_callback_transaction_no_exist(self):
+        """
+        ProblemManagementPlugin.remove_transaction_callback() Transaction does not exist:
+        """
+        msg = {"message_id":"1", "sender_entity_id":"2","transaction_id":ObjectId()}
+        self.test_subject.remove_transaction_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error": "Either the transaction doesn't exist or you don't have permission to remove it.",
+                 "success":False
+        })
+        
+    def test_remove_transaction_callback_bad_permission(self):
+        """
+        ProblemManagementPlugin.remove_transaction_callback() Bad permission:
+        """
+        new_transaction = self.test_subject.transaction_db.insert({
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":"123",
+                    "edit_allowed_id":"3",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+        })
+        msg = {"message_id":"1", "sender_entity_id":"2","transaction_id":new_transaction}
+        self.test_subject.remove_transaction_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error": "Either the transaction doesn't exist or you don't have permission to remove it.",
+                 "success":False
+        })
+        
+    def test_remove_transaction_callback_success(self):
+        """
+        ProblemManagementPlugin.remove_transaction_callback() Success:
+        """
+        new_transaction = self.test_subject.transaction_db.insert({
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":"123",
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+        })
+        msg = {"message_id":"1", "sender_entity_id":"2","transaction_id":new_transaction}
+        self.test_subject.remove_transaction_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "success":True,
+                "exists":True,
+        })
+        
+        self.test_subject.transaction_db.find({}).count().should.equal(0)
         
     def test_get_step_transactions_callback(self):
         """
         ProblemManagementPlugin.get_step_transactions_callback() Test plan:
-            -
+            - if no step_id, then return error
+            - if step id is invalid, return error
+            - if no step, should reply with error
+            - othwersise, should return transactions
         """
-        raise Exception()
+        #no step id
+        msg = {"message_id":"1","sender_entity_id":"2"}
+        self.test_subject.get_step_transactions_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"get_step_transactions_callback requires a 'step_id'",   
+            "success":False        
+        })
+        
+    def test_get_step_transactions_callback_invalid_id(self):
+        """
+        ProblemManagementPlugin.get_step_transactions_callback() Invalid Id:
+        """
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":4}
+        self.test_subject.get_step_transactions_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"The supplied 'step_id' is not a valid ObjectId.",
+            "success":False        
+        })
+        
+    def test_get_step_transactions_callback_no_step(self):
+        """
+        ProblemManagementPlugin.get_step_transactions_callback() No step:
+        """
+        bogus_id = ObjectId()
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":bogus_id}
+        self.test_subject.get_step_transactions_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"Step with ID " + str(bogus_id) + " does not exist.",
+            "success":False        
+        })
+        
+    def test_get_step_transactions_callback_success(self):
+        """
+        ProblemManagementPlugin.get_step_transactions_callback() Success:
+        """
+        
+        sid = self.test_subject.step_db.insert({
+                    "step_text":"subtract",
+                    "date_created":"3:40",
+                    "problem_id":"123",
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"subtract":"44"},
+                    "skill_names":{"math":"subtract"}
+                })
+        
+        transaction_ids = self.test_subject.transaction_db.insert([
+                 {
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":sid,
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                },
+                {
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "step_id":sid,
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                }])
+        
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":sid}
+        self.test_subject.get_step_transactions_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "step_id":str(sid),
+                "success":True,
+                "transactions":[
+                    {
+                    "transaction_id":str(transaction_ids[0]),
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                },
+                {
+                    "transaction_id":str(transaction_ids[1]),
+                    "transaction_text":"transaction",
+                    "date_created":"3:40",
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"addition":"44"},
+                    "skill_names":{"math":"addition"},
+                }]
+        })
  
     def test_get_student_model_fragment_callback(self):
         """
