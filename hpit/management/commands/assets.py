@@ -1,5 +1,9 @@
 import os
+import time
 import shutil
+
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from clint.textui import puts, colored
 
@@ -30,24 +34,20 @@ class Command:
             #    '.hbs': 'gears_handlebars.HandlebarsCompiler'
             },
             public_assets=(
-                os.path.join(settings.PROJECT_DIR, 'server/assets/css/style.css'), 
-                os.path.join(settings.PROJECT_DIR, 'server/assets/js/script.js')
+                os.path.join(settings.PROJECT_DIR, 'hpit/server/assets/css/style.css'), 
+                os.path.join(settings.PROJECT_DIR, 'hpit/server/assets/js/script.js')
             )
         )
 
-        parser.add_argument('dest', type=str, help="The destination directory of where to put these assets.")
+        parser.add_argument('--dest', type=str, default="hpit/server/assets/compiled", help="The destination directory of where to put these assets.")
+        parser.add_argument('--watch', action='store_true', help="Watch for changes to source files and compile on demand.")
 
     
     def get_absolute_path(self, path):
         return os.path.normpath(os.path.abspath(os.path.join(settings.PROJECT_DIR, path)))
 
 
-    def run(self, arguments, configuration):
-        self.arguments = arguments
-        self.configuration = configuration
-
-        dest_path = self.arguments.dest
-
+    def _do_compilation(self, dest_path):
         if not os.path.isabs(dest_path):
             dest_path = os.path.join(os.getcwd(), dest_path)
 
@@ -72,3 +72,34 @@ class Command:
             src_path = os.path.relpath(asset.absolute_path)
             dest_path = os.path.relpath(os.path.join(environment.root, path))
             puts(colored.green('- compiled %s to %s' % (src_path, dest_path)))
+
+
+    def run(self, arguments, configuration):
+        self.arguments = arguments
+        self.configuration = configuration
+
+        dest_path = self.arguments.dest
+
+        me = self
+        class RecompileAssetsEventHandler(FileSystemEventHandler):
+
+            def on_any_event(self, event):
+                me._do_compilation(dest_path)
+
+        handle_file_change = RecompileAssetsEventHandler()
+
+        if self.arguments.watch:
+            observer = Observer()
+            observer.schedule(
+                handle_file_change, 'hpit/server/assets', recursive=True)
+            observer.start()
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                observer.stop()
+            observer.join()
+
+        else:
+            self._do_compilation(dest_path)
+

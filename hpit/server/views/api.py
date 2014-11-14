@@ -731,9 +731,6 @@ def message():
                 'receiver_entity_id': plugin_entity_id,
 
                 'time_created': datetime.now(),
-                'time_received': datetime.now(),
-                'time_responded': datetime.now(),
-                'time_response_received': datetime.now(),
 
                 'message_name': message_name,
                 'payload': payload
@@ -746,9 +743,6 @@ def message():
                 'receiver_entity_id': plugin_entity_id,
 
                 'time_created': datetime.now(),
-                'time_received': datetime.now(),
-                'time_responded': datetime.now(),
-                'time_response_received': datetime.now(),
 
                 'message_name': message_name,
                 'payload': payload

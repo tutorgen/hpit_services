@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if error %}
+<div class="alert alert-danger">
+    <button type="button" class="close" data-dismiss="alert">
+      <span aria-hidden="true">&times;</span>
+      <span class="sr-only">Close</span>
+    </button>
+
+    <h4>Uh Oh. Something went wrong.</h4>
+    <p>{{error}}</p>
+</div>
+{% endif %}
+
+{% if flash %}
+<div class="alert alert-info">
+    <button type="button" class="close" data-dismiss="alert">
+      <span aria-hidden="true">&times;</span>
+      <span class="sr-only">Close</span>
+    </button>
+
+    <h4>New information, {{current_user.username}}!</h4>
+    <p>{{flash}}</p>
+</div>
+{% endif %}
+
+<h2>Account Dashboard</h2>
+
+{% include '_metrics_partial.html' %}
+
+<hr>
+<h1>Change your company.</h1>
+<form action="/account/company" method="POST" role="form">
+    <input name="_csrf_token" type=hidden value="{{csrf_token()}}">
+    <div class="form-group">
+        <label for="inputCompany">Company: </label>
+        <input type="text" class="form-control" id="inputCompany" name="company" value="{{current_user.company}}" />
+    </div>
+    <button type="submit" class="btn btn-primary">Update Company</button>
+</form>
+
+{% endblock %}
