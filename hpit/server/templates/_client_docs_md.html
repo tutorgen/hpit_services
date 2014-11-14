@@ -1,0 +1,430 @@
+<h1>HPIT (Hyper-Personalized Intelligent Tutor) Python Client Libraries</h1>
+<h2>What is HPIT?</h2>
+<p>HPIT is a collection of machine learning and data management plugins for Intelligent Tutoring Systems. It
+is being developed between a partnership with Carnegie Learning and TutorGen, Inc and is based on the most 
+recent research available. The goal of HPIT is to provide a scalable platform for the future development 
+of cognitive and intelligent tutoring systems. HPIT by default consists of several different plugins
+which users can store, track and query for information. As of today we support Bayesian Knowledge Tracing, 
+Model Tracing, Adaptive Hint Generation, and data storage and retrieval. HPIT is in active development 
+and should be considered unstable for everyday use.</p>
+<h2>Installing the client libraries</h2>
+<ol>
+<li>
+<p>To install the client libraries make sure you are using the most recent version of Python 3.4.</p>
+<ul>
+<li>On Ubuntu: <code>sudo apt-get install python3 python-virtualenv</code></li>
+<li>On Mac w/ Homebrew: <code>brew install python3 pyenv-virtualenv</code></li>
+</ul>
+</li>
+<li>
+<p>Setup a virtual environment: <code>virtualenv -p python3 env</code></p>
+</li>
+<li>Active the virtual environment: <code>source env/bin/activate</code></li>
+<li>Install the HPIT client libraries: <code>pip3 install hpitclient</code></li>
+</ol>
+<p>You're all set to start using the libraries.</p>
+<h2>Running the test suite.</h2>
+<ol>
+<li>Activate the virtual environment: <code>source env/bin/activate</code></li>
+<li>Install the testing requirements: <code>pip3 install -r test_requirements.txt</code></li>
+<li>Run the nose tests runner: <code>nosetests</code></li>
+</ol>
+<h2>Registering with HPIT</h2>
+<p>Go to https://www.hpit-project.org/user/register and create a new account.</p>
+<h2>Settings</h2>
+<p>There are various settings which change the behavior of the client side libraries.</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>default</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HPIT_URL_ROOT</td>
+<td>'https://www.hpit-project.org'</td>
+<td>The URL of the HPIT server.</td>
+</tr>
+<tr>
+<td>REQUESTS_LOG_LEVEL</td>
+<td>'debug'</td>
+<td>The logging level of the requests library.</td>
+</tr>
+</tbody>
+</table>
+<p>To override the clientside settings in your app do the following. You will need to override the HPIT
+URL if you are doing any local testing.</p>
+<p><code>python
+    from hpitclient.settings import HpitClientSettings
+    settings = HpitClientSettings.settings()
+    settings.HPIT_URL_ROOT = 'http://127.0.0.1:8000'</code></p>
+<h2>Plugins</h2>
+<h3>Tutorial: Creating a Plugin</h3>
+<p>To create a new plugin, first go https://www.hpit-project.org and log in. Then
+click on "My Plugins" and add a new plugin. Give it a brief name and a description. Click
+Submit. The next page will generate for you two items you'll need to us to connect to the
+centralized HPIT router. An Entity ID and an API Key. We do not store API Keys on the server
+so if you lose it you'll need to generate a new one. Copy the Entity ID and API Key.</p>
+<p>To create a new plugin you'll need to derive from the Plugin class.</p>
+<p>```python
+from hpitclient import Plugin</p>
+<p>class MyPlugin(Plugin):</p>
+<pre><code>def __init__(self):
+    entity_id = 'YOUR_PLUGIN_ENTITY_ID' #eg. b417e82d-4153-4f87-8a11-8bb5c6bfaa00
+    api_key = 'YOUR_PLUGIN_API_KEY' #eg. ae29bd1b81a6064061eca875a8ff0a8d
+
+    #Call the parent class's init function
+    super().__init__(entity_id, api_key)
+</code></pre>
+<p>```</p>
+<p>Calling the start method on the plugin will connect it to the server.</p>
+<p>```python</p>
+<p>my_plugin = MyPlugin()
+my_plugin.start()
+```</p>
+<p>Plugins are event driven. The start method connects to the server then starts an endless loop. There are
+several hooks that can get called in this process. One of these hooks is the <code>post_connect</code> hook and will
+get called after successfully connecting to the server. Here is where you can register the messages you want
+your plugin to listen to and the callback functions to call when your plugin recieves a message of that type.</p>
+<p>Let's define one now:</p>
+<p>```python
+from hpitclient import Plugin</p>
+<p>class MyPlugin(Plugin):</p>
+<pre><code>def __init__(self):
+    ...
+
+def post_connect(self):
+    super().post_connect()
+
+    #Subscribe to a message called 'echo'
+    self.subscribe(echo=self.my_echo_callback)
+
+def my_echo_callback(self, message):
+    print(message['echo_text'])
+</code></pre>
+<p>```</p>
+<p>The <code>self.subscribe</code> method takes a message name and a callable. In this case <code>echo</code> is the message name and
+<code>self.my_echo_callback</code> is the callback that will be called when a message of that name is sent to the plugin. It 
+then contacts the HPIT central router and tells it to start storing messages with that name of <code>echo</code> so this plugin
+can listen to and respond to those messages.</p>
+<p>A message in HPIT consists of a message name, in this case <code>echo</code> and a payload. The payload can
+have any arbitrary data in it that a tutor wishes to send. HPIT doesn't care about the kind of data
+it sends to plugins. It's the plugin operator's responsibility to do what it wants with the data
+that comes from the tutor.</p>
+<p>So now if a tutor sends a message like <code>"echo" -&gt; {'echo_text' : "Hello World!"}</code> through HPIT this plugin
+will recieve that message and print it to the screen. If 'echo_text' isn't in the payload the callback would
+throw a KeyError exception so we might want to handle that.</p>
+<p>```python</p>
+<p>from hpitclient import Plugin</p>
+<p>class MyPlugin(Plugin):</p>
+<pre><code>def __init__(self):
+    ...
+
+def post_connect(self):
+    ...
+
+def my_echo_callback(self, message):
+    if 'echo_text' in message:
+        print(message['echo_text'])
+</code></pre>
+<p>```</p>
+<p>In the inner loop of the start method a few things happen. The plugin asks the HPIT router server if any messages
+that it wants to listen to are queued to be sent to the plugin. Then if it recieves new messages it dispatches them
+to the assigned callbacks that were specified in your calls to <code>self.subscribe</code></p>
+<p>Plugins can also send responses back to the original sender of messages. To do so the plugin needs to call the
+<code>self.send_response</code> function. All payloads come with the <code>message_id</code> specified so we can route responses appropriately.
+To send a response we'll need to slightly modify our code a bit.</p>
+<p>```python</p>
+<p>from hpitclient import Plugin</p>
+<p>class MyPlugin(Plugin):</p>
+<pre><code>def __init__(self):
+    ...
+
+def post_connect(self):
+    ...
+
+def my_echo_callback(self, message):
+    if 'echo_text' in message:
+        #Print the echo message
+        print(message['echo_text'])
+
+        #Send a response to the message sender 
+        my_response = {
+            'echo_response': message['echo_text']
+        }
+        self.send_response(message['message_id'], my_response)
+</code></pre>
+<p>```</p>
+<p>Now the original tutor or plugin who sent this message to your MyPlugin will get a response back
+with the <code>echo_response</code> parameter sent back.</p>
+<p>Just like tutors, plugins can also send messages to other messages over HPIT. It is possible to
+"daisy chain" plugins together this way where you have a tutor send a message, which gets sent 
+to a plugin (A), which queries another plugin for information (B), which does the same for another plugin (C), 
+which sends back a response to plugin B, which responds to plugin A, which responds to the original Tutor.</p>
+<p>The goal with this is that each plugin can handle a very small task, like storing information, do some logging,
+update a decision tree, or a knowledge graph, or etc, etc. The possibilities are endless.</p>
+<p>Our plugin all put together now looks like:</p>
+<p>```python
+from hpitclient import Plugin</p>
+<p>class MyPlugin(Plugin):</p>
+<pre><code>def __init__(self):
+    entity_id = 'YOUR_PLUGIN_ENTITY_ID' #eg. b417e82d-4153-4f87-8a11-8bb5c6bfaa00
+    api_key = 'YOUR_PLUGIN_API_KEY' #eg. ae29bd1b81a6064061eca875a8ff0a8d
+
+    #Call the parent class's init function
+    super().__init__(entity_id, api_key)
+
+def post_connect(self):
+    super().post_connect()
+
+    #Subscribe to a message called 'echo'
+    self.subscribe(echo=self.my_echo_callback)
+
+def my_echo_callback(self, message):
+    if 'echo_text' in message:
+        #Print the echo message
+        print(message['echo_text'])
+
+        #Send a response to the message sender 
+        my_response = {
+            'echo_response': message['echo_text']
+        }
+        self.send_response(message['message_id'], my_response)
+</code></pre>
+<p>if <strong>name</strong> == '<strong>main</strong>':
+    my_plugin = MyPlugin()
+    my_plugin.start()
+```</p>
+<h3>Plugin Hooks</h3>
+<p>There are several hooks throughout the main event loop, where you can handle some special cases. The only hook
+that MUST be defined in a plugin is the <code>post_connect</code> hook. It is where you should define the messages and handlers
+that the plugin to listen and possibly respond to. </p>
+<p>To stop the plugin from running you can either send a SIGTERM or SIGKILL signal to it eg. (<code>sudo kill -9 plugin_process_id</code>), OR
+you can press CTRL+C, OR you can return False from a hook. A signal, control+c, and returning False from a hook are considered
+graceful by the library and not only will the plugin terminate, it will send a disconnect message to the server, which will
+destory the authentication session against the server, and the HPIT server will continue storing messages for you to retrieve
+later.</p>
+<p>Disconnecting from the HPIT server will not cause HPIT to forget about you, it will continue storing messages for you, which
+you can recieve the next time you run your plugin. Isn't that nice. :)</p>
+<p>If you want HPIT to stop storing and routing messages to you, you can call the handy, dandy 'self.unsubscribe' method after
+connecting to HPIT. A good place to do this is in the <code>pre_disconnect</code> hook.</p>
+<p>```python
+from hpitclient import Plugin</p>
+<p>class MyPlugin(Plugin):</p>
+<pre><code>def __init__(self):
+    pass
+
+def post_connect(self):
+    super().post_connect()
+
+    #Subscribe to a message called 'echo'
+    self.subscribe(echo=self.my_echo_callback)
+
+def pre_disconnect(self):
+    #Unsubscribe to the 'echo' message
+    self.unsubscribe('echo')
+</code></pre>
+<p>```</p>
+<p>Here are some other places you can hook into the event loop. Returning False from any of them, will cause the event loop to
+terminate.</p>
+<table>
+<thead>
+<tr>
+<th>Hook Name</th>
+<th>Called When:</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pre_connect</td>
+<td>Before the plugin connects and authenticates with the server.</td>
+</tr>
+<tr>
+<td>post_connect</td>
+<td>After the plugin connects and authenticates with the server.</td>
+</tr>
+<tr>
+<td>pre_disconnect</td>
+<td>Before the plugin disconnects from the server.</td>
+</tr>
+<tr>
+<td>post_disconnect</td>
+<td>After the plugin disconnects from the server. (Right before exit)</td>
+</tr>
+<tr>
+<td>pre_poll_messages</td>
+<td>Before the plugin polls the server for new messages.</td>
+</tr>
+<tr>
+<td>post_poll_messages</td>
+<td>After the plugin polls the server for new messages but before dispatch.</td>
+</tr>
+<tr>
+<td>pre_dispatch_messages</td>
+<td>Before the messages are dispatched to their callbacks.</td>
+</tr>
+<tr>
+<td>post_dispatch_messages</td>
+<td>After the messages are dispatched to their callbacks.</td>
+</tr>
+<tr>
+<td>pre_handle_transactions</td>
+<td>Before the plugin polls the server for new PSLC Datashop transactions.</td>
+</tr>
+<tr>
+<td>post_handle_transcations</td>
+<td>After the plugin polls the server for new PSLC Datashop transactions.</td>
+</tr>
+<tr>
+<td>pre_poll_responses</td>
+<td>Before the plugin polls the server for new responses to it's messages.</td>
+</tr>
+<tr>
+<td>post_poll_responses</td>
+<td>After the plugin polls the server for new responses but before dispatch.</td>
+</tr>
+<tr>
+<td>pre_dispatch_responses</td>
+<td>Before the plugin dispatches it's responses to response callbacks.</td>
+</tr>
+<tr>
+<td>post_dispatch_responses</td>
+<td>After the plugin dispatches it's responses to response callbacks.</td>
+</tr>
+</tbody>
+</table>
+<h2>Tutors</h2>
+<h3>Tutorial: Creating a Tutor</h3>
+<p>To create a new tutor, first go https://www.hpit-project.org and log in. Then
+click on "My Tutors" and add a new tutor. Give it a brief name and a description. Click
+Submit. The next page will generate for you two items you'll need to us to connect to the
+centralized HPIT router. An Entity ID and an API Key. We do not store API Keys on the server
+so if you lose it you'll need to generate a new one. Copy the Entity ID and API Key.</p>
+<p>To create a new tutor you'll need to derive from the Tutor class.</p>
+<p>```python
+from hpitclient import Tutor</p>
+<p>class MyTutor(Tutor):</p>
+<pre><code>def __init__(self):
+    entity_id = 'YOUR_PLUGIN_ENTITY_ID' #eg. b417e82d-4153-4f87-8a11-8bb5c6bfaa00
+    api_key = 'YOUR_PLUGIN_API_KEY' #eg. ae29bd1b81a6064061eca875a8ff0a8d
+
+    super().__init__(entity_id, api_key, self.main_callback)
+
+def main_callback(self):
+    print("Main Callback Loop")
+    response = self.send('echo', {'test': 1234})
+</code></pre>
+<p>```</p>
+<p>Tutors differ from plugins in one major way, in their main event loop they call a callback function
+which will be called during each iteration of the main event loop. This callback is specified in a 
+parameter in the init function. After calling the main callback function, the main event loop then
+polls HPIT for responses from plugins which you have sent messages to earlier.</p>
+<p>To send a message to HPIT and have that message routed to a specific plugin you can call the <code>self.send</code>
+method as we do above. Messages sent this way consist of an event name (in this case 'echo') and a dictionary
+of data. Optionally you can specify a response callback as we do below. All messages sent through HPIT are 
+multicast and every plugin which 'subscribes' to those messages will recieve them, including the echo plugin
+you created and registered with HPIT in the last tutorial.</p>
+<p>```python
+class MyTutor(Tutor):
+    ...</p>
+<pre><code>def main_callback(self):
+    response = self.send('echo', {'test': 1234}, self.response_callback)
+
+def response_callback(self, response):
+    print(str(response))
+</code></pre>
+<p>```</p>
+<p>When you send a message to HPIT you can specify a response callback to the send method. After the message is
+recieved and processed by a plugin, it may optionally send a response back. If it does the response will travel
+back through HPIT, where when polled by this library, will route that response to the callback you specified. You can
+then process the response however you would like in your Tutor. Here, we are just echoing the response back to the
+console. Responses you recive will be a dictionary consisting of the following key-value pairs.</p>
+<table>
+<thead>
+<tr>
+<th>Key (. denotes sub-dictionary)</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>message_id</td>
+<td>The ID generated to track the message.</td>
+</tr>
+<tr>
+<td>message.sender_entity_id</td>
+<td>Your Entity ID.</td>
+</tr>
+<tr>
+<td>message.receiver_entity_id</td>
+<td>The Plugin's Entity ID that is responding to your message.</td>
+</tr>
+<tr>
+<td>message.time_created</td>
+<td>The time HPIT first recieved your message.</td>
+</tr>
+<tr>
+<td>message.time_received</td>
+<td>The time HPIT queued the message for the plugin to consume.</td>
+</tr>
+<tr>
+<td>message.time_responded</td>
+<td>The time HPIT recieved a response from the plugin.</td>
+</tr>
+<tr>
+<td>message.time_response_received</td>
+<td>The time HPIT sent the response back to your tutor.</td>
+</tr>
+<tr>
+<td>message.payload</td>
+<td>What you originally sent to HPIT.</td>
+</tr>
+<tr>
+<td>message.message_name</td>
+<td>What you named the message.</td>
+</tr>
+<tr>
+<td>response</td>
+<td>A dictionary of values the Plugin responded to the message with.</td>
+</tr>
+</tbody>
+</table>
+<p>Since multiply plugins may respond to the same message that you sent out, you may wish to check the contents
+of the response payload, as well as the message.reciever_entity_id to help filter the responses you actually
+want to handle. You can specify different callbacks for the same message, as well as a "global" callback for 
+one message. For example both:</p>
+<p>```python
+class mytutor(tutor):
+    ...</p>
+<pre><code>def main_callback(self):
+    response = self.send('echo', {'test': 1234}, self.response_callback)
+    response = self.send('echo_two', {'test': 1234}, self.response_callback)
+
+def response_callback(self, response):
+    print(str(response))
+</code></pre>
+<p>```</p>
+<p>AND</p>
+<p>```python
+class mytutor(tutor):
+    ...</p>
+<pre><code>def main_callback(self):
+    response = self.send('echo', {'test': 1234}, self.response_callback)
+    response = self.send('echo', {'test': 1234}, self.response_callback_two)
+
+def response_callback(self, response):
+    print(str(response))
+
+def response_callback_two(self, response):
+    logger.log(str(response))
+</code></pre>
+<p>```</p>
+<p>are valid ways to handle responses from plugins. </p>
+<p>That's really all their is to writing a tutor.</p>
+<h2>Active Plugins in Production</h2>
+<p>Currently, there are only 2 plugins active on HPIT's production servers which you can query for information.
+These are the knowledge tracing plugin and the hint factory plugin. The knowledge tracing plugin is responsible
+for handling bayesian knowledge tracing, and the hint factory handle domain model generation and hint generation.
+Documentation on these two plugins are available from https://www.hpit-project.org/docs</p>
