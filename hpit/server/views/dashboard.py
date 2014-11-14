@@ -14,55 +14,78 @@ mongo = app_instance.mongo
 from hpit.server.models import Plugin, Tutor
 from hpit.server.forms import PluginForm, TutorForm
 
+
+def query_metrics(collection, metric_name, senders=None, receivers=None):
+    end = datetime.now()
+
+    def _query_metrics_with_time(time_delta):
+        query_count = None
+
+        if senders and receivers:
+            query_count = collection.find({
+                metric_name: {'$gte': end - time_delta, '$lt': end },
+                '$or' : [
+                    {
+                        'sender_entity_id': {
+                            '$in' : senders
+                        }
+                    }, {
+                        'receiver_entity_id': {
+                            '$in': receivers
+                        }
+                    }
+                ] 
+            }).count()
+        elif senders:
+            query_count = collection.find({
+                metric_name: {'$gte': end - time_delta, '$lt': end },
+                'sender_entity_id': {'$in' : senders},
+            }).count()
+        elif receivers:
+            query_count = collection.find({
+                metric_name: {'$gte': end - time_delta, '$lt': end },
+                'receiver_entity_id': {'$in': receivers},
+            }).count()
+        else:
+            query_count = collection.find({
+                metric_name: {'$gte': end - time_delta, '$lt': end }
+            }).count()
+
+        return query_count
+
+    seconds = _query_metrics_with_time(timedelta(seconds=1))
+    minutes = _query_metrics_with_time(timedelta(minutes=1))
+    hours = _query_metrics_with_time(timedelta(hours=1))
+    days = _query_metrics_with_time(timedelta(days=1))
+
+    return (seconds, minutes, hours, days)
+
+
 @app.route("/")
 def index():
     """
     SUPPORTS: GET
     Shows the main page for HPIT.
     """
-    active_poll_time = datetime.now() - timedelta(minutes=5)
+    active_poll_time = datetime.now() - timedelta(minutes=15)
 
     plugins = list(Plugin.query.filter(Plugin.time_last_polled >= active_poll_time))
     tutors = list(Tutor.query.filter(Tutor.time_last_polled >= active_poll_time))
 
-    end = datetime.now()
-
-    h_mes = mongo.db.sent_messages_and_transactions.find({
-        'time_received': {'$gte': end - timedelta(hours=1), '$lt': end }
-    }).count()
-
-    h_res = mongo.db.sent_responses.find({
-        'time_response_received': {'$gte': end - timedelta(hours=1), '$lt': end }
-    }).count()
-
-    last_hour = (h_mes, h_res)
-
-    m_mes = mongo.db.sent_messages_and_transactions.find({
-        'time_received': {'$gte': end - timedelta(minutes=1), '$lt': end }
-    }).count()
-
-    m_res = mongo.db.sent_responses.find({
-        'time_response_received': {'$gte': end - timedelta(minutes=1), '$lt': end }
-    }).count()
-
-    last_minute = (m_mes, m_res)
-
-    d_mes = mongo.db.sent_messages_and_transactions.find({
-        'time_received': {'$gte': end - timedelta(days=1), '$lt': end }
-    }).count()
-
-    d_res = mongo.db.sent_responses.find({
-        'time_response_received': {'$gte': end - timedelta(days=1), '$lt': end }
-    }).count()
-
-    last_day = (d_mes, d_res)
+    messages_created = query_metrics(mongo.db.plugin_messages, 'time_created')
+    messages_received = query_metrics(mongo.db.sent_messages_and_transactions, 'time_received')
+    responses_created = query_metrics(mongo.db.sent_messages_and_transactions, 'time_responded')
+    responses_received = query_metrics(mongo.db.sent_responses, 'time_response_received')
 
     return render_template('index.html', 
         tutor_count=len(tutors),
         plugin_count=len(plugins),
         tutors=tutors,
         plugins=plugins,
-        events={'last_minute': last_minute, 'last_hour': last_hour, 'last_day': last_day}
+        messages_created=messages_created,
+        messages_received=messages_received,
+        responses_created=responses_created,
+        responses_received=responses_received
     )
 
 
@@ -396,3 +419,59 @@ def tutor_delete(tutor_id):
     db.session.commit()
 
     return redirect(url_for('tutors'))
+
+
+@app.route('/account/company', methods=["POST"])
+@login_required
+def account_company():
+    """
+    SUPPORTS: PUT
+    Updates the currently loggest in user's company.
+    """
+    new_company_name = request.form['company']
+
+    if not new_company_name:
+        return render_template('account_detail.html', error="Your company cannot be empty.")
+
+    current_user.company = new_company_name
+    db.session.add(current_user)
+    db.session.commit()
+
+    return render_template('account_detail.html', flash='Your company was updated successfully!')
+
+
+@app.route('/account', methods=["GET"])
+@login_required
+def account_details():
+    """
+    SUPPORTS: GET
+    Shows the currently logged in user's account details.
+    """
+    plugins = current_user.plugins
+    tutors = current_user.tutors
+
+    active_poll_time = datetime.now() - timedelta(minutes=15)
+
+    active_plugins = list(filter(lambda x: x.time_last_polled >= active_poll_time, plugins))
+    active_tutors = list(filter(lambda x: x.time_last_polled >= active_poll_time, tutors))
+
+    senders = list(map(lambda x: x.entity_id, tutors))
+    receivers = list(map(lambda x: x.entity_id, plugins))
+
+    messages_created = query_metrics(mongo.db.plugin_messages, 'time_created', senders, receivers)
+    messages_received = query_metrics(mongo.db.sent_messages_and_transactions, 'time_received', senders, receivers)
+    responses_created = query_metrics(mongo.db.sent_messages_and_transactions, 'time_responded', senders, receivers)
+    responses_received = query_metrics(mongo.db.sent_responses, 'time_response_received', senders, receivers)
+
+    return render_template('account_detail.html', 
+        tutor_count=len(active_tutors),
+        plugin_count=len(active_plugins),
+        tutors=active_tutors,
+        plugins=active_plugins,
+        messages_created=messages_created,
+        messages_received=messages_received,
+        responses_created=responses_created,
+        responses_received=responses_received
+    )
+
+

@@ -1,0 +1,73 @@
+Number of Tutors Connected: {{tutor_count}}<br/>
+Number of Plugins Connected: {{plugin_count}}<br/>
+
+<h4>Event Throughput</h4>
+<table>
+    <tr>
+        <td><b>Event Type</b></td>
+        <td><b>Last Second</b></td>
+        <td><b>Last Minute</b></td>
+        <td><b>Last Hour</b></td>
+        <td><b>Last 24 Hours</b></td>
+    </tr>
+    <tr>
+        <td><b>Messages Created</b></td>
+        <td>{{messages_created.0}}</td>
+        <td>{{messages_created.1}}</td>
+        <td>{{messages_created.2}}</td>
+        <td>{{messages_created.3}}</td>
+    </tr>
+    <tr>
+        <td><b>Messages Received</b></td>
+        <td>{{messages_received.0}}</td>
+        <td>{{messages_received.1}}</td>
+        <td>{{messages_received.2}}</td>
+        <td>{{messages_received.3}}</td>
+    </tr>
+    <tr>
+        <td><b>Responses Created</b></td>
+        <td>{{responses_created.0}}</td>
+        <td>{{responses_created.1}}</td>
+        <td>{{responses_created.2}}</td>
+        <td>{{responses_created.3}}</td>
+    </tr>
+    <tr>
+        <td><b>Responses Received</b></td>
+        <td>{{responses_received.0}}</td>
+        <td>{{responses_received.1}}</td>
+        <td>{{responses_received.2}}</td>
+        <td>{{responses_received.3}}</td>
+    </tr>
+</table>
+
+<h4>Connected Tutors</h4>
+<table>
+    <tr>
+        <td><b>User Name</b></td>
+        <td><b>Tutor Name</b></td>
+        <td><b>Tutor ID</b></td>
+    </tr>
+    {% for tutor in tutors %}
+        <tr>
+            <td>{{tutor.user.username}}</td>
+            <td>{{tutor.name}}</td>
+            <td>{{tutor.entity_id}}</td>
+        </tr> 
+    {% endfor %}
+</table>
+
+<h4>Connected Plugins</h4>
+<table>
+    <tr>
+        <td><b>User Name</b></td>
+        <td><b>Plugin Name</b></td>
+        <td><b>Plugin ID</b></td>
+    </tr>
+    {% for plugin in plugins %}
+        <tr>
+            <td>{{plugin.user.username}}</td>
+            <td>{{plugin.name}}</td>
+            <td>{{plugin.entity_id}}</td>
+        </tr> 
+    {% endfor %}
+</table>
