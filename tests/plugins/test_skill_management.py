@@ -35,7 +35,6 @@ class TestSkillManagementPlugin(unittest.TestCase):
         req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
         
         self.test_subject = SkillManagementPlugin(123,456,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_skills
         self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = settings.COUCHBASE_HOSTNAME)
        
         self.test_subject.send_response = MagicMock()
@@ -51,7 +50,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 raise Exception(' '.join(["Failure to delete bucket:", str(r.status_code), r.text]))
             
         client = MongoClient()
-        client.drop_database("test_hpit")
+        client.drop_database(settings.MONGO_DBNAME)
         
         self.test_subject = None
 
@@ -143,6 +142,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
                 "skill_id":str(added_id),
+                "skill_model":"Default",
                 "cached":False
         })
         
@@ -150,13 +150,14 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """
         SkillManagementPlugin.get_skill_id_callback() Existing Skill
         """
-        self.test_subject.cache.set("addition","123")
+        self.test_subject.cache.set("Defaultaddition","123")
         
         msg = {"message_id":"1","skill_name":"addition"}
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
                 "skill_id":"123",
+                "skill_model":"Default",
                 "cached":True
         })
         

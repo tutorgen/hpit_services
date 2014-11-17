@@ -6,6 +6,9 @@ from bson.objectid import ObjectId
 
 from hpit.plugins import KnowledgeTracingPlugin
 
+from hpit.management.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+
 import nose
 
 class TestKnowledgeTracingPlugin(unittest.TestCase):
@@ -15,7 +18,6 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         class.  setup_method is invoked for every test method of a class.
         """
         self.test_subject = KnowledgeTracingPlugin(123,456,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_knowledge_tracing
         self.test_subject.send_response = MagicMock()
         
     def tearDown(self):
@@ -23,7 +25,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         call.
         """
         client = MongoClient()
-        client.drop_database("test_hpit")
+        client.drop_database(settings.MONGO_DBNAME)
         
         self.test_subject = None
         
