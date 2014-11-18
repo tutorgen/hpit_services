@@ -34,7 +34,6 @@ class TestStudentManagementPlugin(unittest.TestCase):
         req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
         
         self.test_subject = StudentManagementPlugin(123,456,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_students
         
         self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
         self.test_subject.logger = MagicMock()
@@ -51,7 +50,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
                 raise Exception("Failure to delete bucket")
         
         client = MongoClient()
-        client.drop_database("test_hpit")
+        client.drop_database(settings.MONGO_DBNAME)
         
         self.test_subject = None
 
@@ -88,18 +87,24 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_log_entry.assert_has_calls(calls)
         
         client = MongoClient()
-        result = client.test_hpit.hpit_students.find({})
+        result = client[settings.MONGO_DBNAME].hpit_students.find({})
         result.count().should.equal(1)
         result[0]["attributes"].should.equal({})  
-        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{},"resource_id":"456"})
+        
+        session = client[settings.MONGO_DBNAME].hpit_sessions.find_one({"student_id":str(result[0]["_id"])})
+        
+        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[0]["_id"]),"attributes":{},"resource_id":"456","session_id":str(session["_id"])})
         self.test_subject.send_response.reset_mock()
         
         test_message = {"message_id":"2","attributes":{"attr":"value"},"sender_entity_id":"3"}
         self.test_subject.add_student_callback(test_message)
-        result = client.test_hpit.hpit_students.find({})
+        result = client[settings.MONGO_DBNAME].hpit_students.find({})
         result.count().should.equal(2)
         result[1]["attributes"].should.equal({"attr":"value"})
-        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[1]["_id"]),"attributes":{"attr":"value"},"resource_id":"456"})
+        
+        session = client[settings.MONGO_DBNAME].hpit_sessions.find_one({"student_id":str(result[1]["_id"])})
+        
+        self.test_subject.send_response.assert_called_with("2",{"student_id":str(result[1]["_id"]),"attributes":{"attr":"value"},"resource_id":"456","session_id":str(session["_id"])})
         
     def test_get_student_callback(self):
         """
@@ -131,7 +136,10 @@ class TestStudentManagementPlugin(unittest.TestCase):
         sid = self.test_subject.db.insert({"attributes":{"key":"value"},"owner_id":"123","resource_id":"4"})
         test_message = {"message_id":"2","student_id":sid,"sender_entity_id":"123"}
         self.test_subject.get_student_callback(test_message)
-        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"resource_id":"4","attributes":{"key":"value"}})
+        
+        session = self.test_subject.session_db.find_one({"student_id":str(sid)})
+        
+        self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"resource_id":"4","attributes":{"key":"value"},"session_id":str(session["_id"])})
         self.test_subject.send_response.reset_mock()
         
         #try without owner
