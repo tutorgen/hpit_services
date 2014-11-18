@@ -200,7 +200,7 @@
             "MONGO_DBNAME" : "hpit_unit_test_db",
             "COUCHBASE_HOSTNAME" : "66.228.32.124",
             "COUCHBASE_BUCKET_URI" : "http://66.228.32.124:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"],
+            "COUCHBASE_AUTH" : ["Administrator", "88#als@"],
             "PROJECT_DIR" : "/home/travis/build/tutorgen/hpit_services"
         },
         "server": {
@@ -252,7 +252,7 @@
             "MONGO_DBNAME" : "hpit_development",
             "COUCHBASE_HOSTNAME" : "66.228.32.124",
             "COUCHBASE_BUCKET_URI" : "http://66.228.32.124:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"],
+            "COUCHBASE_AUTH" : ["Administrator", "88#als@"],
             "PROJECT_DIR" : "/home/travis/build/tutorgen/hpit_services"
         },
         "server": {
@@ -304,7 +304,7 @@
             "MONGO_DBNAME" : "hpit_unit_test_db",
             "COUCHBASE_HOSTNAME" : "66.228.32.124",
             "COUCHBASE_BUCKET_URI" : "http://66.228.32.124:8091/pools/default/buckets",
-            "COUCHBASE_AUTH" : ["Administrator", "..fou@T"],
+            "COUCHBASE_AUTH" : ["Administrator", "88#als@"],
             "PROJECT_DIR" : "/home/ansible/hpit_services"
         },
         "server": {
