@@ -708,6 +708,9 @@ def message():
 
     sender_entity_id = session['entity_id']
     message_name = request.json['name']
+    if message_name== "transaction":
+        return bad_parameter_response("name")
+        
     payload = request.json['payload']
 
     message = {
@@ -724,32 +727,76 @@ def message():
     for subscription in subscriptions:
         plugin_entity_id = subscription.plugin.entity_id
 
-        if message_name == 'transaction':
-            mongo.db.plugin_transactions.insert({
-                'message_id': message_id,
-                'sender_entity_id': sender_entity_id,
-                'receiver_entity_id': plugin_entity_id,
+        
+        mongo.db.plugin_messages.insert({
+            'message_id': message_id,
 
-                'time_created': datetime.now(),
+            'sender_entity_id': sender_entity_id,
+            'receiver_entity_id': plugin_entity_id,
 
-                'message_name': message_name,
-                'payload': payload
-            })
-        else:
-            mongo.db.plugin_messages.insert({
-                'message_id': message_id,
+            'time_created': datetime.now(),
 
-                'sender_entity_id': sender_entity_id,
-                'receiver_entity_id': plugin_entity_id,
-
-                'time_created': datetime.now(),
-
-                'message_name': message_name,
-                'payload': payload
-            })
+            'message_name': message_name,
+            'payload': payload
+        })
 
     return jsonify(message_id=str(message_id))
 
+@csrf.exempt
+@app.route("/transaction", methods=["POST"])
+def transaction():
+    """
+    SUPPORTS: POST
+    Submit a transaction to the HPIT server. Expect the data formatted as JSON
+    with the application/json mimetype given in the headers. Expects two fields in
+    the JSON data.
+
+    Accepts: JSON
+        - payload : Object => A JSON Object of the DATA to store in the database
+
+    Returns:
+        403         - A connection with HPIT must be established first.
+        200: JSON   
+            - message_id - The ID of the message submitted to the database
+    """
+    if 'entity_id' not in session:
+        return auth_failed_response()
+        
+    for x in ['payload']:
+        if x not in request.json:
+            return bad_parameter_response(x)
+
+    sender_entity_id = session['entity_id']
+    message_name = "transaction"
+        
+    payload = request.json['payload']
+
+    message = {
+        'sender_entity_id': sender_entity_id,
+        'time_created': datetime.now(),
+        'message_name': message_name,
+        'payload': payload,
+    }     
+
+    message_id = mongo.db.messages_and_transactions.insert(message)
+
+    subscriptions = Subscription.query.filter_by(message_name=message_name)
+
+    for subscription in subscriptions:
+        plugin_entity_id = subscription.plugin.entity_id
+
+        mongo.db.plugin_transactions.insert({
+            'message_id': message_id,
+            'sender_entity_id': sender_entity_id,
+            'receiver_entity_id': plugin_entity_id,
+
+            'time_created': datetime.now(),
+
+            'message_name': message_name,
+            'payload': payload
+        })
+
+    return jsonify(message_id=str(message_id))
 
 @csrf.exempt
 @app.route("/response", methods=["POST"])
