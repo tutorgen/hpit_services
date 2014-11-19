@@ -18,11 +18,8 @@ settings = SettingsManager.get_plugin_settings()
 
 class TestStudentManagementPlugin(unittest.TestCase):
 
-    def setUp(self):
-        """ setup any state tied to the execution of the given method in a
-        class.  setup_method is invoked for every test method of a class.
-        """
-        
+    @classmethod
+    def setUpClass(cls):
         options = {
                 "authType":"sasl",
                 "saslPassword":"",
@@ -32,7 +29,19 @@ class TestStudentManagementPlugin(unittest.TestCase):
                 "ramQuotaMB":100,
             }
         req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
-        
+
+    @classmethod
+    def tearDownClass(cls):
+        res = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_student_model_cache",auth=settings.COUCHBASE_AUTH)
+        if res.status_code != 200 and res.status_code != 404:
+            if '_' not in res.json() or res.json()['_'] != 'Bucket deletion not yet complete, but will continue.\r\n':
+                raise Exception("Failure to delete bucket")
+    
+    def setUp(self):
+        """ setup any state tied to the execution of the given method in a
+        class.  setup_method is invoked for every test method of a class.
+        """
+
         self.test_subject = StudentManagementPlugin(123,456,None)
         
         self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
@@ -43,12 +52,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
-        
-        res = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_student_model_cache",auth=settings.COUCHBASE_AUTH)
-        if res.status_code != 200 and res.status_code != 404:
-            if '_' not in res.json() or res.json()['_'] != 'Bucket deletion not yet complete, but will continue.\r\n':
-                raise Exception("Failure to delete bucket")
-        
+       
         client = MongoClient()
         client.drop_database(settings.MONGO_DBNAME)
         
