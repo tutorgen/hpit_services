@@ -53,6 +53,7 @@ class TestServerAPI(unittest.TestCase):
         app.testing = True
         self.test_client = app.test_client()
         
+        db.session.close()
         db.drop_all()
         db.create_all()
         
