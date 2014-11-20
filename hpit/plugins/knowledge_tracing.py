@@ -6,6 +6,7 @@ from bson import ObjectId
 import bson
 
 import time
+import json
 
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
@@ -17,7 +18,16 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo[settings.MONGO_DBNAME].hpit_knowledge_tracing
-
+        
+        if args: 
+            self.args = json.loads(args[1:-1])
+            try:
+                self.share_entities = self.args["share_entities"]
+            except (KeyError, TypeError):
+                self.share_entities = None
+        else:
+            self.share_entities = None
+        
 
     def post_connect(self):
         super().post_connect()
@@ -32,6 +42,7 @@ class KnowledgeTracingPlugin(Plugin):
         #response = self._get_data("message-owner/get_student_model_fragment")
         #if response["owner"] == self.entity_id:
         #    self._post_data("message-auth",{"message_name":"get_student_model_fragment","other_entity_id":"88bb246d-7347-4f57-8cbe-95944a4e0027"}) #problem manager
+        
         self._post_data("share-message",{"message_name":"get_student_model_fragment","other_entity_ids":["88bb246d-7347-4f57-8cbe-95944a4e0027"]}) #problem manager
 
     def check_skill_manager(self, message):

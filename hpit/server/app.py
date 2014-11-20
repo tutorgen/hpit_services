@@ -54,6 +54,12 @@ class ServerApp:
         self.gears.init_app(self.app)
 
         self.app.config.from_object(settings)
+        
+        import logging
+        from logging.handlers import RotatingFileHandler
+        log_handler = RotatingFileHandler("log/app.log")
+        log_handler.setLevel(logging.WARNING)
+        self.app.logger.addHandler(log_handler)
 
         try:
             self.mongo = PyMongo(self.app)
