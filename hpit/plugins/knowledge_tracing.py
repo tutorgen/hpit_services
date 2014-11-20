@@ -6,6 +6,7 @@ from bson import ObjectId
 import bson
 
 import time
+import json
 
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()

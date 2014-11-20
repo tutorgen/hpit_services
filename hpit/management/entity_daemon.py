@@ -121,6 +121,7 @@ class BaseDaemon:
             self.entity = self.get_entity_class()
         except Exception as e:
             self.logger.error(str(e))
+            raise
 
         if self.entity:
             self.logger.debug("Entity: " + str(self.entity) + " Found.")

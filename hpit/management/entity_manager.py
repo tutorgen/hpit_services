@@ -7,6 +7,7 @@ import subprocess
 import signal
 import time
 import shutil
+import shlex
 from hpit.management import commands
 
 from hpit.server.app import ServerApp
