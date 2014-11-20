@@ -10,7 +10,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     administrator = db.Column(db.Boolean(),nullable=False, default = False)
     
-    company = db.Column(db.String(255), nullable=False)
+    company = db.Column(db.String(255), nullable=False, default = "")
     
     
     #email = db.Column(db.String(255), nullable=False, unique=True)
