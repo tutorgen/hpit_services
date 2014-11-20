@@ -18,12 +18,9 @@ from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
 class TestSkillManagementPlugin(unittest.TestCase):
-
-    def setUp(self):
-        """ setup any state tied to the execution of the given method in a
-        class.  setup_method is invoked for every test method of a class.
-        """      
-        
+    
+    @classmethod
+    def setUpClass(cls):
         options = {
                 "authType":"sasl",
                 "saslPassword":"",
@@ -33,9 +30,20 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 "ramQuotaMB":100,
             }
         req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
+              
+    @classmethod
+    def tearDownClass(cls):
+        r = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_skill_cache",auth=settings.COUCHBASE_AUTH)
+        if r.status_code != 200 and r.status_code != 404:
+            if r.json()['_'] != "Bucket deletion not yet complete, but will continue.\r\n":
+                raise Exception(' '.join(["Failure to delete bucket:", str(r.status_code), r.text]))
+    
+    def setUp(self):
+        """ setup any state tied to the execution of the given method in a
+        class.  setup_method is invoked for every test method of a class.
+        """      
         
         self.test_subject = SkillManagementPlugin(123,456,None)
-        self.test_subject.db = self.test_subject.mongo.test_hpit.hpit_skills
         self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = settings.COUCHBASE_HOSTNAME)
        
         self.test_subject.send_response = MagicMock()
@@ -44,14 +52,9 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """ teardown any state that was previously setup with a setup_method
         call.
         """
-        
-        r = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_skill_cache",auth=settings.COUCHBASE_AUTH)
-        if r.status_code != 200 and r.status_code != 404:
-            if r.json()['_'] != "Bucket deletion not yet complete, but will continue.\r\n":
-                raise Exception(' '.join(["Failure to delete bucket:", str(r.status_code), r.text]))
             
         client = MongoClient()
-        client.drop_database("test_hpit")
+        client.drop_database(settings.MONGO_DBNAME)
         
         self.test_subject = None
 
@@ -136,13 +139,14 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """
         SkillManagementPlugin.get_skill_id_callback() New Skill
         """
-        msg = {"message_id":"1","skill_name":"addition"}
+        msg = {"message_id":"1","skill_name":"new_addition"}
         self.test_subject.get_skill_id_callback(msg)
-        self.test_subject.db.find({"skill_name":"addition"}).count().should.equal(1)
-        added_id = self.test_subject.db.find_one({"skill_name":"addition"})["_id"]
+        self.test_subject.db.find({"skill_name":"new_addition"}).count().should.equal(1)
+        added_id = self.test_subject.db.find_one({"skill_name":"new_addition"})["_id"]
         self.test_subject.send_response.assert_called_with("1",{
-                "skill_name":"addition",
+                "skill_name":"new_addition",
                 "skill_id":str(added_id),
+                "skill_model":"Default",
                 "cached":False
         })
         
@@ -150,13 +154,14 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """
         SkillManagementPlugin.get_skill_id_callback() Existing Skill
         """
-        self.test_subject.cache.set("addition","123")
+        self.test_subject.cache.set("Defaultaddition","123")
         
         msg = {"message_id":"1","skill_name":"addition"}
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
                 "skill_id":"123",
+                "skill_model":"Default",
                 "cached":True
         })
         
