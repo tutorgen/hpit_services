@@ -34,8 +34,9 @@
 <form action="/account/company" method="POST" role="form">
     <input name="_csrf_token" type=hidden value="{{csrf_token()}}">
     <div class="form-group">
-        <label for="inputCompany">Company: </label>
-        <input type="text" class="form-control" id="inputCompany" name="company" value="{{current_user.company}}" />
+        <p>Current company: {{current_user.company}} </p>
+        <label for="inputCompany">Change Company: </label>
+        <input type="text" class="form-control" id="inputCompany" name="company" value="" />
     </div>
     <button type="submit" class="btn btn-primary">Update Company</button>
 </form>

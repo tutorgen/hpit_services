@@ -436,8 +436,10 @@ def account_company():
     current_user.company = new_company_name
     db.session.add(current_user)
     db.session.commit()
-
-    return render_template('account_detail.html', flash='Your company was updated successfully!')
+    
+    
+    return redirect("/account")
+    #return render_template('account_detail.html', flash='Your company was updated successfully!')
 
 
 @app.route('/account', methods=["GET"])
