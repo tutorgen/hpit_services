@@ -86,14 +86,14 @@ while 1:
     if problem["Anon Student Id"] not in student_cache:
         existing_student = client.hpit.hpit_students.find_one({
              "attributes":{
-                "datashop_id":problem["Anon Student Id"]  
+                "other_id":problem["Anon Student Id"]  
              }   
         })
         
         if not existing_student:
             new_student = client.hpit.hpit_students.insert({
             "attributes":{
-                "datashop_id":problem["Anon Student Id"]  
+                "other_id":problem["Anon Student Id"]  
              }})
             student_id = str(new_student)
         else:

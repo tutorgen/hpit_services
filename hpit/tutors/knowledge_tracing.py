@@ -22,6 +22,7 @@ class KnowledgeTracingTutor(Tutor):
         self.wait_int = 0
         
         self.student_id = None
+        self.session_id = None
       
         if args: 
             self.args = json.loads(args[1:-1])
@@ -50,16 +51,31 @@ class KnowledgeTracingTutor(Tutor):
         if self.wait_int<4:
             return True
    
-        self.send("tutorgen.get_student_model",{"student_id":str(self.student_id),"update":True},self.get_student_model_callback)
+        #self.send("tutorgen.get_student_model",{"student_id":str(self.student_id),"update":True},self.get_student_model_callback)
+        #self.send_transaction({"key":"value"},self.transaction_response)
+        
         for sk in self.skills:
             if 90 < random.randint(0, 100):
                 correct = random.randint(0, 100)
+                self.send_transaction({
+                    "problem_name":"algebra problem",
+                    "step_text":"first step",
+                    "transaction_text":"transaction stoff",
+                    "session_id":self.session_id,
+                    'skill_ids': {
+                            sk:self.skill_ids[sk],
+                            "addition":self.skill_ids["addition"],
+                        },
+                    'student_id':self.student_id,
+                    'correct': True if 50 < random.randint(0, 100) else False
+                    }, self.trace_response_callback)
+                """
                 self.send('tutorgen.kt_trace', {
                     'skill_id': self.skill_ids[sk],
                     'student_id':self.student_id,
                     'correct': True if 50 < random.randint(0, 100) else False
                     }, self.trace_response_callback)
-
+                """
         sleep(.1)
 
         return True
@@ -73,6 +89,7 @@ class KnowledgeTracingTutor(Tutor):
         
     def new_student_callback(self,response):
         self.student_id = response["student_id"]
+        self.session_id = response["session_id"]
         for sk in self.skills:
             self.send("tutorgen.get_skill_id",{"skill_name":sk},self.get_skills_callback)
             
@@ -89,4 +106,7 @@ class KnowledgeTracingTutor(Tutor):
         
     def get_student_model_callback(self,response):
         self.send_log_entry("RECV: student_model response recieved. " + str(response))
+        
+    def transaction_response(self,response):
+        self.send_log_entry("RECV: transaction: " + str(response))
 

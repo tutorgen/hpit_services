@@ -40,6 +40,8 @@ class SkillManagementPlugin(Plugin):
         self.subscribe({
             "tutorgen.get_skill_name":self.get_skill_name_callback,
             "tutorgen.get_skill_id":self.get_skill_id_callback})
+        
+        self.register_transaction_callback(self.transaction_callback_method)
 
     #Skill Management Plugin
     def get_skill_name_callback(self, message):
@@ -91,6 +93,7 @@ class SkillManagementPlugin(Plugin):
         else:
             skill_model = str(message["skill_model"])
         
+        """
         try:
             cached_skill = self.cache.get(skill_model+skill_name)
             skill_id = cached_skill.value
@@ -103,7 +106,8 @@ class SkillManagementPlugin(Plugin):
             return
         except couchbase.exceptions.NotFoundError:
             cached_skill = None
-            
+        """
+        
         skill = self.db.find_one({"skill_name":skill_name,"skill_model":skill_model})
         if not skill:
             skill_id = self.db.insert({"skill_name":skill_name,"skill_model":skill_model})
@@ -120,6 +124,46 @@ class SkillManagementPlugin(Plugin):
                 "skill_id": str(skill["_id"]),
                 "cached":False
             })
-        self.cache.set(str(skill_model+skill_name),str(skill_id))      
+        #self.cache.set(str(skill_model+skill_name),str(skill_id))      
+        
+    def transaction_callback_method(self,message):
+        if self.logger:
+            self.send_log_entry("RECV: transaction with message: " + str(message))
+
+        try:
+            sender_entity_id = message["sender_entity_id"]
+            skill_ids = dict(message["skill_ids"])
+        except KeyError:
+            self.send_response(message['message_id'],{"error":"transaction for Skill Manager requires 'skill_ids'","responder":"skill_manager",})
+            return
+        except TypeError:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'skill_ids' is not valid; must be dict.",
+                    "responder":"skill_manager",
+            })
+            return
             
-            
+        for skill_name, skill_id in skill_ids.items():
+            try:
+                skill = self.db.find_one({"skill_name":skill_name,"_id":ObjectId(str(skill_id))})
+            except bson.errors.InvalidId:
+                self.send_response(message["message_id"],{
+                    "error" : "Skill " + str(skill_name) + " is not paired with a valid id.",
+                    "responder":"skill_manager",
+                })
+                return
+                
+            if not skill:
+                self.send_response(message["message_id"],{
+                    "error" : "Skill " + str(skill_name) + " was not found, try adding it with get_skill_id.",
+                    "responder":"skill_manager",
+                })
+                return
+        
+        self.send_response(message["message_id"],{
+            "skill_ids" : skill_ids,
+            "responder":"skill_manager",
+        })
+        return        
+        
+                
