@@ -762,9 +762,8 @@ def transaction():
     if 'entity_id' not in session:
         return auth_failed_response()
         
-    for x in ['payload']:
-        if x not in request.json:
-            return bad_parameter_response(x)
+    if "payload" not in request.json:
+        return bad_parameter_response("payload")
 
     sender_entity_id = session['entity_id']
     message_name = "transaction"

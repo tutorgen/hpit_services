@@ -154,16 +154,89 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """
         SkillManagementPlugin.get_skill_id_callback() Existing Skill
         """
-        self.test_subject.cache.set("Defaultaddition","123")
+        #self.test_subject.cache.set("Defaultaddition","123")
+        
+        skill_id = self.test_subject.db.insert({"skill_name":"addition","skill_model":"Default"})
         
         msg = {"message_id":"1","skill_name":"addition"}
         self.test_subject.get_skill_id_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "skill_name":"addition",
-                "skill_id":"123",
+                "skill_id":str(skill_id),
                 "skill_model":"Default",
-                "cached":True
+                "cached":False #this would be true if cached
         })
+        
+    def test_transaction_callback_method(self):
+        """
+        SkillManagementPlugin.transaction_callback_method() Test plan:
+            - if skill ids not present, should respond with error
+            - if skill ids is not a dict, should respond with error
+            - test for empty skills
+            - if skill ids has an invalid id, should respond with error
+            - if skill not existent, should return with an error
+            - otherwise, respond as normal
+        """
+        def mock_send(message_name,payload,callback):
+            callback({"responder":["downstream"]})
+                
+        self.test_subject.send = MagicMock(side_effect = mock_send)
+        self.test_subject.send_response = MagicMock()
+        
+        #no args
+        msg = {"message_id":"1","sender_entity_id":"2"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"transaction for Skill Manager requires 'skill_ids'",
+            "responder":["skill_manager"]
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill_ids not dict
+        msg["skill_ids"] = "not dict"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error" : "The supplied 'skill_ids' is not valid; must be dict.",
+                "responder":["skill_manager"],
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #empty skills
+        msg["skill_ids"] = {}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error" : "The supplied 'skill_ids' is empty.",
+            "responder":["skill_manager"],
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill_ids invalid id
+        msg["skill_ids"] = {"skill_name":"invalid id"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error" : "Skill skill_name is not paired with a valid id.",
+            "responder":["skill_manager"],
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill_ids skill does not exist
+        msg["skill_ids"] = {"skill_name":ObjectId()}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error" : "Skill skill_name was not found, try adding it with get_skill_id.",
+            "responder":["skill_manager"],
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #everything good
+        skill_id = self.test_subject.db.insert({"skill_name":"skill","skill_model":"Default"})
+        msg["skill_ids"] = {"skill":skill_id}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "skill_ids" : {"skill":str(skill_id)},
+            "responder":["skill_manager","downstream"],
+        })
+        self.test_subject.send_response.reset_mock()
         
         
         

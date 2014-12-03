@@ -2,6 +2,7 @@ from hpitclient import Plugin
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+import bson
 
 from threading import Timer
 
@@ -56,6 +57,8 @@ class StudentManagementPlugin(Plugin):
             "tutorgen.set_attribute":self.set_attribute_callback,
             "tutorgen.get_attribute":self.get_attribute_callback,
             "tutorgen.get_student_model":self.get_student_model_callback})
+        
+        self.register_transaction_callback(self.transaction_callback_method)
 
     #Student Management Plugin
     def add_student_callback(self, message):
@@ -156,7 +159,8 @@ class StudentManagementPlugin(Plugin):
                 "error":"student with id " + str(student_id) + " does not exist.",
             })
             return
-          
+        
+        """
         update = False 
         if "update" in message:
             update = message["update"]
@@ -173,7 +177,10 @@ class StudentManagementPlugin(Plugin):
                 return
             except couchbase.exceptions.NotFoundError:
                 pass
-
+        """
+        update = False
+        
+        
         self.student_models[message["message_id"]] = {}
         self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message, student_id])
         self.timeout_threads[message["message_id"]].start()
@@ -227,7 +234,7 @@ class StudentManagementPlugin(Plugin):
                     })
                    
                     try: 
-                        self.cache.set(str(message["student_id"]), self.student_models[message["message_id"]])
+                        #self.cache.set(str(message["student_id"]), self.student_models[message["message_id"]])
                         
                         self.timeout_threads[message["message_id"]].cancel()
                         del self.timeout_threads[message["message_id"]]
@@ -267,4 +274,57 @@ class StudentManagementPlugin(Plugin):
             del self.student_models[message["message_id"]]
         except KeyError:
             pass
+    
+    def transaction_callback_method(self,message):
+        if self.logger:
+            self.send_log_entry("RECV: transaction with message: " + str(message))
+            
+        try:
+            sender_entity_id = message["sender_entity_id"]
+            student_id = message["student_id"]
+            session_id = ObjectId(str(message["session_id"]))
+        except KeyError:
+            self.send_response(message['message_id'],{"error":"transaction for Student Manager requires a 'student_id' and 'session_id'","responder":["student_manager"]})
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{
+                    "error" : "The supplied 'session_id' is not a valid ObjectId.",
+                    "responder":["student_manager"],
+                    "success":False
+            })
+            return 
+        
+        existing_student_other_id = self.db.find_one({"attributes.other_id":str(message["student_id"]),"owner_id":str(message["sender_entity_id"])})
+        if not existing_student_other_id:
+            try:
+                existing_student = self.db.find_one({"_id":ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+                if not existing_student:
+                    self.send_response(message['message_id'],{"error":"transaction failed; could not find student with id " + str(student_id) + ". Try using add_student first.","responder": ["student_manager"]})
+                    return
+                else:
+                    return_id = existing_student["_id"]
+            except bson.errors.InvalidId:
+                self.send_response(message['message_id'],{"error":"transaction failed; could not find student with id " + str(student_id) + ". Try using add_student first.","responder": ["student_manager"]})
+                return
+        else:
+            return_id = existing_student_other_id["_id"]
+        
+        session = self.session_db.find_one({"_id":ObjectId(str(session_id)),"student_id":str(return_id)})
+        if not session:
+            self.send_response(message['message_id'],{"error":"transaction failed; could not find session with id " + str(session_id) +".  Try adding/getting a student for a valid session id.","responder": ["student_manager"]})
+            return
+        
+        def next_step_callback(response):
+            response["student_id"] = str(return_id)
+            response["session_id"] = str(session["_id"])
+            response["responder"] = ["student_manager"] + response["responder"]
+            self.send_response(message["message_id"],response)
+            
+        message["orig_sender_id"] = sender_entity_id
+        self.send("tutorgen.skill_transaction",message,next_step_callback)
+        
+            
+            
+        
+            
         

@@ -9,6 +9,9 @@ from hpit.plugins import KnowledgeTracingPlugin
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
+import shlex
+import json
+
 import nose
 
 class TestKnowledgeTracingPlugin(unittest.TestCase):
@@ -17,7 +20,13 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
-        self.test_subject = KnowledgeTracingPlugin(123,456,None)
+        self.test_subject = KnowledgeTracingPlugin(123,456,None,shlex.quote(json.dumps({
+                "shared_messages": {
+                    "get_student_model_fragment": [
+                        "88bb246d-7347-4f57-8cbe-95944a4e0027"
+                    ]
+                }
+            })))
         self.test_subject.send_response = MagicMock()
         
     def tearDown(self):
@@ -37,7 +46,13 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             - make sure db is a collection
             -check full name
         """
-        ds = KnowledgeTracingPlugin(1234,5678,None)
+        ds = KnowledgeTracingPlugin(1234,5678,None,shlex.quote(json.dumps({
+                "shared_messages": {
+                    "get_student_model_fragment": [
+                        "88bb246d-7347-4f57-8cbe-95944a4e0027"
+                    ]
+                }
+            })))
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
@@ -242,7 +257,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.kt_set_initial_callback(msg)
         self.test_subject.send.call_count.should.equal(1)
         self.test_subject.send_response.assert_called_once_with("2",{
-            "error":"skill_id " + str(skill_id) + " is invalid." 
+            "error":"skill_id " + str(skill_id) + " is invalid.",
+            "skill_manager_error":"there was an error",
             })
 
 
@@ -465,6 +481,104 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             ],
         })
         
+    def test_transaction_callback_method(self):
+        """
+        KnowledgeTracingPlugin.transaction_callback_method() Test plan:
+            - try without skill_ids, student_id, and correct, should reply with error
+            - try with skill_ids not dict, should reply with error
+            - first pass, all skills should be set to .75, ensure called with those values
+            - next pass, all skill should be close to the expected values
+        """
+        def mock_send(message_name,payload,callback):
+            callback({"responder":["downstream"]})
+                
+        self.test_subject.send = MagicMock(side_effect = mock_send)
+        self.test_subject.send_response = MagicMock()
+        
+        #no args
+        msg = {"message_id":"1","sender_entity_id":"2"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"transaction for Knowledge Tracer requires 'skill_ids', 'student_id' and 'correct'",
+             "responder":["knowledge_tracer"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #just correct
+        msg["correct"] = True
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"transaction for Knowledge Tracer requires 'skill_ids', 'student_id' and 'correct'",
+             "responder":["knowledge_tracer"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #no skill_ids
+        msg["student_id"] = "123"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"transaction for Knowledge Tracer requires 'skill_ids', 'student_id' and 'correct'",
+             "responder":["knowledge_tracer"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill ids not valid
+        msg["skill_ids"] = "4"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error" : "The supplied 'skill_ids' is not valid; must be dict.",
+             "responder":["knowledge_tracer"],  
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #first run, default values
+        msg["skill_ids"] = {"skill1":"skill1_id","skill2":"skill2_id"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "skills" : {
+                 "skill1":{
+                    'skill_id': "skill1_id",
+                    'student_id': "123",
+                    'probability_known': 0.75,
+                    'probability_learned': 0.5,
+                    'probability_guess': 0.5,
+                    'probability_mistake': 0.5,
+                },
+                "skill2":{
+                    'skill_id': "skill2_id",
+                    'student_id': "123",
+                    'probability_known': 0.75,
+                    'probability_learned': 0.5,
+                    'probability_guess': 0.5,
+                    'probability_mistake': 0.5,
+             }},
+             "responder":["knowledge_tracer","downstream"],  
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #second run, values should change
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "skills" : {
+                 "skill1":{
+                    'skill_id': "skill1_id",
+                    'student_id': "123",
+                    'probability_known': 0.875,
+                    'probability_learned': 0.5,
+                    'probability_guess': 0.5,
+                    'probability_mistake': 0.5,
+                },
+                "skill2":{
+                    'skill_id': "skill2_id",
+                    'student_id': "123",
+                    'probability_known': 0.875,
+                    'probability_learned': 0.5,
+                    'probability_guess': 0.5,
+                    'probability_mistake': 0.5,
+             }},
+             "responder":["knowledge_tracer","downstream"],  
+        })
+        self.test_subject.send_response.reset_mock()
         
        
         

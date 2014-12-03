@@ -23,6 +23,8 @@ install:
   - pip install -r requirements.txt
   - git clone https://github.com/sympy/sympy.git sympy
   - 'cd sympy && python3 setup.py install && cd ..'
+  - git clone https://github.com/tutorgen/HPIT-python-client.git hpit-client
+  - 'cd hpit-client && python3 setup.py install && cd ..'
 script:
   - "export HPIT_ENV=travis-test"
   - python manage.py syncdb

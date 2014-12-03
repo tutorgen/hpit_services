@@ -765,6 +765,52 @@ class TestServerAPI(unittest.TestCase):
             }     
         ).count().should.equal(1)
         
+        
+    def test_transaction(self):
+        """
+        api.transaction() Test plan:
+            - if not connected, should return an auth_failed
+            - request should have payload params, otherwise bad response
+            - message should be written to db, sender id correctly set
+            - if a subscription exists
+                - message should be written to plugin_transactions
+                - receiver_entity_id should be the subscription plugin_entity_id
+                - sender_id same as sender's entity_id
+            -response should have transaction_id
+        """
+        response = self.test_client.post("/transaction",data = json.dumps({}),content_type="application/json")
+        response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
+        
+        self.connect_helper("plugin")
+        response = self.test_client.post("/transaction",data = json.dumps({"name":"test"}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/transaction",data = json.dumps({"payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'message_id')
+        
+        client = MongoClient()
+        client[settings.MONGO_DBNAME].messages_and_transactions.find(
+            {
+                'sender_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload': {"test":"test"},
+            }     
+        ).count().should.equal(1)
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"transaction"}),content_type="application/json") #subscribe to transaction
+
+        response = self.test_client.post("/transaction",data = json.dumps({"payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'message_id')
+        
+        client[settings.MONGO_DBNAME].plugin_transactions.find(
+            {
+                'sender_entity_id':self.plugin_entity_id,
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"transaction",
+                'payload': {"test":"test"},
+            }     
+        ).count().should.equal(1)
+        
 
     def test_response(self):
         """
