@@ -30,9 +30,10 @@ class KnowledgeTracingPlugin(Plugin):
             "tutorgen.kt_set_initial":self.kt_set_initial_callback,
             "tutorgen.kt_reset":self.kt_reset,
             "tutorgen.kt_trace":self.kt_trace,
+            "tutorgen.kt_transaction":self.transaction_callback_method,
             "get_student_model_fragment":self.get_student_model_fragment})
         
-        self.register_transaction_callback(self.transaction_callback_method)
+        #self.register_transaction_callback(self.transaction_callback_method)
         
         #temporary POC code
         #response = self._get_data("message-owner/get_student_model_fragment")
@@ -312,13 +313,12 @@ class KnowledgeTracingPlugin(Plugin):
             correct = message["correct"]
             skill_ids = dict(message["skill_ids"])
         except KeyError:
-            self.send_response(message['message_id'],{"error":"transaction for Knowledge Tracer requires 'skill_ids', 'student_id' and 'correct'","responder":"knowledge_tracer",})
+            self.send_response(message['message_id'],{"error":"transaction for Knowledge Tracer requires 'skill_ids', 'student_id' and 'correct'","responder":["knowledge_tracer"]})
             return
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_ids' is not valid; must be dict.",
-                    "responder":"knowledge_tracer",
-                    "success":False
+                    "responder":["knowledge_tracer"],
             })
             return
 
@@ -391,11 +391,13 @@ class KnowledgeTracingPlugin(Plugin):
                 'student_id':str(message["student_id"]),
             }
             
-        self.send_response(message['message_id'], {
-                "skills":response_skills,
-                "responder":"knowledge_tracer",
-            })
-    
+        def next_step_callback(response):
+            response["skills"] = response_skills
+            response["responder"] = ["knowledge_tracer"] + response["responder"]
+            self.send_response(message["message_id"],response)
+        self.send("tutorgen.problem_transaction",message,next_step_callback)
+        
+         
         
             
             

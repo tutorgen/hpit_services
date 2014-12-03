@@ -9,13 +9,22 @@ from hpit.plugins import ProblemManagementPlugin
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
+import shlex
+import json
+
 class TestProblemManagementPlugin(unittest.TestCase):
 
     def setUp(self):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
-        self.test_subject = ProblemManagementPlugin(123,456,None)   
+        self.test_subject = ProblemManagementPlugin(123,456,None,shlex.quote(json.dumps({
+                "shared_messages": {
+                    "get_student_model_fragment": [
+                        "88bb246d-7347-4f57-8cbe-95944a4e0027"
+                    ]
+                }
+            })) )   
         self.test_subject.send_response = MagicMock()
         
     def tearDown(self):
@@ -37,7 +46,13 @@ class TestProblemManagementPlugin(unittest.TestCase):
             - make sure step_db is instance of collection
             - make sure step_db name is hpit.hpit_steps
         """
-        pmp = ProblemManagementPlugin(123,456,None)
+        pmp = ProblemManagementPlugin(123,456,None,shlex.quote(json.dumps({
+                "shared_messages": {
+                    "get_student_model_fragment": [
+                        "88bb246d-7347-4f57-8cbe-95944a4e0027"
+                    ]
+                }
+            })))
         pmp.logger.should.equal(None)
         isinstance(pmp.mongo,MongoClient).should.equal(True)
         isinstance(pmp.db,Collection).should.equal(True)
@@ -87,12 +102,12 @@ class TestProblemManagementPlugin(unittest.TestCase):
         """
         ProblemManagementPlugin.add_problem_callback() Existing Problem:
         """
-        msg = {"message_id":"1", "sender_entity_id":"2","problem_name":"problem 1","problem_text":"123"}
+        msg = {"message_id":"1", "sender_entity_id":"2","problem_name":"problem 1","problem_text":"123","edit_allowed_id":"2"}
         problem_id = self.test_subject.db.insert(msg)
         
         self.test_subject.add_problem_callback(msg)
         self.test_subject.send_response.assert_called_with("1", {
-                "error": "This problem already exists.  Try cloning the 'problem_id' sent in this response.",
+                "error": "This problem already exists.",
                 "problem_id": str(problem_id),
                 "success":False,
         })
@@ -1221,6 +1236,93 @@ class TestProblemManagementPlugin(unittest.TestCase):
               "name":"problem_management",
               "fragment": [],
         })
+        
+    def test_transaction_callback_method(self):
+        """
+        ProblemManagementPlugin.transaction_callback_method() Test plan:
+            - send without parameters, should reply error
+            - if skill ids not dict, should return error
+            - if skill names not dict, should return error
+            - with nothing in db, problem, step, and transaction should all be defaults
+            - next time around, those ids should be returned again
+        """
+        
+        self.test_subject.send_response = MagicMock()
+        
+        #no parameters
+        msg = {"message_id":"1","sender_entity_id":"2","orig_sender_id":"3"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
+             "responder":["problem_manager"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #problem name
+        msg["problem_name"] = "problem1"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
+             "responder":["problem_manager"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #step_text
+        msg["step_text"] = "step stuff"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
+             "responder":["problem_manager"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #transaction_text
+        msg["transaction_text"] = "transaction stuff"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
+             "responder":["problem_manager"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #session
+        msg["session_id"] = "456"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+             "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
+             "responder":["problem_manager"]   
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        
+        #student_id
+        msg["student_id"] = "123"
+        self.test_subject.transaction_callback_method(msg)
+        
+        transaction = self.test_subject.transaction_db.find_one({"transaction_text":"transaction stuff"})
+        step = self.test_subject.step_db.find_one({"step_text":"step stuff"})
+        problem = self.test_subject.db.find_one({"problem_name":"problem1"})
+
+        self.test_subject.send_response.assert_called_with("1",{
+            "transaction_id": str(transaction["_id"]),
+            "step_id": str(step["_id"]),
+            "problem_id":str(problem["_id"]),
+            "responder" : ["problem_manager"] 
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #try again
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "transaction_id": str(transaction["_id"]),
+            "step_id": str(step["_id"]),
+            "problem_id":str(problem["_id"]),
+            "responder" : ["problem_manager"] 
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        
+        
         
         
        

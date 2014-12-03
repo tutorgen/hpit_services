@@ -43,9 +43,10 @@ class ProblemManagementPlugin(Plugin):
             "tutorgen.remove_step":self.remove_step_callback,
             "tutorgen.get_step":self.get_step_callback,
             "tutorgen.get_problem_steps":self.get_problem_steps_callback,
+            "tutorgen.problem_transaction":self.transaction_callback_method,
             "get_student_model_fragment":self.get_student_model_fragment_callback})
         
-        self.register_transaction_callback(self.transaction_callback_method)
+        #self.register_transaction_callback(self.transaction_callback_method)
         
         #temporary POC code
         #response = self._get_data("message-owner/get_student_model_fragment")
@@ -94,7 +95,7 @@ class ProblemManagementPlugin(Plugin):
         
         else:
             self.send_response(message['message_id'], {
-                'error': "This problem already exists.  Try cloning the 'problem_id' sent in this response.",
+                'error': "This problem already exists.",
                 'problem_id': str(problem["_id"]),
                 "success":False
             })
@@ -367,7 +368,7 @@ class ProblemManagementPlugin(Plugin):
                 skill_ids = {}
             else:
                 skill_ids = dict(message["skill_ids"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_ids' is not valid; must be dict.",
                     "success":False
@@ -379,7 +380,7 @@ class ProblemManagementPlugin(Plugin):
                 skill_names = {}
             else: 
                 skill_names = dict(message["skill_names"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_names' is not valid; must be dict.",
                     "success":False
@@ -531,102 +532,9 @@ class ProblemManagementPlugin(Plugin):
                 "success":True,
             })
             
-    def _add_transaction_from_message(self,message):
-        """
-        This will add a transaction, but rather than send a response, will return it.
-        This is so both transaction_callback and add_transaction_callback can use the same code
-        """
-        
-        entity_id = message["sender_entity_id"]
-        
-        try:
-            step_id = ObjectId(str(message["step_id"]))
-            transaction_text = message["transaction_text"]
-            session_id = message["session_id"]
-            student_id = message["student_id"]
-        except KeyError:
-            return {
-                    "error": "This action requires a 'step_id', 'session_id','student_id' and 'transaction_text'",
-                    "success":False
-                }
-            
-        except bson.errors.InvalidId:
-            return {
-                    "error" : "The supplied 'step_id' is not a valid ObjectId.",
-                    "success":False
-            }
-            
-        try:
-            if "skill_ids" not in message:
-                skill_ids = {}
-            else:
-                skill_ids = dict(message["skill_ids"])
-        except TypeError:
-            return {
-                    "error" : "The supplied 'skill_ids' is not valid; must be dict.",
-                    "success":False
-            }
-        
-        try:
-            if "skill_names" not in message:
-                skill_names = {}
-            else: 
-                skill_names = dict(message["skill_names"])
-        except TypeError:
-            return {
-                    "error" : "The supplied 'skill_names' is not valid; must be dict.",
-                    "success":False
-            }
-        
-        try:
-            if "level_names" not in message:
-                level_names = {"Default":"default"}
-            else:
-                level_names = dict(message["level_names"])
-        except TypeError:
-            return {
-                "error": "The supplied 'level_names' is not valid; must be dict.",
-                "success":False,
-            }
-        
-        step = self.step_db.find_one({
-                "_id":ObjectId(step_id),
-                "edit_allowed_id":entity_id
-        })
-        
-        if not step:
-            return {
-                "error": "Error: either step with provided id doesn't exist, or you do not have permission to edit.",
-                "success":False,
-            }
-        else:
-            transaction = self.transaction_db.find_one({
-                    "step_id":step["_id"],
-                    "transaction_text":transaction_text,
-                    "edit_allowed_id": entity_id,
-            })
-            if not transaction:
-                transaction_id = self.transaction_db.insert({
-                        "step_id":step["_id"],
-                        "transaction_text": transaction_text,
-                        "edit_allowed_id": entity_id,
-                        "date_created": datetime.now(),
-                        "skill_ids": skill_ids,
-                        "skill_names": skill_names,
-                        "session_id":str(session_id),
-                        "student_id":str(student_id),
-                        "level_names":level_names,
-                })
-            else:
-                transaction_id = transaction["_id"]
-            return {
-                "transaction_id": str(transaction_id),
-                "success": True,
-            }
-        
+
     def add_transaction_callback(self,message):
-        self.send_response(message["message_id"],self._add_transaction_from_message(message))
-        """
+        
         entity_id = message["sender_entity_id"]
         
         try:
@@ -652,7 +560,7 @@ class ProblemManagementPlugin(Plugin):
                 skill_ids = {}
             else:
                 skill_ids = dict(message["skill_ids"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_ids' is not valid; must be dict.",
                     "success":False
@@ -664,7 +572,7 @@ class ProblemManagementPlugin(Plugin):
                 skill_names = {}
             else: 
                 skill_names = dict(message["skill_names"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_names' is not valid; must be dict.",
                     "success":False
@@ -676,7 +584,7 @@ class ProblemManagementPlugin(Plugin):
                 level_names = {"Default":"default"}
             else:
                 level_names = dict(message["level_names"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                 "error": "The supplied 'level_names' is not valid; must be dict.",
                 "success":False,
@@ -710,7 +618,6 @@ class ProblemManagementPlugin(Plugin):
                 "transaction_id": str(transaction_id),
                 "success": True,
             })
-        """
     
     def remove_transaction_callback(self,message):
         entity_id = message["sender_entity_id"]
@@ -825,7 +732,7 @@ class ProblemManagementPlugin(Plugin):
         except KeyError:
             self.send_response(message["message_id"],{
                     "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-                    "responder":"problem_manager"
+                    "responder":["problem_manager"]
             })
             return
             
@@ -844,11 +751,11 @@ class ProblemManagementPlugin(Plugin):
                 skill_ids = {}
             else:
                 skill_ids = dict(message["skill_ids"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_ids' is not valid; must be dict.",
                     "success":False,
-                    "responder":"problem_manager"
+                    "responder":["problem_manager"]
             })
             return
         
@@ -857,19 +764,32 @@ class ProblemManagementPlugin(Plugin):
                 skill_names = {}
             else: 
                 skill_names = dict(message["skill_names"])
-        except TypeError:
+        except (TypeError,ValueError):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_names' is not valid; must be dict.",
                     "success":False,
-                    "responder":"problem_manager"
+                    "responder":["problem_manager"]
+            })
+            return
+            
+        try:
+            if "level_names" not in message:
+                level_names = {"Default":"default"}
+            else:
+                level_names = dict(message["level_names"])
+        except (TypeError,ValueError):
+            self.send_response(message["message_id"],{
+                "error": "The supplied 'level_names' is not valid; must be dict.",
+                "success":False,
+                "responder":["problem_manager"]
             })
             return
         
         #check for problem, add if not there
-        problem= self.db.find_one({"problem_name":problem_name})
+        problem= self.db.find_one({"problem_name":problem_name,"edit_allowed_id":message["orig_sender_id"]})
         if not problem:
             problem_id = self.db.insert({
-                'edit_allowed_id': sender_entity_id,
+                'edit_allowed_id': message["orig_sender_id"],
                 'problem_name': problem_name,
                 'problem_text': problem_text,
                 'date_created': datetime.now(),
@@ -878,12 +798,12 @@ class ProblemManagementPlugin(Plugin):
             problem_id = problem["_id"]
             
         #check for step, add if not there
-        step = self.step_db.find_one({"step_text":step_text,"problem_id":problem_id})
+        step = self.step_db.find_one({"step_text":step_text,"problem_id":problem_id,"edit_allowed_id":message["orig_sender_id"]})
         if not step:
             step_id = self.step_db.insert({
                     "problem_id":problem_id,
                     "step_text": step_text,
-                    "edit_allowed_id": sender_entity_id,
+                    "edit_allowed_id": message["orig_sender_id"],
                     "date_created": datetime.now(),
                     "skill_ids": skill_ids,
                     "skill_names": skill_names,
@@ -891,16 +811,36 @@ class ProblemManagementPlugin(Plugin):
         else:
             step_id = step["_id"]
             
-        #add transaction using _add_transaction_from_message
-        message["step_id"] = step_id
-        response = self._add_transaction_from_message(message)
+        #add transaction if not there
+        transaction = self.transaction_db.find_one({
+                "step_id":step_id,
+                "transaction_text":transaction_text,
+                "edit_allowed_id": message["orig_sender_id"],
+        })
+        if not transaction:
+            transaction_id = self.transaction_db.insert({
+                    "step_id":step_id,
+                    "transaction_text": transaction_text,
+                    "edit_allowed_id": message["orig_sender_id"],
+                    "date_created": datetime.now(),
+                    "skill_ids": skill_ids,
+                    "skill_names": skill_names,
+                    "session_id":str(session_id),
+                    "student_id":str(student_id),
+                    "level_names":level_names,
+            })
+        else:
+            transaction_id = transaction["_id"]      
         
         #update problem worked db
-        if "error" not in response:
-            self.worked_db.update({"student_id":student_id,"problem_id":problem_id},{"student_id":student_id,"problem_id":problem_id},upsert=True)
+        self.worked_db.update({"student_id":student_id,"problem_id":problem_id},{"student_id":student_id,"problem_id":problem_id},upsert=True)
         
-        response["responder"] = "problem_manager"
-        self.send_response(message["message_id"],response)
+        self.send_response(message["message_id"],{
+            "transaction_id": str(transaction_id),
+            "step_id": str(step_id),
+            "problem_id":str(problem_id),
+            "responder" : ["problem_manager"]
+        })
         
             
              

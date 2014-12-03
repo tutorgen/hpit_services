@@ -178,6 +178,8 @@ class StudentManagementPlugin(Plugin):
             except couchbase.exceptions.NotFoundError:
                 pass
         """
+        update = False
+        
         
         self.student_models[message["message_id"]] = {}
         self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message, student_id])
@@ -282,36 +284,47 @@ class StudentManagementPlugin(Plugin):
             student_id = message["student_id"]
             session_id = ObjectId(str(message["session_id"]))
         except KeyError:
-            self.send_response(message['message_id'],{"error":"transaction for Student Manager requires a 'student_id' and 'session_id'","responder":"student_manager"})
+            self.send_response(message['message_id'],{"error":"transaction for Student Manager requires a 'student_id' and 'session_id'","responder":["student_manager"]})
             return
         except bson.errors.InvalidId:
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'session_id' is not a valid ObjectId.",
+                    "responder":["student_manager"],
                     "success":False
             })
             return 
         
-        existing_student = self.db.find_one({"_id":ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"]),"responder": "student_manager"})
-        if not existing_student:
-            existing_student_other_id = self.db.find_one({"attributes.other_id":str(message["student_id"]),"owner_id":str(message["sender_entity_id"]),"responder": "student_manager"})
-            if not existing_student_other_id:
-                self.send_response(message['message_id'],{"error":"transaction failed; could not find student with id " + str(student_id) + ". Try using add_student first.","responder": "student_manager"})
+        existing_student_other_id = self.db.find_one({"attributes.other_id":str(message["student_id"]),"owner_id":str(message["sender_entity_id"])})
+        if not existing_student_other_id:
+            try:
+                existing_student = self.db.find_one({"_id":ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+                if not existing_student:
+                    self.send_response(message['message_id'],{"error":"transaction failed; could not find student with id " + str(student_id) + ". Try using add_student first.","responder": ["student_manager"]})
+                    return
+                else:
+                    return_id = existing_student["_id"]
+            except bson.errors.InvalidId:
+                self.send_response(message['message_id'],{"error":"transaction failed; could not find student with id " + str(student_id) + ". Try using add_student first.","responder": ["student_manager"]})
                 return
-            else:
-                return_id = existing_student_other_id["_id"]
         else:
-            return_id = existing_student["_id"]
-            
+            return_id = existing_student_other_id["_id"]
+        
         session = self.session_db.find_one({"_id":ObjectId(str(session_id)),"student_id":str(return_id)})
         if not session:
-            self.send_response(message['message_id'],{"error":"transaction failed; could not find session with id " + str(session_id) +".  Try adding/getting a student for a valid session id.","responder": "student_manager"})
+            self.send_response(message['message_id'],{"error":"transaction failed; could not find session with id " + str(session_id) +".  Try adding/getting a student for a valid session id.","responder": ["student_manager"]})
             return
-          
-        self.send_response(message["message_id"],{
-            "student_id": str(return_id),
-            "session_id": str(session["_id"]),
-            "responder": "student_manager",
-        })
+        
+        def next_step_callback(response):
+            response["student_id"] = str(return_id)
+            response["session_id"] = str(session["_id"])
+            response["responder"] = ["student_manager"] + response["responder"]
+            self.send_response(message["message_id"],response)
+            
+        message["orig_sender_id"] = sender_entity_id
+        self.send("tutorgen.skill_transaction",message,next_step_callback)
+        
+            
+            
         
             
         

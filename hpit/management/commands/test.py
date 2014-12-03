@@ -25,4 +25,4 @@ class Command:
         if arguments.test_path:
             test_path = arguments.test_path
 
-        nose.main(argv=['-w', test_path, '--verbose' , '--nologcapture'])
+        nose.main(argv=['-w', test_path, '--verbose' , '--nologcapture', "-x"])
