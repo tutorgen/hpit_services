@@ -57,7 +57,7 @@ class ServerApp:
         
         import logging
         from logging.handlers import RotatingFileHandler
-        log_handler = RotatingFileHandler("log/app.log")
+        log_handler = RotatingFileHandler("log/app.log",maxBytes = 10000000, backupCount = 1) #10mb
         log_handler.setLevel(logging.WARNING)
         self.app.logger.addHandler(log_handler)
 

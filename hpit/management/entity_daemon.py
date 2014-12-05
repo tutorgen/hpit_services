@@ -1,5 +1,6 @@
 import argparse
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import random
 import signal
@@ -107,14 +108,23 @@ class BaseDaemon:
         return entity
 
     def start(self):
+        
+        """
         logging.basicConfig(
             filename=logger_path,
             level=logging.DEBUG,
             propagate=False,
             format='%(asctime)s %(levelname)s:----:%(message)s', 
             datefmt='%m/%d/%Y %I:%M:%S %p')
-
+        """
+        
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        log_handler = RotatingFileHandler(logger_path,maxBytes = 10000000, backupCount = 1) #10mb
+        log_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s:----:%(message)s')
+        log_handler.setFormatter(formatter)
+        self.logger.addHandler(log_handler)
 
         self.logger.debug("Retrieving entity class.")
         try:
