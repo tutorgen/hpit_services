@@ -20,6 +20,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """
         options = {
                 "authType":"sasl",
                 "saslPassword":"",
@@ -29,14 +30,17 @@ class TestStudentManagementPlugin(unittest.TestCase):
                 "ramQuotaMB":100,
             }
         req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
-
+        """
+        
     @classmethod
     def tearDownClass(cls):
+        """
         res = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_student_model_cache",auth=settings.COUCHBASE_AUTH)
         if res.status_code != 200 and res.status_code != 404:
             if '_' not in res.json() or res.json()['_'] != 'Bucket deletion not yet complete, but will continue.\r\n':
                 raise Exception("Failure to delete bucket")
-    
+        """
+        
     def setUp(self):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
@@ -44,7 +48,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
 
         self.test_subject = StudentManagementPlugin(123,456,None)
         
-        self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
+        #self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
         self.test_subject.logger = MagicMock()
         self.test_subject.send_log_entry = MagicMock()
         
@@ -366,7 +370,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         """
         #init stuff
         self.test_subject.send_response = MagicMock()
-        self.test_subject.cache.set = MagicMock()
+        #self.test_subject.cache.set = MagicMock()
         msg = {"message_id":"1"}        
         self.test_subject.timeout_threads["1"] = Timer(15,self.test_subject.kill_timeout,[msg, "123"])
         self.test_subject.student_model_fragment_names = ["knowledge_tracing"]
@@ -426,7 +430,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         func = self.test_subject.get_populate_student_model_callback_function(str(sid),msg)
         func({"name":"knowledge_tracing","fragment":"some_data","cached":False})
         self.test_subject.send_response.call_count.should.equal(0)
-        self.test_subject.cache.set.call_count.should.equal(0)
+        #self.test_subject.cache.set.call_count.should.equal(0)
         
         
     def test_kill_timeout(self):

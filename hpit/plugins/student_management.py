@@ -32,7 +32,7 @@ class StudentManagementPlugin(Plugin):
         self.student_models = {}
         self.timeout_threads = {}
         
-        
+        """
         try:
             self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
         except couchbase.exceptions.BucketNotFoundError:
@@ -47,7 +47,8 @@ class StudentManagementPlugin(Plugin):
             req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
             
             self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
-
+        """
+        
     def post_connect(self):
         super().post_connect()
         
