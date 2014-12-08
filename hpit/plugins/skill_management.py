@@ -18,7 +18,8 @@ class SkillManagementPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo[settings.MONGO_DBNAME].hpit_skills
-
+        
+        """
         try:
             self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
         except couchbase.exceptions.BucketNotFoundError:
@@ -33,6 +34,7 @@ class SkillManagementPlugin(Plugin):
             req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
             
             self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
+        """
      
     def post_connect(self):
         super().post_connect()
