@@ -742,9 +742,9 @@ class ProblemManagementPlugin(Plugin):
             problem_text = "none"
         
         if "step_text" in message:
-            problem_text = message["step_text"]
+            step_text = message["step_text"]
         else:
-            problem_text = "none"
+            step_text = "none"
         
         try:
             if "skill_ids" not in message:
