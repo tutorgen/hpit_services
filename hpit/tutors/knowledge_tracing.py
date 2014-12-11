@@ -67,7 +67,7 @@ class KnowledgeTracingTutor(Tutor):
                             "addition":self.skill_ids["addition"],
                         },
                     'student_id':self.student_id,
-                    'correct': True if 50 < random.randint(0, 100) else False
+                    'outcome': "correct" if 50 < random.randint(0, 100) else "incorrect"
                     }, self.trace_response_callback)
                 """
                 self.send('tutorgen.kt_trace', {

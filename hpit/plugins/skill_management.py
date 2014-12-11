@@ -130,6 +130,14 @@ class SkillManagementPlugin(Plugin):
         #self.cache.set(str(skill_model+skill_name),str(skill_id))      
         
     def transaction_callback_method(self,message):
+        
+        def next_step_callback(response):
+            for k,v, in skill_ids.items():
+                skill_ids[k] = str(v)
+            response["skill_ids"] = skill_ids
+            response["responder"] = ["skill_manager"] + response["responder"]
+            self.send_response(message["message_id"],response)
+        
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
 
@@ -137,46 +145,26 @@ class SkillManagementPlugin(Plugin):
             sender_entity_id = message["sender_entity_id"]
             skill_ids = dict(message["skill_ids"])
         except KeyError:
-            self.send_response(message['message_id'],{"error":"transaction for Skill Manager requires 'skill_ids'","responder":["skill_manager"],})
+            skill_ids = {}
+            self.send("tutorgen.kt_transaction",message,next_step_callback)
             return
         except (TypeError, ValueError):
-            self.send_response(message["message_id"],{
-                    "error" : "The supplied 'skill_ids' is not valid; must be dict.",
-                    "responder":["skill_manager"],
-            })
-            return
-            
-        if len(skill_ids)<1:
-            self.send_response(message["message_id"],{
-                    "error" : "The supplied 'skill_ids' is empty.",
-                    "responder":["skill_manager"],
-            })
+            skill_ids = {}
+            self.send("tutorgen.kt_transaction",message,next_step_callback)
             return
             
         for skill_name, skill_id in skill_ids.items():
             try:
                 skill = self.db.find_one({"skill_name":skill_name,"_id":ObjectId(str(skill_id))})
+                if not skill:
+                    del message["skill_ids"][skill_name] 
+                    skill_ids[skill_name] = "error: Skill skill_name was not found, try adding it with get_skill_id." #for returning to user
             except bson.errors.InvalidId:
-                self.send_response(message["message_id"],{
-                    "error" : "Skill " + str(skill_name) + " is not paired with a valid id.",
-                    "responder":["skill_manager"],
-                })
-                return
-                
-            if not skill:
-                self.send_response(message["message_id"],{
-                    "error" : "Skill " + str(skill_name) + " was not found, try adding it with get_skill_id.",
-                    "responder":["skill_manager"],
-                })
-                return
-
-        def next_step_callback(response):
-            for k,v, in skill_ids.items():
-                skill_ids[k] = str(v)
-            response["skill_ids"] = skill_ids
-            response["responder"] = ["skill_manager"] + response["responder"]
-            self.send_response(message["message_id"],response)
-            
+                del message["skill_ids"][skill_name] 
+                skill_ids[skill_name] = "error: this is not a valid id" #for returning to user
+               
+           
+                   
         self.send("tutorgen.kt_transaction",message,next_step_callback)
         
                 
