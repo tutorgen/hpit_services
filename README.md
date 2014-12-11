@@ -1048,14 +1048,57 @@ Optional information includes:
 
 * skill_names : dict - a mapping of skill models to skill names
 * skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id
-* correct : boolean - a boolean if the problem was correct of incorrect, used for knowledge tracing
 * selection : string - a descriptor of the item being worked on ("text-area-1")
 * action : string - the action being committed ("keypress")
 * input : string - the input used ("Key-D")
 * outcome : string - the result of the transaction, usually "correct", "incorrect", "hint"
 
+Transaction Responses:
+* student_id : string - The HPIT student ID
+* session_id : string - a HPIT ID for the session
+* transaction_id : string - The HPIT ID for the transaction
+* step_id : string - The HPIT ID for the step
+* problem_id : string - a HPIT ID for the problem
+* hint_text: string - The hint received, or an error message if hint was not requested.
+* hint_exists : boolean - does a hint exist, if requested
+* traced_skills : dict - a dictionary of skill name keys with dictionary values, containing probability guessed, known, mistake, and learned.  If a skill is invalid, an error message will replace the dict value.
+* skill_ids : dict - a dictionary with skil names as keys and HPIT IDs as values, or errors, if present.
+* responder : list - a list of plugins that have worked with this transaction
+
+```
+{
+    'student_id': '5489e227cc48d113d005850c', 
+    'step_id': '54822391cc48d10d709b5708', 
+    'hint_text': "error: 'outcome' is not 'hint' for hint factory transaction.", 
+    'transaction_id': '54822391cc48d10d709b5709', 
+    'traced_skills': {
+        'addition': {
+            'student_id': '5489e227cc48d113d005850c', 
+            'probability_guess': 0.5, 
+            'probability_known': 0.99609375, 
+            'skill_id': '5482239bcc48d100c0dd5164', 
+            'probability_learned': 0.5, 
+            'probability_mistake': 0.5}, 
+        'division': {
+            'student_id': '5489e227cc48d113d005850c', 
+            'probability_guess': 0.5, 
+            'probability_known': 0.9375, 
+            'skill_id': '548223b3cc48d1097059e693', 
+            'probability_learned': 0.5, 
+            'probability_mistake': 0.5}
+        }, 
+    'session_id': '5489e227cc48d113d005850d', 
+    'skill_ids': {
+        'addition': '5482239bcc48d100c0dd5164', 
+        'division': '548223b3cc48d1097059e693'}, 
+    'problem_id': '54822391cc48d10d709b5707', 
+    'hint_exists': False, 
+    'responder': ['student_manager', 'skill_manager', 'knowledge_tracer', 'hint_factory', 'problem_manager']
+}
+```
+
 Transactions are sent by the tutor's send_transaction() method, which uses the API's /transaction endpoint.
-    
+
 ## <a name="PluginToc"></a> Plugin Component Specification
 
 A Plugin is an HPIT entity that subscribes to (listens to) certain event names, receives

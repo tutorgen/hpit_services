@@ -191,8 +191,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg = {"message_id":"1","sender_entity_id":"2"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "error":"transaction for Skill Manager requires 'skill_ids'",
-            "responder":["skill_manager"]
+            "skill_ids":{},
+            "responder":["skill_manager","downstream"]
         })
         self.test_subject.send_response.reset_mock()
         
@@ -200,8 +200,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = "not dict"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-                "error" : "The supplied 'skill_ids' is not valid; must be dict.",
-                "responder":["skill_manager"],
+                "skill_ids" : {},
+                "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()
         
@@ -209,8 +209,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = {}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "error" : "The supplied 'skill_ids' is empty.",
-            "responder":["skill_manager"],
+            "skill_ids" : {},
+            "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()
         
@@ -218,8 +218,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = {"skill_name":"invalid id"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "error" : "Skill skill_name is not paired with a valid id.",
-            "responder":["skill_manager"],
+            "skill_ids":{"skill_name" : "error: this is not a valid id"},
+            "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()
         
@@ -227,8 +227,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = {"skill_name":ObjectId()}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "error" : "Skill skill_name was not found, try adding it with get_skill_id.",
-            "responder":["skill_manager"],
+            "skill_ids":{"skill_name" : "error: Skill skill_name was not found, try adding it with get_skill_id."},
+            "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()
         

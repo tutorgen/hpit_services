@@ -281,6 +281,7 @@ class HintFactoryPlugin(Plugin):
              "tutorgen.hf_push_state":self.push_state_callback,
              "tutorgen.hf_hint_exists":self.hint_exists_callback,
              "tutorgen.hf_get_hint":self.get_hint_callback,
+             "tutorgen.hf_transaction":self.transaction_callback_method,
              "get_student_model_fragment":self.get_student_model_fragment_callback})
 
     def init_problem_callback(self, message):
@@ -449,6 +450,58 @@ class HintFactoryPlugin(Plugin):
                "fragment": hints,
         })
         
+    def transaction_callback_method(self,message):
+        
+        hint_exists = False
+        hint = ""
+        
+        def next_step_callback(response):
+            response["hint_text"] = hint
+            response["hint_exists"] = hint_exists
+            response["responder"]  = ["hint_factory"] + response["responder"]
+            self.send_response(message["message_id"],response)
+            
+        if self.logger:
+            self.send_log_entry("RECV: transaction with message " + str(message))
+        
+        if "outcome" not in message:
+            hint = "error: 'outcome' is not present for hint factory transaction."
+            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            return
+        elif message["outcome"] != "hint":
+            hint = "error: 'outcome' is not 'hint' for hint factory transaction."
+            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            return
+            
+        try:
+            state=  message["state"]
+        except KeyError:
+            hint = "error: 'state' required for hint factory transactions."
+            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            return
+        
+        incoming_state = self.get_incoming_state(message["state"])
+        if not incoming_state:
+            hint = "error: 'state' is invalid for hint factory transaction."
+            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            return
+            
+        try:
+            new_hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
+            if new_hint:
+                hint = new_hint
+                hint_exists = True
+                self.send("tutorgen.problem_transaction",message,next_step_callback)
+                if "student_id" in message:
+                    self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
+                return
+            else:
+                self.send("tutorgen.problem_transaction",message,next_step_callback)
+                return
+        except HintDoesNotExistException as e:
+            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            return
+            
             
 if __name__ == '__main__':
     hf = SimpleHintFactory()
