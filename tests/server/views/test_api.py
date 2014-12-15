@@ -628,6 +628,7 @@ class TestServerAPI(unittest.TestCase):
         response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'messages')
         
+        time = datetime.now()
         client = MongoClient()
         client[settings.MONGO_DBNAME].plugin_messages.insert([
             {
@@ -636,6 +637,7 @@ class TestServerAPI(unittest.TestCase):
                 'payload':{"msg":"Valid payload 1"},
                 'message_id':"1",
                 'sender_entity_id':"1",
+                'time_created':time,
             },
         ])
         
@@ -657,6 +659,7 @@ class TestServerAPI(unittest.TestCase):
                 'sent_to_plugin': False,
                 'message_id':"1",
                 'sender_entity_id':"1",
+                'time_created':time,
             },
             {
                 'receiver_entity_id':self.plugin_entity_id,
@@ -664,6 +667,7 @@ class TestServerAPI(unittest.TestCase):
                 'payload':{"msg":"Valid payload 2"},
                 'message_id':"1",
                 'sender_entity_id':"1",
+                'time_created':time,
             }
         ])
         
@@ -691,6 +695,7 @@ class TestServerAPI(unittest.TestCase):
         response = self.test_client.get("/plugin/transaction/list",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'transactions')
         
+        time = datetime.now()
         client = MongoClient()
         client[settings.MONGO_DBNAME].plugin_transactions.insert([
             {
@@ -699,6 +704,7 @@ class TestServerAPI(unittest.TestCase):
                 'payload':{"msg":"Valid payload 1"},
                 'message_id':"1",
                 'sender_entity_id':"1",
+                'time_created':time,
             },
             {
                 'receiver_entity_id':self.plugin_entity_id,
@@ -706,6 +712,7 @@ class TestServerAPI(unittest.TestCase):
                 'payload':{"msg":"Valid payload 2"},
                 'message_id':"1",
                 'sender_entity_id':"1",
+                'time_created':time,
             }
         ])
         
