@@ -597,7 +597,7 @@ def plugin_message_list():
     
             
     result = [
-        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
+        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'],t['time_created'],_map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
@@ -606,7 +606,8 @@ def plugin_message_list():
         'message_id': str(t[1]),
         'message_name': t[2],
         'sender_entity_id': t[3],
-        'message': t[4]} for t in result]
+        'time_created':t[4],
+        'message': t[5]} for t in result]
 
     #Move sent messages to another collection.
     if my_messages:
@@ -657,7 +658,7 @@ def plugin_transaction_list():
     my_messages = list(my_messages)
 
     result = [
-        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'], _map_mongo_document(t['payload']))
+        (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'],t['time_created'], _map_mongo_document(t['payload']))
         for t in my_messages
     ]
 
@@ -666,7 +667,8 @@ def plugin_transaction_list():
         'message_id': str(t[1]),
         'message_name': t[2],
         'sender_entity_id': t[3],
-        'message': t[4]} for t in result]
+        'time_created':t[4],
+        'message': t[5]} for t in result]
 
     #Move sent transactions to another collection.
     if my_messages:
