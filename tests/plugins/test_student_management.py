@@ -130,7 +130,7 @@ class TestStudentManagementPlugin(unittest.TestCase):
         
         self.test_subject.get_student_callback(test_message)
         self.test_subject.send_log_entry.assert_has_calls(calls)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a 'student_id' to get a student"})
+        self.test_subject.send_response.assert_called_once_with("2",{"error":"Must provide a valid 'student_id' to get a student"})
         self.test_subject.send_response.reset_mock()
         
         #get non existing student
