@@ -87,9 +87,9 @@ class StudentManagementPlugin(Plugin):
             self.send_log_entry(message)
         
         try:
-            student_id = message["student_id"]
+            student_id = ObjectId(str(message["student_id"]))
         except:
-            self.send_response(message["message_id"],{"error":"Must provide a 'student_id' to get a student"})
+            self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' to get a student"})
             return
         
         return_student = self.db.find_one({"_id":ObjectId(student_id),"owner_id":str(message["sender_entity_id"])})
@@ -105,11 +105,14 @@ class StudentManagementPlugin(Plugin):
             self.send_log_entry(message)
         
         try:
-            student_id = message["student_id"]
-            attribute_name = message["attribute_name"]
-            attribute_value = message["attribute_value"]
-        except KeyError:
+            student_id = ObjectId(str(message["student_id"]))
+            attribute_name = str(message["attribute_name"])
+            attribute_value = str(message["attribute_value"])
+        except (KeyError, TypeError,ValueError):
             self.send_response(message["message_id"],{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' for set_attribute"})
             return
             
         update = self.db.update({'_id':ObjectId(str(student_id)),"owner_id":str(message["sender_entity_id"])},{'$set':{'attributes.'+str(attribute_name): str(attribute_value)}},upsert=False, multi=False)
@@ -125,11 +128,15 @@ class StudentManagementPlugin(Plugin):
             self.send_log_entry(message)
         
         try:
-            student_id = message["student_id"]
-            attribute_name = message["attribute_name"]
-        except KeyError:
+            student_id = ObjectId(str(message["student_id"]))
+            attribute_name = str(message["attribute_name"])
+        except (KeyError, TypeError, ValueError):
             self.send_response(message["message_id"],{"error":"Must provide a 'student_id' and 'attribute_name'"})
-            return 
+            return
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' for get_attribute"})
+            return
+         
             
         student = self.db.find_one({'_id':ObjectId(str(student_id)),"owner_id":str(message["sender_entity_id"])})
         if not student:
@@ -153,8 +160,13 @@ class StudentManagementPlugin(Plugin):
             })
             return
         student_id = message["student_id"]
-          
-        student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+        
+        try:
+            student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+        except bson.errors.InvalidId:
+            self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' for get_student_model"})
+            return
+            
         if not student:
             self.send_response(message["message_id"],{
                 "error":"student with id " + str(student_id) + " does not exist.",
