@@ -10,6 +10,7 @@ from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
 from datetime import datetime
+from datetime import timedelta
 
 class TestBoredomDetectorPlugin(unittest.TestCase):
 
@@ -48,11 +49,11 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         BoredomDetectorPlugin.update_boredom_callback() Test plan:
             - try without student_id, should return error
             - try without record, should be initted
-            - try with a record, should be updated.
-            - fake update total records, check if bored set to false on non- outlier
-            - enter a largely variant time, should set bored to true.
+            - add records, check if bored set to false on non- outlier, true on high outlier
+            - add records, check if bored set to false on non- outlier, true on high outlier
         """
         time = datetime.now()
+        time = datetime(2014,12,15,9,59)
         
         #no args
         msg = {"message_id":"1","sender_entity_id":"2","time_created":time}
@@ -72,36 +73,35 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         
         self.test_subject.db.find_one({
             "student_id":"123",
-            "last_reported_time": time,
-            "average_time_difference": 0,
-            "sum_of_variance": 0,
-            "total_reports":0,
+            "time": time,
         }).should_not.equal(None)
         
-        #second try, should change
-        msg["time_created"] = time.replace(microsecond=time.microsecond + 10)
-        import nose;nose.tools.set_trace()
-        self.test_subject.update_boredom_callback(msg)
+        
+        #add some values, get bored set to true because of unusually high value
+        for xx in range(0,5):
+            msg["time_created"] += timedelta(0,1)
+            self.test_subject.update_boredom_callback(msg)
+            self.test_subject.send_response.assert_called_with("1",{
+                "bored":False      
+            })
+           
+        msg["time_created"]+= timedelta(0,5)
+        self.test_subject.update_boredom_callback(msg)  
         self.test_subject.send_response.assert_called_with("1",{
-            "bored":False   
+            "bored":True      
         })
         self.test_subject.send_response.reset_mock()
         
-        self.test_subject.db.find_one({
-            "student_id":"123",
-            "last_reported_time": msg["time_created"],
-            "average_time_difference": 10,
-            "sum_of_variance": 0,
-            "total_reports":1,
-        }).should_not.equal(None)
-        self.test_subject.db.find({"student_id":"123"}).count.should.equal(1)
-        
-        #add some values, get bored set to true
-        for xx in range(0,self.test_subject.RECORD_THRESHOLD):
-            msg["time_created"] = time.replace(microsecond=time.microsecond + ((xx+2)*10))
+        #add some values, get bored set to true because of unusually low value
+        self.test_subject.db.remove({})
+        for xx in range(0,5):
+            msg["time_created"] += timedelta(0,5)
             self.test_subject.update_boredom_callback(msg)
-           
-        msg["time_created"].replace(microsecond=time.microsecond + 2000)
+            self.test_subject.send_response.assert_called_with("1",{
+                "bored":False      
+            })
+            
+        msg["time_created"]+= timedelta(0,1)
         self.test_subject.update_boredom_callback(msg)  
         self.test_subject.send_response.assert_called_with("1",{
             "bored":True      
