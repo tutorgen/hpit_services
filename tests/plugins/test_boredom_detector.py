@@ -51,6 +51,7 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
             - try without record, should be initted
             - add records, check if bored set to false on non- outlier, true on high outlier
             - add records, check if bored set to false on non- outlier, true on high outlier
+            ** this test also tests update_moredom_callback
         """
         time = datetime.now()
         time = datetime(2014,12,15,9,59)
@@ -108,6 +109,55 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
          
+    def test_transaction_callback_method(self):
+        """
+        BoredomDetectorPlugin.transaction_callback_method() Test plan:
+            - try without student_id, bored_message should be set
+            - mock boredom_calculation to return false, should show in response 
+            - mock boredom_calculation to return true, should show in response
+        """
+        def mock_send(message_name,payload,callback):
+            callback({"responder":["downstream"]})
+            
+        self.test_subject.send_response = MagicMock()
+        self.test_subject.boredom_calculation = MagicMock(return_value=False)
+        self.test_subject.send = MagicMock(side_effect=mock_send)
+        
+        time = datetime.now()
+        msg = {"message_id":"1","sender_entity_id":"2","time_created":time}
+        
+        #no student
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "bored":False,
+            "boredom_detector_message":"error: boredom detector requires a 'student_id'",
+            "responder":["boredom_detector","downstream"]
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #student here
+        msg["student_id"] = "123"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "bored":False,
+            "boredom_detector_message":"",
+            "responder":["boredom_detector","downstream"]
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        
+        #boredom_calculation returns true
+        self.test_subject.boredom_calculation = MagicMock(return_value=True)
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "bored":True,
+            "boredom_detector_message":"",
+            "responder":["boredom_detector","downstream"]
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        
+            
         
         
         

@@ -34,23 +34,13 @@ class BoredomDetectorPlugin(Plugin):
             "tutorgen.boredom_transaction":self.transaction_callback_method
         })
         
-    def update_boredom_callback(self,message):
-        if self.logger:
-            self.send_log_entry("RECV: update_boredom with message: " + str(message))
-        
-        bored = False
-        
-        try:
-            student_id = str(message["student_id"])
-        except KeyError:
-            self.send_response(message["message_id"],{
-               "error":"update_boredom requires a 'student_id'",
-            })
-            return
+    def boredom_calculation(self,student_id,time):
             
+        bored = False
+
         self.db.insert({
             "student_id":student_id,
-            "time": message["time_created"],
+            "time": time,
         })
         
         dt_sum = 0
@@ -79,9 +69,51 @@ class BoredomDetectorPlugin(Plugin):
             if abs(dt_mean - ((records[0]["time"] - records[1]["time"]).total_seconds())) > abs(dt_mean - dt_std_dev):
                 bored = True
         
+        return bored
+        
+        
+    def update_boredom_callback(self,message):
+        if self.logger:
+            self.send_log_entry("RECV: update_boredom with message: " + str(message))
+        
+        bored = False
+        
+        try:
+            student_id = str(message["student_id"])
+        except KeyError:
+            self.send_response(message["message_id"],{
+               "error":"update_boredom requires a 'student_id'",
+            })
+            return
+            
+        bored = self.boredom_calculation(student_id,message["time_created"])
+        
         self.send_response(message["message_id"],{
             "bored":bored,
         })
         
     def transaction_callback_method(self,message):
-        pass
+        
+        bored = False
+        bored_message = ""
+
+        def next_step_callback(response):
+            response["bored"] = bored
+            response["boredom_detector_message"] = bored_message
+            response["responder"] = ["boredom_detector"] + response["responder"]
+            self.send_response(message["message_id"],response)
+            
+        if self.logger:
+            self.send_log_entry("RECV: update_boredom with message: " + str(message))
+        
+        bored = False
+        
+        try:
+            student_id = str(message["student_id"])
+            bored = self.boredom_calculation(student_id,message["time_created"])
+        except KeyError:
+            bored_message = "error: boredom detector requires a 'student_id'"
+            
+        
+        self.send("tutorgen.problem_transaction",message,next_step_callback)    
+        

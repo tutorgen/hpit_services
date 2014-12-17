@@ -499,7 +499,7 @@ class HintFactoryPlugin(Plugin):
                 self.send("tutorgen.problem_transaction",message,next_step_callback)
                 return
         except HintDoesNotExistException as e:
-            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            self.send("tutorgen.boredom_transaction",message,next_step_callback)
             return
             
             
