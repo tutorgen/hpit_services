@@ -38,9 +38,13 @@ class BoredomDetectorPlugin(Plugin):
             
         bored = False
 
+
+        #"Thu, 28 Nov 2013 22:28:43 GMT"
+        insert_time = datetime.strptime(time, "%a, %d %b %Y %H:%M:%S GMT")
+
         self.db.insert({
             "student_id":student_id,
-            "time": time,
+            "time": insert_time,
         })
         
         dt_sum = 0

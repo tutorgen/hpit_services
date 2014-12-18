@@ -44,7 +44,8 @@ plugin_types = [
     'data',
     'data_connector',
     'hint_factory',
-    'student_management']
+    'student_management',
+    'boredom_detector']
 
 subtype_help = "The sub type of entity. tutor=(" + ', '.join(tutor_types) + ") plugin=(" + ', '.join(plugin_types) + ")"
 
@@ -81,7 +82,8 @@ class BaseDaemon:
             'data': DataStoragePlugin,
             'data_connector' : DataShopConnectorPlugin,
             'hint_factory' : HintFactoryPlugin,
-            'student_management': StudentManagementPlugin
+            'student_management': StudentManagementPlugin,
+            'boredom_detector': BoredomDetectorPlugin,
         }
         tutor_classes = {
             'example': ExampleTutor,

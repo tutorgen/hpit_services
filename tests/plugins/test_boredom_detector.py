@@ -53,11 +53,11 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
             - add records, check if bored set to false on non- outlier, true on high outlier
             ** this test also tests update_moredom_callback
         """
-        time = datetime.now()
         time = datetime(2014,12,15,9,59)
+        timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
         
         #no args
-        msg = {"message_id":"1","sender_entity_id":"2","time_created":time}
+        msg = {"message_id":"1","sender_entity_id":"2","time_created":timestring}
         self.test_subject.update_boredom_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "error":"update_boredom requires a 'student_id'",      
@@ -80,13 +80,18 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         
         #add some values, get bored set to true because of unusually high value
         for xx in range(0,5):
-            msg["time_created"] += timedelta(0,1)
+            time += timedelta(0,1)
+            timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            
+            msg["time_created"] = timestring
             self.test_subject.update_boredom_callback(msg)
             self.test_subject.send_response.assert_called_with("1",{
                 "bored":False      
             })
-           
-        msg["time_created"]+= timedelta(0,5)
+        
+        time += timedelta(0,5)
+        timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+        msg["time_created"]=timestring
         self.test_subject.update_boredom_callback(msg)  
         self.test_subject.send_response.assert_called_with("1",{
             "bored":True      
@@ -96,13 +101,18 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         #add some values, get bored set to true because of unusually low value
         self.test_subject.db.remove({})
         for xx in range(0,5):
-            msg["time_created"] += timedelta(0,5)
+            time += timedelta(0,5)
+            timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            
+            msg["time_created"] = timestring
             self.test_subject.update_boredom_callback(msg)
             self.test_subject.send_response.assert_called_with("1",{
                 "bored":False      
             })
-            
-        msg["time_created"]+= timedelta(0,1)
+        
+        time += timedelta(0,1)
+        timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+        msg["time_created"] = timestring
         self.test_subject.update_boredom_callback(msg)  
         self.test_subject.send_response.assert_called_with("1",{
             "bored":True      
@@ -123,7 +133,7 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         self.test_subject.boredom_calculation = MagicMock(return_value=False)
         self.test_subject.send = MagicMock(side_effect=mock_send)
         
-        time = datetime.now()
+        time = "Thu, 28 Nov 2013 22:28:43 GMT"
         msg = {"message_id":"1","sender_entity_id":"2","time_created":time}
         
         #no student

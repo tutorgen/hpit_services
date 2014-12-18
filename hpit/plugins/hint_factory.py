@@ -466,24 +466,24 @@ class HintFactoryPlugin(Plugin):
         
         if "outcome" not in message:
             hint = "error: 'outcome' is not present for hint factory transaction."
-            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            self.send("tutorgen.boredom_transaction",message,next_step_callback)
             return
         elif message["outcome"] != "hint":
             hint = "error: 'outcome' is not 'hint' for hint factory transaction."
-            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            self.send("tutorgen.boredom_transaction",message,next_step_callback)
             return
             
         try:
             state=  message["state"]
         except KeyError:
             hint = "error: 'state' required for hint factory transactions."
-            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            self.send("tutorgen.boredom_transaction",message,next_step_callback)
             return
         
         incoming_state = self.get_incoming_state(message["state"])
         if not incoming_state:
             hint = "error: 'state' is invalid for hint factory transaction."
-            self.send("tutorgen.problem_transaction",message,next_step_callback)
+            self.send("tutorgen.boredom_transaction",message,next_step_callback)
             return
             
         try:
@@ -491,12 +491,12 @@ class HintFactoryPlugin(Plugin):
             if new_hint:
                 hint = new_hint
                 hint_exists = True
-                self.send("tutorgen.problem_transaction",message,next_step_callback)
+                self.send("tutorgen.boredom_transaction",message,next_step_callback)
                 if "student_id" in message:
                     self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
                 return
             else:
-                self.send("tutorgen.problem_transaction",message,next_step_callback)
+                self.send("tutorgen.boredom_transaction",message,next_step_callback)
                 return
         except HintDoesNotExistException as e:
             self.send("tutorgen.boredom_transaction",message,next_step_callback)
