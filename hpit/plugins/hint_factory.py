@@ -236,31 +236,35 @@ class SimpleHintFactory(object):
                 
     def get_hint(self,problem_string,state_string):
         state_hash = self.hash_string('-'.join([problem_string, state_string]))
-        if not self.hint_exists(problem_string,state_string):
-            raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
-        else:
-            node = self.db.get_indexed_node("problems_index","start_string",state_string)
-
-            if not node:
-                node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
-
-            if not node:
+        try:
+            if not self.hint_exists(problem_string,state_string):
                 raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
-            
-            child_edges = node.match_outgoing("action")
-            max_reward = -999999
-            hint = ""
-            count = 0
-            for edge in child_edges:
-                if edge.end_node["bellman_value"] > max_reward:
-                    max_reward = edge.end_node["bellman_value"]
-                    hint = edge["action_string"]
-                count +=1
-            
-            if count == 0:
-                raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
+            else:
+                node = self.db.get_indexed_node("problems_index","start_string",state_string)
+    
+                if not node:
+                    node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
+    
+                if not node:
+                    raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
                 
-            return hint
+                child_edges = node.match_outgoing("action")
+                max_reward = -999999
+                hint = ""
+                count = 0
+                for edge in child_edges:
+                    if edge.end_node["bellman_value"] > max_reward:
+                        max_reward = edge.end_node["bellman_value"]
+                        hint = edge["action_string"]
+                    count +=1
+                
+                if count == 0:
+                    raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
+                    
+                return hint
+        except StateDoesNotExistException:
+            raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
+            
 
 
 class HintFactoryPlugin(Plugin):
