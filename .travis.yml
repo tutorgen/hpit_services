@@ -10,7 +10,6 @@ before_install:
   - "sudo wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/ubuntu/couchbase-ubuntu1204.list"
   - "wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add -"
   - "sudo apt-get update"
-  - "yes | sudo apt-get upgrade"
   - "sudo apt-get install mongodb-org-server mongodb-org-shell"
   - "sudo apt-get install python2.7-dev python3-dev"
   - "sudo apt-get install libcouchbase2-core libcouchbase2-libevent libcouchbase-dev"

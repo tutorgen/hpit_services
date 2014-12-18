@@ -10,6 +10,7 @@ from .hint_factory import HintFactoryPlugin
 from .hint_factory import SimpleHintFactory
 from .hint_factory import StateDoesNotExistException
 from .hint_factory import HintDoesNotExistException
+from .boredom_detector import BoredomDetectorPlugin
 
 __all__ = [
     'ExamplePlugin', 
@@ -23,5 +24,6 @@ __all__ = [
     'HintFactoryPlugin',
     'SimpleHintFactory',
     'StateDoesNotExistException',
-    'HintDoesNotExistException'
+    'HintDoesNotExistException',
+    'BoredomDetectorPlugin',
 ]
