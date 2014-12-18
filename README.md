@@ -76,6 +76,8 @@
         * [tutorgen.get_transactions](#get_transactions)
         * [tutorgen.get_student_steps](#get_student_steps)
         * [tutorgen.add_custom_field](#add_custom_field)
+    * [Boredom Detector Plugin](#BoredomPlugin)
+        * [tutorgen.update_boredom](#update_boredom)
         
 * [Developing New Plugins and Tutors](https://github.com/tutorgen/HPIT-python-client/blob/master/README.md)
 * [License](#LicenseToc)
@@ -1064,7 +1066,8 @@ Transaction Responses:
 * traced_skills : dict - a dictionary of skill name keys with dictionary values, containing probability guessed, known, mistake, and learned.  If a skill is invalid, an error message will replace the dict value.
 * skill_ids : dict - a dictionary with skil names as keys and HPIT IDs as values, or errors, if present.
 * responder : list - a list of plugins that have worked with this transaction
-
+* bored : boolean - True if the student is bored, False of otherwise.
+* boredom_detector_message - A message, usually describing an error, from the boredom detector.
 ```
 {
     'student_id': '5489e227cc48d113d005850c', 
@@ -1094,6 +1097,8 @@ Transaction Responses:
     'problem_id': '54822391cc48d10d709b5707', 
     'hint_exists': False, 
     'responder': ['student_manager', 'skill_manager', 'knowledge_tracer', 'hint_factory', 'problem_manager']
+    'bored': True,
+    'boredom_detector_message': "",
 }
 ```
 
@@ -1735,6 +1740,23 @@ Returns:
 
 * response_xml : string - the XML from the DataShop server
 * status_cude : string - the HTTP request status code.
+
+
+##<a name="BoredomPlugin"></a> Boredom Detector
+The Boredom Detector looks at student data and determines if they may be bored.  This simple
+version relies on the time difference between student interactions to make its decision.
+####<a name="update_boredom"></a> tutorgen.update_boredom
+Send a student interaction to the boredom detector.
+
+Receives:
+
+* student_id : string - the HPIT student ID for the student we are tracking.
+
+Returns:
+
+* bored : boolean - True or False if the student is bored or not.
+
+
 
 ## <a name="LicenseToc"></a> License
 
