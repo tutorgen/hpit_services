@@ -10,10 +10,18 @@ app_instance = ServerApp.get_instance()
 app = app_instance.app
 db = app_instance.db
 mongo = app_instance.mongo
+csrf = app_instance.csrf
 
 from hpit.server.models import Plugin, Tutor
 from hpit.server.forms import PluginForm, TutorForm
 
+#for the student monitor
+from hpit.management.settings_manager import SettingsManager
+settings = SettingsManager.get_plugin_settings()
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+import bson
+#-----------------------------
 
 def query_metrics(collection, metric_name, senders=None, receivers=None):
     end = datetime.now()
@@ -67,7 +75,7 @@ def index():
     SUPPORTS: GET
     Shows the main page for HPIT.
     """
-    active_poll_time = datetime.now() - timedelta(minutes=15)
+    active_poll_time = datetime.now() - timedelta(minutes=3)
 
     plugins = list(Plugin.query.filter(Plugin.time_last_polled >= active_poll_time))
     tutors = list(Tutor.query.filter(Tutor.time_last_polled >= active_poll_time))
@@ -135,8 +143,17 @@ def plugins():
     Shows a user's plugins.
     """
     plugins = current_user.plugins
+    
+    connected_dict = {}
+    for p in plugins:
+        active_poll_time = datetime.now() - timedelta(minutes=1)
+        if p.time_last_polled >= active_poll_time:
+            connected_dict[p.id] = True
+        else:
+            connected_dict[p.id] = False
+        
 
-    return render_template('plugins.html', plugins=plugins)
+    return render_template('plugins.html', plugins=plugins,connected_dict=connected_dict)
 
 
 @app.route('/plugin/new', methods=["GET", "POST"])
@@ -283,8 +300,16 @@ def tutors():
     Shows a user's tutors.
     """
     tutors = current_user.tutors
+    
+    connected_dict = {}
+    for t in tutors:
+        active_poll_time = datetime.now() - timedelta(minutes=1)
+        if t.time_last_polled >= active_poll_time:
+            connected_dict[t.id] = True
+        else:
+            connected_dict[t.id] = False
 
-    return render_template('tutors.html', tutors=tutors)
+    return render_template('tutors.html', tutors=tutors,connected_dict=connected_dict)
 
 
 @app.route('/tutor/new', methods=["GET", "POST"])
@@ -476,4 +501,114 @@ def account_details():
         responses_received=responses_received
     )
 
+@csrf.exempt
+@app.route('/student-monitor',methods=["GET","POST"])
+@login_required
+def student_monitor(student_id=""):
+    if request.method == 'POST':
+        #student_attributes = {"name":"brian","interests":["sports","music","plants"]}
+        student_skills = [
+            {"skill_name":"Addition",
+             "skill_id":"1",
+             "prob_known":.45,
+             "prob_learned":.32,
+             "prob_mistake":.20,
+             "prob_guess":.56,
+           },
+           {"skill_name":"Subtraction",
+             "skill_id":"1",
+             "prob_known":.6,
+             "prob_learned":.92,
+             "prob_mistake":.60,
+             "prob_guess":.31,
+           },
+        ]
+        student_problems = [
+            {"problem_name":"Area of a door",
+             "problem_id":"p123",
+             "number_of_steps":"4",
+             "skills_involved":["addition","reading","some other skill"],
+            },
+            {"problem_name":"Angles problem",
+             "problem_id":"p1235",
+             "number_of_steps":"6",
+             "skills_involved":["baseball","eating contest","skydiving"],
+            }
+           
+        ]
+        bored=True
+        
+        """
+        This is basically a hack.  The dashboard should not have access to the plugin's databases.
+        In the future, the dashboard should send messages, just as other plugins do.
+        """
+        
+        def error_template(msg):
+            return render_template('student_monitor_detail.html',
+                  student_id=request.form["student_id"],
+                  error=msg,
+                  student_attributes={},
+                  student_skills=[],
+                  student_problems=[],
+                  bored=False,      
+                )
+        
+        mongo = MongoClient(settings.MONGODB_URI)
+        
+        #student_id
+        student_id = request.form["student_id"]
+        
+        #error message
+        error = None
+        
+        #student_attributes
+        student_attributes = {}
+        db = mongo[settings.MONGO_DBNAME].hpit_students
+        
+        try:
+            student = db.find_one({"_id":ObjectId(str(student_id))})
+            if not student:
+                return error_template("Could not find student with ID " + str(student_id))
+            for item in student["attributes"]:
+                student_attributes[item] = student["attributes"][item]
+        
+        except bson.errors.InvalidId:
+            return error_template("Invalid student id.")
+        
+        #student_skills
+        student_skills = []
+        skill_db = mongo[settings.MONGO_DBNAME].hpit_skills
+        kt_db = mongo[settings.MONGO_DBNAME].hpit_knowledge_tracing
+        kts = kt_db.find({"student_id":str(student_id)})
+        for kt in kts:
+            skill = skill_db.find_one({"_id":ObjectId(kt["skill_id"])})
+            if not skill:
+                skill_name = "unknown"
+                skill_model = "unknown"
+            else:
+                skill_name = skill["skill_name"]
+                skill_model = skill["skill_model"]
+                
+            student_skills.append(
+                {"skill_name":skill_name,
+                 "skill_id":kt["skill_id"],
+                 "skill_model":skill_model,
+                 "prob_known":kt["probability_known"],
+                 "prob_learned":kt["probability_learned"],
+                 "prob_mistake":kt["probability_mistake"],
+                 "prob_guess":kt["probability_guess"],
+               })
+            
+        
+        
+        return render_template('student_monitor_detail.html',
+              student_id=request.form["student_id"],
+              error=error,
+              student_attributes=student_attributes,
+              student_skills=student_skills,
+              student_problems=student_problems,
+              bored=bored,      
+        )
+    else:
+        return render_template('student_monitor.html')
 

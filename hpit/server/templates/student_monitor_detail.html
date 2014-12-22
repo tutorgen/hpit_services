@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Student Monitor</h1>
+
+<div class="row"><div class="spacer"></div></div>
+
+
+<form action="/student-monitor" method="POST" role="form">
+    <span style="font-weight:bold">Student ID: </span>
+    <input type="text" value="{{student_id}}" name="student_id"/>
+    <input type="submit" value="Refresh" />
+</form>
+
+{% if error %}
+    <span style="color:red">Error: {{error}}</span>
+{% else %}
+
+    <h4>Student Attributes</h4>
+    <table>
+        <tr>
+            <th>Attribute Name</th>
+            <th>Attribute Value</th>
+        {% for attr in student_attributes %}
+            <tr>
+                <td>{{attr}}</td>
+                <td>{{student_attributes[attr]}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    
+    <h4>Skills</h4>
+    <table>
+        <tr>
+            <th>Skill Name</th>
+            <th>Skill ID</th>
+            <th>Prob. Known</th>
+            <th>Prob. Learned</th>
+            <th>Prob. Mistake</th>
+            <th>Prob. Guess</th>
+        </tr>
+        {% for skill in student_skills %}
+            <tr>
+                <td>{{skill.skill_name}}</td>
+                <td>{{skill.skill_id}}</td>
+                <td>{{skill.prob_known}}</td>
+                <td>{{skill.prob_learned}}</td>
+                <td>{{skill.prob_mistake}}</td>
+                <td>{{skill.prob_guess}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    
+    <h4>Problems Worked</h4>
+    <table>
+        <tr>
+            <th>Problem Name</th>
+            <th>Problem ID</th>
+            <th>Number of Steps</th>
+            <th>Skills Involved</th>
+        </tr>
+        {% for problem in student_problems %}
+            <tr>
+                <td>{{problem.problem_name}}</td>
+                <td>{{problem.problem_id}}</td>
+                <td>{{problem.number_of_steps}}</td>
+                <td>{{problem.skills_involved}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    
+    <h4>Boredom</h4>
+    {% if bored %}
+        <h4><span style="color:red;">Bored</span></h4>
+    {% else %}
+        <h4><span style="color:green;">Not Bored</span></h4>
+    {% endif %}
+
+{% endif %}
+
+{% endblock %}
