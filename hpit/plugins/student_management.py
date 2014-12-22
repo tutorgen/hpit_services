@@ -92,7 +92,7 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' to get a student"})
             return
         
-        return_student = self.db.find_one({"_id":ObjectId(student_id),"owner_id":str(message["sender_entity_id"])})
+        return_student = self.db.find_one({"_id":ObjectId(student_id)})
         if not return_student:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
         else:

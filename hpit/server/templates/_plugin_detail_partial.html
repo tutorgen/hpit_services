@@ -5,7 +5,7 @@
                 {{ plugin.name|title }}
             </a>
 
-            {% if plugin.connected %}
+            {% if  connected_dict[plugin.id] %}
                 <span style="color:green">(Online)</span>
             {% else %}
                 <span style="color:red">(Offline)</span>
