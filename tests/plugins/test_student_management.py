@@ -150,12 +150,6 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_once_with("2",{"student_id":str(sid),"resource_id":"4","attributes":{"key":"value"},"session_id":str(session["_id"])})
         self.test_subject.send_response.reset_mock()
         
-        #try without owner
-        test_message = {"message_id":"2","student_id":sid,"sender_entity_id":"456"}
-        self.test_subject.get_student_callback(test_message)
-        self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(sid)+" not found."})
-        self.test_subject.send_response.reset_mock()
-        
         
     def test_set_attribute_callback(self):
         """
