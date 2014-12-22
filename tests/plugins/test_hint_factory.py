@@ -238,46 +238,55 @@ class TestSimpleHintFactory(unittest.TestCase):
         
         self.test_subject.hint_exists = MagicMock(return_value = True)
         
+        #create a problem node, nothing else
         problem_node, = self.test_subject.db.create({"start_string":"state","goal_string":"goal","discount_factor":"0.5"})
         problem_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problems_index")
         problem_index.add("start_string","state",problem_node)
         problem_node.add_labels("_unit_test_only")
         
+        #should return nothing
         self.test_subject.get_hint.when.called_with("problem","state").should.throw(HintDoesNotExistException)
         
+        #add a state to the problem node, state_2, bellman value 0
         state_string = "state_2"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes(("problem-"+state_string).encode('utf-8'))).hexdigest()
         new_node, new_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":"0.5"},(problem_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,new_node)
         new_rel["action_string"] = "bad hint"
         
+        #add a state, state 3  to problem node, bellman value 1
         state_string = "state_3"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes(("problem-"+state_string).encode('utf-8'))).hexdigest()
         another_node, another_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":1,"discount_factor":"0.5"},(problem_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,another_node)
         another_rel["action_string"] = "good hint"
         
-        self.test_subject.get_hint("problem","state").should.equal("good hint")
+        #should pick higher bellman value (state_3)
+        self.test_subject.get_hint("problem","state").should.equal({"hint_text":"good hint","hint_result":"state_3"})
         
+        #should return nothing for hint from state_2
         self.test_subject.get_hint.when.called_with("problem","state_2").should.throw(HintDoesNotExistException)
         
+        #add state_3 branching from state_2, bellman value 0 
         state_string = "state_3"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes(("problem-"+state_string).encode('utf-8'))).hexdigest()
         new_node2, new_rel2 = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":"0.5"},(new_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,new_node2)
         new_rel2["action_string"] = "bad hint"
         
+        #add state_5 branching from state 2, bellman value 1
         state_string = "state_5"
-        state_hash = hashlib.sha256(bytes(state_string.encode('utf-8'))).hexdigest()
+        state_hash = hashlib.sha256(bytes(("problem-"+state_string).encode('utf-8'))).hexdigest()
         another_node2, another_rel2 = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":1,"discount_factor":"0.5"},(new_node,"action",0))
         problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
         problem_states_index.add("state_hash",state_hash,another_node2)
         another_rel2["action_string"] = "good hint"
         
-        self.test_subject.get_hint("problem","state").should.equal("good hint")
+        #should return hint_5, higher bellman value
+        self.test_subject.get_hint("problem","state_2").should.equal({"hint_text":"good hint","hint_result":"state_5"})
         
         problem_node.delete_related()
         
@@ -498,25 +507,27 @@ class TestHintFactoryPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
-        self.test_subject.hf.get_hint = MagicMock(return_value="hint text")
+        self.test_subject.hf.get_hint = MagicMock(return_value={"hint_text":"hint text","hint_result":"hint result"})
         self.test_subject.get_hint_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "status":"OK",
             "exists":"YES",
-            "hint_text": "hint text"
+            "hint_text": "hint text",
+            "hint_result": "hint result",
         })
         self.test_subject.send_response.reset_mock()
         
         #student model stuff
         msg["student_id"] = "123"
-        self.test_subject.hf.get_hint = MagicMock(return_value="hint text")
+        self.test_subject.hf.get_hint = MagicMock(return_value={"hint_text":"hint text","hint_result":"hint result"})
         self.test_subject.get_hint_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "status":"OK",
             "exists":"YES",
-            "hint_text": "hint text"
+            "hint_text": "hint text",
+            "hint_result": "hint result"
         })
-        self.test_subject.hint_db.find({"student_id":"123","hint_text":"hint text","state": dict(HintFactoryState(problem="2 + 2 = 4"))}).count().should.equal(1)
+        self.test_subject.hint_db.find({"student_id":"123","hint_text":"hint text","hint_result":"hint result","state": dict(HintFactoryState(problem="2 + 2 = 4"))}).count().should.equal(1)
         self.test_subject.send_response.reset_mock()
         
         #duplicate records?
@@ -524,7 +535,7 @@ class TestHintFactoryPlugin(unittest.TestCase):
         self.test_subject.hint_db.find({}).count().should.equal(1)
         self.test_subject.send_response.reset_mock()
         
-        self.test_subject.hf.get_hint = MagicMock(return_value="hint text 2")
+        self.test_subject.hf.get_hint = MagicMock(return_value={"hint_text":"hint text 2","hint_result":"hint result"})
         self.test_subject.get_hint_callback(msg)
         self.test_subject.hint_db.find({}).count().should.equal(2)
         self.test_subject.send_response.reset_mock()

@@ -250,12 +250,13 @@ class SimpleHintFactory(object):
                 
                 child_edges = node.match_outgoing("action")
                 max_reward = -999999
-                hint = ""
+                hint = {}
                 count = 0
                 for edge in child_edges:
                     if edge.end_node["bellman_value"] > max_reward:
                         max_reward = edge.end_node["bellman_value"]
-                        hint = edge["action_string"]
+                        hint["hint_text"] = edge["action_string"]
+                        hint["hint_result"] = edge.end_node["state_string"]
                     count +=1
                 
                 if count == 0:
@@ -417,9 +418,9 @@ class HintFactoryPlugin(Plugin):
         try:
             hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
             if hint:
-                self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint})
+                self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint["hint_text"],"hint_result":hint["hint_result"]})
                 if "student_id" in message:
-                    self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
+                    self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint["hint_text"],"hint_result":hint["hint_result"]},{"$set":{"hint_text":hint["hint_text"],"hint_result":hint["hint_result"],}},upsert=True)
             else:
                 self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
         except HintDoesNotExistException as e:

@@ -115,7 +115,7 @@ class StudentManagementPlugin(Plugin):
             self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' for set_attribute"})
             return
             
-        update = self.db.update({'_id':ObjectId(str(student_id)),"owner_id":str(message["sender_entity_id"])},{'$set':{'attributes.'+str(attribute_name): str(attribute_value)}},upsert=False, multi=False)
+        update = self.db.update({'_id':ObjectId(str(student_id))},{'$set':{'attributes.'+str(attribute_name): str(attribute_value)}},upsert=False, multi=False)
         if not update["updatedExisting"]:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
         else:
@@ -138,7 +138,7 @@ class StudentManagementPlugin(Plugin):
             return
          
             
-        student = self.db.find_one({'_id':ObjectId(str(student_id)),"owner_id":str(message["sender_entity_id"])})
+        student = self.db.find_one({'_id':ObjectId(str(student_id))})
         if not student:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
             return
@@ -162,7 +162,7 @@ class StudentManagementPlugin(Plugin):
         student_id = message["student_id"]
         
         try:
-            student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+            student = self.db.find_one({'_id':ObjectId(str(message["student_id"]))})
         except bson.errors.InvalidId:
             self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' for get_student_model"})
             return
@@ -236,7 +236,7 @@ class StudentManagementPlugin(Plugin):
                     break
             else:
                 #student model complete, send response (unless timed out)
-                student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+                student = self.db.find_one({'_id':ObjectId(str(message["student_id"]))})
                 if message["message_id"] in self.timeout_threads:
                     self.send_response(message["message_id"], {
                         "student_id": str(student_id),
@@ -263,7 +263,7 @@ class StudentManagementPlugin(Plugin):
         if self.logger:
             self.send_log_entry("TIMEOUT " + str(message))
         
-        student = self.db.find_one({'_id':ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+        student = self.db.find_one({'_id':ObjectId(str(message["student_id"]))})
         
         try:
             self.send_response(message["message_id"],{
@@ -307,10 +307,10 @@ class StudentManagementPlugin(Plugin):
             })
             return 
         
-        existing_student_other_id = self.db.find_one({"attributes.other_id":str(message["student_id"]),"owner_id":str(message["sender_entity_id"])})
+        existing_student_other_id = self.db.find_one({"attributes.other_id":str(message["student_id"])})
         if not existing_student_other_id:
             try:
-                existing_student = self.db.find_one({"_id":ObjectId(str(message["student_id"])),"owner_id":str(message["sender_entity_id"])})
+                existing_student = self.db.find_one({"_id":ObjectId(str(message["student_id"]))})
                 if not existing_student:
                     self.send_response(message['message_id'],{"error":"transaction failed; could not find student with id " + str(student_id) + ". Try using add_student first.","responder": ["student_manager"]})
                     return
