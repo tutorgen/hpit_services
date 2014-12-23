@@ -45,6 +45,7 @@
         * [tutorgen.kt_trace](#kt_trace)
     * [Hint Factory (model tracing)](#HFPlugin)
         * [tutorgen.hf_init_problem](#hf_init_problem)
+        * [tutorgen.hf_delete_state](#hf_delete_state)
         * [tutorgen.hf_push_state](#hf_push_state)
         * [tutorgen.hf_hint_exists](#hf_hint_exists)
         * [tutorgen.hf_get_hint](#hf_get_hint)
@@ -1337,6 +1338,18 @@ Returns:
 
 * status: string - OK or NOT_OK on success and failure respectively
 
+####<a name="hf_delete_state"></a> tutorgen.ht_delete_state
+Deletes a state and all edges attached to it.
+
+Receives:
+
+* state : json - A json object representing the state to push.
+
+Returns:
+
+* status: string - either OK or NOT_OK
+* error: string - an optional error message
+
 ####<a name="hf_push_state"></a> tutorgen.hf_push_state
 Pushes a new state on the problem.
 
@@ -1384,7 +1397,9 @@ Returns:
 
 * status: string - OK
 * exists: string - YES if a hint is available, NO if it isn't
-* hint_text: string - The text describing the hint.
+* hint: dict - contains:
+    * hint_text: string - The text describing the action to be taken.
+    * hint_result: string - The state string the hint will take you into.
 
 ##<a name="PMPlugin"></a> Problem Management Plugin
 

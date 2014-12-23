@@ -98,6 +98,24 @@ class SimpleHintFactory(object):
         self.bellman_update(problem_node["start_string"],problem_node["goal_string"])
         return return_node
     
+    def delete_node(self,problem_string,state_string):
+        state_hash = self.hash_string('-'.join([problem_string, state_string]))
+        node = self.db.get_indexed_node("problems_index","start_string",state_string)
+        if not node:
+            node = self.db.get_indexed_node("problem_states_index","state_hash",state_hash)
+            if not node:
+                raise StateDoesNotExistException("Problem with string " + str(problem_string) + " or state with string " + str(state_string) + " does not exist.")
+
+        in_edges = node.match_incoming()
+        for e in in_edges:
+            e.delete()
+        out_edges = node.match_outgoing()
+        for e in out_edges:
+            e.delete()
+                
+        node.delete()
+        return True
+    
     def hash_string(self, string):
         #hashing used for problem states and action strings
         return hashlib.sha256(bytes(str(string).encode('utf-8'))).hexdigest()
@@ -266,6 +284,9 @@ class SimpleHintFactory(object):
         except StateDoesNotExistException:
             raise HintDoesNotExistException("Hint does not exist for state " + str(state_string))
             
+            
+    
+        
 
 
 class HintFactoryPlugin(Plugin):
@@ -287,6 +308,7 @@ class HintFactoryPlugin(Plugin):
              "tutorgen.hf_hint_exists":self.hint_exists_callback,
              "tutorgen.hf_get_hint":self.get_hint_callback,
              "tutorgen.hf_transaction":self.transaction_callback_method,
+             "tutorgen.hf_delete_state":self.delete_state_callback,
              "get_student_model_fragment":self.get_student_model_fragment_callback})
 
     def init_problem_callback(self, message):
@@ -312,7 +334,39 @@ class HintFactoryPlugin(Plugin):
             "error":"Unknown error when attempting to create or get problem state",
             })
             
-    
+    def delete_state_callback(self,message):
+        if self.logger:
+            self.send_log_entry("DELETE STATE")
+            self.send_log_entry(message)
+        
+        try:
+            state=  message["state"]
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error": "hf_delete_state requires a 'state'",
+                "status":"NOT_OK"
+            })
+            return
+        
+        incoming_state = self.get_incoming_state(message["state"])
+        if not incoming_state:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"message's 'state' parameter should be a dict",
+            })
+            return
+            
+        try:
+            result = self.hf.delete_node(incoming_state.problem,incoming_state.problem_state)
+            if result:
+                self.send_response(message["message_id"],{"status":"OK"})
+            else:
+                self.send_response(message["message_id"],{"status":"NOT_OK"})
+        except StateDoesNotExistException as e:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error": str(e)
+            })
         
     def push_state_callback(self, message):
         if self.logger:
@@ -370,7 +424,7 @@ class HintFactoryPlugin(Plugin):
             state=  message["state"]
         except KeyError:
             self.send_response(message["message_id"], {
-                "error": "hf_push_state requires a 'state'",
+                "error": "hf_hint_exists requires a 'state'",
                 "status":"NOT_OK"
             })
             return
@@ -402,7 +456,7 @@ class HintFactoryPlugin(Plugin):
             state=  message["state"]
         except KeyError:
             self.send_response(message["message_id"], {
-                "error": "hf_push_state requires a 'state'",
+                "error": "hf_get_hint requires a 'state'",
                 "status":"NOT_OK"
             })
             return
