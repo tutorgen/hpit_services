@@ -177,8 +177,10 @@ def plugin_new():
 
             db.session.add(new_plugin)
             db.session.commit()
+            
+            connected_dict = {new_plugin.entity_id:False}
 
-            return render_template('plugin_key.html', plugin=new_plugin, key=key)
+            return render_template('plugin_key.html', plugin=new_plugin, key=key, connected_dict=connected_dict)
 
     return render_template('plugin_new.html', form=plugin_form, isadmin=current_user.administrator)
 
@@ -200,7 +202,14 @@ def plugin_detail(plugin_id):
         'deleted': False
     })
 
-    return render_template('plugin_detail.html', plugin=plugin, logs=log_entries)
+    connected_dict = {}
+    active_poll_time = datetime.now() - timedelta(minutes=1)
+    if plugin.time_last_polled >= active_poll_time:
+        connected_dict[plugin.id] = True
+    else:
+        connected_dict[plugin.id] = False
+
+    return render_template('plugin_detail.html', plugin=plugin, logs=log_entries, connected_dict=connected_dict)
 
 
 @app.route('/plugin/<plugin_id>/log/clear', methods=["GET"])
@@ -333,8 +342,10 @@ def tutor_new():
 
             db.session.add(new_tutor)
             db.session.commit()
+            
+            connected_dict = {new_tutor.entity_id:False}
 
-            return render_template('tutor_key.html', tutor=new_tutor, key=key)
+            return render_template('tutor_key.html', tutor=new_tutor, key=key, connected_dict = connected_dict)
 
     return render_template('tutor_new.html', form=tutor_form)
 
@@ -356,7 +367,14 @@ def tutor_detail(tutor_id):
         'deleted': False
     })
 
-    return render_template('tutor_detail.html', tutor=tutor, logs=log_entries)
+    connected_dict = {}
+    active_poll_time = datetime.now() - timedelta(minutes=1)
+    if tutor.time_last_polled >= active_poll_time:
+        connected_dict[tutor.id] = True
+    else:
+        connected_dict[tutor.id] = False
+    
+    return render_template('tutor_detail.html', tutor=tutor, logs=log_entries, connected_dict=connected_dict)
 
     
 @app.route('/tutor/<tutor_id>/log/clear', methods=["GET"])
