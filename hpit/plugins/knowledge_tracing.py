@@ -315,7 +315,7 @@ class KnowledgeTracingPlugin(Plugin):
             self.send_log_entry("RECV: transaction with message: " + str(message))
 
         try:
-            sender_entity_id = message["sender_entity_id"]
+            sender_entity_id = message["orig_sender_id"]
             student_id = message["student_id"]
             outcome = message["outcome"]
             skill_ids = dict(message["skill_ids"])
@@ -345,7 +345,7 @@ class KnowledgeTracingPlugin(Plugin):
         response_skills = {}
         for skill_name,skill_id in skill_ids.items(): 
             kt_config = self.db.find_one({
-                'sender_entity_id': message['sender_entity_id'],
+                'sender_entity_id': message['orig_sender_id'],
                 'skill_id': skill_id,
                 'student_id':str(message['student_id'])
             })
@@ -355,7 +355,7 @@ class KnowledgeTracingPlugin(Plugin):
                     self.send_log_entry("INFO: No initial settings for Transaction message. Using defaults.")
     
                 new_trace = {
-                    'sender_entity_id': message['sender_entity_id'],
+                    'sender_entity_id': message['orig_sender_id'],
                     'skill_id': str(skill_id),
                     'student_id': message['student_id'],
                     'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
