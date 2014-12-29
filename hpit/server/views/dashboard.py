@@ -21,6 +21,8 @@ settings = SettingsManager.get_plugin_settings()
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import bson
+import pymongo
+import math
 #-----------------------------
 
 def query_metrics(collection, metric_name, senders=None, receivers=None):
@@ -524,38 +526,6 @@ def account_details():
 @login_required
 def student_monitor(student_id=""):
     if request.method == 'POST':
-        #student_attributes = {"name":"brian","interests":["sports","music","plants"]}
-        student_skills = [
-            {"skill_name":"Addition",
-             "skill_id":"1",
-             "prob_known":.45,
-             "prob_learned":.32,
-             "prob_mistake":.20,
-             "prob_guess":.56,
-           },
-           {"skill_name":"Subtraction",
-             "skill_id":"1",
-             "prob_known":.6,
-             "prob_learned":.92,
-             "prob_mistake":.60,
-             "prob_guess":.31,
-           },
-        ]
-        student_problems = [
-            {"problem_name":"Area of a door",
-             "problem_id":"p123",
-             "number_of_steps":"4",
-             "skills_involved":["addition","reading","some other skill"],
-            },
-            {"problem_name":"Angles problem",
-             "problem_id":"p1235",
-             "number_of_steps":"6",
-             "skills_involved":["baseball","eating contest","skydiving"],
-            }
-           
-        ]
-        bored=True
-        
         """
         This is basically a hack.  The dashboard should not have access to the plugin's databases.
         In the future, the dashboard should send messages, just as other plugins do.
@@ -617,7 +587,74 @@ def student_monitor(student_id=""):
                  "prob_guess":kt["probability_guess"],
                })
             
+        student_problems = [
+            {"problem_name":"Area of a door",
+             "problem_id":"p123",
+             "number_of_steps":"4",
+             "skills_involved":["addition","reading","some other skill"],
+            },
+            {"problem_name":"Angles problem",
+             "problem_id":"p1235",
+             "number_of_steps":"6",
+             "skills_involved":["baseball","eating contest","skydiving"],
+            }
+           
+        ]    
+            
+        #student_problems
+        student_problems = []
+        problem_worked_db = mongo[settings.MONGO_DBNAME].hpit_problems_worked
+        problem_db = mongo[settings.MONGO_DBNAME].hpit_problems
+        step_db = mongo[settings.MONGO_DBNAME].hpit_steps
         
+        problems_worked = problem_worked_db.find({"student_id":str(student_id)})
+        for problem in problems_worked:
+            actual_problem = problem_db.find_one({"_id":problem["problem_id"]})
+            step_count = 0
+            skill_list = []
+            steps = step_db.find({"problem_id":problem["problem_id"]})
+            for step in steps:
+                for skill in step["skill_names"]:
+                    skill_list.append(skill)
+                step_count +=1
+                
+            student_problems.append({
+                "problem_name":actual_problem["problem_name"],
+                "problem_id":str(problem["_id"]),
+                "number_of_steps":step_count,
+                "skills_involved":skill_list,
+            })
+        
+        #boredom (straight from boredom_detector.boredom_calculation())
+        bored = False
+        
+        boredom_db = mongo[settings.MONGO_DBNAME].hpit_boredom_detection
+        dt_sum = 0
+        dt_mean = 0
+        dt_std_dev = 0
+        dts = []
+        
+        records = list(boredom_db.find({"student_id":student_id},limit=1000).sort("time",pymongo.DESCENDING))
+        if len(records) > 1:
+            for xx in range(0,len(records)-1):
+                dt = (records[xx]["time"] - records[xx+1]["time"]).total_seconds();
+                dt_sum += dt
+                dts.append(dt)
+  
+            dt_mean = float(dt_sum) / (len(records)-1)
+            var_squared = 0
+            var_squared_sum =0
+            
+            for xx in dts:
+                var_squared = abs((xx-dt_mean))**2
+                var_squared_sum += var_squared
+                
+            dt_std_dev = math.sqrt(float(var_squared_sum) / (len(records)-1))
+            
+            
+            if abs(dt_mean - ((records[0]["time"] - records[1]["time"]).total_seconds())) > abs(dt_mean - dt_std_dev):
+                bored = True
+
         
         return render_template('student_monitor_detail.html',
               student_id=request.form["student_id"],
@@ -627,6 +664,7 @@ def student_monitor(student_id=""):
               student_problems=student_problems,
               bored=bored,      
         )
+        
     else:
         return render_template('student_monitor.html')
 
