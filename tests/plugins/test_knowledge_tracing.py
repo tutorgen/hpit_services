@@ -496,7 +496,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send_response = MagicMock()
         
         #no args
-        msg = {"message_id":"1","sender_entity_id":"2"}
+        msg = {"message_id":"1","sender_entity_id":"2","orig_sender_id":"2"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "traced_skills":{"error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found."},
