@@ -174,12 +174,12 @@ class TestSkillManagementPlugin(unittest.TestCase):
     def test_transaction_callback_method(self):
         """
         SkillManagementPlugin.transaction_callback_method() Test plan:
-            - if skill ids not present, should respond with error
-            - if skill ids is not a dict, should respond with error
-            - test for empty skills
-            - if skill ids has an invalid id, should respond with error
-            - if skill not existent, should return with an error
-            - otherwise, respond as normal
+            - if skill names not present, should respond with error
+            - if skill_ids not present, should respond with error
+            - if skill names or skill ids not dict, should respond with error
+            - if empty, should reply empty
+            - otherwise, for new skill names, ids should be set
+            - calling again should render same ids
         """
         def mock_send(message_name,payload,callback):
             callback({"responder":["downstream"]})
@@ -191,7 +191,16 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg = {"message_id":"1","sender_entity_id":"2"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "skill_ids":{},
+            "skill_ids":{"error":"skill manager transactions requires 'skill_ids' and 'skill_names'"},
+            "responder":["skill_manager","downstream"]
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill names only
+        msg["skill_names"] = {"Default":"skill_name"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "skill_ids":{"error":"skill manager transactions requires 'skill_ids' and 'skill_names'"},
             "responder":["skill_manager","downstream"]
         })
         self.test_subject.send_response.reset_mock()
@@ -200,13 +209,24 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = "not dict"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-                "skill_ids" : {},
+                "skill_ids" : {"error":"invalid skill_names or skill_ids for skill manager transaction"},
+                "responder":["skill_manager","downstream"],
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill names not dict
+        msg["skill_ids"] = {}
+        msg["skill_names"] = "not dict"
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "skill_ids" : {"error":"invalid skill_names or skill_ids for skill manager transaction"},
                 "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()
         
         #empty skills
         msg["skill_ids"] = {}
+        msg["skill_names"] = {}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "skill_ids" : {},
@@ -214,30 +234,25 @@ class TestSkillManagementPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
-        #skill_ids invalid id
-        msg["skill_ids"] = {"skill_name":"invalid id"}
+        #create new ids
+        msg["skill_ids"] = {}
+        msg["skill_names"] = {"Default":"skill_name"}
+        
         self.test_subject.transaction_callback_method(msg)
+        
+        skill = self.test_subject.db.find_one({"skill_name":"skill_name"})
+        skill.should_not.equal(None)
+        
         self.test_subject.send_response.assert_called_with("1",{
-            "skill_ids":{"skill_name" : "error: this is not a valid id"},
+            "skill_ids":{"skill_name" :str(skill["_id"])},
             "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()
         
-        #skill_ids skill does not exist
-        msg["skill_ids"] = {"skill_name":ObjectId()}
-        self.test_subject.transaction_callback_method(msg)
+        #should be the same id
+        self.test_subject.transaction_callback_method(msg)       
         self.test_subject.send_response.assert_called_with("1",{
-            "skill_ids":{"skill_name" : "error: Skill skill_name was not found, try adding it with get_skill_id."},
-            "responder":["skill_manager","downstream"],
-        })
-        self.test_subject.send_response.reset_mock()
-        
-        #everything good
-        skill_id = self.test_subject.db.insert({"skill_name":"skill","skill_model":"Default"})
-        msg["skill_ids"] = {"skill":skill_id}
-        self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "skill_ids" : {"skill":str(skill_id)},
+            "skill_ids":{"skill_name" :str(skill["_id"])},
             "responder":["skill_manager","downstream"],
         })
         self.test_subject.send_response.reset_mock()

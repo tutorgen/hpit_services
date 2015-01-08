@@ -52,11 +52,11 @@ class KnowledgeTracingTutor(Tutor):
             return True
    
         #self.send("tutorgen.get_student_model",{"student_id":str(self.student_id),"update":True},self.get_student_model_callback)
-        #self.send_transaction({"key":"value"},self.transaction_response)
-        
+
         for sk in self.skills:
             if 90 < random.randint(0, 100):
                 correct = random.randint(0, 100)
+                """
                 self.send_transaction({
                     "problem_name":"algebra problem",
                     "step_text":"first step",
@@ -66,16 +66,21 @@ class KnowledgeTracingTutor(Tutor):
                             sk:self.skill_ids[sk],
                             "addition":self.skill_ids["addition"],
                         },
+                    'skill_names': {
+                        sk:"Default",
+                        "addition":"Default",
+                    },
                     'student_id':self.student_id,
                     'outcome': "correct" if 50 < random.randint(0, 100) else "incorrect"
                     }, self.trace_response_callback)
                 """
+                
                 self.send('tutorgen.kt_trace', {
                     'skill_id': self.skill_ids[sk],
                     'student_id':self.student_id,
                     'correct': True if 50 < random.randint(0, 100) else False
                     }, self.trace_response_callback)
-                """
+                
         sleep(.1)
 
         return True

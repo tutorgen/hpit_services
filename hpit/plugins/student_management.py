@@ -114,7 +114,10 @@ class StudentManagementPlugin(Plugin):
         except bson.errors.InvalidId:
             self.send_response(message["message_id"],{"error":"Must provide a valid 'student_id' for set_attribute"})
             return
-            
+        if not attribute_name or not attribute_value:
+            self.send_response(message["message_id"],{"error":"Must provide a 'student_id', 'attribute_name' and 'attribute_value'"})
+            return
+        
         update = self.db.update({'_id':ObjectId(str(student_id))},{'$set':{'attributes.'+str(attribute_name): str(attribute_value)}},upsert=False, multi=False)
         if not update["updatedExisting"]:
             self.send_response(message["message_id"],{"error":"Student with id " + str(student_id) + " not found."})
