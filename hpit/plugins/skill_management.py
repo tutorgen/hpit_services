@@ -132,39 +132,41 @@ class SkillManagementPlugin(Plugin):
     def transaction_callback_method(self,message):
         
         def next_step_callback(response):
-            for k,v, in skill_ids.items():
-                skill_ids[k] = str(v)
+            
             response["skill_ids"] = skill_ids
             response["responder"] = ["skill_manager"] + response["responder"]
             self.send_response(message["message_id"],response)
         
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
-
+        
         try:
             sender_entity_id = message["sender_entity_id"]
+            skill_names = dict(message["skill_names"])
             skill_ids = dict(message["skill_ids"])
         except KeyError:
-            skill_ids = {}
+            skill_names = {}
+            skill_ids = {"error":"skill manager transactions requires 'skill_ids' and 'skill_names'"}
             self.send("tutorgen.kt_transaction",message,next_step_callback)
             return
         except (TypeError, ValueError):
-            skill_ids = {}
+            skill_names = {}
+            skill_ids = {"error":"invalid skill_names or skill_ids for skill manager transaction"}
             self.send("tutorgen.kt_transaction",message,next_step_callback)
             return
             
-        for skill_name, skill_id in skill_ids.items():
-            try:
-                skill = self.db.find_one({"skill_name":skill_name,"_id":ObjectId(str(skill_id))})
-                if not skill:
-                    del message["skill_ids"][skill_name] 
-                    skill_ids[skill_name] = "error: Skill skill_name was not found, try adding it with get_skill_id." #for returning to user
-            except bson.errors.InvalidId:
-                del message["skill_ids"][skill_name] 
-                skill_ids[skill_name] = "error: this is not a valid id" #for returning to user
+        for skill_model, skill_name in skill_names.items():
+            skill = self.db.find_one({"skill_name":skill_name})
+            if not skill:
+                skill_id = self.db.insert({"skill_name":skill_name,"skill_model":skill_model})
+                skill_ids[skill_name] = skill_id
+            else:
+                skill_ids[skill_name] = str(skill["_id"])
+            
                
-           
-                   
+        for k,v, in skill_ids.items():
+            skill_ids[k] = str(v)
+        message["skill_ids"] = skill_ids #update for passing on to knowledge tracer         
         self.send("tutorgen.kt_transaction",message,next_step_callback)
         
                 

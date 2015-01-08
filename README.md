@@ -1049,8 +1049,8 @@ A transaction requires these pieces of information:
 
 Optional information includes:
 
-* skill_names : dict - a mapping of skill models to skill names
-* skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id
+* skill_names : dict - a mapping of skill models to skill names.  Required if using skill_ids.
+* skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id.  Will be populated automatically if skill does not exist.  Should contain the same skills as skill_names.
 * selection : string - a descriptor of the item being worked on ("text-area-1")
 * action : string - the action being committed ("keypress")
 * input : string - the input used ("Key-D")

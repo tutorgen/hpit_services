@@ -280,8 +280,10 @@ def plugin_genkey(plugin_id):
 
     db.session.add(plugin)
     db.session.commit()
+    
+    connected_dict = {plugin.entity_id:False}
 
-    return render_template('plugin_key.html', plugin=plugin, key=key)
+    return render_template('plugin_key.html', plugin=plugin, key=key, connected_dict=connected_dict)
 
 
 @app.route('/plugin/<plugin_id>/delete', methods=["GET"])
@@ -444,8 +446,10 @@ def tutor_genkey(tutor_id):
 
     db.session.add(tutor)
     db.session.commit()
+    
+    connected_dict = {tutor.entity_id:False}
 
-    return render_template('tutor_key.html', tutor=tutor, key=key)
+    return render_template('tutor_key.html', tutor=tutor, key=key, connected_dict=connected_dict)
 
 
 @app.route('/tutor/<tutor_id>/delete', methods=["GET"])
