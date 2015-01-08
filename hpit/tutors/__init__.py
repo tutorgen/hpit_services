@@ -5,6 +5,7 @@ from .hint_factory_base_tutor import HintFactoryBaseTutor, HintFactoryState, Hin
 from .problem_generator import ProblemGeneratorTutor
 from .student_model import StudentModelTutor
 from .load_testing import LoadTestingTutor
+from .replay2 import ReplayTutor2
 
 __all__ = [
     'ExampleTutor', 
@@ -15,5 +16,6 @@ __all__ = [
     'HintFactoryTutor',
     'ProblemGeneratorTutor',
     'StudentModelTutor',
-    'LoadTestingTutor'
+    'LoadTestingTutor',
+    'ReplayTutor2',
 ]

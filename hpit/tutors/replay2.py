@@ -43,17 +43,6 @@ def get_skills(row):
     
     return skills
 
-
-class NoArgumentsException(Exception):
-    """
-    Raised when there are no arguments passed.
-    """
-
-class InvalidArgumentsException(Exception):
-    """
-    Raised when there are no arguments passed.
-    """
-
 class ReplayTutor2(Tutor):
     """
     ReplayTutor:  a tutor for testing/backup purposes, that re-sends messages to plugins.
@@ -348,7 +337,10 @@ class ReplayTutor2(Tutor):
         skill_names = {}
         for skill_model, skill_name in self.json_in.items():
             skill_ids[skill_name] = ""
-            skill_names[skill_name] = skill_model
+            skill_names[skill_model] = skill_name
+        
+        print(skill_ids)
+        print(skill_names)
         
         self.send_transaction({
             "problem_name":self.problem_name.get(),
