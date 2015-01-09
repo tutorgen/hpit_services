@@ -102,6 +102,23 @@ class TestSimpleHintFactory(unittest.TestCase):
         
         problem_node.delete_related()
     
+    def test_delete_problem(self):
+        self.test_subject.delete_problem("problem","state").should.equal(False)
+        
+        problem_node, = self.test_subject.db.create({"start_string":"state","goal_string":"goal","discount_factor":"0.5"})
+        problem_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problems_index")
+        problem_index.add("start_string","state",problem_node)
+        problem_node.add_labels("_unit_test_only")
+        
+        state_string = "state_2"
+        state_hash = hashlib.sha256(bytes('-'.join(['problem', state_string]).encode('utf-8'))).hexdigest()
+        new_node, new_rel = self.test_subject.db.create({"state_string":state_string,"state_hash":state_hash,"bellman_value":0,"discount_factor":"0.5"},(problem_node,"action",0))
+        problem_states_index = self.test_subject.db.get_or_create_index(neo4j.Node,"problem_states_index")
+        problem_states_index.add("state_hash",state_hash,new_node)
+        
+        self.test_subject.delete_problem("problem","state2").should.equal(False)
+        self.test_subject.delete_problem("problem","state").should.equal(True)
+    
     def test_hash_string(self):
         """
         SimpleHintFactory.hash_string() Test plan:
@@ -370,6 +387,49 @@ class TestHintFactoryPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("1", {
                 "status": "OK",
             })
+    
+    def test_delete_problem_callback(self):
+        """
+        HintFactoryPlugin.delete_problem_callback() Test plan:
+            - pass without state, should relpy with error
+            - invalid state, should respond error
+            - mock delete problem true, should respond ok
+            - mock delete problem false, should respond not ok
+        """
+        self.test_subject.send_response = MagicMock()
+        self.test_subject.hf.delete_problem = MagicMock(return_value=True)
+
+        msg = {"message_id":"1"}
+        self.test_subject.delete_problem_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error": "hf_delete_problem requires a 'state'",
+            "status":"NOT_OK"         
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = 4
+        self.test_subject.delete_problem_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"NOT_OK",
+            "error":"message's 'state' parameter should be a dict",       
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["state"] = dict(HintFactoryState(problem="2 + 2 = 4"))
+        self.test_subject.delete_problem_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"OK",     
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        self.test_subject.hf.delete_problem.return_value=False
+        self.test_subject.delete_problem_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "status":"NOT_OK",
+            "error":"unable to delete problem",     
+        })
+        self.test_subject.send_response.reset_mock()
+        
         
     def test_delete_state_callback(self):
         """
