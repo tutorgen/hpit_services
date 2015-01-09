@@ -115,6 +115,15 @@ class SimpleHintFactory(object):
                 
         node.delete()
         return True
+        
+    def delete_problem(self,problem_string,state_string):
+        node = self.db.get_indexed_node("problems_index","start_string",state_string)
+        if not node:
+            return False
+        
+        node.delete_related()
+        return True
+        
     
     def hash_string(self, string):
         #hashing used for problem states and action strings
@@ -309,6 +318,7 @@ class HintFactoryPlugin(Plugin):
              "tutorgen.hf_get_hint":self.get_hint_callback,
              "tutorgen.hf_transaction":self.transaction_callback_method,
              "tutorgen.hf_delete_state":self.delete_state_callback,
+             "tutorgen.hf_delete_problem":self.delete_problem_callback,
              "get_student_model_fragment":self.get_student_model_fragment_callback})
 
     def init_problem_callback(self, message):
@@ -333,7 +343,40 @@ class HintFactoryPlugin(Plugin):
             "status":"NOT_OK",
             "error":"Unknown error when attempting to create or get problem state",
             })
+    
+    def delete_problem_callback(self,message):
+        if self.logger:
+            self.send_log_entry("DELETE PPROBLEMj")
+            self.send_log_entry(message)
             
+        try:
+            state=  message["state"]
+        except KeyError:
+            self.send_response(message["message_id"], {
+                "error": "hf_delete_problem requires a 'state'",
+                "status":"NOT_OK"
+            })
+            return
+        
+        incoming_state = self.get_incoming_state(message["state"])
+        if not incoming_state:
+            self.send_response(message["message_id"],{
+            "status":"NOT_OK",
+            "error":"message's 'state' parameter should be a dict",
+            })
+            return
+        
+        if self.hf.delete_problem(incoming_state.problem,incoming_state.problem_state):
+            self.send_response(message["message_id"],{
+                    "status":"OK",
+            })
+        else:
+            self.send_response(message["message_id"],{
+                    "status":"NOT_OK",
+                    "error":"unable to delete problem",
+            })
+        
+        
     def delete_state_callback(self,message):
         if self.logger:
             self.send_log_entry("DELETE STATE")

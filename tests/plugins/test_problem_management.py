@@ -1188,6 +1188,50 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "skill_names":{"math":"addition"},
                 }]
         })
+        
+    def test_get_problem_by_skill(self):
+        """
+        ProblemManagementPlugin.get_problem_by_skill() Test Plan:
+            -   send without skill name, should return with error
+            -   send with skill name, should be empty
+            -   and problems and steps, two with skill, 1 without, should return correct
+        """
+        msg = {"message_id":"1"}
+        self.test_subject.get_problem_by_skill(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "error":"problem_management get_problem_by_skill requires 'skill_name'"       
+            })
+        self.test_subject.send_response.reset_mock()
+        
+        msg["skill_name"] = "addition"
+        self.test_subject.get_problem_by_skill(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "problems":{}      
+            })
+        self.test_subject.send_response.reset_mock()
+        
+        problem1 = self.test_subject.db.insert({"problem_name":"problem1","problem_text":"4+3"})
+        problem1_step1 = self.test_subject.step_db.insert({"problem_id":problem1,"skill_ids":{"subtraction":"123"}})
+        problem1_step2 = self.test_subject.step_db.insert({"problem_id":problem1,"skill_ids":{"addition":"456"}})    
+        
+        problem2 = self.test_subject.db.insert({"problem_name":"problem2","problem_text":"5+3"})
+        problem2_step1 = self.test_subject.step_db.insert({"problem_id":problem2,"skill_ids":{"addition":"123"}})  
+            
+        problem3 = self.test_subject.db.insert({"problem_name":"problem1","problem_text":"6-3"})
+        problem3_step1 = self.test_subject.step_db.insert({"problem_id":problem3,"skill_ids":{"subtraction":"123"}})
+        problem3_step2 = self.test_subject.step_db.insert({"problem_id":problem3,"skill_ids":{"subtraction":"123"}})
+        
+        self.test_subject.get_problem_by_skill(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "problems":{
+                    "problem1":str(problem1),
+                    "problem2":str(problem2),
+                }      
+            })
+        self.test_subject.send_response.reset_mock()
+            
+        
+        
  
     def test_get_student_model_fragment_callback(self):
         """

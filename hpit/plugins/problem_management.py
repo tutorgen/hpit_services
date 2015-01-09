@@ -697,7 +697,31 @@ class ProblemManagementPlugin(Plugin):
                 "success":True,
             })
     
-    
+    def get_problem_by_skill(self,message):
+        try:
+            skill_name = message["skill_name"]
+        except KeyError:
+            self.send_response(message["message_id"],{
+                "error":"problem_management get_problem_by_skill requires 'skill_name'"       
+            })
+            return
+        
+        return_problems = {}
+        
+        steps = self.step_db.find({})
+        for step in steps:
+            if skill_name in step["skill_ids"]:
+                problem = self.db.find_one({"_id":step["problem_id"]})
+                if problem:
+                    return_problems[problem["problem_name"]] = str(problem["_id"])
+        
+
+        self.send_response(message["message_id"],{
+                "problems":return_problems,       
+            })
+        
+        
+        
     
     
     def get_student_model_fragment_callback(self,message):      
