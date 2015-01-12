@@ -49,6 +49,7 @@
         * [tutorgen.hf_push_state](#hf_push_state)
         * [tutorgen.hf_hint_exists](#hf_hint_exists)
         * [tutorgen.hf_get_hint](#hf_get_hint)
+        * [tutorgen.delete_problem](#hf_delete_problem)
         * [tutorgen.get_student_model_fragment](#kt_get_student_model_fragment)
     * [Problem Management](#PMPlugin)
         * [tutorgen.add_problem](#add_problem)
@@ -63,6 +64,7 @@
         * [tutorgen.remove_step](#remove_step)
         * [tutorgen.get_step](#get_step)
         * [tutorgen.get_problem_steps](#get_problem_steps)
+        * [tutorgen.get_problem_by_skill](#pm_get_problem_by_skill)
         * [tutorgen.get_student_model_fragment](#pm_get_student_model_fragment)
     * [Problem Generator](#PGPlugin)
         * [tutorgen.pg_list_problems](#list_problems)
@@ -1400,6 +1402,21 @@ Returns:
 * hint: dict - contains:
     * hint_text: string - The text describing the action to be taken.
     * hint_result: string - The state string the hint will take you into.
+    
+####<a name="hf_delete_problem"></a>tutorgen.hf_delete_problem
+
+Receives:
+* state : json - A json object representing the state to push.
+* state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+* state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+* state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string representing the problem i.e "2x + 4 = 12"
+
+Returns:
+* status: string - OK or NOT_OK
+* error: string - optional, if NOT_OK and an error happened
+
+
 
 ##<a name="PMPlugin"></a> Problem Management Plugin
 
@@ -1577,6 +1594,17 @@ Returns:
     * date_created : datetime - The time the step was created.
 * problem_id : string - The ID of the problem the steps belong to.
 * success : boolean - Whether everything went ok.
+
+####<a name="pm_get_problem_by_skill"></a> tutorgen.get_problem_by_skill
+Returns a dictionary of problem names and problem ID's that have skills with a certain skill.
+
+Receives:
+
+* skill_name : string - The name of the skill to query problems by
+
+Returns:
+
+* problems : dictionary - A dictionary of problem names and problem ID's that contain the skill.
 
 ####<a name="pm_get_student_model_fragment"></a> tutorgen.get_student_model_fragment
 Returns a this plugin's contribution to the overall student model.  For the problem management plugin,
