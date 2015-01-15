@@ -117,14 +117,14 @@ class EntityManager:
         if 'once' in entity:
             subp_args.append("--once")
             
-        subp_args.extend([entity_id, api_key, entity_type, entity_subtype])
+        subp_args.extend([entity_id, api_key, entity_type, entity_subtype, name])
         
         print("Starting entity: " + name + " ID#: " + entity_id)
 
-        with open("log/output_"+entity_type+"_"+entity_subtype+".txt","w") as f:
+        with open("log/output_"+name+"_"+entity_type+"_"+entity_subtype+".txt","w") as f:
             subp = subprocess.Popen(subp_args, stdout = f, stderr = f)
 
-        pidfile = os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
+        pidfile = os.path.join('tmp', name+"_"+ entity_type + '_' + entity_id + '.pid')
        
         with open(pidfile,"w") as pfile:
             pfile.write(str(subp.pid))
@@ -134,10 +134,15 @@ class EntityManager:
         """
         Shut down all entities of a given type from a collection
         """
-        
+
         entity_id = entity['entity_id']
+        
+        name = 'Unknown'
+        if 'name' in entity:
+            name = entity['name']
+        
         print("Stopping entity: " + entity_id)
-        pidfile = os.path.join('tmp', entity_type + '_' + entity_id + '.pid')
+        pidfile = os.path.join('tmp', name+"_"+ entity_type + '_' + entity_id + '.pid')
 
         try:
             with open(pidfile) as f:

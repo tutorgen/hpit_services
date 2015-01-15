@@ -48,7 +48,7 @@ class TestServerAPI(unittest.TestCase):
     def setUp(self):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
-        """
+        """ 
         app.config['TESTING'] = True
         app.testing = True
         self.test_client = app.test_client()
@@ -877,64 +877,89 @@ class TestServerAPI(unittest.TestCase):
         response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
         response.data.should.contain(b'Could not authenticate. Invalid entity_id/api_key combination.')
         
-        self.connect_helper("plugin")
-        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
-        response.data.should.contain(b'responses')
-        
-        client = MongoClient()
-        client[settings.MONGO_DBNAME].responses.insert([
+        with app.test_client() as c:
+            c.post("/connect",data = json.dumps({"entity_id":self.plugin_entity_id,"api_key":self.plugin_secret_key}),content_type="application/json")
+            with c.session_transaction() as sess:
+                sess["token"] = "9876"
+                
+            response = c.get("/response/list",data = json.dumps({}),content_type="application/json")
+            response.data.should.contain(b'responses')
+            
+            
+            client = MongoClient()
+            client[settings.MONGO_DBNAME].responses.insert([
                 {
                     "receiver_entity_id":self.plugin_entity_id,
                     "response":{"res":"Good value 1"},
                     "message":{"m":"some message"},
+                    "session_token":"9876"
                 },
                 {
                     "receiver_entity_id":self.plugin_entity_id,
                     "response":{"res":"Good value 2"},
                     "message":{"m":"some message"},
+                    "session_token":"9876"
+                },
+                {
+                    "receiver_entity_id":"123456",
+                    "response":{"res":"Bad value 1"},
+                    "message":{"m":"some message"},
+                    "session_token":"8888",
+                },
+                {
+                    "receiver_entity_id":self.plugin_entity_id,
+                    "response":{"res":"Bad value 2"},
+                    "message":{"m":"some message"},
+                    "session_token":"8888",
                 }
-        ])
+            ])
+            
+            response = c.get("/response/list",data = json.dumps({}),content_type="application/json")
+            response.data.should.contain(b'Good value 1')
+            response.data.should.contain(b'Good value 2')
+            response.data.should_not.contain(b'Bad value 1')
+            response.data.should_not.contain(b'Bad value 2')
+            
+            client[settings.MONGO_DBNAME].responses.count().should.equal(2)
         
-        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
-        response.data.should.contain(b'Good value 1')
-        response.data.should.contain(b'Good value 2')
-        
-        client[settings.MONGO_DBNAME].responses.count().should.equal(0)
-        
-        self.disconnect_helper("plugin")
+            c.post("/disconnect",data = json.dumps({"entity_id":self.plugin_entity_id,"api_key":self.plugin_secret_key}),content_type="application/json")
         
     def test_response_list_auth_required(self):
         """
         api.response_list() auth required():
         """
-        self.connect_helper("plugin")
         
-        client = MongoClient()
-        client[settings.MONGO_DBNAME].responses.insert([
+        with app.test_client() as c:
+            c.post("/connect",data = json.dumps({"entity_id":self.plugin_entity_id,"api_key":self.plugin_secret_key}),content_type="application/json")
+            with c.session_transaction() as sess:
+                sess["token"] = "9876"
+            
+            client = MongoClient()
+            client[settings.MONGO_DBNAME].responses.insert([
                 {
                     "receiver_entity_id":self.plugin_entity_id,
                     "response_received":False,
                     "response":{"res":"Good value 1","resource_id":"1"},
                     "message":{"m":"some message"},
+                    "session_token":"9876",
                 },
-        ])
-        
-        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
-        response.data.should_not.contain(b'Good value 1')
-        
-        ra = ResourceAuth()
-        ra.entity_id = self.plugin_entity_id
-        ra.resource_id = "1"
-        ra.is_owner = False
-        db.session.add(ra)
-        db.session.commit()
-        
-        response = self.test_client.get("/response/list",data = json.dumps({}),content_type="application/json")
-        response.data.should.contain(b'Good value 1')
-        
-        
-        
-        
+            ])
+            
+            response = c.get("/response/list",data = json.dumps({}),content_type="application/json")
+            response.data.should_not.contain(b'Good value 1')
+            
+            ra = ResourceAuth()
+            ra.entity_id = self.plugin_entity_id
+            ra.resource_id = "1"
+            ra.is_owner = False
+            db.session.add(ra)
+            db.session.commit()
+            
+            response = c.get("/response/list",data = json.dumps({}),content_type="application/json")
+            response.data.should.contain(b'Good value 1')
+                
+            c.post("/disconnect",data = json.dumps({"entity_id":self.plugin_entity_id,"api_key":self.plugin_secret_key}),content_type="application/json")
+
     
     def test_message_owner_no_connect(self):
         """
