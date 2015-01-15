@@ -124,6 +124,7 @@ def connect():
     session['entity_name'] = entity.name
     session['entity_description'] = entity.description
     session['entity_id'] = entity_id
+    session['token'] = str(uuid.uuid4())
 
     db.session.add(entity)
     db.session.commit()
@@ -207,6 +208,7 @@ def log():
 
     mongo.db.entity_log.insert({
         'entity_id': session['entity_id'],
+        'session_token': session["token"],
         'log_entry': request.json['log_entry'],
         'created_on': datetime.now().isoformat(),
         'deleted': False
@@ -717,6 +719,7 @@ def message():
 
     message = {
         'sender_entity_id': sender_entity_id,
+        'session_token':session["token"],
         'time_created': datetime.now(),
         'message_name': message_name,
         'payload': payload,
@@ -734,6 +737,7 @@ def message():
             'message_id': message_id,
 
             'sender_entity_id': sender_entity_id,
+            'session_token':session["token"],
             'receiver_entity_id': plugin_entity_id,
 
             'time_created': datetime.now(),
@@ -774,6 +778,7 @@ def transaction():
 
     message = {
         'sender_entity_id': sender_entity_id,
+        'session_token':session["token"],
         'time_created': datetime.now(),
         'message_name': message_name,
         'payload': payload,
@@ -789,6 +794,7 @@ def transaction():
         mongo.db.plugin_transactions.insert({
             'message_id': message_id,
             'sender_entity_id': sender_entity_id,
+            'session_token':session["token"],
             'receiver_entity_id': plugin_entity_id,
 
             'time_created': datetime.now(),
@@ -830,7 +836,7 @@ def response():
 
     plugin_message = mongo.db.sent_messages_and_transactions.find_one({
         'message_id': ObjectId(message_id),
-        'receiver_entity_id': responder_entity_id
+        'receiver_entity_id': responder_entity_id,
     })
 
     if not plugin_message:
@@ -843,6 +849,7 @@ def response():
 
     response_id = mongo.db.responses.insert({
         'message_id': plugin_message['message_id'],
+        'session_token':plugin_message["session_token"],
         'sender_entity_id': responder_entity_id,
         'receiver_entity_id': plugin_message['sender_entity_id'],
         'message': plugin_message,
@@ -881,6 +888,7 @@ def responses():
 
     my_responses = mongo.db.responses.find({
         'receiver_entity_id': entity_id,
+        'session_token':session["token"],
     })
     
     def is_auth(r):

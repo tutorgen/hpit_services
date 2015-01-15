@@ -58,6 +58,7 @@ main_parser.add_argument('entity_id', type=str, help="The entity ID of the entit
 main_parser.add_argument('api_key', type=str, help="The API Key for the entity.")
 main_parser.add_argument('entity', type=str, help="The type of entity. (tutor, plugin)")
 main_parser.add_argument('type', type=str, help=subtype_help)
+main_parser.add_argument("name", type=str,help="The name of the entity")
 main_parser.add_argument('--once', action='store_true', help="Only run one loop of the tutor.")
 main_parser.add_argument('--args', type=str, help = "JSON string of command line arguments.")
 
@@ -139,7 +140,7 @@ if __name__ == '__main__':
 
     arguments = main_parser.parse_args()
 
-    logger_path = os.path.join(os.getcwd(), 'log/'+arguments.entity+'_' + arguments.entity_id + '.log')
+    logger_path = os.path.join(os.getcwd(), 'log/'+arguments.name+"_"+arguments.entity+'_' + arguments.entity_id + '.log')
 
     entity_subtype = arguments.type
    
