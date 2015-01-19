@@ -18,6 +18,7 @@ class SkillManagementPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo[settings.MONGO_DBNAME].hpit_skills
+        self.db.ensure_index("skill_name")
         
         """
         try:

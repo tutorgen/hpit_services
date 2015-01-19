@@ -18,6 +18,11 @@ class KnowledgeTracingPlugin(Plugin):
         self.logger = logger
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo[settings.MONGO_DBNAME].hpit_knowledge_tracing
+        self.db.ensure_index([
+                ("sender_entity_id", 1),
+                ("skill_id", 1),
+                ("student_id",1)
+            ])
         
         self.shared_messages = self.get_shared_messages(args)
         if not self.shared_messages:

@@ -362,6 +362,10 @@ if __name__ == "__main__":
     app_secret = "e992a697f396a2fd99ef9910cb040fa9"
     url_root = "http://localhost:8000"
     
+    #production
+    #entity_id = "e7e43470-5031-496c-9972-cbb809455333"
+    #app_secret = "1aadb263acec65c24b683976643516ce"
+    #url_root = "http://www.hpit-project.org"
     
     logging.basicConfig(
             filename="log/datashop_replay.log",
