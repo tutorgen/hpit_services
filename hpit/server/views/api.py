@@ -614,6 +614,7 @@ def plugin_message_list():
     #Move sent messages to another collection.
     if my_messages:
         for t in my_messages:
+            app.logger.debug("message routed: " + t["message_name"] + " " + str(t["message_id"]) + " " + str(datetime.now()))
             t['time_received'] = datetime.now() 
 
         mongo.db.sent_messages_and_transactions.insert(my_messages)
@@ -746,6 +747,8 @@ def message():
             'payload': payload
         })
 
+    app.logger.debug("message received: " + message_name + " " + str(message_id) + " " + str(datetime.now()))
+    
     return jsonify(message_id=str(message_id))
 
 @csrf.exempt
