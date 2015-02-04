@@ -715,7 +715,7 @@ example, "test", "debug", and "production". By default, HPIT will look for the '
 override this by setting the HPIT_ENV environment variable i.e. (`export HPIT_ENV=production`). The structure 
 of the file looks like this:
 
-```json
+    json
     {
         "debug": {
             "plugin": {
@@ -734,7 +734,6 @@ of the file looks like this:
             }
         }
     }
-```
 
 Most of these settings can be left as defaults, but the important ones to change are:
 * PROJECT_DIR - should be set to the directory this README is in
@@ -863,7 +862,7 @@ Optionally, you can specify two optional parameters:
 
 An example configuration would look like this:
 
-```json
+    json
     {
         "tutors" : [
             {
@@ -883,7 +882,7 @@ An example configuration would look like this:
         ],
         "plugins": [],
     }
-```
+    
 
 ## <a name="DatabaseToc"></a> Database Structure
 
@@ -1039,7 +1038,7 @@ student answers a question, they would want to tell HPIT to:
 
 A tutor could do this using the messages defined by HPIT's plugins, or they could send a single transaction.  That
 transaction will be passed to each of the main plugins, and return the information they have gathered in a single call.  
-Transactions should be the main way that turos interact with HPIT.
+Transactions should be the main way that tutors interact with HPIT.
 
 A transaction requires these pieces of information:
 
@@ -1048,62 +1047,136 @@ A transaction requires these pieces of information:
 * step_text : string - the unique step name
 * problem_name : string - the unique problem name
 * transaction_text : string - a unique string identifying the transaction 
+* skill_names : dict - a mapping of skill models to skill names.  Required if using skill_ids.
+* skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id.  Will be populated automatically if skill does not exist.  Should contain the same skills as skill_names.
 
 Optional information includes:
 
-* skill_names : dict - a mapping of skill models to skill names.  Required if using skill_ids.
-* skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id.  Will be populated automatically if skill does not exist.  Should contain the same skills as skill_names.
+* state : json - a hint factory state if hints are requested
 * selection : string - a descriptor of the item being worked on ("text-area-1")
 * action : string - the action being committed ("keypress")
 * input : string - the input used ("Key-D")
 * outcome : string - the result of the transaction, usually "correct", "incorrect", "hint"
 
 Transaction Responses:
-* student_id : string - The HPIT student ID
-* session_id : string - a HPIT ID for the session
-* transaction_id : string - The HPIT ID for the transaction
-* step_id : string - The HPIT ID for the step
-* problem_id : string - a HPIT ID for the problem
-* hint_text: string - The hint received, or an error message if hint was not requested.
-* hint_exists : boolean - does a hint exist, if requested
-* traced_skills : dict - a dictionary of skill name keys with dictionary values, containing probability guessed, known, mistake, and learned.  If a skill is invalid, an error message will replace the dict value.
-* skill_ids : dict - a dictionary with skil names as keys and HPIT IDs as values, or errors, if present.
-* responder : list - a list of plugins that have worked with this transaction
-* bored : boolean - True if the student is bored, False of otherwise.
-* boredom_detector_message - A message, usually describing an error, from the boredom detector.
-```
-{
-    'student_id': '5489e227cc48d113d005850c', 
-    'step_id': '54822391cc48d10d709b5708', 
-    'hint_text': "error: 'outcome' is not 'hint' for hint factory transaction.", 
-    'transaction_id': '54822391cc48d10d709b5709', 
-    'traced_skills': {
-        'addition': {
-            'student_id': '5489e227cc48d113d005850c', 
-            'probability_guess': 0.5, 
-            'probability_known': 0.99609375, 
-            'skill_id': '5482239bcc48d100c0dd5164', 
-            'probability_learned': 0.5, 
-            'probability_mistake': 0.5}, 
-        'division': {
-            'student_id': '5489e227cc48d113d005850c', 
-            'probability_guess': 0.5, 
-            'probability_known': 0.9375, 
-            'skill_id': '548223b3cc48d1097059e693', 
-            'probability_learned': 0.5, 
-            'probability_mistake': 0.5}
+
+* skill_ids : dict - a dictionary mapping skill names and their IDs
+* student_id : string - the ID of the student
+* session_id : string - the ID of the session
+* boredom_response : dict - response from the boredom detector
+    * error : string - if an error occured, a message is presented here
+    * bored : boolean - if the student is bored
+* hf_response : dict - response from the hint factory
+    * error : string - if an error occured, a message is presented here
+    * hint_text : string - if hint requested, it will be here
+    * hint_exists : boolean - true if hint exists
+* kt_response : dict - response from the knowledge tracer
+    * error : string - if an error occured, a message is presented here
+    * traced_skills : dict - a dictionary of traced skills, similar to kt_trace's response
+* problem_response : dict - response from the problem manager
+    * error : string - if an error occured, a message is presented here
+    * problem_id : string - the problem ID this transaction belongs to
+    * step_id : string - the step ID this transaction belongs to
+    * transaction_id : string - the ID of this transaction
+* skill_response : dict - response from the skill manager
+    * skill_ids : dict - a dictionary mapping skill names and their IDs
+* student_response : dict - the response from the student manager
+    * student_id : string - the ID of the student
+    * session_id : string - the ID of the session
+    
+
+An example transaction payload looks like this:
+
+    json
+    {
+        'skill_names': {
+            'Unique-step': 'KC293', 
+            'Default': 'same', 
+            'Single-KC': 'Single-KC'
         }, 
-    'session_id': '5489e227cc48d113d005850d', 
-    'skill_ids': {
-        'addition': '5482239bcc48d100c0dd5164', 
-        'division': '548223b3cc48d1097059e693'}, 
-    'problem_id': '54822391cc48d10d709b5707', 
-    'hint_exists': False, 
-    'responder': ['student_manager', 'skill_manager', 'knowledge_tracer', 'hint_factory', 'problem_manager']
-    'bored': True,
-    'boredom_detector_message': "",
-}
-```
+        'outcome': 'Correct', 
+        'skill_ids': {
+            'KC293': '', 
+            'same': '', 
+            'Single-KC': ''
+        }, 
+        'transaction_text': '4f5cf2e1f4ecf52030f7e1916ff87f9e', 
+        'student_id': '54d27f95cc48d1184cf2a80a', 
+        'session_id': '54d27f95cc48d1184cf2a80b', 
+        'step_text': 'formB1_1 UpdateComboBox', 
+        'problem_name': 'No Feedback (ver. b 0910)-0'
+    }
+
+An example response looks like this:
+
+    json
+    {
+        "boredom_response": {
+            "bored": false,
+            "responder": "boredom"
+        },
+        "hf_response": {
+            "error": "'outcome' is not 'hint' for hint factory transaction.",
+            "responder": "hf"
+        },
+        "kt_response": {
+            "responder": "kt",
+            "traced_skills": {
+                "KC293": {
+                    "probability_guess": 0.5,
+                    "probability_known": 0.75,
+                    "probability_learned": 0.5,
+                    "probability_mistake": 0.5,
+                    "skill_id": "54bd443dcc48d114c09f3cd5",
+                    "student_id": "54d27f95cc48d1184cf2a80a"
+                },
+                "Single-KC": {
+                    "probability_guess": 0.5,
+                    "probability_known": 0.75,
+                    "probability_learned": 0.5,
+                    "probability_mistake": 0.5,
+                    "skill_id": "54ad5636cc48d10b64d200c8",
+                    "student_id": "54d27f95cc48d1184cf2a80a"
+                },
+                "same": {
+                    "probability_guess": 0.5,
+                    "probability_known": 0.75,
+                    "probability_learned": 0.5,
+                    "probability_mistake": 0.5,
+                    "skill_id": "54bd443dcc48d114c09f3cd6",
+                    "student_id": "54d27f95cc48d1184cf2a80a"
+                }
+            }
+        },
+        "problem_response": {
+            "problem_id": "54ad5639cc48d106bc7406b0",
+            "responder": "problem",
+            "step_id": "54bd4440cc48d112e073f163",
+            "transaction_id": "54bd4440cc48d112e073f164"
+        },
+        "session_id": "54d27f95cc48d1184cf2a80b",
+        "skill_ids": {
+            "KC293": "54bd443dcc48d114c09f3cd5",
+            "Single-KC": "54ad5636cc48d10b64d200c8",
+            "same": "54bd443dcc48d114c09f3cd6"
+        },
+        "skill_response": {
+            "responder": "skill",
+            "skill_ids": {
+                "KC293": "54bd443dcc48d114c09f3cd5",
+                "Single-KC": "54ad5636cc48d10b64d200c8",
+                "same": "54bd443dcc48d114c09f3cd6"
+            }
+        },
+        "student_id": "54d27f95cc48d1184cf2a80a",
+        "student_response": {
+            "responder": "student",
+            "session_id": "54d27f95cc48d1184cf2a80b",
+            "student_id": "54d27f95cc48d1184cf2a80a"
+        }
+    }
+
+
 
 Transactions are sent by the tutor's send_transaction() method, which uses the API's /transaction endpoint.
 

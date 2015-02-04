@@ -188,11 +188,11 @@ class TestSkillManagementPlugin(unittest.TestCase):
         self.test_subject.send_response = MagicMock()
         
         #no args
-        msg = {"message_id":"1","sender_entity_id":"2"}
+        msg = {"message_id":"1","orig_sender_id":"2"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "skill_ids":{"error":"skill manager transactions requires 'skill_ids' and 'skill_names'"},
-            "responder":["skill_manager","downstream"]
+            "error":"skill manager transactions requires 'skill_ids' and 'skill_names'",
+            "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         
@@ -200,8 +200,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_names"] = {"Default":"skill_name"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-            "skill_ids":{"error":"skill manager transactions requires 'skill_ids' and 'skill_names'"},
-            "responder":["skill_manager","downstream"]
+            "error":"skill manager transactions requires 'skill_ids' and 'skill_names'",
+            "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         
@@ -209,8 +209,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_ids"] = "not dict"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-                "skill_ids" : {"error":"invalid skill_names or skill_ids for skill manager transaction"},
-                "responder":["skill_manager","downstream"],
+                "error":"invalid skill_names or skill_ids for skill manager transaction",
+                "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         
@@ -219,8 +219,8 @@ class TestSkillManagementPlugin(unittest.TestCase):
         msg["skill_names"] = "not dict"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-                "skill_ids" : {"error":"invalid skill_names or skill_ids for skill manager transaction"},
-                "responder":["skill_manager","downstream"],
+                "error":"invalid skill_names or skill_ids for skill manager transaction",
+                "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         
@@ -230,7 +230,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "skill_ids" : {},
-            "responder":["skill_manager","downstream"],
+            "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         
@@ -245,7 +245,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         
         self.test_subject.send_response.assert_called_with("1",{
             "skill_ids":{"skill_name" :str(skill["_id"])},
-            "responder":["skill_manager","downstream"],
+            "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         
@@ -253,7 +253,7 @@ class TestSkillManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)       
         self.test_subject.send_response.assert_called_with("1",{
             "skill_ids":{"skill_name" :str(skill["_id"])},
-            "responder":["skill_manager","downstream"],
+            "responder":"skill",
         })
         self.test_subject.send_response.reset_mock()
         

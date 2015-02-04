@@ -374,11 +374,7 @@ class ReplayTutor2(Tutor):
         for skill_model, skill_name in self.json_in.items():
             skill_ids[skill_name] = ""
             skill_names[skill_model] = skill_name
-        
-        print(skill_ids)
-        print(skill_names)
-        
-        self.send_transaction({
+        transaction = {
             "problem_name":self.problem_name.get(),
             "step_text":self.step_name.get(),
             "transaction_text":self.transaction_id.get(),
@@ -387,16 +383,18 @@ class ReplayTutor2(Tutor):
             'skill_names': skill_names,
             'student_id':self.student_id.get(),
             'outcome': self.outcome.get(),
-            }, self.transaction_response_callback)
+            }
+        print(transaction)
+        self.send_transaction(transaction, self.transaction_response_callback)
     
     def main_callback(self):
         return True
 
 if __name__ == "__main__":
     #localhost
-    #entity_id = "ed188aa3-a673-4482-9475-aedd981ff360"
-    #app_secret = "e992a697f396a2fd99ef9910cb040fa9"
-    #url_root = "http://localhost:8000"
+    entity_id = "ed188aa3-a673-4482-9475-aedd981ff360"
+    app_secret = "e992a697f396a2fd99ef9910cb040fa9"
+    url_root = "http://localhost:8000"
     
     #production (tres)
     #entity_id = "e7e43470-5031-496c-9972-cbb809455333"
@@ -404,9 +402,9 @@ if __name__ == "__main__":
     #url_root = "http://www.hpit-project.org"
     
     #production (prod)
-    entity_id = "35f8fdda-7f4e-4b48-86ab-eda038186183"
-    app_secret = "d5f1723260ec88293f4fc79f0f7e4572"
-    url_root = "http://23.239.14.159"
+    #entity_id = "35f8fdda-7f4e-4b48-86ab-eda038186183"
+    #app_secret = "d5f1723260ec88293f4fc79f0f7e4572"
+    #url_root = "http://production.hpit-project.org"
     
     logging.basicConfig(
             filename="log/datashop_replay.log",

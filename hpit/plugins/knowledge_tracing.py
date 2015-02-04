@@ -310,11 +310,6 @@ class KnowledgeTracingPlugin(Plugin):
     
     def transaction_callback_method(self,message):
         response_skills = {}
-        
-        def next_step_callback(response):
-            response["traced_skills"] = response_skills
-            response["responder"] = ["knowledge_tracer"] + response["responder"]
-            self.send_response(message["message_id"],response)
             
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
@@ -325,12 +320,10 @@ class KnowledgeTracingPlugin(Plugin):
             outcome = message["outcome"]
             skill_ids = dict(message["skill_ids"])
         except KeyError:
-            response_skills = {"error": "knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found."}
-            self.send("tutorgen.hf_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found.","responder":"kt"})
             return
         except (TypeError,ValueError):
-            response_skills = {"error": "knowledge tracing not done because supplied 'skill_ids' is not valid; must be dict."}
-            self.send("tutorgen.hf_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "knowledge tracing not done because supplied 'skill_ids' is not valid; must be dict.","responder":"kt"})
             return
         
         try:
@@ -339,12 +332,10 @@ class KnowledgeTracingPlugin(Plugin):
             elif outcome.lower() == "incorrect":
                 correct = False
             else:
-                response_skills = {"error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'"}
-                self.send("tutorgen.hf_transaction",message,next_step_callback)
+                self.send_response(message["message_id"],{"error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'","responder":"kt"})
                 return
         except:
-            response_skills = {"error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'"}
-            self.send("tutorgen.hf_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'","responder":"kt"})
             return
         
         response_skills = {}
@@ -415,8 +406,12 @@ class KnowledgeTracingPlugin(Plugin):
             }
             
         
-        self.send("tutorgen.hf_transaction",message,next_step_callback)
+        #self.send("tutorgen.hf_transaction",message,next_step_callback)
         
+        response ={}
+        response["traced_skills"] = response_skills
+        response["responder"] = "kt"
+        self.send_response(message["message_id"],response)
          
         
             

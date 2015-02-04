@@ -97,16 +97,6 @@ class BoredomDetectorPlugin(Plugin):
         })
         
     def transaction_callback_method(self,message):
-        
-        bored = False
-        bored_message = ""
-
-        def next_step_callback(response):
-            response["bored"] = bored
-            response["boredom_detector_message"] = bored_message
-            response["responder"] = ["boredom_detector"] + response["responder"]
-            self.send_response(message["message_id"],response)
-            
         if self.logger:
             self.send_log_entry("RECV: update_boredom with message: " + str(message))
         
@@ -114,10 +104,16 @@ class BoredomDetectorPlugin(Plugin):
         
         try:
             student_id = str(message["student_id"])
-            bored = self.boredom_calculation(student_id,message["time_created"])
         except KeyError:
-            bored_message = "error: boredom detector requires a 'student_id'"
-            
+            self.send_response(message["message_id"],{
+                "error":"boredom detector requires a 'student_id'",
+                "responder":"boredom"}
+            )
         
-        self.send("tutorgen.problem_transaction",message,next_step_callback)    
+        bored = self.boredom_calculation(student_id,message["time_created"])
+        
+        response = {}
+        response["bored"] = bored
+        response["responder"] = "boredom"
+        self.send_response(message["message_id"],response)
         

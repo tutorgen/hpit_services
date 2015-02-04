@@ -688,51 +688,31 @@ class TestHintFactoryPlugin(unittest.TestCase):
             - if hint does not exist, should reply with nothing
         """
         
-        def mock_send(message_name,payload,callback):
-            callback({"responder":["downstream"]})
-        
         self.test_subject.send_response = MagicMock()
         self.test_subject.hf.get_hint = MagicMock(return_value=False)
-        self.test_subject.send = MagicMock(side_effect = mock_send)
         
         #no args
         msg = {"message_id":"1","sender_entity_id":"2"}
         self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "hint_exists":False,
-            "hint_text":"error: 'outcome' is not present for hint factory transaction.",
-            "responder":["hint_factory","downstream"]
-        })
+        self.test_subject.send_response.assert_called_with("1",{"error": "'outcome' is not present for hint factory transaction.","responder":"hf"})
         self.test_subject.send_response.reset_mock()
         
         #outcome not hint
         msg["outcome"] = "not hint"
         self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "hint_exists":False,
-            "hint_text":"error: 'outcome' is not 'hint' for hint factory transaction.",
-            "responder":["hint_factory","downstream"]
-        })
+        self.test_subject.send_response.assert_called_with("1",{"error": "'outcome' is not 'hint' for hint factory transaction.","responder":"hf"})
         self.test_subject.send_response.reset_mock()
         
         #outcome normal, no state
         msg["outcome"] = "hint"
         self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "hint_exists":False,
-            "hint_text":"error: 'state' required for hint factory transactions.",
-            "responder":["hint_factory","downstream"]
-        })
+        self.test_subject.send_response.assert_called_with("1",{"error": "'state' required for hint factory transactions.","responder":"hf"})
         self.test_subject.send_response.reset_mock()
         
         #state invalid
         msg["state"] = "foo"
         self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "hint_exists":False,
-            "hint_text":"error: 'state' is invalid for hint factory transaction.",
-            "responder":["hint_factory","downstream"]
-        })
+        self.test_subject.send_response.assert_called_with("1",{"error": "'state' is invalid for hint factory transaction.","responder":"hf"})
         self.test_subject.send_response.reset_mock()
         
         #good state, hint does not exist
@@ -741,7 +721,7 @@ class TestHintFactoryPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("1",{
             "hint_exists":False,
             "hint_text":"",
-            "responder":["hint_factory","downstream"]
+            "responder":"hf"
         })
         
         #good state, hint does exist
@@ -750,7 +730,7 @@ class TestHintFactoryPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("1",{
             "hint_exists":True,
             "hint_text":"this is a hint",
-            "responder":["hint_factory","downstream"]
+            "responder":"hf"
         })
         
     

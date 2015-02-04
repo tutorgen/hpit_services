@@ -1298,7 +1298,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-             "responder":["problem_manager"]   
+             "responder":"problem"   
         })
         self.test_subject.send_response.reset_mock()
         
@@ -1307,7 +1307,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-             "responder":["problem_manager"]   
+             "responder":"problem"  
         })
         self.test_subject.send_response.reset_mock()
         
@@ -1316,7 +1316,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-             "responder":["problem_manager"]   
+             "responder":"problem"  
         })
         self.test_subject.send_response.reset_mock()
         
@@ -1325,7 +1325,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-             "responder":["problem_manager"]   
+             "responder":"problem"  
         })
         self.test_subject.send_response.reset_mock()
         
@@ -1334,7 +1334,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-             "responder":["problem_manager"]   
+             "responder":"problem"   
         })
         self.test_subject.send_response.reset_mock()
         
@@ -1351,7 +1351,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
             "transaction_id": str(transaction["_id"]),
             "step_id": str(step["_id"]),
             "problem_id":str(problem["_id"]),
-            "responder" : ["problem_manager"] 
+            "responder" : "problem" 
         })
         self.test_subject.send_response.reset_mock()
         
@@ -1361,7 +1361,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
             "transaction_id": str(transaction["_id"]),
             "step_id": str(step["_id"]),
             "problem_id":str(problem["_id"]),
-            "responder" : ["problem_manager"] 
+            "responder" : "problem" 
         })
         self.test_subject.send_response.reset_mock()
         
