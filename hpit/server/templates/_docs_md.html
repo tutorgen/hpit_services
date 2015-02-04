@@ -56,9 +56,11 @@
 </li>
 <li><a href="#HFPlugin">Hint Factory (model tracing)</a><ul>
 <li><a href="#hf_init_problem">tutorgen.hf_init_problem</a></li>
+<li><a href="#hf_delete_state">tutorgen.hf_delete_state</a></li>
 <li><a href="#hf_push_state">tutorgen.hf_push_state</a></li>
 <li><a href="#hf_hint_exists">tutorgen.hf_hint_exists</a></li>
 <li><a href="#hf_get_hint">tutorgen.hf_get_hint</a></li>
+<li><a href="#hf_delete_problem">tutorgen.delete_problem</a></li>
 <li><a href="#kt_get_student_model_fragment">tutorgen.get_student_model_fragment</a></li>
 </ul>
 </li>
@@ -75,6 +77,7 @@
 <li><a href="#remove_step">tutorgen.remove_step</a></li>
 <li><a href="#get_step">tutorgen.get_step</a></li>
 <li><a href="#get_problem_steps">tutorgen.get_problem_steps</a></li>
+<li><a href="#pm_get_problem_by_skill">tutorgen.get_problem_by_skill</a></li>
 <li><a href="#pm_get_student_model_fragment">tutorgen.get_student_model_fragment</a></li>
 </ul>
 </li>
@@ -95,6 +98,10 @@
 <li><a href="#get_transactions">tutorgen.get_transactions</a></li>
 <li><a href="#get_student_steps">tutorgen.get_student_steps</a></li>
 <li><a href="#add_custom_field">tutorgen.add_custom_field</a></li>
+</ul>
+</li>
+<li><a href="#BoredomPlugin">Boredom Detector Plugin</a><ul>
+<li><a href="#update_boredom">tutorgen.update_boredom</a></li>
 </ul>
 </li>
 </ul>
@@ -520,25 +527,26 @@ object which then can be used project wide. This JSON file allows for multiple e
 example, "test", "debug", and "production". By default, HPIT will look for the 'debug' settings but you can
 override this by setting the HPIT_ENV environment variable i.e. (<code>export HPIT_ENV=production</code>). The structure 
 of the file looks like this:</p>
-<p><code>json
-    {
-        "debug": {
-            "plugin": {
-                [plugin settings go here (see below)]
-            },
-            "server": {
-                [server settings go here (see below)]
-            }
+<pre><code>json
+{
+    "debug": {
+        "plugin": {
+            [plugin settings go here (see below)]
         },
-        "production": {
-            "plugin": {
-                [plugin settings go here (see below)]
-            },
-            "server": {
-                [server settings go here (see below)]
-            }
+        "server": {
+            [server settings go here (see below)]
         }
-    }</code></p>
+    },
+    "production": {
+        "plugin": {
+            [plugin settings go here (see below)]
+        },
+        "server": {
+            [server settings go here (see below)]
+        }
+    }
+}
+</code></pre>
 <p>Most of these settings can be left as defaults, but the important ones to change are:
 <em> PROJECT_DIR - should be set to the directory this README is in
 </em> VENV_DIRNAME - shoule be a relative link from PROJECT_DIR to wherever the virtual environment is.
@@ -862,26 +870,27 @@ removes it from the 'configuration.json' file. All entities within the configura
 <li>once - a boolean that tells the tutor or plugin to run only one time.</li>
 </ol>
 <p>An example configuration would look like this:</p>
-<p><code>json
-    {
-        "tutors" : [
-            {
-                "name": "replay_tutor", 
-                "args": {
-                    "beforeTime": "02-11-2020 14:03:09", 
-                    "filter": {
-                        "event": "kt_trace"
-                    }
-                }, 
-                "type": "replay", 
-                "once": true, 
-                "active": false, 
-                "entity_id": "1234", 
-                "api_key": "1234"
-            }
-        ],
-        "plugins": [],
-    }</code></p>
+<pre><code>json
+{
+    "tutors" : [
+        {
+            "name": "replay_tutor", 
+            "args": {
+                "beforeTime": "02-11-2020 14:03:09", 
+                "filter": {
+                    "event": "kt_trace"
+                }
+            }, 
+            "type": "replay", 
+            "once": true, 
+            "active": false, 
+            "entity_id": "1234", 
+            "api_key": "1234"
+        }
+    ],
+    "plugins": [],
+}
+</code></pre>
 <h2><a name="DatabaseToc"></a> Database Structure</h2>
 <p>HPIT uses a relational database (SQLite or PostgreSQL) for administrative purposes. This 
 database manages, users, plugin authentication, tutor authentication, and plugin subscriptions.
@@ -1018,7 +1027,7 @@ student answers a question, they would want to tell HPIT to:</p>
 </ol>
 <p>A tutor could do this using the messages defined by HPIT's plugins, or they could send a single transaction.  That
 transaction will be passed to each of the main plugins, and return the information they have gathered in a single call.<br />
-Transactions should be the main way that turos interact with HPIT.</p>
+Transactions should be the main way that tutors interact with HPIT.</p>
 <p>A transaction requires these pieces of information:</p>
 <ul>
 <li>student_id : string - the HPIT ID of a student, usually gotten via a previous call to add_student or get_student</li>
@@ -1026,56 +1035,144 @@ Transactions should be the main way that turos interact with HPIT.</p>
 <li>step_text : string - the unique step name</li>
 <li>problem_name : string - the unique problem name</li>
 <li>transaction_text : string - a unique string identifying the transaction </li>
+<li>skill_names : dict - a mapping of skill models to skill names.  Required if using skill_ids.</li>
+<li>skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id.  Will be populated automatically if skill does not exist.  Should contain the same skills as skill_names.</li>
 </ul>
 <p>Optional information includes:</p>
 <ul>
-<li>skill_names : dict - a mapping of skill models to skill names</li>
-<li>skill_ids : dict - a mapping of skill names to their IDS, usually gotten via get_skill_id</li>
+<li>state : json - a hint factory state if hints are requested</li>
 <li>selection : string - a descriptor of the item being worked on ("text-area-1")</li>
 <li>action : string - the action being committed ("keypress")</li>
 <li>input : string - the input used ("Key-D")</li>
 <li>outcome : string - the result of the transaction, usually "correct", "incorrect", "hint"</li>
 </ul>
-<p>Transaction Responses:
-<em> student_id : string - The HPIT student ID
-</em> session_id : string - a HPIT ID for the session
-<em> transaction_id : string - The HPIT ID for the transaction
-</em> step_id : string - The HPIT ID for the step
-<em> problem_id : string - a HPIT ID for the problem
-</em> hint_text: string - The hint received, or an error message if hint was not requested.
-<em> hint_exists : boolean - does a hint exist, if requested
-</em> traced_skills : dict - a dictionary of skill name keys with dictionary values, containing probability guessed, known, mistake, and learned.  If a skill is invalid, an error message will replace the dict value.
-<em> skill_ids : dict - a dictionary with skil names as keys and HPIT IDs as values, or errors, if present.
-</em> responder : list - a list of plugins that have worked with this transaction</p>
-<p><code>{
-    'student_id': '5489e227cc48d113d005850c', 
-    'step_id': '54822391cc48d10d709b5708', 
-    'hint_text': "error: 'outcome' is not 'hint' for hint factory transaction.", 
-    'transaction_id': '54822391cc48d10d709b5709', 
-    'traced_skills': {
-        'addition': {
-            'student_id': '5489e227cc48d113d005850c', 
-            'probability_guess': 0.5, 
-            'probability_known': 0.99609375, 
-            'skill_id': '5482239bcc48d100c0dd5164', 
-            'probability_learned': 0.5, 
-            'probability_mistake': 0.5}, 
-        'division': {
-            'student_id': '5489e227cc48d113d005850c', 
-            'probability_guess': 0.5, 
-            'probability_known': 0.9375, 
-            'skill_id': '548223b3cc48d1097059e693', 
-            'probability_learned': 0.5, 
-            'probability_mistake': 0.5}
-        }, 
-    'session_id': '5489e227cc48d113d005850d', 
+<p>Transaction Responses:</p>
+<ul>
+<li>skill_ids : dict - a dictionary mapping skill names and their IDs</li>
+<li>student_id : string - the ID of the student</li>
+<li>session_id : string - the ID of the session</li>
+<li>boredom_response : dict - response from the boredom detector<ul>
+<li>error : string - if an error occured, a message is presented here</li>
+<li>bored : boolean - if the student is bored</li>
+</ul>
+</li>
+<li>hf_response : dict - response from the hint factory<ul>
+<li>error : string - if an error occured, a message is presented here</li>
+<li>hint_text : string - if hint requested, it will be here</li>
+<li>hint_exists : boolean - true if hint exists</li>
+</ul>
+</li>
+<li>kt_response : dict - response from the knowledge tracer<ul>
+<li>error : string - if an error occured, a message is presented here</li>
+<li>traced_skills : dict - a dictionary of traced skills, similar to kt_trace's response</li>
+</ul>
+</li>
+<li>problem_response : dict - response from the problem manager<ul>
+<li>error : string - if an error occured, a message is presented here</li>
+<li>problem_id : string - the problem ID this transaction belongs to</li>
+<li>step_id : string - the step ID this transaction belongs to</li>
+<li>transaction_id : string - the ID of this transaction</li>
+</ul>
+</li>
+<li>skill_response : dict - response from the skill manager<ul>
+<li>skill_ids : dict - a dictionary mapping skill names and their IDs</li>
+</ul>
+</li>
+<li>student_response : dict - the response from the student manager<ul>
+<li>student_id : string - the ID of the student</li>
+<li>session_id : string - the ID of the session</li>
+</ul>
+</li>
+</ul>
+<p>An example transaction payload looks like this:</p>
+<pre><code>json
+{
+    'skill_names': {
+        'Unique-step': 'KC293', 
+        'Default': 'same', 
+        'Single-KC': 'Single-KC'
+    }, 
+    'outcome': 'Correct', 
     'skill_ids': {
-        'addition': '5482239bcc48d100c0dd5164', 
-        'division': '548223b3cc48d1097059e693'}, 
-    'problem_id': '54822391cc48d10d709b5707', 
-    'hint_exists': False, 
-    'responder': ['student_manager', 'skill_manager', 'knowledge_tracer', 'hint_factory', 'problem_manager']
-}</code></p>
+        'KC293': '', 
+        'same': '', 
+        'Single-KC': ''
+    }, 
+    'transaction_text': '4f5cf2e1f4ecf52030f7e1916ff87f9e', 
+    'student_id': '54d27f95cc48d1184cf2a80a', 
+    'session_id': '54d27f95cc48d1184cf2a80b', 
+    'step_text': 'formB1_1 UpdateComboBox', 
+    'problem_name': 'No Feedback (ver. b 0910)-0'
+}
+</code></pre>
+<p>An example response looks like this:</p>
+<pre><code>json
+{
+    "boredom_response": {
+        "bored": false,
+        "responder": "boredom"
+    },
+    "hf_response": {
+        "error": "'outcome' is not 'hint' for hint factory transaction.",
+        "responder": "hf"
+    },
+    "kt_response": {
+        "responder": "kt",
+        "traced_skills": {
+            "KC293": {
+                "probability_guess": 0.5,
+                "probability_known": 0.75,
+                "probability_learned": 0.5,
+                "probability_mistake": 0.5,
+                "skill_id": "54bd443dcc48d114c09f3cd5",
+                "student_id": "54d27f95cc48d1184cf2a80a"
+            },
+            "Single-KC": {
+                "probability_guess": 0.5,
+                "probability_known": 0.75,
+                "probability_learned": 0.5,
+                "probability_mistake": 0.5,
+                "skill_id": "54ad5636cc48d10b64d200c8",
+                "student_id": "54d27f95cc48d1184cf2a80a"
+            },
+            "same": {
+                "probability_guess": 0.5,
+                "probability_known": 0.75,
+                "probability_learned": 0.5,
+                "probability_mistake": 0.5,
+                "skill_id": "54bd443dcc48d114c09f3cd6",
+                "student_id": "54d27f95cc48d1184cf2a80a"
+            }
+        }
+    },
+    "problem_response": {
+        "problem_id": "54ad5639cc48d106bc7406b0",
+        "responder": "problem",
+        "step_id": "54bd4440cc48d112e073f163",
+        "transaction_id": "54bd4440cc48d112e073f164"
+    },
+    "session_id": "54d27f95cc48d1184cf2a80b",
+    "skill_ids": {
+        "KC293": "54bd443dcc48d114c09f3cd5",
+        "Single-KC": "54ad5636cc48d10b64d200c8",
+        "same": "54bd443dcc48d114c09f3cd6"
+    },
+    "skill_response": {
+        "responder": "skill",
+        "skill_ids": {
+            "KC293": "54bd443dcc48d114c09f3cd5",
+            "Single-KC": "54ad5636cc48d10b64d200c8",
+            "same": "54bd443dcc48d114c09f3cd6"
+        }
+    },
+    "student_id": "54d27f95cc48d1184cf2a80a",
+    "student_response": {
+        "responder": "student",
+        "session_id": "54d27f95cc48d1184cf2a80b",
+        "student_id": "54d27f95cc48d1184cf2a80a"
+    }
+}
+</code></pre>
 <p>Transactions are sent by the tutor's send_transaction() method, which uses the API's /transaction endpoint.</p>
 <h2><a name="PluginToc"></a> Plugin Component Specification</h2>
 <p>A Plugin is an HPIT entity that subscribes to (listens to) certain event names, receives
@@ -1288,6 +1385,17 @@ after it receives a get_student_model message.</p>
 <ul>
 <li>status: string - OK or NOT_OK on success and failure respectively</li>
 </ul>
+<h4><a name="hf_delete_state"></a> tutorgen.ht_delete_state</h4>
+<p>Deletes a state and all edges attached to it.</p>
+<p>Receives:</p>
+<ul>
+<li>state : json - A json object representing the state to push.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status: string - either OK or NOT_OK</li>
+<li>error: string - an optional error message</li>
+</ul>
 <h4><a name="hf_push_state"></a> tutorgen.hf_push_state</h4>
 <p>Pushes a new state on the problem.</p>
 <p>Receives:</p>
@@ -1332,8 +1440,22 @@ the student towards a solution.</p>
 <ul>
 <li>status: string - OK</li>
 <li>exists: string - YES if a hint is available, NO if it isn't</li>
-<li>hint_text: string - The text describing the hint.</li>
+<li>hint: dict - contains:<ul>
+<li>hint_text: string - The text describing the action to be taken.</li>
+<li>hint_result: string - The state string the hint will take you into.</li>
 </ul>
+</li>
+</ul>
+<h4><a name="hf_delete_problem"></a>tutorgen.hf_delete_problem</h4>
+<p>Receives:
+<em> state : json - A json object representing the state to push.
+</em> state.problem_state: string - A string representing the new state of the problem. i.e. "x = 4"
+<em> state.steps: array of strings - A list of steps taken from the starting state to get to this state. i.e. ["Subtract 4", "Divide 2"]
+</em> state.last_problem_state: string - What state this problem was in before this state. i.e. "2x = 8"
+* state.problem: string - A string representing the problem i.e "2x + 4 = 12"</p>
+<p>Returns:
+<em> status: string - OK or NOT_OK
+</em> error: string - optional, if NOT_OK and an error happened</p>
 <h2><a name="PMPlugin"></a> Problem Management Plugin</h2>
 <h4><a name="add_problem"></a> tutorgen.add_problem</h4>
 <p>Adds a problem to the problem manager.</p>
@@ -1503,6 +1625,16 @@ parameters or the requested problem doesn't exist.</li>
 <li>problem_id : string - The ID of the problem the steps belong to.</li>
 <li>success : boolean - Whether everything went ok.</li>
 </ul>
+<h4><a name="pm_get_problem_by_skill"></a> tutorgen.get_problem_by_skill</h4>
+<p>Returns a dictionary of problem names and problem ID's that have skills with a certain skill.</p>
+<p>Receives:</p>
+<ul>
+<li>skill_name : string - The name of the skill to query problems by</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>problems : dictionary - A dictionary of problem names and problem ID's that contain the skill.</li>
+</ul>
 <h4><a name="pm_get_student_model_fragment"></a> tutorgen.get_student_model_fragment</h4>
 <p>Returns a this plugin's contribution to the overall student model.  For the problem management plugin,
 this is all of the problems the student has worked on.  This is usually sent via the StudentManagement model
@@ -1670,6 +1802,19 @@ only provides for a subset of functionality that they provide via their web serv
 <ul>
 <li>response_xml : string - the XML from the DataShop server</li>
 <li>status_cude : string - the HTTP request status code.</li>
+</ul>
+<h2><a name="BoredomPlugin"></a> Boredom Detector</h2>
+<p>The Boredom Detector looks at student data and determines if they may be bored.  This simple
+version relies on the time difference between student interactions to make its decision.</p>
+<h4><a name="update_boredom"></a> tutorgen.update_boredom</h4>
+<p>Send a student interaction to the boredom detector.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the HPIT student ID for the student we are tracking.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>bored : boolean - True or False if the student is bored or not.</li>
 </ul>
 <h2><a name="LicenseToc"></a> License</h2>
 <p>This software is dual licensed under the MIT License and the BSD 3-clause license.</p>

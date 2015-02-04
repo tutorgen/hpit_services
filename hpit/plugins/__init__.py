@@ -11,6 +11,7 @@ from .hint_factory import SimpleHintFactory
 from .hint_factory import StateDoesNotExistException
 from .hint_factory import HintDoesNotExistException
 from .boredom_detector import BoredomDetectorPlugin
+from .transaction_management import TransactionManagementPlugin
 
 __all__ = [
     'ExamplePlugin', 
@@ -26,4 +27,5 @@ __all__ = [
     'StateDoesNotExistException',
     'HintDoesNotExistException',
     'BoredomDetectorPlugin',
+    'TransactionManagementPlugin',
 ]

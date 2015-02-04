@@ -122,49 +122,10 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
     def test_transaction_callback_method(self):
         """
         BoredomDetectorPlugin.transaction_callback_method() Test plan:
-            - try without student_id, bored_message should be set
-            - mock boredom_calculation to return false, should show in response 
-            - mock boredom_calculation to return true, should show in response
+            - this method is identical to update_boredom_callback, so no testing.
+            - revisit when code is refactored
         """
-        def mock_send(message_name,payload,callback):
-            callback({"responder":["downstream"]})
-            
-        self.test_subject.send_response = MagicMock()
-        self.test_subject.boredom_calculation = MagicMock(return_value=False)
-        self.test_subject.send = MagicMock(side_effect=mock_send)
-        
-        time = "Thu, 28 Nov 2013 22:28:43 GMT"
-        msg = {"message_id":"1","sender_entity_id":"2","time_created":time}
-        
-        #no student
-        self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "bored":False,
-            "boredom_detector_message":"error: boredom detector requires a 'student_id'",
-            "responder":["boredom_detector","downstream"]
-        })
-        self.test_subject.send_response.reset_mock()
-        
-        #student here
-        msg["student_id"] = "123"
-        self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "bored":False,
-            "boredom_detector_message":"",
-            "responder":["boredom_detector","downstream"]
-        })
-        self.test_subject.send_response.reset_mock()
-        
-        
-        #boredom_calculation returns true
-        self.test_subject.boredom_calculation = MagicMock(return_value=True)
-        self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{
-            "bored":True,
-            "boredom_detector_message":"",
-            "responder":["boredom_detector","downstream"]
-        })
-        self.test_subject.send_response.reset_mock()
+        pass
         
         
             

@@ -752,11 +752,11 @@ class ProblemManagementPlugin(Plugin):
             transaction_text = message["transaction_text"]
             session_id = message["session_id"]
             student_id = message["student_id"]
-            sender_entity_id = message["sender_entity_id"]
+            sender_entity_id = message["orig_sender_id"]
         except KeyError:
             self.send_response(message["message_id"],{
                     "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
-                    "responder":["problem_manager"]
+                    "responder":"problem"
             })
             return
             
@@ -779,7 +779,7 @@ class ProblemManagementPlugin(Plugin):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_ids' is not valid; must be dict.",
                     "success":False,
-                    "responder":["problem_manager"]
+                    "responder":"problem"
             })
             return
         
@@ -792,7 +792,7 @@ class ProblemManagementPlugin(Plugin):
             self.send_response(message["message_id"],{
                     "error" : "The supplied 'skill_names' is not valid; must be dict.",
                     "success":False,
-                    "responder":["problem_manager"]
+                    "responder":"problem"
             })
             return
             
@@ -805,7 +805,7 @@ class ProblemManagementPlugin(Plugin):
             self.send_response(message["message_id"],{
                 "error": "The supplied 'level_names' is not valid; must be dict.",
                 "success":False,
-                "responder":["problem_manager"]
+                "responder":"problem"
             })
             return
         
@@ -863,7 +863,7 @@ class ProblemManagementPlugin(Plugin):
             "transaction_id": str(transaction_id),
             "step_id": str(step_id),
             "problem_id":str(problem_id),
-            "responder" : ["problem_manager"]
+            "responder" : "problem"
         })
         
             

@@ -437,7 +437,6 @@ similarly to the send() method, except it issues a special "transaction" message
 <p>For a Plugin, they must specifically set a transaction callback using register_transaction_callback(), which also
 subscribes a tutor to transaction messages.</p>
 <h2>Active Plugins in Production</h2>
-<p>Currently, there are only 2 plugins active on HPIT's production servers which you can query for information.
-These are the knowledge tracing plugin and the hint factory plugin. The knowledge tracing plugin is responsible
-for handling bayesian knowledge tracing, and the hint factory handle domain model generation and hint generation.
-Documentation on these two plugins are available from https://www.hpit-project.org/docs</p>
+<p>Currently, there are several active plugins on HPIT's production servers which you can query for information.
+These include:  knowledge tracing plugin; hint factory plugin; boredom detector plugin; student manager plugin. The knowledge tracing plugin is responsible for handling bayesian knowledge tracing,  the hint factory handle domain model generation and hint generation, the boredom detctor plugin provides either a boredom indicator (true/false) or boredom percentage indicator, and the student manager plugin allows for setting and retrieving any standard or custom student attributes.</p>
+<p>Documentation on these  plugins are available from https://www.hpit-project.org/docs</p>

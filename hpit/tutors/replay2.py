@@ -197,6 +197,12 @@ class ReplayTutor2(Tutor):
         self.attr_button = Button(leftframe, text="Set", command=self.set_attribute, state=DISABLED)
         self.attr_button.pack()
         
+        b = Button(leftframe, text="Get", command=self.get_attribute)
+        b.pack()
+        
+        b = Button(leftframe, text="Add Problem", command=self.add_problem)
+        b.pack()
+        
         #kt_trace
         w = Label(rightframe, text="Skill ID")
         w.pack(fill=X)
@@ -205,6 +211,9 @@ class ReplayTutor2(Tutor):
         
         self.kt_button = Button(rightframe, text="Trace", command=self.kt_trace, state=DISABLED)
         self.kt_button.pack()
+        
+        b = Button(rightframe, text="Reset", command=self.kt_reset)
+        b.pack()
         
         #response box
         w = Label(self.root, text="Responses")
@@ -269,26 +278,53 @@ class ReplayTutor2(Tutor):
         rt.status.update_idletasks()
         
         print("file " + filename)
-    
+    def add_problem(self):
+        mid = self.send("tutorgen.add_problem",{
+            "problem_name":"some problem",
+            "problem_text":"some problem text",
+        }, self.transaction_response_callback)
+        
+        print(str(mid) + str(datetime.now()))
+        
     def kt_trace(self):
         correct=False
         if self.outcome.get().lower() == "correct":
             correct = True
             
-        self.send("tutorgen.kt_trace",{
+        mid = self.send("tutorgen.kt_trace",{
             "student_id":self.student_id.get(),
             "correct":correct,
             "skill_id":self.skill_id.get(),
         }, self.transaction_response_callback)
+        
+        print(str(mid) + str(datetime.now()))
+        
+    def kt_reset(self):
+        mid = self.send("tutorgen.kt_reset",{
+            "student_id":self.student_id.get(),
+            "skill_id":self.skill_id.get(),
+        }, self.transaction_response_callback)
+        
+        print(str(mid) + str(datetime.now()))
     
     def set_attribute(self):
-        self.send("tutorgen.set_attribute",{
+        mid = self.send("tutorgen.set_attribute",{
             "student_id":self.student_id.get(),
             "attribute_name":self.attr_name.get(),
             "attribute_value":self.attr_value.get(),
         }, self.transaction_response_callback)
         self.attr_name.delete(0,END)
         self.attr_value.delete(0,END)
+        
+        print(str(mid) + str(datetime.now()))
+        
+    def get_attribute(self):
+        mid = self.send("tutorgen.get_attribute",{
+            "student_id":self.student_id.get(),
+            "attribute_name":self.attr_name.get(),
+        }, self.transaction_response_callback)
+        
+        print(str(mid) + str(datetime.now()))
     
     def populate_form(self,evt):
         w = evt.widget
@@ -338,11 +374,7 @@ class ReplayTutor2(Tutor):
         for skill_model, skill_name in self.json_in.items():
             skill_ids[skill_name] = ""
             skill_names[skill_model] = skill_name
-        
-        print(skill_ids)
-        print(skill_names)
-        
-        self.send_transaction({
+        transaction = {
             "problem_name":self.problem_name.get(),
             "step_text":self.step_name.get(),
             "transaction_text":self.transaction_id.get(),
@@ -351,7 +383,9 @@ class ReplayTutor2(Tutor):
             'skill_names': skill_names,
             'student_id':self.student_id.get(),
             'outcome': self.outcome.get(),
-            }, self.transaction_response_callback)
+            }
+        print(transaction)
+        self.send_transaction(transaction, self.transaction_response_callback)
     
     def main_callback(self):
         return True
@@ -362,10 +396,15 @@ if __name__ == "__main__":
     app_secret = "e992a697f396a2fd99ef9910cb040fa9"
     url_root = "http://localhost:8000"
     
-    #production
+    #production (tres)
     #entity_id = "e7e43470-5031-496c-9972-cbb809455333"
     #app_secret = "1aadb263acec65c24b683976643516ce"
     #url_root = "http://www.hpit-project.org"
+    
+    #production (prod)
+    #entity_id = "35f8fdda-7f4e-4b48-86ab-eda038186183"
+    #app_secret = "d5f1723260ec88293f4fc79f0f7e4572"
+    #url_root = "http://production.hpit-project.org"
     
     logging.basicConfig(
             filename="log/datashop_replay.log",

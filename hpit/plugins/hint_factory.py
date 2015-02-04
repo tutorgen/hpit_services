@@ -556,36 +556,26 @@ class HintFactoryPlugin(Plugin):
         
         hint_exists = False
         hint = ""
-        
-        def next_step_callback(response):
-            response["hint_text"] = hint
-            response["hint_exists"] = hint_exists
-            response["responder"]  = ["hint_factory"] + response["responder"]
-            self.send_response(message["message_id"],response)
-            
+
         if self.logger:
             self.send_log_entry("RECV: transaction with message " + str(message))
         
         if "outcome" not in message:
-            hint = "error: 'outcome' is not present for hint factory transaction."
-            self.send("tutorgen.boredom_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "'outcome' is not present for hint factory transaction.","responder":"hf"})
             return
         elif message["outcome"] != "hint":
-            hint = "error: 'outcome' is not 'hint' for hint factory transaction."
-            self.send("tutorgen.boredom_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "'outcome' is not 'hint' for hint factory transaction.","responder":"hf"})
             return
             
         try:
             state=  message["state"]
         except KeyError:
-            hint = "error: 'state' required for hint factory transactions."
-            self.send("tutorgen.boredom_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "'state' required for hint factory transactions.","responder":"hf"})
             return
         
         incoming_state = self.get_incoming_state(message["state"])
         if not incoming_state:
-            hint = "error: 'state' is invalid for hint factory transaction."
-            self.send("tutorgen.boredom_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error": "'state' is invalid for hint factory transaction.","responder":"hf"})
             return
             
         try:
@@ -593,16 +583,20 @@ class HintFactoryPlugin(Plugin):
             if new_hint:
                 hint = new_hint
                 hint_exists = True
-                self.send("tutorgen.boredom_transaction",message,next_step_callback)
                 if "student_id" in message:
                     self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
-                return
             else:
-                self.send("tutorgen.boredom_transaction",message,next_step_callback)
-                return
+                hint = ""
+                hint_exists = False       
         except HintDoesNotExistException as e:
-            self.send("tutorgen.boredom_transaction",message,next_step_callback)
-            return
+            hint = ""
+            hint_exists = False
+        
+        response = {}
+        response["hint_text"] = hint
+        response["hint_exists"] = hint_exists
+        response["responder"]  = "hf"
+        self.send_response(message["message_id"],response)
             
             
 if __name__ == '__main__':

@@ -499,8 +499,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg = {"message_id":"1","sender_entity_id":"2","orig_sender_id":"2"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-             "traced_skills":{"error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found."},
-             "responder":["knowledge_tracer","downstream"]   
+             "error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found.",
+             "responder":"kt",   
         })
         self.test_subject.send_response.reset_mock()
                
@@ -508,8 +508,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["outcome"] = "correct"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-             "traced_skills":{"error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found."},
-             "responder":["knowledge_tracer","downstream"]   
+             "error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found.",
+             "responder":"kt"  
         })
         self.test_subject.send_response.reset_mock()
         
@@ -517,8 +517,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["student_id"] = "123"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-             "traced_skills":{"error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found."},
-             "responder":["knowledge_tracer","downstream"]   
+             "error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found.",
+             "responder":"kt"    
         })
         self.test_subject.send_response.reset_mock()
         
@@ -526,8 +526,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["skill_ids"] = "4"
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-             "traced_skills":{"error" : "knowledge tracing not done because supplied 'skill_ids' is not valid; must be dict."},
-             "responder":["knowledge_tracer","downstream"],  
+             "error":"knowledge tracing not done because supplied 'skill_ids' is not valid; must be dict.",
+             "responder":"kt"    
         })
         self.test_subject.send_response.reset_mock()
         
@@ -536,8 +536,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["outcome"] = True
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
-             "traced_skills":{"error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'"},
-             "responder":["knowledge_tracer","downstream"]   
+             "error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'",
+             "responder":"kt"  
         })
         self.test_subject.send_response.reset_mock()
         
@@ -562,7 +562,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
                     'probability_guess': 0.5,
                     'probability_mistake': 0.5,
              }},
-             "responder":["knowledge_tracer","downstream"],  
+             "responder":"kt",  
         })
         self.test_subject.send_response.reset_mock()
         
@@ -586,7 +586,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
                     'probability_guess': 0.5,
                     'probability_mistake': 0.5,
              }},
-             "responder":["knowledge_tracer","downstream"],  
+             "responder":"kt",  
         })
         self.test_subject.send_response.reset_mock()
         

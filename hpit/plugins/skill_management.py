@@ -130,30 +130,19 @@ class SkillManagementPlugin(Plugin):
             })
         #self.cache.set(str(skill_model+skill_name),str(skill_id))      
         
-    def transaction_callback_method(self,message):
-        
-        def next_step_callback(response):
-            
-            response["skill_ids"] = skill_ids
-            response["responder"] = ["skill_manager"] + response["responder"]
-            self.send_response(message["message_id"],response)
-        
+    def transaction_callback_method(self,message):   
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
         
         try:
-            sender_entity_id = message["sender_entity_id"]
+            sender_entity_id = message["orig_sender_id"]
             skill_names = dict(message["skill_names"])
             skill_ids = dict(message["skill_ids"])
         except KeyError:
-            skill_names = {}
-            skill_ids = {"error":"skill manager transactions requires 'skill_ids' and 'skill_names'"}
-            self.send("tutorgen.kt_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error":"skill manager transactions requires 'skill_ids' and 'skill_names'","responder":"skill"})
             return
         except (TypeError, ValueError):
-            skill_names = {}
-            skill_ids = {"error":"invalid skill_names or skill_ids for skill manager transaction"}
-            self.send("tutorgen.kt_transaction",message,next_step_callback)
+            self.send_response(message["message_id"],{"error":"invalid skill_names or skill_ids for skill manager transaction","responder":"skill"})
             return
             
         for skill_model, skill_name in skill_names.items():
@@ -167,7 +156,10 @@ class SkillManagementPlugin(Plugin):
                
         for k,v, in skill_ids.items():
             skill_ids[k] = str(v)
-        message["skill_ids"] = skill_ids #update for passing on to knowledge tracer         
-        self.send("tutorgen.kt_transaction",message,next_step_callback)
+            
+        response = {}
+        response["skill_ids"] = skill_ids
+        response["responder"] = "skill"
+        self.send_response(message["message_id"],response)
         
                 
