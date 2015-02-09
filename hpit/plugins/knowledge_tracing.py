@@ -98,6 +98,74 @@ class KnowledgeTracingPlugin(Plugin):
         
         self.send("tutorgen.get_skill_name",{"skill_id":str(message["skill_id"])}, _callback_sm)
     
+    def _kt_trace(self,sender_id, skill_id, student_id,correct):
+        kt_config = self.db.find_one({
+            'sender_entity_id':sender_id,
+            'skill_id': skill_id,
+            'student_id':student_id
+        })
+        
+        if not kt_config:
+            if self.logger:
+                self.send_log_entry("INFO: No initial settings for KT_TRACE message. Using defaults.")
+
+            new_trace = {
+                'sender_entity_id': sender_id,
+                'skill_id': skill_id,
+                'student_id': student_id,
+                'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
+                'probability_learned': 0.33,
+                'probability_guess': 0.33,
+                'probability_mistake': 0.33,
+            }
+
+            self.db.insert(new_trace)
+
+            del new_trace['sender_entity_id']
+            del new_trace['_id']
+
+            #The calculation is the same regardless of correct 
+            #or not with 50% probability settings so we just 
+            #return with a response rather than calculate below.
+            return new_trace
+            
+
+        p_known = float(kt_config['probability_known'])
+        p_learned = float(kt_config['probability_learned'])
+        p_guess = float(kt_config['probability_guess'])
+        p_mistake = float(kt_config['probability_mistake'])
+
+        numer = 0
+        denom = 1
+
+        if correct:
+            numer = p_known * (1 - p_mistake)
+            denom = numer + (1 - p_known) * p_guess
+        else:
+            numer = p_known * p_mistake
+            denom = numer + (1 - p_known) * (1 - p_guess)
+
+        p_known_prime = numer / denom if denom != 0 else 0
+        p_known = p_known_prime + (1 - p_known_prime) * p_learned
+        
+        self.db.update({'_id': kt_config['_id']}, {'$set': {
+            'probability_known': p_known
+        }})
+        
+        if self.logger:
+            self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
+
+        return {
+            'skill_id': kt_config['skill_id'],
+            'probability_known': p_known,
+            'probability_learned': p_learned,
+            'probability_guess': p_guess,
+            'probability_mistake': p_mistake,
+            'student_id':student_id
+            }
+        
+    
+    
     #Knowledge Tracing Plugin
     def kt_trace(self, message):
         """
@@ -123,73 +191,9 @@ class KnowledgeTracingPlugin(Plugin):
         except bson.errors.InvalidId:
             self.send_response(message["message_id"],{"error":"kt_trace 'skill_id' is not a valid skill id"})
             return
-
-        kt_config = self.db.find_one({
-            'sender_entity_id': message['sender_entity_id'],
-            'skill_id': str(message['skill_id']),
-            'student_id':str(message['student_id'])
-        })
-        
-        if not kt_config:
-            if self.logger:
-                self.send_log_entry("INFO: No initial settings for KT_TRACE message. Using defaults.")
-
-            new_trace = {
-                'sender_entity_id': message['sender_entity_id'],
-                'skill_id': str(message['skill_id']),
-                'student_id': message['student_id'],
-                'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
-                'probability_learned': 0.5,
-                'probability_guess': 0.5,
-                'probability_mistake': 0.5,
-            }
-
-            self.db.insert(new_trace)
-
-            del new_trace['sender_entity_id']
-            del new_trace['_id']
-
-            #The calculation is the same regardless of correct 
-            #or not with 50% probability settings so we just 
-            #return with a response rather than calculate below.
-            self.send_response(message['message_id'], new_trace)
-            return
-
-        p_known = float(kt_config['probability_known'])
-        p_learned = float(kt_config['probability_learned'])
-        p_guess = float(kt_config['probability_guess'])
-        p_mistake = float(kt_config['probability_mistake'])
-
-        correct = message['correct']
-
-        numer = 0
-        denom = 1
-
-        if correct:
-            numer = p_known * (1 - p_mistake)
-            denom = numer + (1 - p_known) * p_guess
-        else:
-            numer = p_known * p_mistake
-            denom = numer + (1 - p_known) * (1 - p_guess)
-
-        p_known_prime = numer / denom if denom != 0 else 0
-        p_known = p_known_prime + (1 - p_known_prime) * p_learned
-        
-        self.db.update({'_id': kt_config['_id']}, {'$set': {
-            'probability_known': p_known
-        }})
-        
-        if self.logger:
-            self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
-
-        self.send_response(message['message_id'], {
-            'skill_id': kt_config['skill_id'],
-            'probability_known': p_known,
-            'probability_learned': p_learned,
-            'probability_guess': p_guess,
-            'probability_mistake': p_mistake,
-            'student_id':str(message["student_id"])
-            })
+            
+        response = self._kt_trace(sender_entity_id,str(skill),str(student_id),correct)
+        self.send_response(message['message_id'],response)
 
     def kt_set_initial_callback(self, message):
         if self.logger:
@@ -258,17 +262,17 @@ class KnowledgeTracingPlugin(Plugin):
 
         if kt_config:
             self.db.update({'_id': kt_config['_id']}, {'$set': {
-                'probability_known': 0.5,
-                'probability_learned': 0.5,
-                'probability_guess': 0.5,
-                'probability_mistake': 0.5
+                'probability_known': 0.75,
+                'probability_learned': 0.33,
+                'probability_guess': 0.33,
+                'probability_mistake': 0.33
             }})
             self.send_response(message['message_id'], {
                 'skill_id': str(message['skill_id']),
-                'probability_known': 0.5,
-                'probability_learned': 0.5,
-                'probability_guess': 0.5,
-                'probability_mistake': 0.5,
+                'probability_known': 0.75,
+                'probability_learned': 0.33,
+                'probability_guess': 0.33,
+                'probability_mistake': 0.33,
                 'student_id':str(message["student_id"])
             })
         else:
@@ -340,74 +344,9 @@ class KnowledgeTracingPlugin(Plugin):
         
         response_skills = {}
         for skill_name,skill_id in skill_ids.items(): 
-            kt_config = self.db.find_one({
-                'sender_entity_id': message['orig_sender_id'],
-                'skill_id': skill_id,
-                'student_id':str(message['student_id'])
-            })
-            
-            if not kt_config:
-                if self.logger:
-                    self.send_log_entry("INFO: No initial settings for Transaction message. Using defaults.")
-    
-                new_trace = {
-                    'sender_entity_id': message['orig_sender_id'],
-                    'skill_id': str(skill_id),
-                    'student_id': message['student_id'],
-                    'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
-                    'probability_learned': 0.5,
-                    'probability_guess': 0.5,
-                    'probability_mistake': 0.5,
-                }
-    
-                self.db.insert(new_trace)
-    
-                del new_trace['sender_entity_id']
-                del new_trace['_id']
-    
-                #The calculation is the same regardless of correct 
-                #or not with 50% probability settings so we just 
-                #return with a response rather than calculate below.
-                response_skills[skill_name] = new_trace
-                continue
-    
-            p_known = float(kt_config['probability_known'])
-            p_learned = float(kt_config['probability_learned'])
-            p_guess = float(kt_config['probability_guess'])
-            p_mistake = float(kt_config['probability_mistake'])
-    
-            numer = 0
-            denom = 1
-    
-            if correct:
-                numer = p_known * (1 - p_mistake)
-                denom = numer + (1 - p_known) * p_guess
-            else:
-                numer = p_known * p_mistake
-                denom = numer + (1 - p_known) * (1 - p_guess)
-    
-            p_known_prime = numer / denom if denom != 0 else 0
-            p_known = p_known_prime + (1 - p_known_prime) * p_learned
-            
-            self.db.update({'_id': kt_config['_id']}, {'$set': {
-                'probability_known': p_known
-            }})
-            
-            if self.logger:
-                self.send_log_entry("SUCCESS: KT Transaction with new data: " + str(kt_config))
-            
-            response_skills[skill_name] = {
-                'skill_id': kt_config['skill_id'],
-                'probability_known': p_known,
-                'probability_learned': p_learned,
-                'probability_guess': p_guess,
-                'probability_mistake': p_mistake,
-                'student_id':str(message["student_id"]),
-            }
-            
-        
-        #self.send("tutorgen.hf_transaction",message,next_step_callback)
-        
+            response = self._kt_trace(sender_entity_id,str(skill_id),str(student_id),correct)
+            response_skills[skill_name] = response
+
         response ={}
         response["traced_skills"] = response_skills
         response["responder"] = "kt"
