@@ -108,10 +108,10 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         msg["probability_mistake"] = .4
         self.test_subject.kt_trace(msg)
         self.test_subject.send_response.assert_called_once_with("2", {
-            'probability_guess': 0.5, 
+            'probability_guess': 0.33, 
             'probability_known': 0.75, 
-            'probability_learned': 0.5, 
-            'probability_mistake': 0.5, 
+            'probability_learned': 0.33, 
+            'probability_mistake': 0.33, 
             'skill_id': skill_id, 
             'student_id': '4'
         })
@@ -383,18 +383,18 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.kt_reset(msg)
         self.test_subject.send_response.assert_called_once_with("2",{
             'skill_id': str(skill_id),
-            'probability_known': 0.5,
-            'probability_learned': 0.5,
-            'probability_guess': 0.5,
-            'probability_mistake': 0.5,
+            'probability_known': 0.75,
+            'probability_learned': 0.33,
+            'probability_guess': 0.33,
+            'probability_mistake': 0.33,
             'student_id':"4"
         })
         
         ob = self.test_subject.db.find_one({"_id":oid})
-        ob["probability_known"].should.equal(0.5)
-        ob["probability_learned"].should.equal(0.5)
-        ob["probability_guess"].should.equal(0.5)
-        ob["probability_mistake"].should.equal(0.5)
+        ob["probability_known"].should.equal(0.75)
+        ob["probability_learned"].should.equal(0.33)
+        ob["probability_guess"].should.equal(0.33)
+        ob["probability_mistake"].should.equal(0.33)
         
         
     def test_get_student_model_fragment_no_student_id(self):
@@ -550,44 +550,54 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
                     'skill_id': "skill1_id",
                     'student_id': "123",
                     'probability_known': 0.75,
-                    'probability_learned': 0.5,
-                    'probability_guess': 0.5,
-                    'probability_mistake': 0.5,
+                    'probability_learned': 0.33,
+                    'probability_guess': 0.33,
+                    'probability_mistake': 0.33,
                 },
                 "skill2":{
                     'skill_id': "skill2_id",
                     'student_id': "123",
                     'probability_known': 0.75,
-                    'probability_learned': 0.5,
-                    'probability_guess': 0.5,
-                    'probability_mistake': 0.5,
+                    'probability_learned': 0.33,
+                    'probability_guess': 0.33,
+                    'probability_mistake': 0.33,
              }},
              "responder":"kt",  
         })
         self.test_subject.send_response.reset_mock()
         
         #second run, values should change
+        
         self.test_subject.transaction_callback_method(msg)
+        """
         self.test_subject.send_response.assert_called_with("1",{
              "traced_skills" : {
                  "skill1":{
                     'skill_id': "skill1_id",
                     'student_id': "123",
                     'probability_known': 0.875,
-                    'probability_learned': 0.5,
-                    'probability_guess': 0.5,
-                    'probability_mistake': 0.5,
+                    'probability_learned': 0.33,
+                    'probability_guess': 0.33,
+                    'probability_mistake': 0.33,
                 },
                 "skill2":{
                     'skill_id': "skill2_id",
                     'student_id': "123",
                     'probability_known': 0.875,
-                    'probability_learned': 0.5,
-                    'probability_guess': 0.5,
-                    'probability_mistake': 0.5,
+                    'probability_learned': 0.33,
+                    'probability_guess': 0.33,
+                    'probability_mistake': 0.33,
              }},
              "responder":"kt",  
         })
+        """
+        self.test_subject.send_response.called.should.equal(True) #can't check params because of float precision
+        expected_value = (.5025 / .585) + ( (1 - (.5025 / .585)) * .33)
+        thing  = self.test_subject.db.find_one({'sender_entity_id':"2",'student_id':"123","skill_id":"skill1_id"})
+        nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
+        thing  = self.test_subject.db.find_one({'sender_entity_id':"2",'student_id':"123","skill_id":"skill2_id"})
+        nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
+        
         self.test_subject.send_response.reset_mock()
         
        
