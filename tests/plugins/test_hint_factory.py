@@ -12,6 +12,9 @@ from pymongo.collection import Collection
 from hpit.utils.hint_factory_state import *
 
 import hashlib
+import json
+
+import shlex
 
 from py2neo import neo4j
 
@@ -82,6 +85,10 @@ class TestSimpleHintFactory(unittest.TestCase):
         problem_node.delete_related()
     
     def test_delete_node(self):
+        """
+        SimpleHintFactory.delete_problem() Test plan:
+            - add a node, then delete it
+        """
         self.test_subject.delete_node.when.called_with("problem","state").should.throw(StateDoesNotExistException)
         
         problem_node, = self.test_subject.db.create({"start_string":"state","goal_string":"goal","discount_factor":"0.5"})
@@ -103,6 +110,10 @@ class TestSimpleHintFactory(unittest.TestCase):
         problem_node.delete_related()
     
     def test_delete_problem(self):
+        """
+        SimpleHintFactory.delete_problem() Test plan:
+            - add a problem, then delete it
+        """
         self.test_subject.delete_problem("problem","state").should.equal(False)
         
         problem_node, = self.test_subject.db.create({"start_string":"state","goal_string":"goal","discount_factor":"0.5"})
@@ -332,7 +343,11 @@ class TestSimpleHintFactory(unittest.TestCase):
         
 class TestHintFactoryPlugin(unittest.TestCase):
     def setUp(self):
-        self.test_subject = HintFactoryPlugin(123,456,None)
+        
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        self.test_subject = HintFactoryPlugin(123,456,None,args_string)
         self.test_subject.hint_db = self.test_subject.mongo.test_hpit.hpit_hints
     
     def tearDown(self):
@@ -346,7 +361,11 @@ class TestHintFactoryPlugin(unittest.TestCase):
             -ensure that logger set to none
             -ensure hf is instance of SimpleHintFactory
         """
-        hf = HintFactoryPlugin(1,1,None)
+        
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        hf = HintFactoryPlugin(1,1,None,args_string)
         hf.logger.should.equal(None)
         isinstance(hf.hf,SimpleHintFactory).should.equal(True)
     
@@ -691,8 +710,14 @@ class TestHintFactoryPlugin(unittest.TestCase):
         self.test_subject.send_response = MagicMock()
         self.test_subject.hf.get_hint = MagicMock(return_value=False)
         
+        #invalid orig id
+        msg = {"message_id":"1","orig_entity_id":"2","sender_entity_id":"888"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{"error" : "Access denied"})
+        self.test_subject.send_response.reset_mock()
+        
         #no args
-        msg = {"message_id":"1","sender_entity_id":"2"}
+        msg = {"message_id":"1","orig_entity_id":"2","sender_entity_id":"999"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{"error": "'outcome' is not present for hint factory transaction.","responder":"hf"})
         self.test_subject.send_response.reset_mock()

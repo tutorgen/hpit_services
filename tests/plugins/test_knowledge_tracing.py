@@ -25,7 +25,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
                     "get_student_model_fragment": [
                         "88bb246d-7347-4f57-8cbe-95944a4e0027"
                     ]
-                }
+                },
+                "transaction_management":"999",
             })))
         self.test_subject.send_response = MagicMock()
         
@@ -51,7 +52,8 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
                     "get_student_model_fragment": [
                         "88bb246d-7347-4f57-8cbe-95944a4e0027"
                     ]
-                }
+                },
+                "transaction_management":"999"
             })))
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
@@ -495,8 +497,15 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send = MagicMock(side_effect = mock_send)
         self.test_subject.send_response = MagicMock()
         
+        #access denied
+        msg = {"message_id":"1","orig_sender_id":"2","sender_entity_id":"888"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{"error" : "Access denied"})
+        self.test_subject.send_response.reset_mock()
+        
+        
         #no args
-        msg = {"message_id":"1","sender_entity_id":"2","orig_sender_id":"2"}
+        msg = {"message_id":"1","orig_sender_id":"2","sender_entity_id":"999"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"knowledge tracing not done because 'skill_ids', 'student_id', or 'outcome' not found.",

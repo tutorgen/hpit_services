@@ -12,6 +12,9 @@ import couchbase
 
 import requests
 
+import shlex
+import json
+
 from hpit.plugins import SkillManagementPlugin
 
 from hpit.management.settings_manager import SettingsManager
@@ -47,7 +50,10 @@ class TestSkillManagementPlugin(unittest.TestCase):
         class.  setup_method is invoked for every test method of a class.
         """      
         
-        self.test_subject = SkillManagementPlugin(123,456,None)
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        self.test_subject = SkillManagementPlugin(123,456,None,args_string)
         #self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = settings.COUCHBASE_HOSTNAME)
        
         self.test_subject.send_response = MagicMock()
@@ -71,7 +77,10 @@ class TestSkillManagementPlugin(unittest.TestCase):
             -ensure that a cache db is set up
         """
         
-        test_subject = SkillManagementPlugin(123,456,None)
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        test_subject = SkillManagementPlugin(123,456,None,args_string)
         test_subject.logger.should.equal(None)
         
         isinstance(test_subject.mongo,MongoClient).should.equal(True)
@@ -186,9 +195,14 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 
         self.test_subject.send = MagicMock(side_effect = mock_send)
         self.test_subject.send_response = MagicMock()
+        #access denied
+        msg = {"message_id":"1","orig_sender_id":"3","sender_entity_id":"888"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{ "error" : "Access denied"})
+        self.test_subject.send_response.reset_mock()
         
         #no args
-        msg = {"message_id":"1","orig_sender_id":"2"}
+        msg = {"message_id":"1","orig_sender_id":"2","sender_entity_id":"999"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "error":"skill manager transactions requires 'skill_ids' and 'skill_names'",

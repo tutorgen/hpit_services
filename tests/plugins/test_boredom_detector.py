@@ -4,6 +4,9 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from bson.objectid import ObjectId
 
+import shlex
+import json
+
 from hpit.plugins import BoredomDetectorPlugin
 
 from hpit.management.settings_manager import SettingsManager
@@ -18,7 +21,11 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         """ setup any state tied to the execution of the given method in a
         class.  setup_method is invoked for every test method of a class.
         """
-        self.test_subject = BoredomDetectorPlugin(123,456,None)
+        
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        self.test_subject = BoredomDetectorPlugin(123,456,None,args_string)
         self.test_subject.send_response = MagicMock()
         
     def tearDown(self):
@@ -38,7 +45,13 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
             - make sure db is a collection
             -check full name
         """
-        ds = BoredomDetectorPlugin(1234,5678,None)
+        
+        BoredomDetectorPlugin.when.called_with(1234,5678,None).should.throw(Exception)
+        
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        ds = BoredomDetectorPlugin(1234,5678,None,args_string)
         ds.logger.should.equal(None)
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
@@ -57,7 +70,7 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
         
         #no args
-        msg = {"message_id":"1","sender_entity_id":"2","time_created":timestring}
+        msg = {"message_id":"1","orig_sender_id":"2","time_created":timestring,"sender_entity_id":"999"}
         self.test_subject.update_boredom_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
             "error":"update_boredom requires a 'student_id'",      
@@ -125,7 +138,14 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
             - this method is identical to update_boredom_callback, so no testing.
             - revisit when code is refactored
         """
-        pass
+        time = datetime(2014,12,15,9,59)
+        timestring = time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+        msg = {"message_id":"1","orig_sender_id":"2","time_created":timestring,"sender_entity_id":"888"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                    "error" : "Access denied",
+            })
+        
         
         
             

@@ -23,7 +23,8 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "get_student_model_fragment": [
                         "88bb246d-7347-4f57-8cbe-95944a4e0027"
                     ]
-                }
+                },
+                "transaction_management":"999",
             })) )   
         self.test_subject.send_response = MagicMock()
         
@@ -51,7 +52,8 @@ class TestProblemManagementPlugin(unittest.TestCase):
                     "get_student_model_fragment": [
                         "88bb246d-7347-4f57-8cbe-95944a4e0027"
                     ]
-                }
+                },
+                "transaction_management":"999",
             })))
         pmp.logger.should.equal(None)
         isinstance(pmp.mongo,MongoClient).should.equal(True)
@@ -1293,8 +1295,14 @@ class TestProblemManagementPlugin(unittest.TestCase):
         
         self.test_subject.send_response = MagicMock()
         
+        #access denied
+        msg = {"message_id":"1","orig_sender_id":"3","sender_entity_id":"888"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{ "error" : "Access denied"})
+        self.test_subject.send_response.reset_mock()
+        
         #no parameters
-        msg = {"message_id":"1","sender_entity_id":"2","orig_sender_id":"3"}
+        msg = {"message_id":"1","orig_sender_id":"3","sender_entity_id":"999"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
              "error":"Problem Manager transactions require a problem_name, step_text, transaction_text, session_id, and student_id",
