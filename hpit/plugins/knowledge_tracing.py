@@ -27,7 +27,16 @@ class KnowledgeTracingPlugin(Plugin):
         self.shared_messages = self.get_shared_messages(args)
         if not self.shared_messages:
             raise Exception("Failed to initilize; invalid shared_messages")
-
+        
+        if args:
+            try:
+                self.args = json.loads(args[1:-1])
+                self.transaction_manager_id = self.args["transaction_management"]
+            except KeyError:
+                raise Exception("Failed to initialize; invalid transaction_management")
+        else:
+            raise Exception("Failed to initialize; invalid transaction_management")
+            
     def post_connect(self):
         super().post_connect()
         
@@ -317,6 +326,12 @@ class KnowledgeTracingPlugin(Plugin):
             
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
+            
+        if message["sender_entity_id"] != self.transaction_manager_id:
+            self.send_response(message["message_id"],{
+                    "error" : "Access denied",
+            })
+            return 
 
         try:
             sender_entity_id = message["orig_sender_id"]

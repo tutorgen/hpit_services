@@ -26,6 +26,15 @@ class BoredomDetectorPlugin(Plugin):
         
         self.RECORD_THRESHOLD = 5
         
+        if args:
+            try:
+                self.args = json.loads(args[1:-1])
+                self.transaction_manager_id = self.args["transaction_management"]
+            except KeyError:
+                raise Exception("Failed to initialize; invalid transaction_management not in args")
+        else:
+            raise Exception("Failed to initialize; no args")
+        
     def post_connect(self):
         super().post_connect()
         
@@ -99,6 +108,12 @@ class BoredomDetectorPlugin(Plugin):
     def transaction_callback_method(self,message):
         if self.logger:
             self.send_log_entry("RECV: update_boredom with message: " + str(message))
+            
+        if message["sender_entity_id"] != self.transaction_manager_id:
+            self.send_response(message["message_id"],{
+                    "error" : "Access denied",
+            })
+            return 
         
         bored = False
         

@@ -17,6 +17,7 @@ from couchbase import Couchbase
 import couchbase
 
 import requests
+import json
 
 class StudentManagementPlugin(Plugin):
 
@@ -31,6 +32,15 @@ class StudentManagementPlugin(Plugin):
         self.student_model_fragment_names = ["knowledge_tracing","problem_management","hint_factory"]
         self.student_models = {}
         self.timeout_threads = {}
+        
+        if args:
+            try:
+                self.args = json.loads(args[1:-1])
+                self.transaction_manager_id = self.args["transaction_management"]
+            except KeyError:
+                raise Exception("Failed to initialize; invalid transaction_management")
+        else:
+            raise Exception("Failed to initialize; invalid transaction_management")
         
         """
         try:
@@ -294,7 +304,13 @@ class StudentManagementPlugin(Plugin):
     def transaction_callback_method(self,message):
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
-            
+        
+        if message["sender_entity_id"] != self.transaction_manager_id:
+            self.send_response(message["message_id"],{
+                    "error" : "Access denied",
+            })
+            return 
+        
         try:
             sender_entity_id = message["orig_sender_id"]
             student_id = message["student_id"]

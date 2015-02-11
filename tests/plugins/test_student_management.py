@@ -11,6 +11,9 @@ import couchbase
 
 import requests
 
+import shlex
+import json
+
 from hpit.plugins import StudentManagementPlugin
 
 from hpit.management.settings_manager import SettingsManager
@@ -46,7 +49,10 @@ class TestStudentManagementPlugin(unittest.TestCase):
         class.  setup_method is invoked for every test method of a class.
         """
 
-        self.test_subject = StudentManagementPlugin(123,456,None)
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+
+        self.test_subject = StudentManagementPlugin(123,456,None,args_string)
         
         #self.test_subject.cache = Couchbase.connect(bucket = "test_student_model_cache", host = settings.COUCHBASE_HOSTNAME)
         self.test_subject.logger = MagicMock()
@@ -70,7 +76,11 @@ class TestStudentManagementPlugin(unittest.TestCase):
             -ensure that db is an instance of Collection
             -ensure that the full name is hpit.hpit_students
         """
-        smp = StudentManagementPlugin(123,456,None)
+        
+        args = {"transaction_management":"999"}
+        args_string = shlex.quote(json.dumps(args))
+        
+        smp = StudentManagementPlugin(123,456,None,args_string)
         isinstance(smp.mongo,MongoClient).should.equal(True)
         isinstance(smp.db,Collection).should.equal(True)
         smp.db.full_name.should.equal("hpit_unit_test_db.hpit_students")
@@ -484,8 +494,14 @@ class TestStudentManagementPlugin(unittest.TestCase):
         self.test_subject.send = MagicMock(side_effect = mock_send)
         self.test_subject.send_response = MagicMock()
         
+        #access denied
+        msg = {"message_id":"1","orig_sender_id":"3","sender_entity_id":"888"}
+        self.test_subject.transaction_callback_method(msg)
+        self.test_subject.send_response.assert_called_with("1",{ "error" : "Access denied"})
+        self.test_subject.send_response.reset_mock()
+        
         #no args
-        msg = {"message_id":"1","orig_sender_id":"2"}
+        msg = {"message_id":"1","orig_sender_id":"2","sender_entity_id":"999"}
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
               "error":"transaction for Student Manager requires a 'student_id' and 'session_id'",

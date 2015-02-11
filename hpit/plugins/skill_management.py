@@ -8,6 +8,7 @@ from couchbase import Couchbase
 import couchbase
 
 import requests
+import json
 
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
@@ -19,6 +20,15 @@ class SkillManagementPlugin(Plugin):
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.db = self.mongo[settings.MONGO_DBNAME].hpit_skills
         self.db.ensure_index("skill_name")
+        
+        if args:
+            try:
+                self.args = json.loads(args[1:-1])
+                self.transaction_manager_id = self.args["transaction_management"]
+            except KeyError:
+                raise Exception("Failed to initialize; invalid transaction_management")
+        else:
+            raise Exception("Failed to initialize; invalid transaction_management")
         
         """
         try:
@@ -133,6 +143,12 @@ class SkillManagementPlugin(Plugin):
     def transaction_callback_method(self,message):   
         if self.logger:
             self.send_log_entry("RECV: transaction with message: " + str(message))
+        
+        if message["sender_entity_id"] != self.transaction_manager_id:
+            self.send_response(message["message_id"],{
+                    "error" : "Access denied",
+            })
+            return 
         
         try:
             sender_entity_id = message["orig_sender_id"]

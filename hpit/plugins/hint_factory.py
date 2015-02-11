@@ -307,6 +307,14 @@ class HintFactoryPlugin(Plugin):
         self.mongo = MongoClient(settings.MONGODB_URI)
         self.hint_db = self.mongo[settings.MONGO_DBNAME].hpit_hints
         
+        if args:
+            try:
+                self.args = json.loads(args[1:-1])
+                self.transaction_manager_id = self.args["transaction_management"]
+            except KeyError:
+                raise Exception("Failed to initialize; invalid transaction_management")
+        else:
+            raise Exception("Failed to initialize; invalid transaction_management")
 
     def post_connect(self):
         super().post_connect()
@@ -553,12 +561,17 @@ class HintFactoryPlugin(Plugin):
         })
         
     def transaction_callback_method(self,message):
-        
         hint_exists = False
         hint = ""
 
         if self.logger:
             self.send_log_entry("RECV: transaction with message " + str(message))
+        
+        if message["sender_entity_id"] != self.transaction_manager_id:
+            self.send_response(message["message_id"],{
+                    "error" : "Access denied",
+            })
+            return 
         
         if "outcome" not in message:
             self.send_response(message["message_id"],{"error": "'outcome' is not present for hint factory transaction.","responder":"hf"})

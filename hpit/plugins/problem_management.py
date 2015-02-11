@@ -6,6 +6,8 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import bson
 
+import json
+
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
@@ -26,6 +28,15 @@ class ProblemManagementPlugin(Plugin):
         self.shared_messages = self.get_shared_messages(args)
         if not self.shared_messages:
             raise Exception("Failed to initilize; invalid shared_messages")
+            
+        if args:
+            try:
+                self.args = json.loads(args[1:-1])
+                self.transaction_manager_id = self.args["transaction_management"]
+            except KeyError:
+                raise Exception("Failed to initialize; invalid transaction_management")
+        else:
+            raise Exception("Failed to initialize; invalid transaction_management")
 
     def post_connect(self):
         super().post_connect()
@@ -745,6 +756,13 @@ class ProblemManagementPlugin(Plugin):
         })
         
     def transaction_callback_method(self,message):
+        
+        if message["sender_entity_id"] != self.transaction_manager_id:
+            self.send_response(message["message_id"],{
+                    "error" : "Access denied",
+            })
+            return 
+
         #check for missing values
         try:
             problem_name = message["problem_name"]
