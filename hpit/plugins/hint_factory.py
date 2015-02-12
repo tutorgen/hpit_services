@@ -570,6 +570,7 @@ class HintFactoryPlugin(Plugin):
         if message["sender_entity_id"] != self.transaction_manager_id:
             self.send_response(message["message_id"],{
                     "error" : "Access denied",
+                    "responder":"hf"
             })
             return 
         

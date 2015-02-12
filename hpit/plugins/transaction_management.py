@@ -30,6 +30,8 @@ class TransactionManagementPlugin(Plugin):
        
         #collects the four responses sent concurrently
         def collect_remaining_callback(response):
+            if "responder" not in response:
+                return 
             
             if self.logger:
                 self.send_log_entry("INFO: Got response from " + response["responder"])

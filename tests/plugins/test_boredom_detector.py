@@ -144,6 +144,7 @@ class TestBoredomDetectorPlugin(unittest.TestCase):
         self.test_subject.transaction_callback_method(msg)
         self.test_subject.send_response.assert_called_with("1",{
                     "error" : "Access denied",
+                    "responder":"boredom",
             })
         
         

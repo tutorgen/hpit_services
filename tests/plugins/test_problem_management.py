@@ -1298,7 +1298,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
         #access denied
         msg = {"message_id":"1","orig_sender_id":"3","sender_entity_id":"888"}
         self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{ "error" : "Access denied"})
+        self.test_subject.send_response.assert_called_with("1",{ "error" : "Access denied","responder":"problem"})
         self.test_subject.send_response.reset_mock()
         
         #no parameters
