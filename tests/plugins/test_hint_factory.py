@@ -713,7 +713,7 @@ class TestHintFactoryPlugin(unittest.TestCase):
         #invalid orig id
         msg = {"message_id":"1","orig_entity_id":"2","sender_entity_id":"888"}
         self.test_subject.transaction_callback_method(msg)
-        self.test_subject.send_response.assert_called_with("1",{"error" : "Access denied"})
+        self.test_subject.send_response.assert_called_with("1",{"error" : "Access denied","responder":"hf",})
         self.test_subject.send_response.reset_mock()
         
         #no args
