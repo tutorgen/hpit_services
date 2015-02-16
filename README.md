@@ -1859,18 +1859,50 @@ Returns:
 
 
 ##<a name="BoredomPlugin"></a> Boredom Detector
-The Boredom Detector looks at student data and determines if they may be bored.  This simple
-version relies on the time difference between student interactions to make its decision.
+The Boredom Detector looks at student data and determines if they may be bored.  The detector
+allows for multiple different boredom detection models.  The two that exist now are "simple", which
+just looks at the time difference between transactions, and "complex", which as of now does nothing 
+but return true.
+
 ####<a name="update_boredom"></a> tutorgen.update_boredom
 Send a student interaction to the boredom detector.
 
 Receives:
 
 * student_id : string - the HPIT student ID for the student we are tracking.
+* return_type: string - either "bool" or "decimal", determining how the return value should look.  Defaults to "bool".
 
 Returns:
 
-* bored : boolean - True or False if the student is bored or not.
+* bored : float/boolean - Either a float probability or boolean if the student is bored, depending on return_type.
+* error : string - optional, a string message of an error if it occured.
+
+####<a name="set_boredom_model"></a> tutorgen.set_boredom_model
+Change the way that the boredom detector determines if a student is bored.
+
+Receives:
+
+* student_id : string - the HPIT student ID for the student we are tracking.
+* model_name : string - the model name, either "simple" or "complex"
+
+Returns:
+
+* status : string - "OK" if successful
+* error : string - optional, a string message of an error if it occured.
+
+####<a name="set_boredom_threshold">
+Change the threshold of probability required to deem student is bored.
+
+Receives:
+
+* student_id : string - the HPIT student ID for the student we are tracking.
+* threshold : float - A value between 0 and 1, inclusive.
+
+Returns:
+
+* status : string - "OK" if successful
+* error : string - optional, a string message of an error if it occured.
+
 
 
 
