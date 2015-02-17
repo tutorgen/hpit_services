@@ -1804,17 +1804,45 @@ only provides for a subset of functionality that they provide via their web serv
 <li>status_cude : string - the HTTP request status code.</li>
 </ul>
 <h2><a name="BoredomPlugin"></a> Boredom Detector</h2>
-<p>The Boredom Detector looks at student data and determines if they may be bored.  This simple
-version relies on the time difference between student interactions to make its decision.</p>
+<p>The Boredom Detector looks at student data and determines if they may be bored.  The detector
+allows for multiple different boredom detection models.  The two that exist now are "simple", which
+just looks at the time difference between transactions, and "complex", which as of now does nothing 
+but return true.</p>
 <h4><a name="update_boredom"></a> tutorgen.update_boredom</h4>
 <p>Send a student interaction to the boredom detector.</p>
 <p>Receives:</p>
 <ul>
 <li>student_id : string - the HPIT student ID for the student we are tracking.</li>
+<li>return_type: string - either "bool" or "decimal", determining how the return value should look.  Defaults to "bool".</li>
 </ul>
 <p>Returns:</p>
 <ul>
-<li>bored : boolean - True or False if the student is bored or not.</li>
+<li>bored : float/boolean - Either a float probability or boolean if the student is bored, depending on return_type.</li>
+<li>error : string - optional, a string message of an error if it occured.</li>
+</ul>
+<h4><a name="set_boredom_model"></a> tutorgen.set_boredom_model</h4>
+<p>Change the way that the boredom detector determines if a student is bored.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the HPIT student ID for the student we are tracking.</li>
+<li>model_name : string - the model name, either "simple" or "complex"</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status : string - "OK" if successful</li>
+<li>error : string - optional, a string message of an error if it occured.</li>
+</ul>
+<h4><a name="set_boredom_threshold"></h4>
+<p>Change the threshold of probability required to deem student is bored.</p>
+<p>Receives:</p>
+<ul>
+<li>student_id : string - the HPIT student ID for the student we are tracking.</li>
+<li>threshold : float - A value between 0 and 1, inclusive.</li>
+</ul>
+<p>Returns:</p>
+<ul>
+<li>status : string - "OK" if successful</li>
+<li>error : string - optional, a string message of an error if it occured.</li>
 </ul>
 <h2><a name="LicenseToc"></a> License</h2>
 <p>This software is dual licensed under the MIT License and the BSD 3-clause license.</p>
