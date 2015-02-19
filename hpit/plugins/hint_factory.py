@@ -330,208 +330,245 @@ class HintFactoryPlugin(Plugin):
              "get_student_model_fragment":self.get_student_model_fragment_callback})
 
     def init_problem_callback(self, message):
-        if self.logger:
-            self.send_log_entry("INIT PROBLEM")
-            self.send_log_entry(message)
+        try:
+            if self.logger:
+                self.send_log_entry("INIT PROBLEM")
+                self.send_log_entry(message)
+                
+            try:
+                start_state = message["start_state"]
+                goal_problem = message["goal_problem"]
+            except KeyError:
+                self.send_response(message["message_id"], {
+                    "error": "hf_init_problem requires a 'start_state' and 'goal_problem'",
+                    "status":"NOT_OK"
+                })
+                return
             
-        try:
-            start_state = message["start_state"]
-            goal_problem = message["goal_problem"]
-        except KeyError:
-            self.send_response(message["message_id"], {
-                "error": "hf_init_problem requires a 'start_state' and 'goal_problem'",
-                "status":"NOT_OK"
-            })
-            return
-        
-        if self.hf.create_or_get_problem_node(message["start_state"],message["goal_problem"]):
-            self.send_response(message["message_id"],{"status":"OK"})
-        else:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"Unknown error when attempting to create or get problem state",
-            })
-    
-    def delete_problem_callback(self,message):
-        if self.logger:
-            self.send_log_entry("DELETE PPROBLEMj")
-            self.send_log_entry(message)
-            
-        try:
-            state=  message["state"]
-        except KeyError:
-            self.send_response(message["message_id"], {
-                "error": "hf_delete_problem requires a 'state'",
-                "status":"NOT_OK"
-            })
-            return
-        
-        incoming_state = self.get_incoming_state(message["state"])
-        if not incoming_state:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"message's 'state' parameter should be a dict",
-            })
-            return
-        
-        if self.hf.delete_problem(incoming_state.problem,incoming_state.problem_state):
-            self.send_response(message["message_id"],{
-                    "status":"OK",
-            })
-        else:
-            self.send_response(message["message_id"],{
-                    "status":"NOT_OK",
-                    "error":"unable to delete problem",
-            })
-        
-        
-    def delete_state_callback(self,message):
-        if self.logger:
-            self.send_log_entry("DELETE STATE")
-            self.send_log_entry(message)
-        
-        try:
-            state=  message["state"]
-        except KeyError:
-            self.send_response(message["message_id"], {
-                "error": "hf_delete_state requires a 'state'",
-                "status":"NOT_OK"
-            })
-            return
-        
-        incoming_state = self.get_incoming_state(message["state"])
-        if not incoming_state:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"message's 'state' parameter should be a dict",
-            })
-            return
-            
-        try:
-            result = self.hf.delete_node(incoming_state.problem,incoming_state.problem_state)
-            if result:
-                self.send_response(message["message_id"],{"status":"OK"})
-            else:
-                self.send_response(message["message_id"],{"status":"NOT_OK"})
-        except StateDoesNotExistException as e:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error": str(e)
-            })
-        
-    def push_state_callback(self, message):
-        if self.logger:
-            self.send_log_entry("PUSH PROBLEM STATE")
-            self.send_log_entry(message)
-            
-        try:
-            state=  message["state"]
-        except KeyError:
-            self.send_response(message["message_id"], {
-                "error": "hf_push_state requires a 'state'",
-                "status":"NOT_OK"
-            })
-            return
-
-        incoming_state = self.get_incoming_state(message["state"])
-        if not incoming_state:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"message's 'state' parameter should be a dict",
-            })
-            return
-            
-        try:
-            success = self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
-            if success:
+            if self.hf.create_or_get_problem_node(message["start_state"],message["goal_problem"]):
                 self.send_response(message["message_id"],{"status":"OK"})
             else:
                 self.send_response(message["message_id"],{
                 "status":"NOT_OK",
-                "error":"Unknown error when pushing state"
+                "error":"Unknown error when attempting to create or get problem state",
                 })
-        except IndexError:
+        
+        except Exception as e:
             self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"State must have at least one step"
+                "error":"Unexpected error; please consult the docs. " + str(e)      
             })
-        except StateDoesNotExistException as e:
+    
+    def delete_problem_callback(self,message):
+        try:
+            if self.logger:
+                self.send_log_entry("DELETE PPROBLEMj")
+                self.send_log_entry(message)
+                
+            try:
+                state=  message["state"]
+            except KeyError:
+                self.send_response(message["message_id"], {
+                    "error": "hf_delete_problem requires a 'state'",
+                    "status":"NOT_OK"
+                })
+                return
+            
+            incoming_state = self.get_incoming_state(message["state"])
+            if not incoming_state:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"message's 'state' parameter should be a dict",
+                })
+                return
+            
+            if self.hf.delete_problem(incoming_state.problem,incoming_state.problem_state):
+                self.send_response(message["message_id"],{
+                        "status":"OK",
+                })
+            else:
+                self.send_response(message["message_id"],{
+                        "status":"NOT_OK",
+                        "error":"unable to delete problem",
+                })
+                
+        except Exception as e:
             self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error": str(e)
+                "error":"Unexpected error; please consult the docs. " + str(e)      
             })
-        except GoalDoesNotExistException as e:
-            self.send_response(message["message_id"], {
-            "status": "NOT_OK",
-            "error": str(e)
+        
+        
+    def delete_state_callback(self,message):
+        try:
+            if self.logger:
+                self.send_log_entry("DELETE STATE")
+                self.send_log_entry(message)
+            
+            try:
+                state=  message["state"]
+            except KeyError:
+                self.send_response(message["message_id"], {
+                    "error": "hf_delete_state requires a 'state'",
+                    "status":"NOT_OK"
+                })
+                return
+            
+            incoming_state = self.get_incoming_state(message["state"])
+            if not incoming_state:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"message's 'state' parameter should be a dict",
+                })
+                return
+                
+            try:
+                result = self.hf.delete_node(incoming_state.problem,incoming_state.problem_state)
+                if result:
+                    self.send_response(message["message_id"],{"status":"OK"})
+                else:
+                    self.send_response(message["message_id"],{"status":"NOT_OK"})
+            except StateDoesNotExistException as e:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error": str(e)
+                })
+                
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
+        
+        
+    def push_state_callback(self, message):
+        try:
+            if self.logger:
+                self.send_log_entry("PUSH PROBLEM STATE")
+                self.send_log_entry(message)
+                
+            try:
+                state=  message["state"]
+            except KeyError:
+                self.send_response(message["message_id"], {
+                    "error": "hf_push_state requires a 'state'",
+                    "status":"NOT_OK"
+                })
+                return
+    
+            incoming_state = self.get_incoming_state(message["state"])
+            if not incoming_state:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"message's 'state' parameter should be a dict",
+                })
+                return
+                
+            try:
+                success = self.hf.push_node(incoming_state.problem,incoming_state.last_problem_state,incoming_state.steps[-1],incoming_state.problem_state)
+                if success:
+                    self.send_response(message["message_id"],{"status":"OK"})
+                else:
+                    self.send_response(message["message_id"],{
+                    "status":"NOT_OK",
+                    "error":"Unknown error when pushing state"
+                    })
+            except IndexError:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"State must have at least one step"
+                })
+            except StateDoesNotExistException as e:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error": str(e)
+                })
+            except GoalDoesNotExistException as e:
+                self.send_response(message["message_id"], {
+                "status": "NOT_OK",
+                "error": str(e)
+                })
+        
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
             })
 
     def hint_exists_callback(self, message):
-        if self.logger:
-            self.send_log_entry("HINT EXISTS")
-            self.send_log_entry(message)
+        try:
+            if self.logger:
+                self.send_log_entry("HINT EXISTS")
+                self.send_log_entry(message)
+                
+            try:
+                state=  message["state"]
+            except KeyError:
+                self.send_response(message["message_id"], {
+                    "error": "hf_hint_exists requires a 'state'",
+                    "status":"NOT_OK"
+                })
+                return
             
-        try:
-            state=  message["state"]
-        except KeyError:
-            self.send_response(message["message_id"], {
-                "error": "hf_hint_exists requires a 'state'",
-                "status":"NOT_OK"
-            })
-            return
-        
-        incoming_state = self.get_incoming_state(message["state"])
-        if not incoming_state:
+            incoming_state = self.get_incoming_state(message["state"])
+            if not incoming_state:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"message's 'state' parameter should be a dict",
+                })
+                return
+            try:
+                if self.hf.hint_exists(incoming_state.problem,incoming_state.problem_state):
+                    self.send_response(message["message_id"],{"status":"OK","exists":"YES"})
+                else:
+                    self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
+            except StateDoesNotExistException as e:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error": str(e)
+                })
+                
+        except Exception as e:
             self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"message's 'state' parameter should be a dict",
-            })
-            return
-        try:
-            if self.hf.hint_exists(incoming_state.problem,incoming_state.problem_state):
-                self.send_response(message["message_id"],{"status":"OK","exists":"YES"})
-            else:
-                self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
-        except StateDoesNotExistException as e:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error": str(e)
+                "error":"Unexpected error; please consult the docs. " + str(e)      
             })
         
     def get_hint_callback(self, message):
-        if self.logger:
-            self.send_log_entry("GET HINT")
-            self.send_log_entry(message)
-        
         try:
-            state=  message["state"]
-        except KeyError:
-            self.send_response(message["message_id"], {
-                "error": "hf_get_hint requires a 'state'",
-                "status":"NOT_OK"
-            })
-            return
-        
-        incoming_state = self.get_incoming_state(message["state"])
-        if not incoming_state:
-            self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error":"message's 'state' parameter should be a dict",
-            })
-            return
+            if self.logger:
+                self.send_log_entry("GET HINT")
+                self.send_log_entry(message)
             
-        try:
-            hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
-            if hint:
-                self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint["hint_text"],"hint_result":hint["hint_result"]})
-                if "student_id" in message:
-                    self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint["hint_text"],"hint_result":hint["hint_result"]},{"$set":{"hint_text":hint["hint_text"],"hint_result":hint["hint_result"],}},upsert=True)
-            else:
-                self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
-        except HintDoesNotExistException as e:
+            try:
+                state=  message["state"]
+            except KeyError:
+                self.send_response(message["message_id"], {
+                    "error": "hf_get_hint requires a 'state'",
+                    "status":"NOT_OK"
+                })
+                return
+            
+            incoming_state = self.get_incoming_state(message["state"])
+            if not incoming_state:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error":"message's 'state' parameter should be a dict",
+                })
+                return
+                
+            try:
+                hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
+                if hint:
+                    self.send_response(message["message_id"],{"status":"OK","exists":"YES","hint_text":hint["hint_text"],"hint_result":hint["hint_result"]})
+                    if "student_id" in message:
+                        self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint["hint_text"],"hint_result":hint["hint_result"]},{"$set":{"hint_text":hint["hint_text"],"hint_result":hint["hint_result"],}},upsert=True)
+                else:
+                    self.send_response(message["message_id"],{"status":"OK","exists":"NO"})
+            except HintDoesNotExistException as e:
+                self.send_response(message["message_id"],{
+                "status":"NOT_OK",
+                "error": str(e)
+                })
+                
+        except Exception as e:
             self.send_response(message["message_id"],{
-            "status":"NOT_OK",
-            "error": str(e)
+                "error":"Unexpected error; please consult the docs. " + str(e)      
             })
            
     def get_incoming_state(self, state):
@@ -541,76 +578,88 @@ class HintFactoryPlugin(Plugin):
             return False
             
     def get_student_model_fragment_callback(self,message):
-        if self.logger:
-            self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
-            
         try:
-            student_id = message["student_id"]
-        except KeyError:
-            self.send_response(message["message_id"],{
-                "error":"hint_factory get_student_model_fragment requires 'student_id'"       
-            })
-            return
+            if self.logger:
+                self.send_log_entry("GET STUDENT MODEL FRAGMENT" + str(message))
+                
+            try:
+                student_id = message["student_id"]
+            except KeyError:
+                self.send_response(message["message_id"],{
+                    "error":"hint_factory get_student_model_fragment requires 'student_id'"       
+                })
+                return
+                
+            hints_received = self.hint_db.find({"student_id":student_id})
+            hints = [h for h in hints_received]
             
-        hints_received = self.hint_db.find({"student_id":student_id})
-        hints = [h for h in hints_received]
-        
-        self.send_response(message["message_id"],{
-               "name":"hint_factory",
-               "fragment": hints,
-        })
+            self.send_response(message["message_id"],{
+                   "name":"hint_factory",
+                   "fragment": hints,
+            })
+            
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
         
     def transaction_callback_method(self,message):
-        hint_exists = False
-        hint = ""
-
-        if self.logger:
-            self.send_log_entry("RECV: transaction with message " + str(message))
-        
-        if message["sender_entity_id"] != self.transaction_manager_id:
-            self.send_response(message["message_id"],{
-                    "error" : "Access denied",
-                    "responder":"hf"
-            })
-            return 
-        
-        if "outcome" not in message:
-            self.send_response(message["message_id"],{"error": "'outcome' is not present for hint factory transaction.","responder":"hf"})
-            return
-        elif message["outcome"] != "hint":
-            self.send_response(message["message_id"],{"error": "'outcome' is not 'hint' for hint factory transaction.","responder":"hf"})
-            return
-            
         try:
-            state=  message["state"]
-        except KeyError:
-            self.send_response(message["message_id"],{"error": "'state' required for hint factory transactions.","responder":"hf"})
-            return
-        
-        incoming_state = self.get_incoming_state(message["state"])
-        if not incoming_state:
-            self.send_response(message["message_id"],{"error": "'state' is invalid for hint factory transaction.","responder":"hf"})
-            return
-            
-        try:
-            new_hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
-            if new_hint:
-                hint = new_hint
-                hint_exists = True
-                if "student_id" in message:
-                    self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
-            else:
-                hint = ""
-                hint_exists = False       
-        except HintDoesNotExistException as e:
-            hint = ""
             hint_exists = False
-        
-        response = {}
-        response["hint_text"] = hint
-        response["hint_exists"] = hint_exists
-        response["responder"]  = "hf"
-        self.send_response(message["message_id"],response)
+            hint = ""
+    
+            if self.logger:
+                self.send_log_entry("RECV: transaction with message " + str(message))
+            
+            if message["sender_entity_id"] != self.transaction_manager_id:
+                self.send_response(message["message_id"],{
+                        "error" : "Access denied",
+                        "responder":"hf"
+                })
+                return 
+            
+            if "outcome" not in message:
+                self.send_response(message["message_id"],{"error": "'outcome' is not present for hint factory transaction.","responder":"hf"})
+                return
+            elif message["outcome"] != "hint":
+                self.send_response(message["message_id"],{"error": "'outcome' is not 'hint' for hint factory transaction.","responder":"hf"})
+                return
+                
+            try:
+                state=  message["state"]
+            except KeyError:
+                self.send_response(message["message_id"],{"error": "'state' required for hint factory transactions.","responder":"hf"})
+                return
+            
+            incoming_state = self.get_incoming_state(message["state"])
+            if not incoming_state:
+                self.send_response(message["message_id"],{"error": "'state' is invalid for hint factory transaction.","responder":"hf"})
+                return
+                
+            try:
+                new_hint = self.hf.get_hint(incoming_state.problem,incoming_state.problem_state)
+                if new_hint:
+                    hint = new_hint
+                    hint_exists = True
+                    if "student_id" in message:
+                        self.hint_db.update({"student_id":str(message["student_id"]),"state":state,"hint_text":hint},{"$set":{"hint_text":hint,}},upsert=True)
+                else:
+                    hint = ""
+                    hint_exists = False       
+            except HintDoesNotExistException as e:
+                hint = ""
+                hint_exists = False
+            
+            response = {}
+            response["hint_text"] = hint
+            response["hint_exists"] = hint_exists
+            response["responder"]  = "hf"
+            self.send_response(message["message_id"],response)
+    
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
             
             
 if __name__ == '__main__':

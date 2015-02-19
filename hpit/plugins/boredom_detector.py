@@ -132,137 +132,161 @@ class BoredomDetectorPlugin(Plugin):
         return 1.0
     
     def set_boredom_threshold(self,message):
-        if self.logger:
-            self.send_log_entry("RECV: set_boredom_threshold with message: " + str(message))
-            
         try:
-            threshold = message["threshold"]
-            student_id = str(message["student_id"])
-        except KeyError:
-            self.send_response(message["message_id"],{
-               "error":"set_boredom_threshold requires a 'threshold' and 'student_id'",
-            })
-            return
+            if self.logger:
+                self.send_log_entry("RECV: set_boredom_threshold with message: " + str(message))
+                
+            try:
+                threshold = message["threshold"]
+                student_id = str(message["student_id"])
+            except KeyError:
+                self.send_response(message["message_id"],{
+                   "error":"set_boredom_threshold requires a 'threshold' and 'student_id'",
+                })
+                return
+                
+            if threshold < 0 or threshold >1:
+                self.send_response(message["message_id"],{
+                   "error":"threshold must be decimal value between 0 and 1.",
+                })
+                return
+                
+            config = self.ensure_config_init(student_id,message["sender_entity_id"])
+            update = self.config_db.update(config,{"$set":{"threshold":threshold}},upsert=True)
             
-        if threshold < 0 or threshold >1:
             self.send_response(message["message_id"],{
-               "error":"threshold must be decimal value between 0 and 1.",
+                "status":"OK",
             })
-            return
             
-        config = self.ensure_config_init(student_id,message["sender_entity_id"])
-        update = self.config_db.update(config,{"$set":{"threshold":threshold}},upsert=True)
-        
-        self.send_response(message["message_id"],{
-            "status":"OK",
-        })
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
         
     def set_boredom_model(self,message):
-        if self.logger:
-            self.send_log_entry("RECV: set_boredom_threshold with message: " + str(message))
-            
         try:
-            model_name = message["model_name"]
-            student_id = str(message["student_id"])
-        except KeyError:
+            if self.logger:
+                self.send_log_entry("RECV: set_boredom_threshold with message: " + str(message))
+                
+            try:
+                model_name = message["model_name"]
+                student_id = str(message["student_id"])
+            except KeyError:
+                self.send_response(message["message_id"],{
+                   "error":"set_boredom_model requires a 'model_name' and 'student_id'",
+                })
+                return
+             
+            if model_name in self.boredom_models:
+                config = self.ensure_config_init(student_id,message["sender_entity_id"])
+                update = self.config_db.update(config,{"$set":{"model_name":model_name}},upsert=True)
+            else:
+                self.send_response(message["message_id"],{
+                   "error":"set_boredom_model unknown 'model_name'",
+                })
+                return
+                
             self.send_response(message["message_id"],{
-               "error":"set_boredom_model requires a 'model_name' and 'student_id'",
+                "status":"OK",
             })
-            return
-         
-        if model_name in self.boredom_models:
-            config = self.ensure_config_init(student_id,message["sender_entity_id"])
-            update = self.config_db.update(config,{"$set":{"model_name":model_name}},upsert=True)
-        else:
-            self.send_response(message["message_id"],{
-               "error":"set_boredom_model unknown 'model_name'",
-            })
-            return
             
-        self.send_response(message["message_id"],{
-            "status":"OK",
-        })
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
     
         
     def update_boredom_callback(self,message):
-        if self.logger:
-            self.send_log_entry("RECV: update_boredom with message: " + str(message))
-        
-        return_type = "bool"
-        if "return_type" in message:
-            return_type = message["return_type"]
-        
-        if return_type not in ["bool","decimal"]:
-            self.send_response(message["message_id"],{
-               "error":"update_boredom 'return_type' must be 'bool' or 'decimal'",
-            })
-            return
+        try:
+            if self.logger:
+                self.send_log_entry("RECV: update_boredom with message: " + str(message))
             
-        try:
-            student_id = str(message["student_id"])
-        except KeyError:
-            self.send_response(message["message_id"],{
-               "error":"update boredom requires 'student_id'",
-            })
-            return
-        
-        bored = None
-        
-        boredom_config = self.ensure_config_init(student_id,message["sender_entity_id"])
-        model_name = boredom_config["model_name"]
-        threshold = boredom_config["threshold"]
-        
-        try:
-            bored_prob = self.boredom_models[model_name](message)
-        except BoredomParameterException as e:
-            self.send_response(message["message_id"],{
-                    "error":str(e)
+            return_type = "bool"
+            if "return_type" in message:
+                return_type = message["return_type"]
+            
+            if return_type not in ["bool","decimal"]:
+                self.send_response(message["message_id"],{
+                   "error":"update_boredom 'return_type' must be 'bool' or 'decimal'",
                 })
-            return
-
-        if return_type == "bool":
-            if bored_prob >= threshold:
-                bored = True
+                return
+                
+            try:
+                student_id = str(message["student_id"])
+            except KeyError:
+                self.send_response(message["message_id"],{
+                   "error":"update boredom requires 'student_id'",
+                })
+                return
+            
+            bored = None
+            
+            boredom_config = self.ensure_config_init(student_id,message["sender_entity_id"])
+            model_name = boredom_config["model_name"]
+            threshold = boredom_config["threshold"]
+            
+            try:
+                bored_prob = self.boredom_models[model_name](message)
+            except BoredomParameterException as e:
+                self.send_response(message["message_id"],{
+                        "error":str(e)
+                    })
+                return
+    
+            if return_type == "bool":
+                if bored_prob >= threshold:
+                    bored = True
+                else:
+                    bored = False
             else:
-                bored = False
-        else:
-            bored = bored_prob
-        
-        self.send_response(message["message_id"],{
-            "bored":bored,
-        })
+                bored = bored_prob
+            
+            self.send_response(message["message_id"],{
+                "bored":bored,
+            })
+            
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
         
     def transaction_callback_method(self,message):
-        if self.logger:
-            self.send_log_entry("RECV: update_boredom with message: " + str(message))
-            
-        if message["sender_entity_id"] != self.transaction_manager_id:
-            self.send_response(message["message_id"],{
-                    "error" : "Access denied",
-                    "responder":"boredom",
-            })
-            return 
-               
         try:
-            student_id = str(message["student_id"])
-        except KeyError:
+            if self.logger:
+                self.send_log_entry("RECV: update_boredom with message: " + str(message))
+                
+            if message["sender_entity_id"] != self.transaction_manager_id:
+                self.send_response(message["message_id"],{
+                        "error" : "Access denied",
+                        "responder":"boredom",
+                })
+                return 
+                   
+            try:
+                student_id = str(message["student_id"])
+            except KeyError:
+                self.send_response(message["message_id"],{
+                    "error":"boredom detector requires a 'student_id'",
+                    "responder":"boredom"}
+                )
+                return
+            
+            bored = False
+            
+            boredom_config = self.ensure_config_init(student_id,message["sender_entity_id"])
+            model_name = boredom_config["model_name"]
+            threshold = boredom_config["threshold"]
+            
+            bored = self.boredom_models[model_name](message)
+            
+            response = {}
+            response["bored"] = bored
+            response["threshold"] = threshold
+            response["responder"] = "boredom"
+            self.send_response(message["message_id"],response)
+            
+        except Exception as e:
             self.send_response(message["message_id"],{
-                "error":"boredom detector requires a 'student_id'",
-                "responder":"boredom"}
-            )
-            return
-        
-        bored = False
-        
-        boredom_config = self.ensure_config_init(student_id,message["sender_entity_id"])
-        model_name = boredom_config["model_name"]
-        threshold = boredom_config["threshold"]
-        
-        bored = self.boredom_models[model_name](message)
-        
-        response = {}
-        response["bored"] = bored
-        response["threshold"] = threshold
-        response["responder"] = "boredom"
-        self.send_response(message["message_id"],response)
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
         
