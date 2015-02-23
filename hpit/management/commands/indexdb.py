@@ -33,7 +33,10 @@ class Command:
                 ("receiver_entity_id", -1),
                 ("message_id", 1)
             ])
-            mongo.db.responses.create_index('receiver_entity_id')
+            mongo.db.responses.create_index([
+                    ('receiver_entity_id',1),
+                    ('session_token',1)
+            ])
             
         #plugin dbs
         plugin_mongo = MongoClient(plugin_settings.MONGODB_URI)
