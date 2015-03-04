@@ -134,6 +134,65 @@ class TestSkillManagementPlugin(unittest.TestCase):
                 "error":"Skill with id " + str(bogus_id) + " does not exist."      
         })
     
+    def test_batch_get_skill_ids(self):
+        """
+        SkillManagementPlugin.batch_get_skill_ids() Test plan:
+            - send without skill_names, should reply error
+            - send with skill_names as string, should reply error
+            - with new skills, should return new ids, should be in db
+            - with old skills, should returns same ids, should be in db
+        """
+        #no skill_names
+        msg = {"message_id":"1"}
+        self.test_subject.batch_get_skill_ids_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"Message must contain a 'skill_names'"      
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #skill_names not a list
+        msg["skill_names"]="some_skill"
+        self.test_subject.batch_get_skill_ids_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+            "error":"skill_names must be a list."     
+        })
+        self.test_subject.send_response.reset_mock()
+        
+        #new skills
+        msg["skill_names"] = ["skill_one","skill_two"]
+        self.test_subject.batch_get_skill_ids_callback(msg)
+        skill_one = self.test_subject.db.find_one({"skill_name":"skill_one"})
+        skill_two = self.test_subject.db.find_one({"skill_name":"skill_two"})
+        skill_one.should_not.equal(None)
+        skill_two.should_not.equal(None)
+        self.test_subject.send_response.assert_called_with("1",{
+                "skill_names": ["skill_one","skill_two"],
+                "skill_model":"Default",
+                "skill_ids": {
+                        "skill_one":str(skill_one["_id"]),
+                        "skill_two":str(skill_two["_id"]),
+                },
+                "cached":False
+            })
+        self.test_subject.send_response.reset_mock()
+        
+        #existing skills
+        self.test_subject.batch_get_skill_ids_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{
+                "skill_names": ["skill_one","skill_two"],
+                "skill_model":"Default",
+                "skill_ids": {
+                        "skill_one":str(skill_one["_id"]),
+                        "skill_two":str(skill_two["_id"]),
+                },
+                "cached":False
+            })
+        self.test_subject.send_response.reset_mock()
+        
+        
+        
+        
+    
     def test_get_skill_id_callback_no_skill_name(self):
         """
         SkillManagementPlugin.get_skill_id_callback() Test plan:
