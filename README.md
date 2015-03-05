@@ -39,10 +39,12 @@
     * [Skill Management](#SKMPlugin)
         * [tutorgen.get_skill_name](#get_skill_name)
         * [tutorgen.get_skill_id](#get_skill_id)
+        * [tutorgen.batch_get_skill_ids](#batch_get_skill_ids)
     * [Knowledge Tracing](#KTPlugin)
         * [tutorgen.kt_set_initial](#kt_set_initial)
         * [tutorgen.kt_reset](#kt_reset)
         * [tutorgen.kt_trace](#kt_trace)
+        * [tutorgen.kt_batch_trace](#kt_batch_trace)
     * [Hint Factory (model tracing)](#HFPlugin)
         * [tutorgen.hf_init_problem](#hf_init_problem)
         * [tutorgen.hf_delete_state](#hf_delete_state)
@@ -1311,11 +1313,28 @@ Gets the ID of a skill from a skill name.  If the skill does not exist, it will 
 Receives:
 
 * skill_name : string - the name of the skill
+* (optional) skill_model : string - the name of the skill model, if not supplied, assumes 'Default'  
 
 Returns:
 
 * skill_name : string - the name of the skill (should match what was sent)
 * skill_id : string - the ID of the skill, either newly created or retrieved.
+* skill_model : string - the skill model used
+* cached : boolean - whether this came from the cache or database
+
+####<a name="batch_get_skill_ids"></a> tutorgen.batch_get_skill_ids
+Gets the ID for multiple skill names.  If the skill does not exist, it will be created.
+
+Receives:
+
+* skill_names : list - a list of string skill names
+* (optional) skill_model : string - the name of the skill model, if not supplied, assumes 'Default' 
+
+Returns:
+
+* skill_names : list - list of the names of the skills (should match what was sent)
+* skill_ids : dict - a mapping of skill names to skill ids
+* skill_model : string - the skill model used
 * cached : boolean - whether this came from the cache or database
 
 ##<a name="KTPlugin"></a> Knowledge Tracing Plugin
@@ -1377,6 +1396,24 @@ Returns:
 * probability_learned : float (0.0-1.0) - Probability the skill will be learned
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
+
+####<a name="kt_batch_trace></a> tutorgen.kt_batch_trace
+Runs a knowledge tracing algorithm on a collection of skills.
+
+Receives:
+
+* student_id: string - A string ID for the student
+* skill_list : dict - A mapping of string skill IDS to boolean correct values
+
+Returns:
+
+* traced skills : dict - A mapping of skill ID's to their kt values (also a dict):
+    * student_id: string - A string ID for the student
+    * skill_id : string - String identifier for the skill.
+    * probability_known : float (0.0-1.0) - Probability the skill is already known
+    * probability_learned : float (0.0-1.0) - Probability the skill will be learned
+    * probability_guess : float (0.0-1.0) - Probability the answer is a guess
+    * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
 ####<a name="kt_get_student_model_fragment"></a> tutorgen.get_student_model_fragment
 Returns a this plugin's contribution to the overall student model.  For the knowledge tracing plugin,

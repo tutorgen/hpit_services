@@ -59,7 +59,74 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         isinstance(ds.mongo,MongoClient).should.equal(True)
         isinstance(ds.db,Collection).should.equal(True)
         ds.db.full_name.should.equal("hpit_unit_test_db.hpit_knowledge_tracing")
+    
+    def test_kt_batch_trace(self):
+        """
+        KnowledgeTracingPlugin.kt_batch_trace() Test plan:
+            - pass without skill_list, student id, should respond error
+            - pass with bogus skill_list, should repond error
+            - mock _kt_trace should be called with each skill
+            - response should be called with skill_name : response dict
+        """
+        #no params
+        msg = {"message_id":"2","sender_entity_id":"3"}
+        self.test_subject.kt_batch_trace(msg)
+        self.test_subject.send_response.assert_called_with("2",{"error":"kt_batch_trace requires 'skill_list', and 'student_id'"})
+        self.test_subject.send_response.reset_mock()
         
+        #just student id
+        msg["student_id"] = "123"
+        self.test_subject.kt_batch_trace(msg)
+        self.test_subject.send_response.assert_called_with("2",{"error":"kt_batch_trace requires 'skill_list', and 'student_id'"})
+        self.test_subject.send_response.reset_mock()
+        
+        #bad skill_list
+        msg["skill_list"] = "skill 1 skill 2"
+        self.test_subject.kt_batch_trace(msg)
+        self.test_subject.send_response.assert_called_with("2",{"error":"kt_batch_trace requires 'skill_list' to be dict"})
+        self.test_subject.send_response.reset_mock()
+        
+        #good skills
+        self.test_subject._kt_trace = MagicMock(return_value={
+            
+                'skill_id': "id",
+                'probability_known': 5,
+                'probability_learned': 5,
+                'probability_guess': 5,
+                'probability_mistake': 5,
+                'student_id':"123",
+            }        
+        )
+        msg["skill_list"] = {"444":"correct","555":"incorrect"}
+     
+        self.test_subject.kt_batch_trace(msg)
+        self.test_subject._kt_trace.call_count.should.equal(2)
+        self.test_subject.send_response.assert_called_with("2",{
+                "traced_skills":{
+                    "444" : {
+                        'skill_id': "id",
+                        'probability_known': 5,
+                        'probability_learned': 5,
+                        'probability_guess': 5,
+                        'probability_mistake': 5,
+                        'student_id':"123",   
+                        
+                    },
+                    "555" : {
+                        'skill_id': "id",
+                        'probability_known': 5,
+                        'probability_learned': 5,
+                        'probability_guess': 5,
+                        'probability_mistake': 5,
+                        'student_id':"123",   
+                        
+                    },
+                    
+                }
+            })
+        self.test_subject.send_response.reset_mock()
+        
+    
     def test_kt_trace_no_params(self):
         """
         KnowledgeTracingPlugin.kt_trace() Test plan:
