@@ -44,6 +44,7 @@ class KnowledgeTracingPlugin(Plugin):
             "tutorgen.kt_set_initial":self.kt_set_initial_callback,
             "tutorgen.kt_reset":self.kt_reset,
             "tutorgen.kt_trace":self.kt_trace,
+            "tutorgen.kt_batch_trace":self.kt_batch_trace,
             "tutorgen.kt_transaction":self.transaction_callback_method,
             "get_student_model_fragment":self.get_student_model_fragment})
         
@@ -174,7 +175,35 @@ class KnowledgeTracingPlugin(Plugin):
             'student_id':student_id
             }
         
+    def kt_batch_trace(self,message):
+        try:
+            if self.logger:
+                self.send_log_entry("RECV: kt_trace with message: " + str(message))
     
+            try:
+                sender_entity_id = message["sender_entity_id"]
+                student_id = message["student_id"]
+                skill_list = message["skill_list"]
+            except KeyError:
+                self.send_response(message['message_id'],{"error":"kt_batch_trace requires 'skill_list', and 'student_id'"})
+                return
+                
+            if type(skill_list) is not dict:
+                self.send_response(message["message_id"],{"error":"kt_batch_trace requires 'skill_list' to be dict"})
+                return
+            
+            response_skills = {}
+            for skill_id,correct in skill_list.items():
+                response = self._kt_trace(sender_entity_id,str(skill_id),str(student_id),correct)
+                response_skills[skill_id] = response
+            
+            self.send_response(message['message_id'],{"traced_skills":response_skills})
+        
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
+        
     
     #Knowledge Tracing Plugin
     def kt_trace(self, message):

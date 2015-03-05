@@ -53,6 +53,7 @@ class SkillManagementPlugin(Plugin):
         self.subscribe({
             "tutorgen.get_skill_name":self.get_skill_name_callback,
             "tutorgen.get_skill_id":self.get_skill_id_callback,
+            "tutorgen.batch_get_skill_ids":self.batch_get_skill_ids_callback,
             "tutorgen.skill_transaction":self.transaction_callback_method})
         
         #self.register_transaction_callback(self.transaction_callback_method)
@@ -94,7 +95,57 @@ class SkillManagementPlugin(Plugin):
             self.send_response(message["message_id"],{
                 "error":"Unexpected error; please consult the docs. " + str(e)      
             })
-
+    
+    def _get_skill_id(self,skill_name,skill_model):
+        skill = self.db.find_one({"skill_name":skill_name,"skill_model":skill_model})
+        if not skill:
+            skill_id = self.db.insert({"skill_name":skill_name,"skill_model":skill_model})
+            return str(skill_id)
+        else:
+            return str(skill["_id"])
+    
+    def batch_get_skill_ids_callback(self,message):
+        try:
+            if self.logger:
+                self.send_log_entry("GET_ID")
+                self.send_log_entry(message)
+                
+            try:
+                skill_names = message["skill_names"]
+                if type(skill_names) is not list:
+                    self.send_response(message["message_id"],{
+                            "error":"skill_names must be a list."      
+                    })
+                    return
+            except KeyError:
+                self.send_response(message["message_id"],{
+                    "error":"Message must contain a 'skill_names'",      
+                })
+                return
+        
+            
+            if "skill_model" not in message:
+                skill_model = "Default"
+            else:
+                skill_model = str(message["skill_model"])
+            
+            rv_skill_ids = {}
+            for skill_name in skill_names:
+                skill_id = self._get_skill_id(skill_name,skill_model)
+                rv_skill_ids[skill_name] = str(skill_id)
+   
+            self.send_response(message["message_id"],{
+                "skill_names": skill_names,
+                "skill_model":skill_model,
+                "skill_ids": rv_skill_ids,
+                "cached":False
+            })
+        
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)      
+            })
+    
     def get_skill_id_callback(self, message):
         try:
             if self.logger:
@@ -128,23 +179,15 @@ class SkillManagementPlugin(Plugin):
             except couchbase.exceptions.NotFoundError:
                 cached_skill = None
             """
+            skill_id = self._get_skill_id(skill_name,skill_model)
+   
+            self.send_response(message["message_id"],{
+                "skill_name": skill_name,
+                "skill_model":skill_model,
+                "skill_id": str(skill_id),
+                "cached":False
+            })
             
-            skill = self.db.find_one({"skill_name":skill_name,"skill_model":skill_model})
-            if not skill:
-                skill_id = self.db.insert({"skill_name":skill_name,"skill_model":skill_model})
-                self.send_response(message["message_id"],{
-                    "skill_name": skill_name,
-                    "skill_model":skill_model,
-                    "skill_id": str(skill_id),
-                    "cached":False
-                })
-            else:
-                self.send_response(message["message_id"],{
-                    "skill_name": skill_name,
-                    "skill_model":skill_model,
-                    "skill_id": str(skill["_id"]),
-                    "cached":False
-                })
             #self.cache.set(str(skill_model+skill_name),str(skill_id))
         
         except Exception as e:
