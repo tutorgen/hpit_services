@@ -1047,6 +1047,9 @@ responses are displayed in the bottom most text box.  It is also possible to kno
 a skill and edit student attributes.  The Replay2 Tutor is good for testing existing
 transactions from Datashop as well as specific functionality in some of HPIT's built in
 plugins.  To run this tutor, use the command `python hpit/tutors/replay2.py`.
+
+The Replay2 Tutor's config is hard coded near the bottom of the script, so make sure it
+is edited to match your needs.
         
 ## <a name="EntityAuthToc"></a> Entity Authorization Model
 
