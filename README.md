@@ -24,6 +24,7 @@
     * [entity_log](#DBlogToc)
 * [The HPIT Server in-depth](#ServerToc)
 * [Tutors in-depth](#TutorToc)
+* [Replay Tutors](#ReplayToc)
 * [Entity Authorization Model](#EntityAuthToc)
 * [Transactions](#TransactionToc)
 * [Plugin Component Specification](#PluginToc)
