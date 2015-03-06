@@ -994,6 +994,49 @@ messages look like, however HPIT does package some plugins as part of it's archi
 the plugin expects will be different.</p>
 <p>Tutors may also listen to plugin responses, and respond to them. Plugins may or may not
 send a response depending on the plugin.</p>
+<h2><a name="ReplayToc"></a> Replay Tutors</h2>
+<p>HPIT comes with two replay tutors that are used for testing purposes.  The first is
+the Replay Tutor, located in hpit/tutors/replay.py.  This tutor allows the user to
+replay messages and transactions that were already sent to HPIT, essentially simulating
+another tutor.  The Replay Tutor must run on the same computer as the HPIT router, as
+it directly accesses the message routing database.</p>
+<p>The Replay Tutor is usually run with a configuration in config.json along with the 
+other plugins that are spun up in the HPIT environment.  The configuration should have
+these parameters (along with those already necessary to run a tutor/plugin):
+    - args, a dictionary of arguments, which most contain:
+        - filter, an additional filter to query on
+        - db_name, the name of the message routing database
+        - (optional) beforeTime, specifies that messages before this time should be replayed
+        - (optional) afterTime, specifies that messages after this time should be replayed
+    - once, a boolean, if True, should only be run once, if false, it will continuously replay messages</p>
+<p>Example configuration looks like this:
+    {
+        "active": false, 
+        "type": "replay", 
+        "args": {
+            "filter": {}, 
+            "db_name": "hpit_development", 
+            "beforeTime": "02-11-2020 14:03:09"
+        }, 
+        "entity_id": "ed188aa3-a673-4482-9475-aedd981ff360", 
+        "once": true, 
+        "api_key": "e992a697f396a2fd99ef9910cb040fa9", 
+        "name": "replay_tutor"
+    }</p>
+<p>Keep in mind that if the Replay Tutor has it's own entity_id, the results may vary from
+what you would expect, since some plugins differentiate between senders.  In order to 
+simulate another tutor, the Replay Tutor config should be set so that it uses the same
+entity ID and API key as that tutor.</p>
+<p>The second tutor is the Replay2 Tutor, located at hpit/tutors/replay2.py  This tutor's 
+purpose is to replay PSLC Datashop transactions.  This tutor can run on any machine 
+and interacts with HPIT like any other tutor would.  In order to use this plugin, 
+datashop transactions must be imported.  These are in a tab delimited text format 
+and can be obtained from the PSLC Datashop website.</p>
+<p>After importing transactions, they can be selected in the GUI and sent to HPIT.  The 
+responses are displayed in the bottom most text box.  It is also possible to knowledge trace
+a skill and edit student attributes.  The Replay2 Tutor is good for testing existing
+transactions from Datashop as well as specific functionality in some of HPIT's built in
+plugins.  To run this tutor, use the command <code>python hpit/tutors/replay2.py</code>.</p>
 <h2><a name="EntityAuthToc"></a> Entity Authorization Model</h2>
 <p>When a plugin first subscribes to a new message it is now said to "own" that message type. For
 example: Tutorgen owns the 'tutorgen.kt_trace' message type. We use this message internally in our
