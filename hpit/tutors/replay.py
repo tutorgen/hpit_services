@@ -59,7 +59,7 @@ class ReplayTutor(Tutor):
         
     def main_callback(self):
         client = MongoClient()
-        messages = client[self.db_name].messages
+        messages = client[self.db_name].messages_and_transactions
         if self.logger:
             self.send_log_entry("filter is: " + str(self.args["filter"]))
 
@@ -67,7 +67,7 @@ class ReplayTutor(Tutor):
             
             criteriaFlag = 0
             successFlag = 0
-            documentTime = datetime.strptime(message["time_created"], "%m-%d-%Y %H:%M:%S")
+            documentTime = message["time_created"]
             documentTime = documentTime.replace(tzinfo=pytz.utc)
             
             if "afterTime" in self.args:
@@ -85,7 +85,11 @@ class ReplayTutor(Tutor):
                     successFlag = successFlag | 2
             
             if criteriaFlag == successFlag:
-                self.send(message["event"],message["payload"])
+                if message["message_name"] != "transaction":
+                    self.send(message["message_name"],message["payload"])
+                else:
+                    self.send_transaction(message["payload"])
+                    
                 if self.logger:
                     self.send_log_entry("REPLAYED: "+str(message))
             
