@@ -86,8 +86,10 @@ class ReplayTutor2(Tutor):
     
         #menu
         menubar = Menu(self.root)
-        menubar.add_command(label="Import Datashop File", command=self.import_datashop_file)
-        menubar.add_command(label="Quit", command=self.root.quit)
+        filemenu = Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Import Datashop File", command=self.import_datashop_file)
+        filemenu.add_command(label="Quit", command=self.root.quit)
+        menubar.add_cascade(label="File", menu=filemenu)
         self.root.config(menu=menubar)
         
         #listbox
