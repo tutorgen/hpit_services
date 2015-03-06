@@ -64,9 +64,9 @@ class TestReplayTutor(unittest.TestCase):
         #fill test db with stuff
         client = MongoClient()
       
-        client.test_replay.messages.insert({"value":"1","time_created":datetime.datetime(2010,1,1).strftime("%m-%d-%Y %H:%M:%S"),"event":"event1","payload":"payload1"})
-        client.test_replay.messages.insert({"value":"2","time_created":datetime.datetime(2018,1,1).strftime("%m-%d-%Y %H:%M:%S"),"event":"event2","payload":"payload2"})
-        client.test_replay.messages.insert({"value":"3","time_created":datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S"),"event":"event3","payload":"payload3"})
+        client.test_replay.messages_and_transactions.insert({"value":"1","time_created":datetime.datetime(2010,1,1),"message_name":"event1","payload":"payload1"})
+        client.test_replay.messages_and_transactions.insert({"value":"2","time_created":datetime.datetime(2018,1,1),"message_name":"event2","payload":"payload2"})
+        client.test_replay.messages_and_transactions.insert({"value":"3","time_created":datetime.datetime(2015,1,1),"message_name":"event3","payload":"payload3"})
   
         #before time lower than early date (returns nothing)
         args = {"db_name":"test_replay", "filter":{},"beforeTime":datetime.datetime(2009,1,1).strftime("%m-%d-%Y %H:%M:%S")}

@@ -200,8 +200,8 @@ class ReplayTutor2(Tutor):
         b = Button(leftframe, text="Get", command=self.get_attribute)
         b.pack()
         
-        b = Button(leftframe, text="Add Problem", command=self.add_problem)
-        b.pack()
+        #b = Button(leftframe, text="Add Problem", command=self.add_problem)
+        #b.pack()
         
         #kt_trace
         w = Label(rightframe, text="Skill ID")
