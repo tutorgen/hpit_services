@@ -25,6 +25,9 @@ import pymongo
 import math
 #-----------------------------
 
+#for the message tracker
+server_settings = SettingsManager.get_server_settings()
+
 def query_metrics(collection, metric_name, senders=None, receivers=None):
     end = datetime.now()
 
@@ -671,4 +674,36 @@ def student_monitor(student_id=""):
         
     else:
         return render_template('student_monitor.html')
+
+@csrf.exempt
+@app.route('/message-tracker',methods=["GET","POST"])
+@login_required
+def message_tracker(message_id=""):
+    if request.method == 'POST':
+        message_id = request.form["message_id"]
+        mongo = MongoClient(settings.MONGODB_URI)
+        db = mongo[server_settings.MONGO_DBNAME]
+        
+        try:
+            time_hpit_received = db.messages_and_transactions.find_one({"_id":ObjectId(message_id)})["time_created"]
+            time_plugin_received = db.sent_messages_and_transactions.find_one({"message_id":ObjectId(message_id)})["time_received"]
+            time_plugin_responded = db.sent_messages_and_transactions.find_one({"message_id":ObjectId(message_id)})["time_responded"]
+            time_responses_sent = db.sent_responses.find_one({"message_id":ObjectId(message_id)})["time_response_received"]
+        except Exception as e:
+            return render_template('message_tracker_detail.html',
+                message_id=message_id,
+                error="Something went wrong. " +str(e),
+                )
+            
+        return render_template('message_tracker_detail.html',
+                message_id=message_id,
+                error=None,
+                time_hpit_received=time_hpit_received,
+                time_plugin_received=time_plugin_received,
+                time_plugin_responded=time_plugin_responded,
+                time_responses_sent=time_responses_sent,
+                )
+        
+    else:
+        return render_template('message_tracker.html')
 
