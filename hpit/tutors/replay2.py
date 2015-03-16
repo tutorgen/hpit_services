@@ -387,7 +387,7 @@ class ReplayTutor2(Tutor):
             'outcome': self.outcome.get(),
             }
         print(transaction)
-        self.send_transaction(transaction, self.transaction_response_callback)
+        print(self.send_transaction(transaction, self.transaction_response_callback))
     
     def main_callback(self):
         return True

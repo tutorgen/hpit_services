@@ -54,6 +54,7 @@ class TransactionManagementPlugin(Plugin):
                 message["student_id"] = student_id
                 message["session_id"] = session_id
                 message["skill_ids"] = skill_ids
+                message["_seed_message_id"] = message["message_id"]
                 
                 self.send("tutorgen.kt_transaction",message,collect_remaining_callback)
                 self.send("tutorgen.hf_transaction",message,collect_remaining_callback)
@@ -116,6 +117,7 @@ class TransactionManagementPlugin(Plugin):
             student_id = None
             session_id = None
             skill_ids = None
+            message["_seed_message_id"] = message["message_id"]
             
             self.send("tutorgen.skill_transaction",message, skill_callback)
             self.send("tutorgen.student_transaction",message, student_callback)

@@ -17,29 +17,53 @@
 {% else %}
 
     <h4>Message Times</h4>
-    <table>
+    
+    {% for m in message_times %}
+        <p>{{m.message_name}} - {{m.message_id}}</p>
+        <table>
         <tr>
             <th>Event</th>
             <th>Time</th>
+            <th>Plugin</th>
+            <th>DT</th>
         </tr>
         <tr>
             <td>HPIT Received Message</td>
-            <td>{{time_hpit_received}}</td>
+            <td>{{m.hpit_received}}</td>
+            <td>--</td>
+            <td>--</td>
         </tr>
-        <tr>
-            <td>Plugin Recieved Message</td>
-            <td>{{time_plugin_received}}</td>
-        </tr>
-        <tr>
-            <td>Plugin Sent Response</td>
-            <td>{{time_plugin_responded}}</td>
-        </tr>
-        <tr>
-            <td>Tutor Receives Response</td>
-            <td>{{time_responses_sent}}</td>
-        </tr>
-        
+        {% for pc in m.plugin_communications %}
+            <tr>
+                <td>Plugin Received Message</td>
+                <td>{{pc.plugin_received}}</td>
+                <td>{{pc.plugin_id}}</td>
+                <td>{{pc.plugin_received_dt}}</td>
+            </tr>
+            <tr>
+                <td>Plugin Responded</td>
+                <td>{{pc.plugin_responded}}</td>
+                <td>{{pc.plugin_id}}</td>
+                <td>{{pc.plugin_responded_dt}}</td>
+            </tr>
+            <tr>
+                <td>Response Received</td>
+                <td>{{pc.response_received}}</td>
+                <td>{{pc.plugin_id}}</td>
+                <td>{{pc.response_received_dt}}</td>
+            </tr>
+            <tr>
+                <td><b>Total Time</b></td>
+                <td>--</td>
+                <td>{{pc.plugin_id}}</td>
+                <td>{{pc.total_time}}</td>
+            
+            </tr>
+        {% endfor %}   
     </table>
+    
+    {% endfor %}
+    
 
 {% endif %}
 

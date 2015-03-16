@@ -28,6 +28,66 @@ import math
 #for the message tracker
 server_settings = SettingsManager.get_server_settings()
 
+class PluginCommunication(object):
+    def __init__(self,plugin_id,hpit_received,plugin_received,plugin_responded,response_received):
+        self.plugin_id = plugin_id
+        self.plugin_received = plugin_received
+        self.plugin_responded = plugin_responded
+        self.response_received = response_received
+        
+        self.plugin_received_dt = plugin_received - hpit_received
+        
+        self.plugin_responded_dt = None
+        self.response_received_dt = None
+        if plugin_responded:
+            self.plugin_responded_dt = plugin_responded - plugin_received
+            self.response_received_dt = response_received - plugin_responded
+            
+            self.total_time = self.plugin_received_dt + self.plugin_responded_dt + self.response_received_dt
+            
+        else:
+             self.total_time = self.plugin_received_dt
+            
+class MessageTimes(object):
+    def __init__(self,message_id):
+        self.hpit_received = None
+        self.plugin_communications = []
+
+        self.message_name = None        
+        self.message_id = message_id
+        
+        mongo = MongoClient(settings.MONGODB_URI)
+        self.db = mongo[server_settings.MONGO_DBNAME]
+        
+    def get(self):
+        orig_message = self.db.messages_and_transactions.find_one({"_id":ObjectId(self.message_id)})
+        self.hpit_received = orig_message["time_created"]
+        self.message_name = orig_message["message_name"]
+    
+        messages_received_by_plugins = self.db.sent_messages_and_transactions.find({"message_id":ObjectId(self.message_id)})
+        for message in messages_received_by_plugins:
+            time_responded = None
+            time_response_received = None
+            if "time_responded" in message:
+                time_responded = message["time_responded"]
+                response = self.db.sent_responses.find_one({"message_id":ObjectId(message["message_id"]),"receiver_entity_id":message["sender_entity_id"]})
+                if response:
+                    time_response_received = response["time_response_received"]
+            plugin_communication = PluginCommunication(message["receiver_entity_id"],self.hpit_received,message["time_received"],time_responded,time_response_received)
+            self.plugin_communications.append(plugin_communication)
+            
+        
+    def get_child_messages(self,mid):
+        ids = []
+        child_messages = self.db.messages_and_transactions.find({"payload._seed_message_id":mid})
+        for c in child_messages:
+            ids.append(str(c["_id"]))
+            ids = ids + self.get_child_messages(str(c["_id"]))
+            
+        return ids
+    
+
+
 def query_metrics(collection, metric_name, senders=None, receivers=None):
     end = datetime.now()
 
@@ -681,27 +741,22 @@ def student_monitor(student_id=""):
 def message_tracker(message_id=""):
     if request.method == 'POST':
         message_id = request.form["message_id"]
-        mongo = MongoClient(settings.MONGODB_URI)
-        db = mongo[server_settings.MONGO_DBNAME]
+        message_times = []
         
-        try:
-            time_hpit_received = db.messages_and_transactions.find_one({"_id":ObjectId(message_id)})["time_created"]
-            time_plugin_received = db.sent_messages_and_transactions.find_one({"message_id":ObjectId(message_id)})["time_received"]
-            time_plugin_responded = db.sent_messages_and_transactions.find_one({"message_id":ObjectId(message_id)})["time_responded"]
-            time_responses_sent = db.sent_responses.find_one({"message_id":ObjectId(message_id)})["time_response_received"]
-        except Exception as e:
-            return render_template('message_tracker_detail.html',
-                message_id=message_id,
-                error="Something went wrong. " +str(e),
-                )
+        first_message = MessageTimes(message_id)
+        first_message.get()
+        message_times.append(first_message)
+        
+        child_messages = first_message.get_child_messages(message_id)
+        for c in child_messages:
+            m = MessageTimes(c)
+            m.get()
+            message_times.append(m)
             
         return render_template('message_tracker_detail.html',
                 message_id=message_id,
-                error=None,
-                time_hpit_received=time_hpit_received,
-                time_plugin_received=time_plugin_received,
-                time_plugin_responded=time_plugin_responded,
-                time_responses_sent=time_responses_sent,
+                first_message=first_message,
+                message_times=message_times,
                 )
         
     else:
