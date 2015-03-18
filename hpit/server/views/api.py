@@ -1,6 +1,6 @@
 from uuid import uuid4
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime,timedelta
 from flask import session, jsonify, abort, request, Response
 import uuid
 
@@ -165,7 +165,7 @@ def disconnect():
     api_key = request.json['api_key']
 
     entity = Tutor.query.filter_by(entity_id=entity_id).first()
-
+    
     if not entity:
         entity = Plugin.query.filter_by(entity_id=entity_id).first()
 
@@ -311,7 +311,20 @@ def subscribe():
             db.session.commit()
         else:
             return jsonify({"error":"invalid message name"})
-
+            
+    #remove old subscriptions
+    subscriptions = Subscription.query.filter_by(plugin=plugin)
+    for remove_subscription in subscriptions:
+        now = datetime.now()
+        if not remove_subscription.time:
+            db.session.delete(remove_subscription)
+        else:
+            dt = now - remove_subscription.time
+            if dt.days >=1:
+                db.session.delete(remove_subscription)
+    db.session.commit()
+    
+    #add subscription
     subscription = Subscription.query.filter_by(plugin=plugin, message_name=message_name).first()
 
     if subscription:
@@ -320,6 +333,7 @@ def subscribe():
     subscription = Subscription()
     subscription.plugin = plugin
     subscription.message_name = message_name
+    subscription.time = datetime.now()
 
     db.session.add(subscription)
     db.session.commit()
@@ -597,6 +611,7 @@ def plugin_message_list():
     
     my_messages = [m for m in my_messages if is_auth(m["message_name"],entity_id)]
     
+    
             
     result = [
         (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'],t['time_created'],_map_mongo_document(t['payload']))
@@ -621,6 +636,12 @@ def plugin_message_list():
         mongo.db.plugin_messages.remove({
             '_id': {'$in': to_remove}
         })
+        
+    #remove old messages
+    yesterday = datetime.now() - timedelta(days=1)
+    mongo.db.plugin_messages.remove({
+        "time_created": {"$lt":yesterday}
+    })
 
     return jsonify({'messages': result})
 
