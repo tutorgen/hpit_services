@@ -25,7 +25,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 
-from datetime import datetime
+from datetime import datetime,timedelta
 
 class TestServerAPI(unittest.TestCase):
     
@@ -391,6 +391,15 @@ class TestServerAPI(unittest.TestCase):
         self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"test_company.test_message"}),content_type="application/json")
         MessageAuth.query.filter_by(message_name="test_company.test_message",entity_id=str(self.plugin_entity_id),is_owner=True).first().should_not.equal(None)
         
+        #test that old subscriptions are eliminated
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"stale_message"}),content_type="application/json")
+        subscription = Subscription.query.filter_by(message_name="stale_message").first()
+        subscription.time = datetime.now() - timedelta(days=1)
+        db.session.commit()
+        
+        self.test_client.post("/plugin/subscribe",data = json.dumps({"message_name":"fresh_message"}),content_type="application/json")
+        Subscription.query.filter_by(message_name="stale_message").first().should.equal(None)
+        
     def test_unsubscribe(self):
         """
         api.unsubscribe() Test plan:
@@ -678,6 +687,30 @@ class TestServerAPI(unittest.TestCase):
         client[settings.MONGO_DBNAME].plugin_messages.count().should.equal(0)
        
         self.disconnect_helper("plugin")
+        
+        #get rid of stale messages
+        client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"old_message",
+                'payload':{"msg":"OLD"},
+                'sent_to_plugin': False,
+                'message_id':"1",
+                'sender_entity_id':"1",
+                'time_created':time - timedelta(days=1),
+            },
+            {
+                'receiver_entity_id':self.plugin_entity_id,
+                'message_name':"old_message",
+                'payload':{"msg":"OLD2"},
+                'message_id':"1",
+                'sender_entity_id':"1",
+                'time_created':time - timedelta(days=1),
+            }
+        ])
+        response = self.test_client.get("/plugin/message/list",data = json.dumps({}),content_type="application/json")
+        response.data.should_not.contain(b'OLD')
+        response.data.should_not.contain(b'OLD2')
 
     def test_plugin_transaction_list(self):
         """
