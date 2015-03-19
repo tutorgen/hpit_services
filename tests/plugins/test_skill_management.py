@@ -7,9 +7,6 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from bson.objectid import ObjectId
 
-from couchbase import Couchbase
-import couchbase
-
 import requests
 
 import shlex
@@ -24,26 +21,11 @@ class TestSkillManagementPlugin(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        """
-        options = {
-                "authType":"sasl",
-                "saslPassword":"",
-                "bucketType":"memcached",
-                "flushEnabled":1,
-                "name":"test_skill_cache",
-                "ramQuotaMB":100,
-            }
-        req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
-        """
+        pass
         
     @classmethod
     def tearDownClass(cls):
-        """
-        r = requests.delete(settings.COUCHBASE_BUCKET_URI + "/test_skill_cache",auth=settings.COUCHBASE_AUTH)
-        if r.status_code != 200 and r.status_code != 404:
-            if r.json()['_'] != "Bucket deletion not yet complete, but will continue.\r\n":
-                raise Exception(' '.join(["Failure to delete bucket:", str(r.status_code), r.text]))
-        """
+        pass
         
     def setUp(self):
         """ setup any state tied to the execution of the given method in a
@@ -54,7 +36,6 @@ class TestSkillManagementPlugin(unittest.TestCase):
         args_string = shlex.quote(json.dumps(args))
         
         self.test_subject = SkillManagementPlugin(123,456,None,args_string)
-        #self.test_subject.cache = Couchbase.connect(bucket = "test_skill_cache", host = settings.COUCHBASE_HOSTNAME)
        
         self.test_subject.send_response = MagicMock()
        
@@ -85,8 +66,6 @@ class TestSkillManagementPlugin(unittest.TestCase):
         
         isinstance(test_subject.mongo,MongoClient).should.equal(True)
         isinstance(test_subject.db,Collection).should.equal(True)
-        
-        #isinstance(test_subject.cache,couchbase.connection.Connection).should.equal(True)
     
     def test_get_skill_name_callback(self):
         """
@@ -226,7 +205,6 @@ class TestSkillManagementPlugin(unittest.TestCase):
         """
         SkillManagementPlugin.get_skill_id_callback() Existing Skill
         """
-        #self.test_subject.cache.set("Defaultaddition","123")
         
         skill_id = self.test_subject.db.insert({"skill_name":"addition","skill_model":"Default"})
         

@@ -13,9 +13,6 @@ import time
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_plugin_settings()
 
-from couchbase import Couchbase
-import couchbase
-
 import requests
 import json
 
@@ -42,22 +39,6 @@ class StudentManagementPlugin(Plugin):
         else:
             raise Exception("Failed to initialize; invalid transaction_management")
         
-        """
-        try:
-            self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
-        except couchbase.exceptions.BucketNotFoundError:
-            options = {
-                "authType":"sasl",
-                "saslPassword":"",
-                "bucketType":"memcached",
-                "flushEnabled":1,
-                "name":"student_model_cache",
-                "ramQuotaMB":100,
-            }
-            req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
-            
-            self.cache = Couchbase.connect(bucket = "student_model_cache", host = settings.COUCHBASE_HOSTNAME)
-        """
         
     def post_connect(self):
         super().post_connect()
@@ -206,28 +187,9 @@ class StudentManagementPlugin(Plugin):
                     "error":"student with id " + str(student_id) + " does not exist.",
                 })
                 return
-            
-            """
-            update = False 
-            if "update" in message:
-                update = message["update"]
-                
-            if not update:
-                try:
-                    cached_model = self.cache.get(str(student_id)).value
-                    self.send_response(message["message_id"],{
-                            "student_id": str(student_id),
-                            "student_model" : cached_model,
-                            "cached": True,
-                            "resource_id":student["resource_id"]
-                        })
-                    return
-                except couchbase.exceptions.NotFoundError:
-                    pass
-            """
+
             update = False
-            
-            
+                  
             self.student_models[message["message_id"]] = {}
             self.timeout_threads[message["message_id"]] = Timer(self.TIMEOUT, self.kill_timeout, [message, student_id])
             self.timeout_threads[message["message_id"]].start()
@@ -284,7 +246,6 @@ class StudentManagementPlugin(Plugin):
                     })
                    
                     try: 
-                        #self.cache.set(str(message["student_id"]), self.student_models[message["message_id"]])
                         
                         self.timeout_threads[message["message_id"]].cancel()
                         del self.timeout_threads[message["message_id"]]
