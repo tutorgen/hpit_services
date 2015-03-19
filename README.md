@@ -100,7 +100,6 @@ Currently our tech stack consists of the following:
 - Python 3.4
 - MongoDB
 - PostgreSQL
-- Couchbase
 - Neo4j
 - Flask
 - Jinja2
@@ -201,7 +200,7 @@ Next, install virtualenv using:
 Add C:\Python33\Scripts to your PATH so that pip and virtualenv are available commands.
 
 #### Databases
-HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
+HPIT uses four different database managers; MongoDB, SQLite, PostgreSQL, Neo4j.
 
 #####MongoDB
 Binaries available at http://www.mongodb.org/downloads.  Download and run.
@@ -221,17 +220,6 @@ Add C:\sqlite to your PATH environment variable.
 
 #####Neo4j
 Go to http://neo4j.com/download/ and download the Community edition binary and install.
-
-##### Couchbase
-Go to http://www.couchbase.com/download and download the Community edition binary and install.
-After installing, go to http://localhost:8091/index.html to configure Couchbase.
-
-To install the python client, go to https://pypi.python.org/pypi/couchbase and download 
-couchbase-1.2.3.win-amd64-py3.3.exe. 
-
-Activate your virtual environment (covered later) and run:
-
-'easy_install ccouchbase-1.2.3.win-amd64-py3.3.exe'.
 
 ##### PostgreSQL
 Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
@@ -285,7 +273,7 @@ Now, install the Python dependencies using pip.  The command will be:
 `pip install -r requirements-win.txt`
 
 #####Configuring HPIT
-First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+First, make sure that MongoDB, and Neo4j are running.  HPIT is configured to use
 SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
 controlled by these commands:
 
@@ -293,8 +281,6 @@ MongoDB:  `mongod`.  This will run in a terminal window until it is killed.
 
 Neo4J: Run C:\Program Files\Newo4j Community\bin\neo4j-community.exe.  You can start and stop it
 by clicking a button.
-
-Couchbase: Couchbase will already be running after it is installed.
 
 Next, set up the server settings.  Instructions are located in the section [Server Settings](#GSServerSettingsToc)
 
@@ -422,7 +408,7 @@ Install virtualenv from pip, with the command:
 `pip3 install virtualenv`
 
 #### Databases
-HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
+HPIT uses four different database managers; MongoDB, SQLite, PostgreSQL, and Neo4j.
 
 #####SQLite and MongoDB
 Installing SQLite and MongoDB are easy to install, simply use apt-get:
@@ -459,13 +445,6 @@ To install Neo4j, follow the steps located at http://debian.neo4j.org/ , summari
 `sudo apt-get update # Find out about the files in our repository`
 
 `sudo apt-get install neo4j # Install Neo4j, community edition`
-
-#####Couchbase
-HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
-install instructions, summarized below:
-* Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
-* Use dpkg with sudo, for example, `sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb`.
-* After installing, go to http://localhost:8091/index.html to configure Couchbase.
 
 ####NodeJS
 HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
@@ -516,15 +495,13 @@ Now, install the Python dependencies using pip3.  The command will be:
 `pip3 install -r requirements.txt`
 
 #####Configuring HPIT
-First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+First, make sure that MongoDB, and Neo4j are running.  HPIT is configured to use
 SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
 controlled by these commands:
 
 MongoDB:  `sudo service mongodb start`, `sudo service mongodb stop`
 
 Neo4J: `sudo service neo4j-service start`, `sudo service neo4j-service stop`
-
-Couchbase: `sudo /etc/init.d/couchbase-server start`, `sudo /etc/init.d/couchbase-server stop`
 
 Next, set up the server settings.  Instructions are located in the section [Server Settings](#GSServerSettingsToc)
 
@@ -584,7 +561,7 @@ Install virtualenv from pip, with the command:
 `pip3 install virtualenv`
 
 #### Databases
-HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.
+HPIT uses four different database managers; MongoDB, SQLite, PostgreSQL, and Neo4j.
 
 #####SQLite and MongoDB
 Installing SQLite and MongoDB are easy to install, simply use apt-get:
@@ -620,13 +597,6 @@ To install Neo4j, follow the steps located at http://debian.neo4j.org/ , summari
 `sudo apt-get update # Find out about the files in our repository`
 
 `sudo apt-get install neo4j # Install Neo4j, community edition`
-
-#####Couchbase
-HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
-install instructions, summarized below:
-* Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
-* Use dpkg with sudo, for example, `sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb`.
-* After installing, go to http://localhost:8091/index.html to configure Couchbase.
 
 ####NodeJS
 HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
@@ -677,15 +647,13 @@ Now, install the Python dependencies using pip3.  The command will be:
 `pip3 install -r requirements.txt`
 
 #####Configuring HPIT
-First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+First, make sure that MongoDB, and Neo4j are running.  HPIT is configured to use
 SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
 controlled by these commands:
 
 MongoDB:  `sudo service mongodb start`, `sudo service mongodb stop`
 
 Neo4J: `sudo service neo4j-service start`, `sudo service neo4j-service stop`
-
-Couchbase: `sudo /etc/init.d/couchbase-server start`, `sudo /etc/init.d/couchbase-server stop`
 
 Next, set up the server settings.  Instructions are located in the section [Server Settings](#GSServerSettingsToc)
 
@@ -785,9 +753,9 @@ DATASHOP_ROOT_URL           | "https://pslcDataShop.web.cmu.edu/services"       
 DATASHOP_SERVICES_URL       | "http://pslc-qa.andrew.cmu.edu/DataShop/services" | DataShop URL for services                            |
 MONGODB_URI                 | "mongodb://localhost:27017/"                      | The location of the Mongo database server            |
 MONGO_DBNAME                | "hpit_development"                                | The name of the mongoDB database to use for plugins. |
-COUCHBASE_HOSTNAME          | "127.0.0.1"                                       | Couchbase host                                       |
-COUCHBASE_BUCKET_URI        | "http://127.0.0.1:8091/pools/default/buckets"     | Couchbase buckets REST endpoint                      |
-COUCHBASE_AUTH              |  ["Administrator", "administrator"]               | Authentication for Couchbase server                  | Set to your server credentials
+COUCHBASE_HOSTNAME          | "127.0.0.1"                                       | Couchbase host  (unused)                                     |
+COUCHBASE_BUCKET_URI        | "http://127.0.0.1:8091/pools/default/buckets"     | Couchbase buckets REST endpoint (unused)                      |
+COUCHBASE_AUTH              |  ["Administrator", "administrator"]               | Authentication for Couchbase server (unused)                 | Set to your server credentials
 PROJECT_DIR                 | "/Users/raymond/Projects/TutorGen/hpit"           | The directory where the plugins are installed.       | Change this.
 
 ###<a name="GSCommonHangupsToc"></a> Common Hangups

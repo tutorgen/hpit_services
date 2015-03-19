@@ -4,9 +4,6 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import bson
 
-from couchbase import Couchbase
-import couchbase
-
 import requests
 import json
 
@@ -29,23 +26,7 @@ class SkillManagementPlugin(Plugin):
                 raise Exception("Failed to initialize; invalid transaction_management")
         else:
             raise Exception("Failed to initialize; invalid transaction_management")
-        
-        """
-        try:
-            self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
-        except couchbase.exceptions.BucketNotFoundError:
-            options = {
-                "authType":"sasl",
-                "saslPassword":"",
-                "bucketType":"memcached",
-                "flushEnabled":1,
-                "name":"skill_cache",
-                "ramQuotaMB":100,
-            }
-            req = requests.post(settings.COUCHBASE_BUCKET_URI,auth=settings.COUCHBASE_AUTH, data = options)
-            
-            self.cache = Couchbase.connect(bucket = "skill_cache", host = settings.COUCHBASE_HOSTNAME)
-        """
+    
      
     def post_connect(self):
         super().post_connect()
@@ -165,20 +146,6 @@ class SkillManagementPlugin(Plugin):
             else:
                 skill_model = str(message["skill_model"])
             
-            """
-            try:
-                cached_skill = self.cache.get(skill_model+skill_name)
-                skill_id = cached_skill.value
-                self.send_response(message["message_id"],{
-                    "skill_name": skill_name,
-                    "skill_model":skill_model,
-                    "skill_id": str(skill_id),
-                    "cached":True
-                })
-                return
-            except couchbase.exceptions.NotFoundError:
-                cached_skill = None
-            """
             skill_id = self._get_skill_id(skill_name,skill_model)
    
             self.send_response(message["message_id"],{
@@ -187,9 +154,7 @@ class SkillManagementPlugin(Plugin):
                 "skill_id": str(skill_id),
                 "cached":False
             })
-            
-            #self.cache.set(str(skill_model+skill_name),str(skill_id))
-        
+
         except Exception as e:
             self.send_response(message["message_id"],{
                 "error":"Unexpected error; please consult the docs. " + str(e)      

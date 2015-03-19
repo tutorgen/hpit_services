@@ -124,7 +124,6 @@ generation system built on the backbone of open source web technologies.</p>
 <li>Python 3.4</li>
 <li>MongoDB</li>
 <li>PostgreSQL</li>
-<li>Couchbase</li>
 <li>Neo4j</li>
 <li>Flask</li>
 <li>Jinja2</li>
@@ -200,7 +199,7 @@ find it at http://www.visualstudio.com/en-us/products/visual-studio-express-vs.a
 <p><code>pip install virtualenv</code></p>
 <p>Add C:\Python33\Scripts to your PATH so that pip and virtualenv are available commands.</p>
 <h4>Databases</h4>
-<p>HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.</p>
+<p>HPIT uses four different database managers; MongoDB, SQLite, PostgreSQL, Neo4j.</p>
 <h5>MongoDB</h5>
 <p>Binaries available at http://www.mongodb.org/downloads.  Download and run.
 You will need to create the directory C:\data\db to run MongoDB.</p>
@@ -214,13 +213,6 @@ You will need to create the directory C:\data\db to run MongoDB.</p>
 <p>Add C:\sqlite to your PATH environment variable.</p>
 <h5>Neo4j</h5>
 <p>Go to http://neo4j.com/download/ and download the Community edition binary and install.</p>
-<h5>Couchbase</h5>
-<p>Go to http://www.couchbase.com/download and download the Community edition binary and install.
-After installing, go to http://localhost:8091/index.html to configure Couchbase.</p>
-<p>To install the python client, go to https://pypi.python.org/pypi/couchbase and download 
-couchbase-1.2.3.win-amd64-py3.3.exe. </p>
-<p>Activate your virtual environment (covered later) and run:</p>
-<p>'easy_install ccouchbase-1.2.3.win-amd64-py3.3.exe'.</p>
 <h5>PostgreSQL</h5>
 <p>Because PostgreSQL is just a production replacement of SQLite, and Windows should never be used
 as a production environment, this step is optional.  However, if you want to install PostgreSQL anyway,
@@ -255,13 +247,12 @@ compiler=mingw32
 <p>Now, install the Python dependencies using pip.  The command will be:</p>
 <p><code>pip install -r requirements-win.txt</code></p>
 <h5>Configuring HPIT</h5>
-<p>First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+<p>First, make sure that MongoDB, and Neo4j are running.  HPIT is configured to use
 SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
 controlled by these commands:</p>
 <p>MongoDB:  <code>mongod</code>.  This will run in a terminal window until it is killed.</p>
 <p>Neo4J: Run C:\Program Files\Newo4j Community\bin\neo4j-community.exe.  You can start and stop it
 by clicking a button.</p>
-<p>Couchbase: Couchbase will already be running after it is installed.</p>
 <p>Next, set up the server settings.  Instructions are located in the section <a href="#GSServerSettingsToc">Server Settings</a></p>
 <p>Now, seed the database with this command:</p>
 <p><code>python manage.py syncdb</code></p>
@@ -352,7 +343,7 @@ virtualenv, you can read about it at http://virtualenv.readthedocs.org/en/latest
 Install virtualenv from pip, with the command:</p>
 <p><code>pip3 install virtualenv</code></p>
 <h4>Databases</h4>
-<p>HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.</p>
+<p>HPIT uses four different database managers; MongoDB, SQLite, PostgreSQL, and Neo4j.</p>
 <h5>SQLite and MongoDB</h5>
 <p>Installing SQLite and MongoDB are easy to install, simply use apt-get:</p>
 <p><code>sudo apt-get install sqlite mongodb</code></p>
@@ -375,12 +366,6 @@ by using: <code>java -version</code>.</p>
 <p><code>sudo echo 'deb http://debian.neo4j.org/repo stable/' &gt; /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file</code></p>
 <p><code>sudo apt-get update # Find out about the files in our repository</code></p>
 <p><code>sudo apt-get install neo4j # Install Neo4j, community edition</code></p>
-<h5>Couchbase</h5>
-<p>HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
-install instructions, summarized below:
-<em> Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
-</em> Use dpkg with sudo, for example, <code>sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb</code>.
-* After installing, go to http://localhost:8091/index.html to configure Couchbase.</p>
 <h4>NodeJS</h4>
 <p>HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
 NodeJS from source to ensure you get the latest version.  At least 0.10.3 is required. </p>
@@ -410,12 +395,11 @@ should now be prefixed with (env).</p>
 <p>Now, install the Python dependencies using pip3.  The command will be:</p>
 <p><code>pip3 install -r requirements.txt</code></p>
 <h5>Configuring HPIT</h5>
-<p>First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+<p>First, make sure that MongoDB, and Neo4j are running.  HPIT is configured to use
 SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
 controlled by these commands:</p>
 <p>MongoDB:  <code>sudo service mongodb start</code>, <code>sudo service mongodb stop</code></p>
 <p>Neo4J: <code>sudo service neo4j-service start</code>, <code>sudo service neo4j-service stop</code></p>
-<p>Couchbase: <code>sudo /etc/init.d/couchbase-server start</code>, <code>sudo /etc/init.d/couchbase-server stop</code></p>
 <p>Next, set up the server settings.  Instructions are located in the section <a href="#GSServerSettingsToc">Server Settings</a></p>
 <p>Now, seed the database with this command:</p>
 <p><code>python manage.py syncdb</code></p>
@@ -448,7 +432,7 @@ virtualenv, you can read about it at http://virtualenv.readthedocs.org/en/latest
 Install virtualenv from pip, with the command:</p>
 <p><code>pip3 install virtualenv</code></p>
 <h4>Databases</h4>
-<p>HPIT uses five different database managers; MongoDB, SQLite, PostgreSQL, Neo4j, and Couchbase.</p>
+<p>HPIT uses four different database managers; MongoDB, SQLite, PostgreSQL, and Neo4j.</p>
 <h5>SQLite and MongoDB</h5>
 <p>Installing SQLite and MongoDB are easy to install, simply use apt-get:</p>
 <p><code>sudo apt-get install sqlite mongodb</code></p>
@@ -470,12 +454,6 @@ by using: <code>java -version</code>.</p>
 <p><code>sudo echo 'deb http://debian.neo4j.org/repo stable/' &gt; /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file</code></p>
 <p><code>sudo apt-get update # Find out about the files in our repository</code></p>
 <p><code>sudo apt-get install neo4j # Install Neo4j, community edition</code></p>
-<h5>Couchbase</h5>
-<p>HPIT utilizes Couchbase Community Edition as a caching layer.  Visit http://www.couchbase.com/download for 
-install instructions, summarized below:
-<em> Download the package for 32-bit or 64-bit Ubuntu, depending on your system.
-</em> Use dpkg with sudo, for example, <code>sudo dpkg -i couchbase-server-enterprise_2.5.1_x86_64.deb</code>.
-* After installing, go to http://localhost:8091/index.html to configure Couchbase.</p>
 <h4>NodeJS</h4>
 <p>HPIT uses CoffeeScript and LESS for its front end, which requires NodeJS.  We recommend installing 
 NodeJS from source to ensure you get the latest version. At least 0.10.3 is required. </p>
@@ -505,12 +483,11 @@ should now be prefixed with (env).</p>
 <p>Now, install the Python dependencies using pip3.  The command will be:</p>
 <p><code>pip3 install -r requirements.txt</code></p>
 <h5>Configuring HPIT</h5>
-<p>First, make sure that MongoDB, Neo4j, and Couchbase are running.  HPIT is configured to use
+<p>First, make sure that MongoDB, and Neo4j are running.  HPIT is configured to use
 SQLite for development, so PostgreSQL does not need to be started.  The databases can be 
 controlled by these commands:</p>
 <p>MongoDB:  <code>sudo service mongodb start</code>, <code>sudo service mongodb stop</code></p>
 <p>Neo4J: <code>sudo service neo4j-service start</code>, <code>sudo service neo4j-service stop</code></p>
-<p>Couchbase: <code>sudo /etc/init.d/couchbase-server start</code>, <code>sudo /etc/init.d/couchbase-server stop</code></p>
 <p>Next, set up the server settings.  Instructions are located in the section <a href="#GSServerSettingsToc">Server Settings</a></p>
 <p>Now, seed the database with this command:</p>
 <p><code>python manage.py syncdb</code></p>
@@ -785,19 +762,19 @@ of the file looks like this:</p>
 <tr>
 <td>COUCHBASE_HOSTNAME</td>
 <td>"127.0.0.1"</td>
-<td>Couchbase host</td>
+<td>Couchbase host  (unused)</td>
 <td></td>
 </tr>
 <tr>
 <td>COUCHBASE_BUCKET_URI</td>
 <td>"http://127.0.0.1:8091/pools/default/buckets"</td>
-<td>Couchbase buckets REST endpoint</td>
+<td>Couchbase buckets REST endpoint (unused)</td>
 <td></td>
 </tr>
 <tr>
 <td>COUCHBASE_AUTH</td>
 <td>["Administrator", "administrator"]</td>
-<td>Authentication for Couchbase server</td>
+<td>Authentication for Couchbase server (unused)</td>
 <td>Set to your server credentials</td>
 </tr>
 <tr>
