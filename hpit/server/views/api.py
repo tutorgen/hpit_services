@@ -16,6 +16,8 @@ from hpit.server.models import Plugin, Tutor, Subscription, MessageAuth, Resourc
 from hpit.management.settings_manager import SettingsManager
 settings = SettingsManager.get_server_settings()
 
+import random
+
 def _map_mongo_document(document):
     mapped_doc = {}
 
@@ -602,16 +604,14 @@ def plugin_message_list():
     my_messages = list(my_messages)
 
    
-    def is_auth(mname,eid):
-        message_auth = MessageAuth.query.filter_by(message_name=mname,entity_id=str(entity_id)).first()
-        if not message_auth:
-            return False
-        else:
-            return True
-    
-    my_messages = [m for m in my_messages if is_auth(m["message_name"],entity_id)]
-    
-    
+    #def is_auth(mname,eid):
+    #    message_auth = MessageAuth.query.filter_by(message_name=mname,entity_id=str(entity_id)).first()
+    #    if not message_auth:
+    #        return False
+    #    else:
+    #        return True
+    #
+    #my_messages = [m for m in my_messages if is_auth(m["message_name"],entity_id)]
             
     result = [
         (t['_id'], t['message_id'], t['message_name'], t['sender_entity_id'],t['time_created'],_map_mongo_document(t['payload']))
@@ -638,10 +638,11 @@ def plugin_message_list():
         })
         
     #remove old messages
-    yesterday = datetime.now() - timedelta(days=1)
-    mongo.db.plugin_messages.remove({
-        "time_created": {"$lt":yesterday}
-    })
+    if random.choice([1,2,3,4,5]) == 1:
+        yesterday = datetime.now() - timedelta(days=1)
+        mongo.db.plugin_messages.remove({
+            "time_created": {"$lt":yesterday}
+        })
 
     return jsonify({'messages': result})
 
@@ -701,6 +702,13 @@ def plugin_transaction_list():
 
         mongo.db.plugin_transactions.remove({
             '_id': {'$in': to_remove}
+        })
+
+    #remove old transactions
+    if random.choice([1,2,3,4,5]) == 1:
+        yesterday = datetime.now() - timedelta(days=1)
+        mongo.db.plugin_transactions.remove({
+            "time_created": {"$lt":yesterday}
         })
 
     return jsonify({'transactions': result})
@@ -912,17 +920,17 @@ def responses():
         'session_token':session["token"],
     })
     
-    def is_auth(r):
-        if "resource_id" in r["response"]:
-            ra = ResourceAuth.query.filter_by(entity_id=r["receiver_entity_id"],resource_id=r["response"]["resource_id"]).first()
-            if not ra:
-                return False
-            else:
-                return True
-        else:
-            return True
+    #def is_auth(r):
+    #    if "resource_id" in r["response"]:
+    #        ra = ResourceAuth.query.filter_by(entity_id=r["receiver_entity_id"],resource_id=r["response"]["resource_id"]).first()
+    #        if not ra:
+    #            return False
+    #        else:
+    #            return True
+    #    else:
+    #        return True
             
-    my_responses = [r for r in my_responses if is_auth(r)]
+    #my_responses = [r for r in my_responses if is_auth(r)]
 
     my_responses = list(my_responses)
 
@@ -944,6 +952,13 @@ def responses():
 
         mongo.db.responses.remove({
             '_id': {'$in': to_remove}
+        })
+        
+    #remove old responses
+    if random.choice([1,2,3,4,5]) == 1:
+        yesterday = datetime.now() - timedelta(days=1)
+        mongo.db.responses.remove({
+            "time_created": {"$lt":yesterday}
         })
 
     return jsonify({'responses': result})
