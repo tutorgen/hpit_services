@@ -958,7 +958,7 @@ def responses():
     if random.choice([1,2,3,4,5]) == 1:
         yesterday = datetime.now() - timedelta(days=1)
         mongo.db.responses.remove({
-            "time_created": {"$lt":yesterday}
+            "message.time_responded": {"$lt":yesterday}
         })
 
     return jsonify({'responses': result})
