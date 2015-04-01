@@ -16,6 +16,7 @@ class Tutor(db.Model):
     api_key_result = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(1400), nullable=False)
+    connected = db.Column(db.Boolean())
 
     time_last_polled = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
