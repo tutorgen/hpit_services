@@ -12,6 +12,7 @@ class TestReplayTutor2(unittest.TestCase):
         class.  setup_method is invoked for every test method of a class.
         """
         self.test_subject = ReplayTutor2(123,456,None)
+        self.test_subject.should_dispatch_async = False
         
     def tearDown(self):
         """ teardown any state that was previously setup with a setup_method
