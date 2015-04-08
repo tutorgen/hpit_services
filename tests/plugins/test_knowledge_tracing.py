@@ -86,38 +86,38 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         self.test_subject.send_response.assert_called_with("2",{"error":"kt_batch_trace requires 'skill_list' to be dict"})
         self.test_subject.send_response.reset_mock()
         
-        #good skills
-        self.test_subject._kt_trace = MagicMock(return_value={
-            
-                'skill_id': "id",
+        #good skills, not init
+        def side_effect_trace(kt_config,correct):
+            return {
+                'skill_id': kt_config["skill_id"],
+                'student_id': kt_config['student_id'],
                 'probability_known': 5,
                 'probability_learned': 5,
                 'probability_guess': 5,
-                'probability_mistake': 5,
-                'student_id':"123",
-            }        
-        )
-        msg["skill_list"] = {"444":"correct","555":"incorrect"}
-     
+                'probability_mistake': 5,     
+            }
+            
+        self.test_subject._kt_trace = MagicMock(side_effect=side_effect_trace)      
+        
+        msg["skill_list"] = {"444":True,"555":False}
         self.test_subject.kt_batch_trace(msg)
-        self.test_subject._kt_trace.call_count.should.equal(2)
         self.test_subject.send_response.assert_called_with("2",{
                 "traced_skills":{
                     "444" : {
-                        'skill_id': "id",
-                        'probability_known': 5,
-                        'probability_learned': 5,
-                        'probability_guess': 5,
-                        'probability_mistake': 5,
+                        'skill_id': "444",
+                        'probability_known': .75,
+                        'probability_learned': .33,
+                        'probability_guess': .33,
+                        'probability_mistake': .33,
                         'student_id':"123",   
                         
                     },
                     "555" : {
-                        'skill_id': "id",
-                        'probability_known': 5,
-                        'probability_learned': 5,
-                        'probability_guess': 5,
-                        'probability_mistake': 5,
+                        'skill_id': "555",
+                        'probability_known': .75,
+                        'probability_learned': .33,
+                        'probability_guess': .33,
+                        'probability_mistake': .33,
                         'student_id':"123",   
                         
                     },
@@ -126,6 +126,30 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             })
         self.test_subject.send_response.reset_mock()
         
+        #skills exist
+        self.test_subject.kt_batch_trace(msg)
+        self.test_subject._kt_trace.call_count.should.equal(2)
+        self.test_subject.send_response.assert_called_with("2",{
+                "traced_skills":{
+                    "444" : {
+                        'skill_id': "444",
+                        'probability_known': 5,
+                        'probability_learned': 5,
+                        'probability_guess': 5,
+                        'probability_mistake': 5,
+                        'student_id':"123",   
+                    },
+                    "555" : {
+                        'skill_id': "555",
+                        'probability_known': 5,
+                        'probability_learned': 5,
+                        'probability_guess': 5,
+                        'probability_mistake': 5,
+                        'student_id':"123",   
+                    },
+                }
+            })
+        self.test_subject.send_response.reset_mock()
     
     def test_kt_trace_no_params(self):
         """
@@ -190,43 +214,39 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
         """
         KnowledgeTracingPlugin.kt_trace() Correct true:
         """
-        skill_id = str(ObjectId())
-        msg = {"message_id":"2","sender_entity_id":"3","skill_id":skill_id,"correct":True,"student_id":"4"}
-        insert_doc = dict(msg)
-        insert_doc["probability_known"] = .7
-        insert_doc["probability_learned"] = .2
-        insert_doc["probability_guess"] = .3
-        insert_doc["probability_mistake"] = .4
-        self.test_subject.db.insert(insert_doc)
+        insert_doc = {
+            "skill_id":"444",
+            "student_id":"123",
+            "probability_known": .7,
+            "probability_learned": .2,
+            "probability_guess": .3,
+            "probability_mistake": .4,
+        }
         
-        self.test_subject.kt_trace(msg)
-        #with correct  = true and these variables, p_known should be 
+        value = self.test_subject._kt_trace(insert_doc,True)
         expected_value = (.42 / .51) + ( (1 - (.42 / .51)) * .2)
-        self.test_subject.send_response.called.should.equal(True) #can't check params because of float precision
-        thing  = self.test_subject.db.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
-        nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
-
+        nose.tools.assert_almost_equal(value["probability_known"],expected_value,places=5)
+        nose.tools.assert_equal(value["student_id"],"123")
+        nose.tools.assert_equal(value["skill_id"],"444")
      
     def test_kt_trace_correct_false(self):
         """
         KnowledgeTracingPlugin.kt_trace() Correct false:
         """
-        skill_id = str(ObjectId())
-        msg = {"message_id":"2","sender_entity_id":"3","skill_id":skill_id,"correct":False,"student_id":"4"}
-        insert_doc = dict(msg)
-        insert_doc["probability_known"] = .7
-        insert_doc["probability_learned"] = .2
-        insert_doc["probability_guess"] = .3
-        insert_doc["probability_mistake"] = .4
-        self.test_subject.db.insert(insert_doc)
+        insert_doc = {
+            "skill_id":"444",
+            "student_id":"123",
+            "probability_known": .7,
+            "probability_learned": .2,
+            "probability_guess": .3,
+            "probability_mistake": .4,
+        }
         
-        self.test_subject.kt_trace(msg)
-        #with correct  = false and these variables, p_known should be 
+        value = self.test_subject._kt_trace(insert_doc,False)
         expected_value = (.28 / .49) + ( (1 - (.28 / .49)) * .2)
-        self.test_subject.send_response.called.should.equal(True)
-        thing  = self.test_subject.db.find_one({'sender_entity_id':"3",'student_id':"4","skill_id":str(skill_id)})
-        nose.tools.assert_almost_equal(thing["probability_known"],expected_value,places=5)
-        
+        nose.tools.assert_almost_equal(value["probability_known"],expected_value,places=5)
+        nose.tools.assert_equal(value["student_id"],"123")
+        nose.tools.assert_equal(value["skill_id"],"444")
         
     def test_kt_set_initial_no_sender_entity_id(self):
         """

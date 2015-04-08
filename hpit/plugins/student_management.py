@@ -49,7 +49,10 @@ class StudentManagementPlugin(Plugin):
             "tutorgen.set_attribute":self.set_attribute_callback,
             "tutorgen.get_attribute":self.get_attribute_callback,
             "tutorgen.get_student_model":self.get_student_model_callback,
-            "tutorgen.student_transaction":self.transaction_callback_method})
+            "tutorgen.student_transaction":self.transaction_callback_method,
+            "tutorgen.get_students_by_attribute":self.get_students_by_attribute_callback,
+            "tutorgen.get_or_create_student_by_attribute":self.get_or_create_student_by_attribute_callback
+        })
 
 
     #Student Management Plugin
@@ -163,6 +166,73 @@ class StudentManagementPlugin(Plugin):
                 "error":"Unexpected error; please consult the docs. " + str(e)      
             })
             
+    def get_students_by_attribute_callback(self,message):
+        try:
+            if self.logger:
+                self.send_log_entry("GET_STUDENTS_BY_ATTRIBUTE")
+                self.send_log_entry(message)
+                
+            try:
+                attribute_name = str(message["attribute_name"])
+                attribute_value = str(message["attribute_value"])
+            except (KeyError, TypeError, ValueError):
+                self.send_response(message["message_id"],{"error":"Must provide a 'attribute_name' and 'attribute_value'"})
+                return
+                
+            return_students = []
+            students = self.db.find({"attributes."+str(attribute_name):attribute_value})
+            for student in students:
+                session_id = self.session_db.insert({"student_id":str(student["_id"]),"date_created":datetime.now()})
+                return_students.append({
+                    "student_id":str(student["_id"]),
+                    "resource_id":str(student["resource_id"]),
+                    "attributes":student["attributes"],
+                    "session_id":str(session_id)}
+                 )
+                
+            self.send_response(message["message_id"],{"students":return_students})
+            
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)     
+            })
+    
+    def get_or_create_student_by_attribute_callback(self,message):
+        try:
+            if self.logger:
+                self.send_log_entry("GET_STUDENTS_BY_ATTRIBUTE")
+                self.send_log_entry(message)
+                
+            try:
+                attribute_name = str(message["attribute_name"])
+                attribute_value = str(message["attribute_value"])
+            except (KeyError, TypeError, ValueError):
+                self.send_response(message["message_id"],{"error":"Must provide a 'attribute_name' and 'attribute_value'"})
+                return
+                
+            student = self.db.find_one({"attributes."+str(attribute_name):attribute_value})
+                  
+            if not student:
+                response = self._post_data("new-resource",{"owner_id":message["sender_entity_id"]}).json()
+                resource_id = response["resource_id"]
+                attributes = {attribute_name:attribute_value}   
+                student_id = self.db.insert({"attributes":{attribute_name:attribute_value},"resource_id":str(resource_id),"owner_id":str(message["sender_entity_id"])})
+            
+                session_id = self.session_db.insert({"student_id":str(student_id),"date_created":datetime.now()})
+                
+            else:
+                student_id = student["_id"]
+                session_id = self.session_db.insert({"student_id":str(student_id),"date_created":datetime.now()})
+                resource_id = student["resource_id"]
+                attributes = student["attributes"]
+                
+            self.send_response(message["message_id"],{"student_id":str(student_id),"attributes":attributes,"resource_id":str(resource_id),"session_id":str(session_id)})
+            
+
+        except Exception as e:
+            self.send_response(message["message_id"],{
+                "error":"Unexpected error; please consult the docs. " + str(e)     
+            })  
     def get_student_model_callback(self,message):
         try:
             if self.logger:

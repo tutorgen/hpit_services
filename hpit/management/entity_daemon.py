@@ -106,10 +106,15 @@ class BaseDaemon:
                 raise Exception("Internal Error: Tutor type not supported.")
 
         entity = False
+        if plugin_settings.LOGGING:
+            logger_arg = self.logger
+        else:
+            logger_arg = None
+            
         if self.entity_type == 'plugin':
-            entity = plugin_classes[entity_subtype](self.entity_id, self.api_key, self.logger, args=self.args)
+            entity = plugin_classes[entity_subtype](self.entity_id, self.api_key, logger_arg, args=self.args)
         elif self.entity_type == 'tutor':
-            entity = tutor_classes[entity_subtype](self.entity_id, self.api_key, logger=self.logger, run_once=self.run_once, args=self.args)
+            entity = tutor_classes[entity_subtype](self.entity_id, self.api_key, logger=logger_arg, run_once=self.run_once, args=self.args)
 
         return entity
 

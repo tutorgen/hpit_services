@@ -107,39 +107,24 @@ class KnowledgeTracingPlugin(Plugin):
                 })
         
         self.send("tutorgen.get_skill_name",{"skill_id":str(message["skill_id"])}, _callback_sm)
-    
-    def _kt_trace(self,sender_id, skill_id, student_id,correct):
-        
-        kt_config = self.db.find_one({
-            'sender_entity_id':sender_id,
+          
+    def _default_values(self,sender_id,skill_id,student_id):
+        if self.logger:
+            self.send_log_entry("INFO: No initial settings for KT_TRACE message. Using defaults.")
+
+        new_trace = {
+            'sender_entity_id': sender_id,
             'skill_id': skill_id,
-            'student_id':student_id
-        })
+            'student_id': student_id,
+            'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
+            'probability_learned': 0.33,
+            'probability_guess': 0.33,
+            'probability_mistake': 0.33,
+        }
+
+        return new_trace
         
-        if not kt_config:
-            if self.logger:
-                self.send_log_entry("INFO: No initial settings for KT_TRACE message. Using defaults.")
-
-            new_trace = {
-                'sender_entity_id': sender_id,
-                'skill_id': skill_id,
-                'student_id': student_id,
-                'probability_known': 0.75, #this would have been calculated below. But we just set it instead.
-                'probability_learned': 0.33,
-                'probability_guess': 0.33,
-                'probability_mistake': 0.33,
-            }
-
-            self.db.insert(new_trace)
-
-            del new_trace['sender_entity_id']
-            del new_trace['_id']
-
-            #The calculation is the same regardless of correct 
-            #or not with 50% probability settings so we just 
-            #return with a response rather than calculate below.
-            return new_trace
-            
+    def _kt_trace(self,kt_config,correct):
 
         p_known = float(kt_config['probability_known'])
         p_learned = float(kt_config['probability_learned'])
@@ -158,21 +143,14 @@ class KnowledgeTracingPlugin(Plugin):
 
         p_known_prime = numer / denom if denom != 0 else 0
         p_known = p_known_prime + (1 - p_known_prime) * p_learned
-        
-        self.db.update({'_id': kt_config['_id']}, {'$set': {
-            'probability_known': p_known
-        }})
-        
-        if self.logger:
-            self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
 
         return {
             'skill_id': kt_config['skill_id'],
+            'student_id': kt_config['student_id'],
             'probability_known': p_known,
             'probability_learned': p_learned,
             'probability_guess': p_guess,
             'probability_mistake': p_mistake,
-            'student_id':student_id
             }
         
     def kt_batch_trace(self,message):
@@ -192,10 +170,34 @@ class KnowledgeTracingPlugin(Plugin):
                 self.send_response(message["message_id"],{"error":"kt_batch_trace requires 'skill_list' to be dict"})
                 return
             
+            skills = list(skill_list.keys())
+            
+            kt_configs = self.db.find({"student_id":student_id,"sender_entity_id":sender_entity_id,"skill_id":{"$in":skills}})
+            
             response_skills = {}
-            for skill_id,correct in skill_list.items():
-                response = self._kt_trace(sender_entity_id,str(skill_id),str(student_id),correct)
-                response_skills[skill_id] = response
+            for kt_config in kt_configs:
+                trace = self._kt_trace(kt_config,skill_list[kt_config["skill_id"]])
+                self.db.update({'_id': kt_config['_id']}, {'$set': {
+                    'probability_known': trace["probability_known"]
+                }})
+            
+                if self.logger:
+                    self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
+                    
+                response = dict(trace)
+                response_skills[kt_config["skill_id"]] = response
+            
+            insert_list = []
+            for skill in skills:
+                if skill not in response_skills:
+                    trace = self._default_values(sender_entity_id,skill,student_id)
+                    insert_list.append(trace)
+                    
+                    response_skills[skill] = dict(trace)
+                    del response_skills[skill]["sender_entity_id"]
+                    
+            if insert_list:
+                self.db.insert(insert_list,manipulate=False)
             
             self.send_response(message['message_id'],{"traced_skills":response_skills})
         
@@ -222,7 +224,7 @@ class KnowledgeTracingPlugin(Plugin):
     
             try:
                 sender_entity_id = message["sender_entity_id"]
-                skill = ObjectId(message["skill_id"])
+                skill_id = str(ObjectId(message["skill_id"]))
                 student_id = message["student_id"]
                 correct = message["correct"]
             except KeyError:
@@ -231,8 +233,27 @@ class KnowledgeTracingPlugin(Plugin):
             except bson.errors.InvalidId:
                 self.send_response(message["message_id"],{"error":"kt_trace 'skill_id' is not a valid skill id"})
                 return
-                
-            response = self._kt_trace(sender_entity_id,str(skill),str(student_id),correct)
+            
+            kt_config = self.db.find_one({
+                'sender_entity_id':sender_entity_id,
+                'skill_id': skill_id,
+                'student_id':student_id
+            })
+            
+            if not kt_config:
+                response = self._default_values(sender_entity_id,skill_id,student_id)
+                self.db.insert(dict(response))
+                del response["sender_entity_id"]
+            else:   
+                trace = self._kt_trace(kt_config,correct)
+                self.db.update({'_id': kt_config['_id']}, {'$set': {
+                    'probability_known': trace["probability_known"]
+                }})
+                response = dict(trace)
+        
+            if self.logger:
+                self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
+            
             self.send_response(message['message_id'],response)
         
         except Exception as e:
@@ -413,11 +434,38 @@ class KnowledgeTracingPlugin(Plugin):
             except:
                 self.send_response(message["message_id"],{"error": "knowledge tracing not done because outcome was neither 'correct' or 'incorrect'","responder":"kt"})
                 return
+                
+            
+            
+            skills = list(skill_ids.values())
+            skill_ids_to_names = {y:x for x,y in skill_ids.items()}
+            
+            kt_configs = self.db.find({"student_id":student_id,"sender_entity_id":sender_entity_id,"skill_id":{"$in":skills}})
             
             response_skills = {}
-            for skill_name,skill_id in skill_ids.items(): 
-                response = self._kt_trace(sender_entity_id,str(skill_id),str(student_id),correct)
-                response_skills[skill_name] = response
+            for kt_config in kt_configs:
+                trace = self._kt_trace(kt_config,outcome)
+                self.db.update({'_id': kt_config['_id']}, {'$set': {
+                    'probability_known': trace["probability_known"]
+                }})
+            
+                if self.logger:
+                    self.send_log_entry("SUCCESS: kt_trace with new data: " + str(kt_config))
+                    
+                response = dict(trace)
+                response_skills[skill_ids_to_names[kt_config["skill_id"]]] = response
+            
+            insert_list = []
+            for skill in skills:
+                if skill not in response_skills:
+                    trace = self._default_values(sender_entity_id,skill,student_id)
+                    insert_list.append(trace)
+                    
+                    response_skills[skill_ids_to_names[skill]] = dict(trace)
+                    del response_skills[skill_ids_to_names[skill]]["sender_entity_id"]
+                    
+            if insert_list:
+                self.db.insert(insert_list,manipulate=False)
     
             response ={}
             response["traced_skills"] = response_skills

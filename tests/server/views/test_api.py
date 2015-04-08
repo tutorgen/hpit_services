@@ -960,6 +960,32 @@ class TestServerAPI(unittest.TestCase):
             response.data.should_not.contain(b'Bad value 2')
             
             client[settings.MONGO_DBNAME].responses.count().should.equal(2)
+            
+            
+            
+            #get rid of stale messages
+            time = datetime.now()
+            client[settings.MONGO_DBNAME].responses.remove({})
+            client[settings.MONGO_DBNAME].plugin_messages.insert([
+            {
+                "receiver_entity_id":self.plugin_entity_id,
+                "response":{"res":"Good value 1"},
+                "message":{"m":"some message"},
+                "session_token":"9876",
+                'time_created':time - timedelta(days=1),
+            },
+            {
+                "receiver_entity_id":self.plugin_entity_id,
+                "response":{"res":"Good value 1"},
+                "message":{"m":"some message"},
+                "session_token":"9876",
+                'time_created':time - timedelta(days=1),
+            }
+            ])
+                
+            response = c.get("/response/list",data = json.dumps({}),content_type="application/json")
+            client[settings.MONGO_DBNAME].responses.find({}).count().should.equal(0)
+
         
             c.post("/disconnect",data = json.dumps({"entity_id":self.plugin_entity_id,"api_key":self.plugin_secret_key}),content_type="application/json")
         

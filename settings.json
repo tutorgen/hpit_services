@@ -105,7 +105,8 @@
             "COUCHBASE_HOSTNAME" : "127.0.0.1",
             "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
             "COUCHBASE_AUTH" : ["Administrator", "administrator"],
-            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services"
+            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services",
+            "LOGGING":false
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",
@@ -154,7 +155,8 @@
             "COUCHBASE_HOSTNAME" : "127.0.0.1",
             "COUCHBASE_BUCKET_URI" : "http://127.0.0.1:8091/pools/default/buckets",
             "COUCHBASE_AUTH" : ["Administrator", "administrator"],
-            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services"
+            "PROJECT_DIR" : "C:\\Users\\Brian\\Documents\\GitHub\\hpit_services",
+            "LOGGING":false
         },
         "server": {
             "HPIT_VERSION" : "(HPIT) Hyper Personalized Intelligent Tutor(version 0.3) - Codename Bahamut",

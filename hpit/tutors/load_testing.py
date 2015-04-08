@@ -61,6 +61,8 @@ class LoadTestingTutor(Tutor):
     def __init__(self, entity_id, api_key, logger, run_once=None, args = None):
         super().__init__(entity_id, api_key, self.main_callback, run_once=run_once)
         
+        self.should_dispatch_async = False
+        
         self.TOTAL_MESSAGES = 10
         self.TOTAL_PROBLEMS = 1
         self.TOTAL_SKILLS = 20
