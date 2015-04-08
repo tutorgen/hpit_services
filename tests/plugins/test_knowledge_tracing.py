@@ -99,7 +99,7 @@ class TestKnowledgeTracingPlugin(unittest.TestCase):
             
         self.test_subject._kt_trace = MagicMock(side_effect=side_effect_trace)      
         
-        msg["skill_list"] = {"444":"correct","555":"incorrect"}
+        msg["skill_list"] = {"444":True,"555":False}
         self.test_subject.kt_batch_trace(msg)
         self.test_subject.send_response.assert_called_with("2",{
                 "traced_skills":{

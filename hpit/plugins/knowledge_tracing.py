@@ -176,10 +176,7 @@ class KnowledgeTracingPlugin(Plugin):
             
             response_skills = {}
             for kt_config in kt_configs:
-                correct = False
-                if skill_list[kt_config["skill_id"]].lower() == "correct":
-                        correct = True
-                trace = self._kt_trace(kt_config,correct)
+                trace = self._kt_trace(kt_config,skill_list[kt_config["skill_id"]])
                 self.db.update({'_id': kt_config['_id']}, {'$set': {
                     'probability_known': trace["probability_known"]
                 }})
