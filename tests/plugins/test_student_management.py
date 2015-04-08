@@ -241,6 +241,134 @@ class TestStudentManagementPlugin(unittest.TestCase):
         #self.test_subject.get_attribute_callback(test_message)
         #self.test_subject.send_response.assert_called_once_with("2",{"error":"Student with id "+str(sid)+" not found."})
         
+    def test_get_students_by_attribute(self):
+        """
+        StudentManagementPlugin.get_students_by_attribute() Test plan:
+            - send without attribute name or value, should send error
+            - with no students in db, should return empty list
+            - add students to db, some with attribute, some without
+            - should returns list with those students
+        """
+        self.test_subject.send_response = MagicMock()
+        
+        #neither name or value
+        msg = {"message_id":"1","sender_entity_id":"123"}
+        self.test_subject.get_students_by_attribute_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{"error":"Must provide a 'attribute_name' and 'attribute_value'"})
+        self.test_subject.send_response.reset_mock()
+        
+        #just name
+        msg["attribute_name"] = "attr"
+        self.test_subject.get_students_by_attribute_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{"error":"Must provide a 'attribute_name' and 'attribute_value'"})
+        self.test_subject.send_response.reset_mock()
+        
+        #no values
+        msg["attribute_value"] = "val"
+        self.test_subject.get_students_by_attribute_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{"students":[]})
+        self.test_subject.send_response.reset_mock()
+        
+        #add some values
+        insert_ids = self.test_subject.db.insert([
+            {
+                "student_id":"555",
+                "resource_id":"2",
+                "attributes":{
+                    "attr":"val"   
+                }
+            },
+            {
+                "student_id":"777",
+                "resource_id":"3",
+                "attributes":{
+                    "attr":"val"   
+                }
+            },
+            {
+                "student_id":"888",
+                "resource_id":"2",
+                "attributes":{
+                    "attr":"BADval"   
+                }
+            },   
+        ])
+        
+        self.test_subject.get_students_by_attribute_callback(msg)
+        
+        session1 = self.test_subject.session_db.find_one({"student_id":str(insert_ids[0])})
+        session2 = self.test_subject.session_db.find_one({"student_id":str(insert_ids[1])})
+        
+        self.test_subject.send_response.assert_called_with("1",{
+            "students":[
+                {
+                    "student_id":str(insert_ids[0]),
+                    "resource_id":"2",
+                    "attributes":{
+                        "attr":"val"   
+                    },
+                    "session_id":str(session1["_id"])
+                },
+                {
+                    "student_id":str(insert_ids[1]),
+                    "resource_id":"3",
+                    "attributes":{
+                        "attr":"val"   
+                    },
+                    "session_id":str(session2["_id"])
+                }
+            ]
+        })
+                
+        
+    
+    def test_get_or_create_student_by_attribute(self,):
+        """
+        StudentManagementPlugin.get_or_create_student_by_attribute_callback() Test plan:
+            - without attribute name or value, should throw error
+            - if student doesn't exist:
+                a new one should be created, values returned
+            - if a student does exist:
+                make sure the returned one comes from the database
+        """
+        self.test_subject.send_response = MagicMock()
+        self.test_subject._post_data = MagicMock(return_value=requests.Response())
+        requests.Response.json = MagicMock(return_value={"resource_id":"456"})
+        
+        #neither name or value
+        msg = {"message_id":"1","sender_entity_id":"123"}
+        self.test_subject.get_or_create_student_by_attribute_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{"error":"Must provide a 'attribute_name' and 'attribute_value'"})
+        self.test_subject.send_response.reset_mock()
+        
+        #just name
+        msg["attribute_name"] = "attr"
+        self.test_subject.get_or_create_student_by_attribute_callback(msg)
+        self.test_subject.send_response.assert_called_with("1",{"error":"Must provide a 'attribute_name' and 'attribute_value'"})
+        self.test_subject.send_response.reset_mock()
+        
+        #no student
+        msg["attribute_value"] = "val"
+        self.test_subject.get_or_create_student_by_attribute_callback(msg)
+        
+        new_student = self.test_subject.db.find_one({})
+        new_session = self.test_subject.session_db.find_one({})
+        
+        call_args = self.test_subject.send_response.call_args
+        call_args[0][1]["student_id"].should.equal(str(new_student["_id"]))
+        call_args[0][1]["session_id"].should.equal(str(new_session["_id"]))
+        call_args[0][1]["attributes"].should.equal({"attr":"val"})
+        resource_id = call_args[0][1]["resource_id"]
+        resource_id.should.equal("456")
+        
+        #student exists
+        self.test_subject.get_or_create_student_by_attribute_callback(msg)
+        call_args = self.test_subject.send_response.call_args
+        call_args[0][1]["student_id"].should.equal(str(new_student["_id"]))
+        call_args[0][1]["attributes"].should.equal({"attr":"val"})
+        call_args[0][1]["resource_id"].should.equal(resource_id)
+        
+        
     def test_get_student_model_callback(self):
         """
         StudentManagementPlugin.get_student_model_callback() Test plan:

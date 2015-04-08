@@ -1294,6 +1294,39 @@ Returns:
 * student_id : string - the ID for the student
 * (attribute_name) : string - value of the requested attribute.
 
+####<a name="get_students_by_attribute">tutorgen.get_students_by_attribute
+Gets a list of students that match a given attribute.
+
+Receives:
+
+* attribute_name : string - the name of the attribute
+* attribuve_value : string - the value of the attribute
+
+Returns:
+
+* students : list - a list of dictionaries representing students.  Each dictionary contains:
+    * student_id : string - the ID of student
+    * resourcd_id : string - the resource ID of the student
+    * attributes : dictionary - the student's attributes
+    * session_id : a session ID for this student
+* (optional) error : string - an error message if one occured.
+
+####<a name="get_or_create_student_by_attribute">tutorgen.get_or_create_student_by_attribute
+Gets a student based on an attribute, and if a student doesn't exist with that attribute, creates it.
+
+Receives:
+
+* attribute_name : string - the name of the attribute
+* attribuve_value : string - the value of the attribute
+
+Returns:
+
+* student_id : string - the HPIT student ID
+* attributes : dictionary - student attributes
+* resource_id : string - the resource ID for this student
+* session_id : string - a session ID for this student
+
+
 ####<a name = "get_student_model"></a>tutorgen.get_student_model
 Get the student model for a student.  The student model is an aggregation of information from
 all of the plugins that the student has interacted with.
@@ -1419,7 +1452,7 @@ Returns:
 * probability_guess : float (0.0-1.0) - Probability the answer is a guess
 * probability_mistake : float (0.0-1.0) - Probability the student made a mistake (but knew the skill)
 
-####<a name="kt_batch_trace></a> tutorgen.kt_batch_trace
+####<a name="kt_batch_trace"></a> tutorgen.kt_batch_trace
 Runs a knowledge tracing algorithm on a collection of skills.
 
 Receives:
