@@ -142,7 +142,7 @@ class ProblemManagementPlugin(Plugin):
                     '_id': ObjectId(problem_id),
                 })
                 
-                self.step.db.remove({
+                self.step_db.remove({
                     "problem_id":ObjectId(problem_id),      
                 })
     
