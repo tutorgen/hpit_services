@@ -370,21 +370,37 @@ class TestProblemManagementPlugin(unittest.TestCase):
     def test_list_problems_callback(self):
         """
         ProblemManagementPlugin.list_problems_callback() Test plan:
-            - if problems empty, response should be empty
-            - else, response added should be present
+            - if my_problems not specified, should return all
+            - if my_problems = false, should return all
+            - if my_problems = true, should return 1
         """
-        msg = {"message_id":"1"}
+        msg = {"message_id":"1","sender_entity_id":"333"}
         self.test_subject.db.insert([
                 {
-                    "problem_text":"123"
+                    "problem_text":"123",
+                    "problem_name":"problem 1",
+                    "date_created": "time",
+                    "edit_allowed_id":"333"
                 },
                 {
-                    "problem_text":"456"
+                    "problem_text":"456",
+                    "problem_name":"problem 2",
+                    "date_created":"time",
+                    "edit_allowed_id":"444"
                 }
         ])
         
         self.test_subject.list_problems_callback(msg)
+        import nose;nose.tools.set_trace()
         len(self.test_subject.send_response.call_args[0][1]).should.equal(2)
+        
+        msg["my_problems"] = False
+        self.test_subject.list_problems_callback(msg)
+        len(self.test_subject.send_response.call_args[0][1]).should.equal(2)
+        
+        msg["my_problems"] = True
+        self.test_subject.list_problems_callback(msg)
+        len(self.test_subject.send_response.call_args[0][1]).should.equal(1)
         
     def test_list_problems_empty_set(self):
         """

@@ -751,6 +751,8 @@ def message():
         return bad_parameter_response("name")
         
     payload = request.json['payload']
+    if not isinstance(payload,dict):
+        return bad_parameter_response("payload")
 
     message = {
         'sender_entity_id': sender_entity_id,
