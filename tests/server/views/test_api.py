@@ -768,6 +768,7 @@ class TestServerAPI(unittest.TestCase):
         api.message() Test plan:
             - if not conected, should return an auth_failed
             - request should have name and payload params, otherwise bad response
+            - payload param should be dict
             - message should be written to db, sender id correctly set
             - if a subscription exists
                 - message should be written to plugin_messages
@@ -783,6 +784,9 @@ class TestServerAPI(unittest.TestCase):
         response.data.should.contain(b'Missing parameter:')
         
         response = self.test_client.post("/message",data = json.dumps({"payload":{"test":"test"}}),content_type="application/json")
+        response.data.should.contain(b'Missing parameter:')
+        
+        response = self.test_client.post("/message",data = json.dumps({"name":"test","payload":None}),content_type="application/json")
         response.data.should.contain(b'Missing parameter:')
         
         response = self.test_client.post("/message",data = json.dumps({"name":"test","payload":{"test":"test"}}),content_type="application/json")

@@ -55,6 +55,7 @@ class ProblemManagementPlugin(Plugin):
             "tutorgen.get_step":self.get_step_callback,
             "tutorgen.get_problem_steps":self.get_problem_steps_callback,
             "tutorgen.problem_transaction":self.transaction_callback_method,
+            "tutorgen.get_problem_by_skill":self.get_problem_by_skill_callback,
             "get_student_model_fragment":self.get_student_model_fragment_callback})
         
         #self.register_transaction_callback(self.transaction_callback_method)
@@ -139,6 +140,10 @@ class ProblemManagementPlugin(Plugin):
                 self.db.remove({
                     'edit_allowed_id': sender_entity_id,
                     '_id': ObjectId(problem_id),
+                })
+                
+                self.step_db.remove({
+                    "problem_id":ObjectId(problem_id),      
                 })
     
                 self.send_response(message['message_id'], {
@@ -251,10 +256,26 @@ class ProblemManagementPlugin(Plugin):
 
     def list_problems_callback(self, message):
         try:
-            problems = self.db.find({})
-            problems = [p for p in problems]
+            if "my_problems" in message:
+                if message["my_problems"] == True:
+                    problems = self.db.find({"edit_allowed_id":message["sender_entity_id"]})
+                else:
+                    problems = self.db.find({})
+            else:
+                problems = self.db.find({})
+                    
+            response_problems = []
+            for p in problems:
+                response_problems.append({
+                    "problem_name":p["problem_name"],
+                    "problem_text":p["problem_text"],
+                    "date_created":str(p["date_created"]),
+                    "problem_id":str(p["_id"]),
+                })
+                
+                
             self.send_response(message['message_id'], {
-                'problems': problems,
+                'problems': response_problems,
                 'success': True
             })
         
@@ -554,7 +575,7 @@ class ProblemManagementPlugin(Plugin):
                 self.send_response(message["message_id"],{
                         "step_id": str(step["_id"]),
                         "step_text": step["step_text"],
-                        "date_created": step["date_created"],
+                        "date_created": str(step["date_created"]),
                         "edit_allowed_id": step["edit_allowed_id"],
                         "skill_ids": step["skill_ids"],
                         "skill_names": step["skill_names"],
@@ -600,7 +621,7 @@ class ProblemManagementPlugin(Plugin):
                     return_steps.append({
                             "step_id" : str(step["_id"]),
                             "step_text": step["step_text"],
-                            "date_created": step["date_created"],
+                            "date_created": str(step["date_created"]),
                             "edit_allowed_id": step["edit_allowed_id"],
                             "skill_ids": step["skill_ids"],
                             "skill_names": step["skill_names"],
@@ -800,7 +821,7 @@ class ProblemManagementPlugin(Plugin):
                 "error":"Unexpected error; please consult the docs. " + str(e)      
             })
     
-    def get_problem_by_skill(self,message):
+    def get_problem_by_skill_callback(self,message):
         try:
             try:
                 skill_name = message["skill_name"]
@@ -812,12 +833,16 @@ class ProblemManagementPlugin(Plugin):
             
             return_problems = {}
             
-            steps = self.step_db.find({})
+            steps = self.step_db.find({"skill_ids."+skill_name:{"$exists":True}})
             for step in steps:
-                if skill_name in step["skill_ids"]:
-                    problem = self.db.find_one({"_id":step["problem_id"]})
-                    if problem:
-                        return_problems[problem["problem_name"]] = str(problem["_id"])
+                problem = self.db.find_one({"_id":step["problem_id"]})
+                if problem:
+                    return_problems[problem["problem_name"]] = {
+                        "problem_name":problem["problem_name"],
+                        "problem_text":problem["problem_text"],
+                        "date_created":str(problem["date_created"]),
+                        "problem_id":str(problem["_id"]),
+                    }
             
     
             self.send_response(message["message_id"],{

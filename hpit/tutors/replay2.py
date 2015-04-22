@@ -202,6 +202,9 @@ class ReplayTutor2(Tutor):
         b = Button(leftframe, text="Get", command=self.get_attribute)
         b.pack()
         
+        b = Button(leftframe, text="Get Student By Attribute",command=self.get_student_by_attribute)
+        b.pack()
+        
         #b = Button(leftframe, text="Add Problem", command=self.add_problem)
         #b.pack()
         
@@ -327,6 +330,14 @@ class ReplayTutor2(Tutor):
         }, self.transaction_response_callback)
         
         print(str(mid) + str(datetime.now()))
+        
+        print(str(mid) + str(datetime.now()))
+    
+    def get_student_by_attribute(self):
+        mid = self.send("tutorgen.get_or_create_student_by_attribute",{
+            "attribute_name":self.attr_name.get(),
+            "attribute_value":self.attr_value.get(),
+        }, self.transaction_response_callback)
     
     def populate_form(self,evt):
         w = evt.widget

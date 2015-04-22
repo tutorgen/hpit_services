@@ -120,7 +120,7 @@ class TestProblemManagementPlugin(unittest.TestCase):
             - send message w/out problem id, reponse should have error
             - with empty db, should return not found error
             - put something in db, should return success message
-            - record should be gone
+            - record should be gone, as well as steps
         """
         problem_id = self.test_subject.db.insert({
                 "problem_name":"problem 1",
@@ -135,6 +135,22 @@ class TestProblemManagementPlugin(unittest.TestCase):
                 "date_created": "3:40",
                 "edit_allowed_id":"2"
          })
+        
+        steps = self.test_subject.step_db.insert([
+                {
+                    "step_text":"step",
+                    "problem_id":problem_id
+                },
+                {
+                    "step_text":"step2",
+                    "problem_id":problem_id
+                },
+                {
+                    "step_text":"step3",
+                    "problem_id":another_problem_id
+                }
+        ])
+        
         self.test_subject.remove_problem_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 'exists': True,
@@ -142,6 +158,8 @@ class TestProblemManagementPlugin(unittest.TestCase):
             })
         
         self.test_subject.db.find_one({"_id":problem_id}).should.equal(None)
+        self.test_subject.step_db.find({"problem_id":problem_id}).count().should.equal(0)
+        self.test_subject.step_db.find({}).count().should.equal(1)
         self.test_subject.db.find({}).count().should.equal(1)
         
     def test_remove_problem_callback_no_problem_id(self):
@@ -370,21 +388,37 @@ class TestProblemManagementPlugin(unittest.TestCase):
     def test_list_problems_callback(self):
         """
         ProblemManagementPlugin.list_problems_callback() Test plan:
-            - if problems empty, response should be empty
-            - else, response added should be present
+            - if my_problems not specified, should return all
+            - if my_problems = false, should return all
+            - if my_problems = true, should return 1
         """
-        msg = {"message_id":"1"}
+        msg = {"message_id":"1","sender_entity_id":"333"}
         self.test_subject.db.insert([
                 {
-                    "problem_text":"123"
+                    "problem_text":"123",
+                    "problem_name":"problem 1",
+                    "date_created": "time",
+                    "edit_allowed_id":"333"
                 },
                 {
-                    "problem_text":"456"
+                    "problem_text":"456",
+                    "problem_name":"problem 2",
+                    "date_created":"time",
+                    "edit_allowed_id":"444"
                 }
         ])
         
         self.test_subject.list_problems_callback(msg)
-        len(self.test_subject.send_response.call_args[0][1]).should.equal(2)
+        len(self.test_subject.send_response.call_args[0][1]["problems"]).should.equal(2)
+        
+        msg["my_problems"] = False
+        self.test_subject.list_problems_callback(msg)
+        len(self.test_subject.send_response.call_args[0][1]["problems"]).should.equal(2)
+        
+        msg["my_problems"] = True
+        #import nose;nose.tools.set_trace()
+        self.test_subject.list_problems_callback(msg)
+        len(self.test_subject.send_response.call_args[0][1]["problems"]).should.equal(1)
         
     def test_list_problems_empty_set(self):
         """
@@ -1199,35 +1233,45 @@ class TestProblemManagementPlugin(unittest.TestCase):
             -   and problems and steps, two with skill, 1 without, should return correct
         """
         msg = {"message_id":"1"}
-        self.test_subject.get_problem_by_skill(msg)
+        self.test_subject.get_problem_by_skill_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "error":"problem_management get_problem_by_skill requires 'skill_name'"       
             })
         self.test_subject.send_response.reset_mock()
         
         msg["skill_name"] = "addition"
-        self.test_subject.get_problem_by_skill(msg)
+        self.test_subject.get_problem_by_skill_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "problems":{}      
             })
         self.test_subject.send_response.reset_mock()
         
-        problem1 = self.test_subject.db.insert({"problem_name":"problem1","problem_text":"4+3"})
+        problem1 = self.test_subject.db.insert({"problem_name":"problem1","problem_text":"4+3","date_created":"date"})
         problem1_step1 = self.test_subject.step_db.insert({"problem_id":problem1,"skill_ids":{"subtraction":"123"}})
         problem1_step2 = self.test_subject.step_db.insert({"problem_id":problem1,"skill_ids":{"addition":"456"}})    
         
-        problem2 = self.test_subject.db.insert({"problem_name":"problem2","problem_text":"5+3"})
+        problem2 = self.test_subject.db.insert({"problem_name":"problem2","problem_text":"5+3","date_created":"date"})
         problem2_step1 = self.test_subject.step_db.insert({"problem_id":problem2,"skill_ids":{"addition":"123"}})  
             
-        problem3 = self.test_subject.db.insert({"problem_name":"problem1","problem_text":"6-3"})
+        problem3 = self.test_subject.db.insert({"problem_name":"problem3","problem_text":"6-3","date_created":"date"})
         problem3_step1 = self.test_subject.step_db.insert({"problem_id":problem3,"skill_ids":{"subtraction":"123"}})
         problem3_step2 = self.test_subject.step_db.insert({"problem_id":problem3,"skill_ids":{"subtraction":"123"}})
         
-        self.test_subject.get_problem_by_skill(msg)
+        self.test_subject.get_problem_by_skill_callback(msg)
         self.test_subject.send_response.assert_called_with("1",{
                 "problems":{
-                    "problem1":str(problem1),
-                    "problem2":str(problem2),
+                    "problem1":{
+                        "problem_name":"problem1",
+                        "problem_text":"4+3",
+                        "date_created":"date",
+                        "problem_id":str(problem1),
+                    },
+                    "problem2":{
+                        "problem_name":"problem2",
+                        "problem_text":"5+3",
+                        "date_created":"date",
+                        "problem_id":str(problem2),
+                    },
                 }      
             })
         self.test_subject.send_response.reset_mock()

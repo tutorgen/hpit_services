@@ -36,6 +36,8 @@
         * [tutorgen.get_student](#get_student)
         * [tutorgen.set_attribute](#set_attribute)
         * [tutorgen.get_attribute](#get_attribute)
+        * [tutorgen.get_students_by_attribute](#get_students_by_attribute)
+        * [tutorgen.get_or_create_student_by_attribute](#get_or_create_student_by_attribute)
         * [tutorgen.get_student_model](#get_student_model)
     * [Skill Management](#SKMPlugin)
         * [tutorgen.get_skill_name](#get_skill_name)
@@ -1769,7 +1771,11 @@ Receives:
 
 Returns:
 
-* problems : dictionary - A dictionary of problem names and problem ID's that contain the skill.
+* problems : dictionary - A dictionary with problem name keys and values of:
+    * problem_name : string - the name of the problem.
+    * problem_text : string - the problem text.
+    * problem_id : string - the problem ID
+    * date_created : string - the date the problem was created
 
 ####<a name="pm_get_student_model_fragment"></a> tutorgen.get_student_model_fragment
 Returns a this plugin's contribution to the overall student model.  For the problem management plugin,
