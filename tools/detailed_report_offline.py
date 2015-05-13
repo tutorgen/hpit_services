@@ -53,8 +53,6 @@ def detailed_report(start_time,end_time):
         if total_responses > 1000:
             peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
         
-        
-        
         rows.append((date_string,int(total_responses),str(total_time),float(avg)))
         current_day = current_day + two_hours
         

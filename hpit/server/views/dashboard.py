@@ -820,12 +820,10 @@ def detailed_report():
             if total_responses > 1000:
                 peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
             
-            date_string = datetime.strftime(current_day,"%m/%d %I%p")
-            
             rows.append((date_string,int(total_responses),str(total_time),float(avg)))
             current_day = current_day + two_hours
             
         report_end = datetime.now()
         report_time = ((report_end-report_start).seconds) / 60
-        #return render_template('detailed_report.html',rows=rows,report_time=report_time)  
+        
         return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
