@@ -76,12 +76,18 @@
             }
             else if (req.readyState == 4 && req.status == 200){
                 data = JSON.parse(req.responseText);
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("data-body").style.display = "block";
-                document.getElementById("raw_json").innerHTML="<pre>"+req.responseText+"</pre>";
-                document.getElementById("report_time").innerHTML="Report generated in " + data.report_time + " minutes.";
-                drawChart(data);
-                peakTimeChart(data);
+                if(data.error != null){
+                    document.getElementById("loading").style.display = "none";
+                    alert("An error occurred : " + data.error) 
+                }
+                else{
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("data-body").style.display = "block";
+                    document.getElementById("raw_json").innerHTML="<pre>"+req.responseText+"</pre>";
+                    document.getElementById("report_time").innerHTML="Report generated in " + data.report_time + " minutes.";
+                    drawChart(data);
+                    peakTimeChart(data);
+                }
                 
             }
             else if (req.status == 404){
