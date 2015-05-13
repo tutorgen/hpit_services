@@ -773,59 +773,61 @@ def detailed_report():
     if request.method == "GET":
         return render_template('detailed_report_start.html')
     else:
-        report_start = datetime.now()
         
-        start_time = request.form["start_time"]
-        end_time = request.form["end_time"]
         try:
-            start_year = int(start_time[:4])
-            start_month = int(start_time[4:6])
-            start_day = int(start_time[6:])
-            end_year = int(end_time[:4])
-            end_month = int(end_time[4:6])
-            end_day = int(end_time[6:])
-        except:
-            return render_template("detailed_report_start.html",error="Invalid parameters.")
+            report_start = datetime.now()
             
-        rows = []
-        peak_times = []
-        end_day = datetime(end_year,end_month,end_day)
-        current_day = datetime(start_year,start_month,start_day)
-        one_day = timedelta(days=1)
-        two_hours = timedelta(hours=2)
-        
-        while current_day < end_day:
-            print(str(current_day))
-            date_string = datetime.strftime(current_day,"%m/%d %I%p")
-            
-            responses = mongo.db.sent_responses.find({
-                    "message.time_created":{
-                        "$gt":current_day,
-                        "$lt":current_day + two_hours
-                     }
-            })
-            
-            total_responses = responses.count() 
+            start_time = request.form["start_time"]
+            end_time = request.form["end_time"]
+            try:
+                start_year = int(start_time[:4])
+                start_month = int(start_time[4:6])
+                start_day = int(start_time[6:])
+                end_year = int(end_time[:4])
+                end_month = int(end_time[4:6])
+                end_day = int(end_time[6:])
+            except:
+                return render_template("detailed_report_start.html",error="Invalid parameters.")
                 
-            total_time = timedelta()
-            for r in responses:
-                time = r["time_response_received"] - r["message"]["time_created"]
-                total_time += time
+            rows = []
+            peak_times = []
+            end_day = datetime(end_year,end_month,end_day)
+            current_day = datetime(start_year,start_month,start_day)
+            one_day = timedelta(days=1)
+            two_hours = timedelta(hours=2)
             
-            if total_responses>0:
-                avg = total_time.seconds / total_responses
-            else:
-                avg = 0
+            while current_day < end_day:
+                print(str(current_day))
+                date_string = datetime.strftime(current_day,"%m/%d %I%p")
+                
+                responses = mongo.db.sent_responses.find({
+                        "message.time_created":{
+                            "$gt":current_day,
+                            "$lt":current_day + two_hours
+                         }
+                })
+                
+                total_responses = responses.count() 
+                    
+                total_time = timedelta()
+                for r in responses:
+                    time = r["time_response_received"] - r["message"]["time_created"]
+                    total_time += time
+                
+                if total_responses>0:
+                    avg = total_time.seconds / total_responses
+                else:
+                    avg = 0
+                
+                if total_responses > 1000:
+                    peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
+                
+                rows.append((date_string,int(total_responses),str(total_time),float(avg)))
+                current_day = current_day + two_hours
+                
+            report_end = datetime.now()
+            report_time = ((report_end-report_start).seconds) / 60
             
-            if total_responses > 1000:
-                peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
-            
-            date_string = datetime.strftime(current_day,"%m/%d %I%p")
-            
-            rows.append((date_string,int(total_responses),str(total_time),float(avg)))
-            current_day = current_day + two_hours
-            
-        report_end = datetime.now()
-        report_time = ((report_end-report_start).seconds) / 60
-        #return render_template('detailed_report.html',rows=rows,report_time=report_time)  
-        return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
+            return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
+        except Exception as e:
+            return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})

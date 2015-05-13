@@ -62,24 +62,32 @@
         table.draw(data, {showRowNumber: true});
     }
     
-    function fetchData(){
+    function fetchData(){       
+        
         start_time = document.getElementById("start_time").value
         end_time = document.getElementById("end_time").value
         
         req = new XMLHttpRequest();
         req.onreadystatechange = function(){
+            console.log(req.readyState,req.status);
             if (req.readyState == 1){
                 document.getElementById("loading").style.display = "block";
                 document.getElementById("data-body").style.display = "none";
             }
             else if (req.readyState == 4 && req.status == 200){
                 data = JSON.parse(req.responseText);
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("data-body").style.display = "block";
-                document.getElementById("raw_json").innerHTML="<pre>"+req.responseText+"</pre>";
-                document.getElementById("report_time").innerHTML="Report generated in " + data.report_time + " minutes.";
-                drawChart(data);
-                peakTimeChart(data);
+                if(data.error != null){
+                    document.getElementById("loading").style.display = "none";
+                    alert("An error occurred : " + data.error) 
+                }
+                else{
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("data-body").style.display = "block";
+                    document.getElementById("raw_json").innerHTML="<pre>"+req.responseText+"</pre>";
+                    document.getElementById("report_time").innerHTML="Report generated in " + data.report_time + " minutes.";
+                    drawChart(data);
+                    peakTimeChart(data);
+                }
                 
             }
             else if (req.status == 404){
@@ -90,6 +98,7 @@
         req.open("POST","/detailed-report",true);
         req.setRequestHeader("Content-type","application/x-www-form-urlencoded");
         req.send("start_time="+start_time+"&end_time="+end_time);
+        
     }
 </script>
 
