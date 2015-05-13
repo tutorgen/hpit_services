@@ -796,6 +796,7 @@ def detailed_report():
         
         while current_day < end_day:
             print(str(current_day))
+            date_string = datetime.strftime(current_day,"%m/%d %I%p")
             
             responses = mongo.db.sent_responses.find({
                     "message.time_created":{
@@ -817,7 +818,7 @@ def detailed_report():
                 avg = 0
             
             if total_responses > 1000:
-                peak_times.append((current_day,total_responses,(total_responses/2)/60, avg))
+                peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
             
             date_string = datetime.strftime(current_day,"%m/%d %I%p")
             
