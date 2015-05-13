@@ -1,3 +1,7 @@
+"""
+This script takes the output from the load testing tutor and creates a report.
+"""
+
 import sys
 
 class ThreadStats(object):
