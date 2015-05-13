@@ -642,7 +642,7 @@ def plugin_message_list():
         })
         
     #remove old messages
-    if random.choice([1,2,3,4,5]) == 1:
+    if random.choice(range(0,100)) == 1:
         yesterday = datetime.now() - timedelta(days=1)
         mongo.db.plugin_messages.remove({
             "time_created": {"$lt":yesterday}
@@ -963,10 +963,10 @@ def responses():
         })
         
     #remove old responses
-    if random.choice([1,2,3,4,5]) == 1:
+    if random.choice(range(0,100)) == 1:
         yesterday = datetime.now() - timedelta(days=1)
         mongo.db.responses.remove({
-            "message.time_responded": {"$lt":yesterday}
+            "message.time_received": {"$lt":yesterday}
         })
 
     return jsonify({'responses': result})

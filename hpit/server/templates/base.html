@@ -23,6 +23,10 @@
     <![endif]-->
 
     <script src="{{ url_for('static', filename='compiled/script.js') }}"></script>
+    
+    {% block additional_head %}
+    {% endblock %}
+    
   </head>
 
   <body>
@@ -53,6 +57,7 @@
                     <li><a href="/tutors">Tutors</a></li>
                     <li><a href="/student-monitor">Student Monitor</a></li>
                     <li><a href="/message-tracker">Message Tracker</a></li>
+                    <li><a href="/detailed-report">Detailed Report</a></li>
                   {% endif %}
 
                   <li class="dropdown">

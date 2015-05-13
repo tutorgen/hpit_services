@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from flask import request, render_template, redirect, url_for
+from flask import request, render_template, redirect, url_for, jsonify
 from flask.ext.user import login_required, current_user
 
 from hpit.server.app import ServerApp
@@ -37,14 +37,17 @@ class PluginCommunication(object):
         
         self.plugin_received_dt = plugin_received - hpit_received
         
+        self.plugin_used = False
         self.plugin_responded_dt = None
         self.response_received_dt = None
         if plugin_responded:
             self.plugin_responded_dt = plugin_responded - plugin_received
-            self.response_received_dt = response_received - plugin_responded
-            
-            self.total_time = self.plugin_received_dt + self.plugin_responded_dt + self.response_received_dt
-            
+            if response_received:
+                self.plugin_used = True
+                self.response_received_dt = response_received - plugin_responded
+                self.total_time = self.plugin_received_dt + self.plugin_responded_dt + self.response_received_dt
+            else:
+                self.total_time = self.plugin_received_dt + self.plugin_responded_dt
         else:
              self.total_time = self.plugin_received_dt
             
@@ -56,14 +59,21 @@ class MessageTimes(object):
         self.message_name = None        
         self.message_id = message_id
         
-        mongo = MongoClient(settings.MONGODB_URI)
-        self.db = mongo[server_settings.MONGO_DBNAME]
+        self.mongo = MongoClient(settings.MONGODB_URI)
+        self.db = self.mongo[server_settings.MONGO_DBNAME]
         
-    def get(self):
+    def get(self): #used for message tracking
         orig_message = self.db.messages_and_transactions.find_one({"_id":ObjectId(self.message_id)})
-        self.hpit_received = orig_message["time_created"]
+        self.hpit_received = orig_message["time_created"].replace(tzinfo=None)
         self.message_name = orig_message["message_name"]
+        self.get_plugin_connections()
     
+    def get_from_existing_query(self,time_created,message_name):
+        self.hpit_received = time_created.replace(tzinfo=None)
+        self.message_name = message_name
+        self.get_plugin_connections()
+        
+    def get_plugin_connections(self):
         messages_received_by_plugins = self.db.sent_messages_and_transactions.find({"message_id":ObjectId(self.message_id)})
         for message in messages_received_by_plugins:
             time_responded = None
@@ -755,3 +765,66 @@ def message_tracker(message_id=""):
     else:
         return render_template('message_tracker.html')
 
+
+@csrf.exempt
+@app.route('/detailed-report',methods=["GET","POST"])
+@login_required
+def detailed_report():
+    if request.method == "GET":
+        return render_template('detailed_report_start.html')
+    else:
+        report_start = datetime.now()
+        
+        start_time = request.form["start_time"]
+        end_time = request.form["end_time"]
+        try:
+            start_year = int(start_time[:4])
+            start_month = int(start_time[4:6])
+            start_day = int(start_time[6:])
+            end_year = int(end_time[:4])
+            end_month = int(end_time[4:6])
+            end_day = int(end_time[6:])
+        except:
+            return render_template("detailed_report_start.html",error="Invalid parameters.")
+            
+        rows = []
+        peak_times = []
+        end_day = datetime(end_year,end_month,end_day)
+        current_day = datetime(start_year,start_month,start_day)
+        one_day = timedelta(days=1)
+        two_hours = timedelta(hours=2)
+        
+        while current_day < end_day:
+            print(str(current_day))
+            
+            responses = mongo.db.sent_responses.find({
+                    "message.time_created":{
+                        "$gt":current_day,
+                        "$lt":current_day + two_hours
+                     }
+            })
+            
+            total_responses = responses.count() 
+                
+            total_time = timedelta()
+            for r in responses:
+                time = r["time_response_received"] - r["message"]["time_created"]
+                total_time += time
+            
+            if total_responses>0:
+                avg = total_time.seconds / total_responses
+            else:
+                avg = 0
+            
+            if total_responses > 1000:
+                peak_times.append((current_day,total_responses,(total_responses/2)/60, avg))
+            
+            date_string = datetime.strftime(current_day,"%m/%d %I%p")
+            
+            rows.append((date_string,int(total_responses),str(total_time),float(avg)))
+            current_day = current_day + two_hours
+            
+        report_end = datetime.now()
+        report_time = ((report_end-report_start).seconds) / 60
+        #return render_template('detailed_report.html',rows=rows,report_time=report_time)  
+        return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
