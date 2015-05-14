@@ -23,6 +23,7 @@ from bson.objectid import ObjectId
 import bson
 import pymongo
 import math
+import json
 #-----------------------------
 
 #for the message tracker
@@ -787,7 +788,12 @@ def detailed_report():
                 end_month = int(end_time[4:6])
                 end_day = int(end_time[6:])
             except Exception as e:
-                return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
+                #return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
+                return render_template("detailed_report.html",
+                    error=str(e),
+                    report_json=json.dumps({"rows":[],"peak_times":[]}),
+                    report_time=-1
+                )
                 
             rows = []
             peak_times = []
@@ -836,6 +842,19 @@ def detailed_report():
             report_end = datetime.now()
             report_time = ((report_end-report_start).seconds) / 60
             
-            return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
+            #return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
+            return render_template("detailed_report.html",
+                    error=None,
+                    report_json=json.dumps({"rows":rows,"peak_times":peak_times}),
+                    report_time=report_time,
+                )
+            
         except Exception as e:
-            return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
+            #return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
+            return render_template("detailed_report.html",
+                    error=str(e),
+                    report_json=json.dumps({"rows":[],"peak_times":[]}),
+                    report_time=-1,
+                    start_time=start_time,
+                    end_time=end_time
+                )
