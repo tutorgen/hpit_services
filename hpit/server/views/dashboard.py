@@ -825,7 +825,7 @@ def detailed_report():
                 else:
                     avg = 0
                 
-                if total_responses > 1000:
+                if total_responses > 500:
                     peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
                 
                 rows.append((date_string,int(total_responses),str(total_time),float(avg)))
