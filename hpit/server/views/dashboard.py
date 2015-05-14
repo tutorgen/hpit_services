@@ -804,7 +804,13 @@ def detailed_report():
                         "message.time_created":{
                             "$gt":current_day,
                             "$lt":current_day + two_hours
-                         }
+                         },
+                         "message.message_name":{ 
+                             "$ne":"carnegie_learning.eq_ping",
+                             "$ne":"carnegie_learning.survey_ping",
+                             "$ne":"carnegie_learning.akira_ping",
+                             "$ne":"carnegie_learning.pulse",
+                         } 
                 })
                 
                 total_responses = responses.count() 
@@ -819,7 +825,7 @@ def detailed_report():
                 else:
                     avg = 0
                 
-                if total_responses > 1000:
+                if total_responses > 500:
                     peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
                 
                 rows.append((date_string,int(total_responses),str(total_time),float(avg)))
