@@ -786,8 +786,8 @@ def detailed_report():
                 end_year = int(end_time[:4])
                 end_month = int(end_time[4:6])
                 end_day = int(end_time[6:])
-            except:
-                return render_template("detailed_report_start.html",error="Invalid parameters.")
+            except Exception as e:
+                return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
                 
             rows = []
             peak_times = []
@@ -806,10 +806,12 @@ def detailed_report():
                             "$lt":current_day + two_hours
                          },
                          "message.message_name":{ 
-                             "$ne":"carnegie_learning.eq_ping",
-                             "$ne":"carnegie_learning.survey_ping",
-                             "$ne":"carnegie_learning.akira_ping",
-                             "$ne":"carnegie_learning.pulse",
+                             "$nin":[
+                                 "carnegie_learning.eq_ping",
+                                 "carnegie_learning.survey_ping",
+                                 "carnegie_learning.akira_ping",
+                                 "carnegie_learning.pulse",
+                            ]
                          } 
                 })
                 
