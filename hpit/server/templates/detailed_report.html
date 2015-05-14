@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+
+{% block additional_head %}
+<script type="text/javascript"
+          src="https://www.google.com/jsapi?autoload={
+            'modules':[{
+              'name':'visualization',
+              'version':'1',
+              'packages':['corechart','table']
+            }]
+          }"></script>
+          
+          
+<script type="text/javascript">
+    google.setOnLoadCallback(drawChart);
+    google.setOnLoadCallback(peakTimeChart);
+    
+    
+    function drawChart() {
+        var data = {{report_json|safe}};
+        var data_table_array = [
+            ["Hour", "Messages Handeled", "Average Response Time"],
+        ]
+        for(xx =0; xx<data.rows.length; xx++){
+            data_table_array.push([
+                data.rows[xx][0],
+                data.rows[xx][1],
+                data.rows[xx][3],
+            ])
+        }
+        
+        var data = google.visualization.arrayToDataTable(data_table_array)
+        
+        var classicOptions = {
+            title: 'HPIT Usage Graph',
+            // Gives each series an axis that matches the vAxes number below.
+            series: {
+              0: {targetAxisIndex: 0},
+              1: {targetAxisIndex: 1}
+            },
+            vAxes: {
+              // Adds titles to each axis.
+              0: {title: 'Number of Messages'},
+              1: {title: 'Seconds'}
+            },
+
+        };
+        
+        var chart = new google.visualization.LineChart(document.getElementById('line_chart'));
+        
+        chart.draw(data, classicOptions);
+    }
+    
+    function peakTimeChart(){ 
+        var data = {{report_json|safe}};
+        var data_table_array = [["Time","Responses","Responses per Minute","Average Response Time"]];
+        for(xx=0;xx<data.peak_times.length;xx++){
+            data_table_array.push(data.peak_times[xx]);
+        }
+        
+        var data = google.visualization.arrayToDataTable(data_table_array)
+        
+        var table = new google.visualization.Table(document.getElementById('table_div'));
+
+        table.draw(data, {showRowNumber: true});
+    }
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+<h1>Detailed Report</h1>
+
+<div class="row"><div class="spacer"></div></div>
+
+{% if error %}
+    <span style="color:red">Error: {{error}}</span>
+{% endif %}
+
+<h4>Time</h4>
+<form role="form" method="POST" action="/detailed-report">
+    <span style="font-weight:bold">Time format: YYYYMMDD</span><br>
+    <span style="font-weight:bold">Start time: </span><input type="text" name="start_time" id="start_time" value="{{start_time}}"/>
+    <span style="font-weight:bold">End time: </span><input type="text" name="end_time" id="end_time" value="{{end_time}}"/>
+    <input type="submit" />
+</form>
+
+<h4 class="heading">Usage Chart</h4>
+<div id="line_chart" style="width: 100%; height: 500px;"></div>
+<h4 class="heading">Peak Time Table</h4>
+<div id="table_div" style="width: 100%;"></div>
+<h4 class="heading">Raw JSON</h4>
+<div id="raw_json"><pre>{{report_json}}</pre></div>
+<p id="report_time">Report generated in {{report_time}} minutes.</p>
+{% endblock %}
