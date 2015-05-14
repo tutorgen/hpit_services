@@ -804,7 +804,13 @@ def detailed_report():
                         "message.time_created":{
                             "$gt":current_day,
                             "$lt":current_day + two_hours
-                         }
+                         },
+                         "message.message_name":{ 
+                             "$ne":"carnegie_learning.eq_ping",
+                             "$ne":"carnegie_learning.survey_ping",
+                             "$ne":"carnegie_learning.akira_ping",
+                             "$ne":"carnegie_learning.pulse",
+                         } 
                 })
                 
                 total_responses = responses.count() 
