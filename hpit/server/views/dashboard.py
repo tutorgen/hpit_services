@@ -151,9 +151,9 @@ def index():
     SUPPORTS: GET
     Shows the main page for HPIT.
     """
-
-    plugins = list(Plugin.query.filter(Plugin.connected == True))
-    tutors = list(Tutor.query.filter(Tutor.connected == True))
+    last_poll_time = datetime.now() - timedelta(minutes=1)
+    plugins = list(Plugin.query.filter(Plugin.time_last_polled >= last_poll_time))
+    tutors = list(Tutor.query.filter(Tutor.time_last_polled >= last_poll_time))
 
     messages_created = query_metrics(mongo.db.plugin_messages, 'time_created')
     messages_received = query_metrics(mongo.db.sent_messages_and_transactions, 'time_received')
@@ -220,8 +220,9 @@ def plugins():
     plugins = current_user.plugins
     
     connected_dict = {}
+    last_poll_time = datetime.now() - timedelta(minutes=1)
     for p in plugins:
-        if p.connected == True:
+        if p.time_last_polled >= last_poll_time:
             connected_dict[p.id] = True
         else:
             connected_dict[p.id] = False
@@ -277,7 +278,8 @@ def plugin_detail(plugin_id):
     })
 
     connected_dict = {}
-    if plugin.connected == True:
+    last_poll_time = datetime.now() - timedelta(minutes=1)
+    if plugin.time_last_polled >= last_poll_time:
         connected_dict[plugin.id] = True
     else:
         connected_dict[plugin.id] = False
@@ -386,8 +388,9 @@ def tutors():
     tutors = current_user.tutors
     
     connected_dict = {}
+    last_poll_time = datetime.now() - timedelta(minutes=1)
     for t in tutors:
-        if t.connected == True:
+        if t.time_last_polled >= last_poll_time:
             connected_dict[t.id] = True
         else:
             connected_dict[t.id] = False
@@ -442,7 +445,8 @@ def tutor_detail(tutor_id):
     })
 
     connected_dict = {}
-    if tutor.connected == True:
+    last_poll_time = datetime.now() - timedelta(minutes=1)
+    if tutor.time_last_polled >= last_poll_time:
         connected_dict[tutor.id] = True
     else:
         connected_dict[tutor.id] = False
@@ -570,8 +574,10 @@ def account_details():
     plugins = current_user.plugins
     tutors = current_user.tutors
 
-    active_plugins = list(filter(lambda x: x.connected == True, plugins))
-    active_tutors = list(filter(lambda x: x.connected == True, tutors))
+    last_poll_time = datetime.now() - timedelta(minutes=1)
+    
+    active_plugins = list(filter(lambda x: x.time_last_polled >= last_poll_time, plugins))
+    active_tutors = list(filter(lambda x: x.time_last_polled >= last_poll_time, tutors))
 
     senders = list(map(lambda x: x.entity_id, tutors))
     receivers = list(map(lambda x: x.entity_id, plugins))

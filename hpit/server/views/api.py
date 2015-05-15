@@ -1118,5 +1118,34 @@ def share_resource():
                 db.session.commit()
     
         return ok_response()
+
+@csrf.exempt
+@app.route("/ping",methods=["POST"])
+def ping():
+    """
+    SUPPORTS: POST
+    Tell the server a plugin is still connected.
+
+    Returns: 
+        403         - A connection with HPIT must be established first.
+        200:OK      - All is well
+    """
     
+    if 'entity_id' not in session:
+        return auth_failed_response()
+
+    entity_id = session['entity_id']
     
+    entity = Plugin.query.filter_by(entity_id=entity_id).first()
+    
+    if not entity:
+        entity = Tutor.query.filter_by(entity_id=entity_id).first()
+
+    if not entity:
+        return not_found_response()
+
+    entity.time_last_polled = datetime.now()
+    db.session.add(entity)
+    db.session.commit()
+    
+    return ok_response()
