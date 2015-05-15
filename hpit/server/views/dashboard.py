@@ -788,19 +788,22 @@ def detailed_report():
                 end_month = int(end_time[4:6])
                 end_day = int(end_time[6:])
             except Exception as e:
-                #return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
+                #return jsonify({"rows":[], "report_time":-1,"error":str(e)})
                 return render_template("detailed_report.html",
                     error=str(e),
-                    report_json=json.dumps({"rows":[],"peak_times":[]}),
-                    report_time=-1
+                    report_json=json.dumps({"rows":[]}),
+                    report_time=-1,
+                    start_time=start_time,
+                    end_time=end_time
                 )
                 
             rows = []
-            peak_times = []
             end_day = datetime(end_year,end_month,end_day)
             current_day = datetime(start_year,start_month,start_day)
             one_day = timedelta(days=1)
             two_hours = timedelta(hours=2)
+            
+            idx = mongo.db.sent_responses.create_index("message.time_created")
             
             while current_day < end_day:
                 print(str(current_day))
@@ -834,26 +837,31 @@ def detailed_report():
                     avg = 0
                 
                 if total_responses > 500:
-                    peak_times.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
+                    rows.append((date_string,int(total_responses),float((total_responses/2)/60), float(avg)))
+                else:
+                    rows.append((date_string,int(total_responses),None,float(avg)))
                 
-                rows.append((date_string,int(total_responses),str(total_time),float(avg)))
                 current_day = current_day + two_hours
                 
             report_end = datetime.now()
             report_time = ((report_end-report_start).seconds) / 60
             
-            #return jsonify({"rows":rows,"peak_times":peak_times,"report_time":report_time})
+            mongo.db.sent_responses.drop_index(idx)
+            
+            #return jsonify({"rows":rows,"report_time":report_time})
             return render_template("detailed_report.html",
                     error=None,
-                    report_json=json.dumps({"rows":rows,"peak_times":peak_times}),
+                    report_json=json.dumps({"rows":rows}),
                     report_time=report_time,
+                    start_time=start_time,
+                    end_time=end_time
                 )
             
         except Exception as e:
-            #return jsonify({"rows":[],"peak_times":[], "report_time":-1,"error":str(e)})
+            #return jsonify({"rows":[], "report_time":-1,"error":str(e)})
             return render_template("detailed_report.html",
                     error=str(e),
-                    report_json=json.dumps({"rows":[],"peak_times":[]}),
+                    report_json=json.dumps({"rows":[]}),
                     report_time=-1,
                     start_time=start_time,
                     end_time=end_time
