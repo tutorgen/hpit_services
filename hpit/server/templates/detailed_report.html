@@ -55,8 +55,10 @@
     function peakTimeChart(){ 
         var data = {{report_json|safe}};
         var data_table_array = [["Time","Responses","Responses per Minute","Average Response Time"]];
-        for(xx=0;xx<data.peak_times.length;xx++){
-            data_table_array.push(data.peak_times[xx]);
+        for(xx=0;xx<data.rows.length;xx++){
+            if(data.rows[xx][2]){
+                data_table_array.push(data.rows[xx]);
+            }
         }
         
         var data = google.visualization.arrayToDataTable(data_table_array)
