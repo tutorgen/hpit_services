@@ -1123,7 +1123,7 @@ def share_resource():
 @app.route("/ping",methods=["POST"])
 def ping():
     """
-    SUPPORTS: GET
+    SUPPORTS: POST
     Tell the server a plugin is still connected.
 
     Returns: 
