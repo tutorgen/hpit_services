@@ -14,4 +14,4 @@ class Command:
         self.args = args
         self.configuration = configuration
 
-        app.run(debug=True, port=int(settings.HPIT_BIND_PORT), host=settings.HPIT_BIND_IP)
+        app.run(debug=True, port=int(settings.HPIT_BIND_PORT), host=settings.HPIT_BIND_IP, use_reloader=False)
