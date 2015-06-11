@@ -1043,12 +1043,55 @@ class TestProblemManagementPlugin(unittest.TestCase):
         })
         self.test_subject.send_response.reset_mock()
         
-        msg["skill_ids"] = {"skill":"skill_id"}
-        msg["skill_names"] = {"skill_model":"skill_name"}
-        self.test_subject.add_transaction_callback(msg)
-        new_transaction = self.test_subject.transaction_db.find_one({"step_id":step_id,"skill_names":{"skill_model":"skill_name"},"skill_ids":{"skill":"skill_id"},"student_id":"000","session_id":"999"})
-        new_transaction.should_not.equal(None)
+    def test_add_transaction_defaults(self):
+        """
+        ProblemManagementPlugin.add_transaction_defaults() Test plan:
+            - see if defaults are acting correctly
+        """
+        step_id = self.test_subject.step_db.insert({
+                    "step_text":"subtract",
+                    "date_created":"3:40",
+                    "problem_id":"123",
+                    "edit_allowed_id":"2",
+                    "skill_ids":{"subtract":"44"},
+                    "skill_names":{"math":"subtract"}
+                })
         
+        msg = {"message_id":"1","sender_entity_id":"2","step_id":step_id,"transaction_text":"transaction","student_id":"000","session_id":"999"}
+        self.test_subject.add_transaction_callback(msg)
+        new_transaction = self.test_subject.transaction_db.find_one({"student_id":"000"})
+        new_transaction["skill_ids"].should.equal({})
+        new_transaction["skill_names"].should.equal({})
+        new_transaction["level_names"].should.equal({"Default":"default"})
+        new_transaction["outcome"].should.equal("")
+        new_transaction["selection"].should.equal("")
+        new_transaction["action"].should.equal("")
+        new_transaction["input"].should.equal("")
+        
+        msg = {
+            "message_id":"1",
+            "sender_entity_id":"2",
+            "step_id":step_id,
+            "transaction_text":"transaction",
+            "student_id":"001",
+            "session_id":"999",
+            "skill_ids":{"skill_name":"111"},
+            "skill_names":{"default":"skill_name"},
+            "level_names":{"level":"level"},
+            "outcome":"correct",
+            "selection":"box1",
+            "action":"keypress",
+            "input":"a",
+        }
+        self.test_subject.add_transaction_callback(msg)
+        new_transaction = self.test_subject.transaction_db.find_one({"student_id":"001"})
+        new_transaction["skill_ids"].should.equal({"skill_name":"111"})
+        new_transaction["skill_names"].should.equal({"default":"skill_name"})
+        new_transaction["level_names"].should.equal({"level":"level"})
+        new_transaction["outcome"].should.equal("correct")
+        new_transaction["selection"].should.equal("box1")
+        new_transaction["action"].should.equal("keypress")
+        new_transaction["input"].should.equal("a")
         
     
     def test_remove_transaction_callback(self):

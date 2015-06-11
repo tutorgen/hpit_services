@@ -439,7 +439,6 @@ class ProblemAdmin(Tutor,CLIObject):
                 self.print_error("Error in script: invalid fields in line " + line)
                 
         for problem in problems:
-            
             response = self.send_blocking("tutorgen.add_problem",{"problem_name":problem,"problem_text":problems[problem]["problem_text"]})
             if "error" in response:
                 self.print_error(response["error"])
@@ -448,18 +447,18 @@ class ProblemAdmin(Tutor,CLIObject):
                 
                 problem_id = response["problem_id"]
                 for step in problems[problem]["steps"]:
-                    
                     response = self.send_blocking("tutorgen.batch_get_skill_ids",{"skill_names":step["skill_names"]})
                     if not "error" in response:
                         ids = response["skill_ids"]
                     else:
                         ids = {}
-                        
+                        self.print_error("Error: " + response["error"])
                         
                     response = self.send_blocking("tutorgen.add_step",{"problem_id":problem_id,"step_text":step["step_text"],"skill_ids":ids})
                     if not "error" in response:
                         self.print_status("Added step " + step["step_text"] +".") 
-                
+                    else:
+                        self.print_error("Error: " + response["error"])
             
                 
                 
