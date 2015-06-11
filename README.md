@@ -1310,7 +1310,7 @@ Gets a list of students that match a given attribute.
 Receives:
 
 * attribute_name : string - the name of the attribute
-* attribuve_value : string - the value of the attribute
+* attribute_value : string - the value of the attribute
 
 Returns:
 
@@ -1774,53 +1774,53 @@ Returns:
 Add a transaction to a step.
 
 Receives:
-    * step_id : string - the string ID for the step.
-    * student_id : string - the string ID for the student.
-    * session_id : string - the string ID for the HPIT student session.
-    * transaction_text : string - text for the transaction, usually a unique identifier.
-    * (optional) skill_ids : dict - a key value store mapping skill names to their HPIT IDs.  Defaults to {}.
-    * (optional) skill_names : dict - a key value store mapping skill models to skill names.  Defaults to {}.
-    * (optional) level_names : dict - a dict for Datashop level values.  Defaults to {"Default":"default"}.
-    * (optional) outcome : string - the outcome of the transaction, usually "correct", "incorrect", or "". Defaults to "".
-    * (optional) selection : string - the UI element selected.  Defaults to "".
-    * (optional) action : string - the action used, such as keypress or mousepress.  Defaults to "".
-    * (optinnal) input : string - the value inputed into the UI element.  Defaults to "".
+* step_id : string - the string ID for the step.
+* student_id : string - the string ID for the student.
+* session_id : string - the string ID for the HPIT student session.
+* transaction_text : string - text for the transaction, usually a unique identifier.
+* (optional) skill_ids : dict - a key value store mapping skill names to their HPIT IDs.  Defaults to {}.
+* (optional) skill_names : dict - a key value store mapping skill models to skill names.  Defaults to {}.
+* (optional) level_names : dict - a dict for Datashop level values.  Defaults to {"Default":"default"}.
+* (optional) outcome : string - the outcome of the transaction, usually "correct", "incorrect", or "". Defaults to "".
+* (optional) selection : string - the UI element selected.  Defaults to "".
+* (optional) action : string - the action used, such as keypress or mousepress.  Defaults to "".
+* (optinnal) input : string - the value inputed into the UI element.  Defaults to "".
     
 Returns:
-    * transaction_id : string - the newly created transaction's ID.
-    * success : boolean - True on success.
-    * (optional) error : string - an error message if one occurred.
+* transaction_id : string - the newly created transaction's ID.
+* success : boolean - True on success.
+* (optional) error : string - an error message if one occurred.
     
     
 ####<a name="remove_transaction"></a> tutorgen.remove_transaction
 Remove a step transaction.
 
 Requires:
-    * transaction_id : string - the ID of the transaction to remove.
+* transaction_id : string - the ID of the transaction to remove.
 
 Returns:
-    * success : boolean - True on success.
-    * exists : boolean - True if transaction existed, False if couldn't be found.
-    * (optional) error : string - an error message if one occurred.
+* success : boolean - True on success.
+* exists : boolean - True if transaction existed, False if couldn't be found.
+* (optional) error : string - an error message if one occurred.
 
 
 ####<a name="get_step_transactions"></a> tutorgen.get_step_transactions
 Get all the transactions for a step.
 
 Requires:
-    * step_id : string - the HPIT ID of the step
+* step_id : string - the HPIT ID of the step
     
 Returns:
-    * transactions : list - a list containing dictionary structures of the form:
-        * transaction_id : string - the ID of the transaction
-        * transaction_text : string - the transactions text
-        * date_created : string - the date the transaction was created
-        * edit_allowed_id : string - the ID of the entity that owns this transaction
-        * skill_ids : dict - the transaction's skill_ids
-        * skill_names : dict - the transaction's skill_names
-    * step_id : string - the ID you passed to the message
-    * success : True on success
-    * (optional) error : string - an error message if one occurred.
+* transactions : list - a list containing dictionary structures of the form:
+    * transaction_id : string - the ID of the transaction
+    * transaction_text : string - the transactions text
+    * date_created : string - the date the transaction was created
+    * edit_allowed_id : string - the ID of the entity that owns this transaction
+    * skill_ids : dict - the transaction's skill_ids
+    * skill_names : dict - the transaction's skill_names
+* step_id : string - the ID you passed to the message
+* success : True on success
+* (optional) error : string - an error message if one occurred.
 
 ####<a name="pm_get_problem_by_skill"></a> tutorgen.get_problem_by_skill
 Returns a dictionary of problem names and problem ID's that have skills with a certain skill.
