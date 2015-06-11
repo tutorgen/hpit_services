@@ -54,6 +54,9 @@ class ProblemManagementPlugin(Plugin):
             "tutorgen.remove_step":self.remove_step_callback,
             "tutorgen.get_step":self.get_step_callback,
             "tutorgen.get_problem_steps":self.get_problem_steps_callback,
+            "tutorgen.add_transaction":self.add_transaction_callback,
+            "tutorgen.remove_transaction":self.remove_transaction_callback,
+            "tutorgen.get_step_transactions":self.get_step_transactions_callback,
             "tutorgen.problem_transaction":self.transaction_callback_method,
             "tutorgen.get_problem_by_skill":self.get_problem_by_skill_callback,
             "get_student_model_fragment":self.get_student_model_fragment_callback})
@@ -458,7 +461,7 @@ class ProblemManagementPlugin(Plugin):
             
             try:
                 if "skill_names" not in message:
-                    skill_names = {}
+                    skill_names = {k:k for k,v in skill_ids.items()}
                 else: 
                     skill_names = dict(message["skill_names"])
             except (TypeError,ValueError):
@@ -640,7 +643,9 @@ class ProblemManagementPlugin(Plugin):
 
     def add_transaction_callback(self,message):
         try:
-            
+            if self.logger:
+                self.send_log_entry("RECEIVED: ADD TRANSACTION")
+                
             entity_id = message["sender_entity_id"]
             
             try:
@@ -675,7 +680,7 @@ class ProblemManagementPlugin(Plugin):
             
             try:
                 if "skill_names" not in message:
-                    skill_names = {}
+                    skill_names = {k:k for k,v in skill_ids.items()}
                 else: 
                     skill_names = dict(message["skill_names"])
             except (TypeError,ValueError):
@@ -696,6 +701,26 @@ class ProblemManagementPlugin(Plugin):
                     "success":False,
                 })
                 return
+                
+            if "outcome" not in message:
+                outcome = ""
+            else:
+                outcome = message["outcome"]
+                
+            if "selection" not in message:
+                selection = ""
+            else:
+                selection = message["selection"]
+                
+            if "action" not in message:
+                action = ""
+            else:
+                action = message["action"]
+                
+            if "input" not in message:
+                inp = ""
+            else:
+                inp = message["input"]
             
             step = self.step_db.find_one({
                     "_id":ObjectId(step_id),
@@ -719,6 +744,10 @@ class ProblemManagementPlugin(Plugin):
                         "session_id":str(session_id),
                         "student_id":str(student_id),
                         "level_names":level_names,
+                        "outcome":outcome,
+                        "action":action,
+                        "input":inp,
+                        "selection":selection,
                 })
                 self.send_response(message["message_id"], {
                     "transaction_id": str(transaction_id),
@@ -880,7 +909,7 @@ class ProblemManagementPlugin(Plugin):
             self.send_response(message["message_id"],{
                 "error":"Unexpected error; please consult the docs. " + str(e)      
             })
-        
+    
     def transaction_callback_method(self,message):
         try:
             if message["sender_entity_id"] != self.transaction_manager_id:
@@ -930,7 +959,7 @@ class ProblemManagementPlugin(Plugin):
             
             try:
                 if "skill_names" not in message:
-                    skill_names = {}
+                    skill_names = {k:k for k,v in skill_ids.items()}
                 else: 
                     skill_names = dict(message["skill_names"])
             except (TypeError,ValueError):
@@ -953,6 +982,26 @@ class ProblemManagementPlugin(Plugin):
                     "responder":"problem"
                 })
                 return
+            
+            if "outcome" not in message:
+                outcome = ""
+            else:
+                outcome = message["outcome"]
+                
+            if "selection" not in message:
+                selection = ""
+            else:
+                selection = message["selection"]
+                
+            if "action" not in message:
+                action = ""
+            else:
+                action = message["action"]
+                
+            if "input" not in message:
+                inp = ""
+            else:
+                inp = message["input"]
             
             #check for problem, add if not there
             problem= self.db.find_one({"problem_name":problem_name,"edit_allowed_id":message["orig_sender_id"]})
@@ -997,6 +1046,10 @@ class ProblemManagementPlugin(Plugin):
                         "session_id":str(session_id),
                         "student_id":str(student_id),
                         "level_names":level_names,
+                        "outcome":outcome,
+                        "action":action,
+                        "input":inp,
+                        "selection":selection,
                 })
             else:
                 transaction_id = transaction["_id"]      

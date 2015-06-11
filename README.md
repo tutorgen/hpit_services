@@ -69,6 +69,9 @@
         * [tutorgen.remove_step](#remove_step)
         * [tutorgen.get_step](#get_step)
         * [tutorgen.get_problem_steps](#get_problem_steps)
+        * [tutorgen.add_transaction](#add_transaction)
+        * [tutorgen.remove_transaction](#remove_transaction)
+        * [tutorgen.get_step_transactions](#get_step_transactions)
         * [tutorgen.get_problem_by_skill](#pm_get_problem_by_skill)
         * [tutorgen.get_student_model_fragment](#pm_get_student_model_fragment)
     * [Problem Generator](#PGPlugin)
@@ -759,6 +762,7 @@ COUCHBASE_HOSTNAME          | "127.0.0.1"                                       
 COUCHBASE_BUCKET_URI        | "http://127.0.0.1:8091/pools/default/buckets"     | Couchbase buckets REST endpoint (unused)                      |
 COUCHBASE_AUTH              |  ["Administrator", "administrator"]               | Authentication for Couchbase server (unused)                 | Set to your server credentials
 PROJECT_DIR                 | "/Users/raymond/Projects/TutorGen/hpit"           | The directory where the plugins are installed.       | Change this.
+LOGGING                     | False                                             | Disables logging in plugins
 
 ###<a name="GSCommonHangupsToc"></a> Common Hangups
 Here's a list of common problems when trying to install HPIT:
@@ -876,6 +880,7 @@ A list of messages sent to the system before being duplicated to plugin_messages
 - sender_entity_id: "The entity ID of the sender"
 - payload: "The data being sent."
 - time_created: "Date the message was created."
+- session_token: A token injected by the server denoting the tutor session.
 
 ### <a name="DBpluginmesToc"></a> plugin_messages
 Contains messages sent to plugins, as copied from the messages collection. It contains the following fields:
@@ -898,6 +903,7 @@ Stores responses for tutors or other plugins to poll. It contains the following 
 - message_id: "The ID of the message in the messages collection"
 - receiver_entity_id: "the Entity ID of the receiver"
 - sender_entity_id: "The Entity ID of the sender"
+- session_token: A token injected by the server denoting the tutor session.
 
 ### <a name="DBsent_messagesToc"></a> sent_messages_and_transactions
 Stores plugin messages once they have been sent to plugin. It contains the following fields:
@@ -1090,17 +1096,17 @@ Transaction Responses:
 * student_id : string - the ID of the student
 * session_id : string - the ID of the session
 * boredom_response : dict - response from the boredom detector
-    * error : string - if an error occured, a message is presented here
+    * error : string - if an error , a message is presented here
     * bored : boolean - if the student is bored
 * hf_response : dict - response from the hint factory
-    * error : string - if an error occured, a message is presented here
+    * error : string - if an error , a message is presented here
     * hint_text : string - if hint requested, it will be here
     * hint_exists : boolean - true if hint exists
 * kt_response : dict - response from the knowledge tracer
-    * error : string - if an error occured, a message is presented here
+    * error : string - if an error , a message is presented here
     * traced_skills : dict - a dictionary of traced skills, similar to kt_trace's response
 * problem_response : dict - response from the problem manager
-    * error : string - if an error occured, a message is presented here
+    * error : string - if an error , a message is presented here
     * problem_id : string - the problem ID this transaction belongs to
     * step_id : string - the step ID this transaction belongs to
     * transaction_id : string - the ID of this transaction
@@ -1255,6 +1261,7 @@ Returns:
 
 * student_id : string - the ID for the new student
 * attributes : JSON - the attributes for the new student 
+* session_id : string - a randomized token for this student's session.  
 
 ####<a name="get_student"></a> tutorgen.get_student
 Gets an already created student from an ID.
@@ -1266,7 +1273,8 @@ Receives:
 Returns:
 
 * student_id : string - the ID from a previously created student
-* attributes : JSON - the attributes for the new student 
+* attributes : JSON - the attributes for the new student
+* session_id : string - a randomized token for this student's session.  
 
 ####<a name='set_attribute'></a> tutorgen.set_attribute
 Sets an attribute value for a student.  Will overwrite any existing value.
@@ -1311,7 +1319,7 @@ Returns:
     * resourcd_id : string - the resource ID of the student
     * attributes : dictionary - the student's attributes
     * session_id : a session ID for this student
-* (optional) error : string - an error message if one occured.
+* (optional) error : string - an error message if one .
 
 ####<a name="get_or_create_student_by_attribute">tutorgen.get_or_create_student_by_attribute
 Gets a student based on an attribute, and if a student doesn't exist with that attribute, creates it.
@@ -1644,7 +1652,7 @@ Returns:
 * date_created : datetime - The time the problem was created.
 * edit_allowed_id : string - The ID of the entity that can edit this problem.
 * success : boolean - If the edit was successful.
-* (optional) error : string - The error message, if an error occured.
+* (optional) error : string - The error message, if an error .
 
 ####<a name="list_problems"></a> tutorgen.list_problems
 Get all the problems in the database.
@@ -1731,7 +1739,7 @@ Returns:
 * success : boolean - True if the problem existed and was deleted.
 * (optional) error : string - an error emssage if something went wrong
 
-####<a name="get_step"></a> tutorgen.get_problem_step
+####<a name="get_step"></a> tutorgen.get_step
 Gets a previously stored problem step from the problem manager.
 
 Receives:
@@ -1746,7 +1754,7 @@ Returns:
 * allowed_edit_id : string - The ID of the entity that can edit this step.
 * siccess : boolean - Whether everything went OK.
 
-####<a name="get_problem_steps"></a> tutorgen.list_problem_steps
+####<a name="get_problem_steps"></a> tutorgen.get_problem_steps
 Get all the problem steps for a given problem..
 
 Receives:
@@ -1761,6 +1769,58 @@ Returns:
     * date_created : datetime - The time the step was created.
 * problem_id : string - The ID of the problem the steps belong to.
 * success : boolean - Whether everything went ok.
+
+####<a name="add_transaction"></a> tutorgen.add_transaction
+Add a transaction to a step.
+
+Receives:
+    * step_id : string - the string ID for the step.
+    * student_id : string - the string ID for the student.
+    * session_id : string - the string ID for the HPIT student session.
+    * transaction_text : string - text for the transaction, usually a unique identifier.
+    * (optional) skill_ids : dict - a key value store mapping skill names to their HPIT IDs.  Defaults to {}.
+    * (optional) skill_names : dict - a key value store mapping skill models to skill names.  Defaults to {}.
+    * (optional) level_names : dict - a dict for Datashop level values.  Defaults to {"Default":"default"}.
+    * (optional) outcome : string - the outcome of the transaction, usually "correct", "incorrect", or "". Defaults to "".
+    * (optional) selection : string - the UI element selected.  Defaults to "".
+    * (optional) action : string - the action used, such as keypress or mousepress.  Defaults to "".
+    * (optinnal) input : string - the value inputed into the UI element.  Defaults to "".
+    
+Returns:
+    * transaction_id : string - the newly created transaction's ID.
+    * success : boolean - True on success.
+    * (optional) error : string - an error message if one occurred.
+    
+    
+####<a name="remove_transaction"></a> tutorgen.remove_transaction
+Remove a step transaction.
+
+Requires:
+    * transaction_id : string - the ID of the transaction to remove.
+
+Returns:
+    * success : boolean - True on success.
+    * exists : boolean - True if transaction existed, False if couldn't be found.
+    * (optional) error : string - an error message if one occurred.
+
+
+####<a name="get_step_transactions"></a> tutorgen.get_step_transactions
+Get all the transactions for a step.
+
+Requires:
+    * step_id : string - the HPIT ID of the step
+    
+Returns:
+    * transactions : list - a list containing dictionary structures of the form:
+        * transaction_id : string - the ID of the transaction
+        * transaction_text : string - the transactions text
+        * date_created : string - the date the transaction was created
+        * edit_allowed_id : string - the ID of the entity that owns this transaction
+        * skill_ids : dict - the transaction's skill_ids
+        * skill_names : dict - the transaction's skill_names
+    * step_id : string - the ID you passed to the message
+    * success : True on success
+    * (optional) error : string - an error message if one occurred.
 
 ####<a name="pm_get_problem_by_skill"></a> tutorgen.get_problem_by_skill
 Returns a dictionary of problem names and problem ID's that have skills with a certain skill.
@@ -1973,7 +2033,7 @@ Receives:
 Returns:
 
 * bored : float/boolean - Either a float probability or boolean if the student is bored, depending on return_type.
-* error : string - optional, a string message of an error if it occured.
+* error : string - optional, a string message of an error if it .
 
 ####<a name="set_boredom_model"></a> tutorgen.set_boredom_model
 Change the way that the boredom detector determines if a student is bored.
@@ -1986,7 +2046,7 @@ Receives:
 Returns:
 
 * status : string - "OK" if successful
-* error : string - optional, a string message of an error if it occured.
+* error : string - optional, a string message of an error if it .
 
 ####<a name="set_boredom_threshold">
 Change the threshold of probability required to deem student is bored.
@@ -1999,7 +2059,7 @@ Receives:
 Returns:
 
 * status : string - "OK" if successful
-* error : string - optional, a string message of an error if it occured.
+* error : string - optional, a string message of an error if it .
 
 
 
@@ -2061,7 +2121,6 @@ Contributions by:
 
 * Raymond Chandler III 
 * Brian Sauer 
-* Jian Sun 
 * Ryan Carlson 
 * John Stamper 
 * Mary J. Blink 
