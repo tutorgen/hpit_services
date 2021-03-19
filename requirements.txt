@@ -9,7 +9,7 @@ Flask-SQLAlchemy==1.0
 Flask-User==0.5.2
 Flask-WTF==0.10.0
 Gears==0.7.2
-Jinja2==2.7.3
+Jinja2==2.11.3
 Markdown==2.4.1
 MarkupSafe==0.23
 PyYAML==3.11
