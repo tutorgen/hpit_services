@@ -32,7 +32,7 @@ omnijson==0.1.2
 passlib==1.6.2
 pathtools==0.1.2
 psycopg2==2.5.3
-py==1.4.22
+py==1.10.0
 py-bcrypt==0.4
 py2neo==1.6.4
 pycrypto==2.6.1
