@@ -37,7 +37,7 @@ pycrypto==2.6
 pymongo==2.7
 python-dateutil==2.2
 pytz==2014.4
-requests==2.2.1
+requests==2.20.0
 responses==0.2.2
 six==1.6.1
 speaklater==1.3
