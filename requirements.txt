@@ -39,7 +39,7 @@ pycrypto==2.6.1
 pymongo==2.7.1
 python-dateutil==2.2
 pytz==2014.4
-requests==2.3.0
+requests==2.20.0
 responses==0.2.2
 simplejson==3.6.4
 six==1.7.3
